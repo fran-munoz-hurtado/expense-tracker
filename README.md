@@ -22,7 +22,7 @@ A modern, responsive expense tracking application built with Next.js, TypeScript
 
 1. **Clone and install**
    ```bash
-   git clone https://github.com/yourusername/expense-tracker.git
+   git clone https://github.com/fran-munoz-hurtado/expense-tracker.git
    cd expense-tracker
    npm install
    ```
@@ -63,4 +63,6 @@ npm run dev -- --hostname 0.0.0.0
 
 ---
 
-**Happy expense tracking! 💰✨** 
+**Happy expense tracking! 💰✨**
+
+*Last updated: December 2024* 
