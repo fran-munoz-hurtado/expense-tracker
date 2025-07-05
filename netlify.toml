@@ -5,16 +5,22 @@
 [build.environment]
   NODE_VERSION = "18"
 
-# Handle Next.js routing properly
+# Handle Next.js routing
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
 
+# Handle static files
+[[redirects]]
+  from = "/_next/*"
+  to = "/_next/:splat"
+  status = 200
+
 # Handle API routes
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/___netlify-handler"
+  to = "/api/:splat"
   status = 200
 
 [[headers]]
