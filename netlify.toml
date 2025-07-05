@@ -11,7 +11,7 @@
   to = "/index.html"
   status = 200
 
-# Handle static files
+# Handle static assets
 [[redirects]]
   from = "/_next/*"
   to = "/_next/:splat"
