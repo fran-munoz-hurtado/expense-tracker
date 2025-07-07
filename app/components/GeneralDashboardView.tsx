@@ -236,8 +236,9 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   }
 
   function getPercentageColor(percentage: number): string {
-    if (percentage === 100) return 'text-green-600'
-    return 'text-gray-400'
+    if (percentage === 0) return 'bg-gray-100 text-gray-600'
+    if (percentage === 100) return 'bg-green-100 text-green-700'
+    return 'bg-blue-100 text-blue-700'
   }
 
   function calculatePercentage(paid: number, total: number): number {
@@ -510,75 +511,138 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
   return (
     <div className="flex-1 p-6 lg:p-8">
+      {/* 1. Fancy header con explicación de porcentajes */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">{texts.allExpenses}</h1>
-        <p className="text-gray-600 mt-2">{texts.yearlySummary}</p>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
+            <span>📊</span> {texts.allExpenses}
+          </h1>
+          
+          {/* Tooltip informativo más visible */}
+          <div className="relative group">
+            <button className="flex items-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 border border-blue-200">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4m0-4h.01" />
+              </svg>
+              <span className="text-sm font-medium">¿Qué son los porcentajes?</span>
+            </button>
+            
+            {/* Tooltip content */}
+            <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 text-sm font-bold">💡</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Entendiendo los porcentajes</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    Los porcentajes te muestran <strong>cuánto de cada gasto ya pagaste</strong>. 
+                    Por ejemplo, si ves <span className="text-green-600 font-medium">75%</span>, significa que ya pagaste 3 de cada 4 pesos de ese gasto.
+                  </p>
+                  <div className="mt-3 p-2 bg-gray-50 rounded text-xs text-gray-600">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600`}>0%</span>
+                      <span className="font-medium">Gris:</span> No has pagado nada
+                    </div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700`}>50%</span>
+                      <span className="font-medium">Azul claro:</span> Has pagado algo (1-99%)
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700`}>100%</span>
+                      <span className="font-medium">Verde claro:</span> Ya pagaste todo (100%)
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+      {/* 2. Filtro de año más sofisticado */}
       <div className="mb-6 flex items-center gap-4">
-        <label className="block text-sm font-medium text-gray-700 mr-2">{texts.date}</label>
-        <select
-          value={selectedYear}
-          onChange={e => setSelectedYear(Number(e.target.value))}
-          className="px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-        >
-          {availableYears.map(year => (
-            <option key={year} value={year}>{year}</option>
-          ))}
-        </select>
+        <label className="block text-sm font-medium text-gray-700 mr-2 flex items-center gap-1">
+          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+          Año
+        </label>
+        <div className="relative">
+          <select
+            value={selectedYear}
+            onChange={e => setSelectedYear(Number(e.target.value))}
+            className="appearance-none px-4 py-2 border border-blue-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white text-blue-700 font-semibold transition-all duration-150 hover:border-blue-400 cursor-pointer pr-8"
+          >
+            {availableYears.map(year => (
+              <option key={year} value={year}>{year}</option>
+            ))}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-400">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
+          </span>
+        </div>
       </div>
       {error && <div className="mb-4 text-red-600">{error}</div>}
       
-      {/* Desktop Table View */}
+      {/* 3. Fancy tabla con tooltips en porcentajes */}
       <div className="hidden lg:block bg-white rounded-lg shadow-sm border overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{texts.month}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{texts.recurrent}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{texts.nonRecurrent}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{texts.totalBalance}</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">{texts.month}</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                {texts.recurrent}
+                <span className="ml-1 text-blue-400" title="Porcentaje de gastos mensuales ya pagados en el mes">%</span>
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                {texts.nonRecurrent}
+                <span className="ml-1 text-blue-400" title="Porcentaje de gastos únicos ya pagados en el mes">%</span>
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                {texts.totalBalance}
+                <span className="ml-1 text-blue-400" title="Porcentaje del total de gastos ya pagados en el mes">%</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-400">{texts.loading}</td></tr>
-            ) : (
-              Object.entries(monthlyData).map(([monthStr, data]) => {
+              <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-400 animate-pulse">{texts.loading}</td></tr>
+            ) :
+              Object.entries(monthlyData).map(([monthStr, data], idx) => {
                 const month = parseInt(monthStr)
                 const totalAmount = data.total
-                
+                const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'
                 return (
-                  <tr key={month}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <tr key={month} className={`transition-colors duration-150 hover:bg-blue-100 ${rowBg}`}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-900 font-semibold">
                       <button
                         onClick={() => onNavigateToMonth(month, selectedYear)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                        className="text-blue-600 hover:text-blue-800 hover:underline font-bold transition-colors duration-100"
                       >
                         {months[month - 1]}
                       </button>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className="text-gray-900">{formatCurrency(data.recurrent)}</span>
-                      <span className={`ml-2 text-xs ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))} font-semibold`}>
-                        ({calculateExpenseTypePercentage(data, 'recurrent')}%)
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`} title="Porcentaje de gastos mensuales pagados">
+                        {calculateExpenseTypePercentage(data, 'recurrent')}%
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className="text-gray-900">{formatCurrency(data.nonRecurrent)}</span>
-                      <span className={`ml-2 text-xs ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))} font-semibold`}>
-                        ({calculateExpenseTypePercentage(data, 'non_recurrent')}%)
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`} title="Porcentaje de gastos únicos pagados">
+                        {calculateExpenseTypePercentage(data, 'non_recurrent')}%
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="text-gray-900 font-bold">{formatCurrency(totalAmount)}</span>
-                      <span className={`ml-2 text-xs ${getPercentageColor(calculatePercentage(data.paid, totalAmount))} font-semibold`}>
-                        ({calculatePercentage(data.paid, totalAmount)}%)
+                      <span className="text-gray-900">{formatCurrency(totalAmount)}</span>
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculatePercentage(data.paid, totalAmount))}`} title="Porcentaje del total pagado">
+                        {calculatePercentage(data.paid, totalAmount)}%
                       </span>
                     </td>
                   </tr>
                 )
               })
-            )}
+            }
           </tbody>
         </table>
       </div>
@@ -604,8 +668,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                   </button>
                   <div className="text-right">
                     <div className="text-lg font-bold text-gray-900">{formatCurrency(totalAmount)}</div>
-                    <div className={`text-sm ${getPercentageColor(paidPercentage)} font-semibold`}>
-                      {paidPercentage}% {texts.paid}
+                    <div className="flex items-center justify-end gap-2 mt-1">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(paidPercentage)}`}>
+                        {paidPercentage}%
+                      </span>
+                      <span className="text-sm text-gray-600">{texts.paid}</span>
                     </div>
                   </div>
                 </div>
@@ -615,8 +682,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                     <span className="text-sm text-gray-600">{texts.recurrent}:</span>
                     <div className="text-right">
                       <div className="text-sm text-gray-900">{formatCurrency(data.recurrent)}</div>
-                      <div className={`text-xs ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`}>
-                        {calculateExpenseTypePercentage(data, 'recurrent')}% {texts.paid}
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`}>
+                          {calculateExpenseTypePercentage(data, 'recurrent')}%
+                        </span>
+                        <span className="text-xs text-gray-600">{texts.paid}</span>
                       </div>
                     </div>
                   </div>
@@ -625,8 +695,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                     <span className="text-sm text-gray-600">{texts.nonRecurrent}:</span>
                     <div className="text-right">
                       <div className="text-sm text-gray-900">{formatCurrency(data.nonRecurrent)}</div>
-                      <div className={`text-xs ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`}>
-                        {calculateExpenseTypePercentage(data, 'non_recurrent')}% {texts.paid}
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`}>
+                          {calculateExpenseTypePercentage(data, 'non_recurrent')}%
+                        </span>
+                        <span className="text-xs text-gray-600">{texts.paid}</span>
                       </div>
                     </div>
                   </div>
