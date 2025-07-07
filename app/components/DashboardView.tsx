@@ -1024,7 +1024,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   {finalSortedTransactions.map((transaction) => {
                     // Calculate days remaining
                     const getDaysRemaining = () => {
-                      if (transaction.status === 'paid') return 0;
+                      if (transaction.status === 'paid') return null; // Changed from 0 to null
                       if (!transaction.deadline) return null;
                       
                       // Parse the date string the same way as displayed dates
@@ -1094,13 +1094,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         <td className="px-6 py-4 whitespace-nowrap">
                           {daysRemaining !== null ? (
                             <span className={`text-sm font-medium ${
-                              daysRemaining === 0 ? 'text-gray-500' :
                               daysRemaining < 0 ? 'text-black' :
                               daysRemaining <= 7 ? 'text-black' :
                               'text-black'
                             }`}>
-                              {daysRemaining === 0 ? '0' :
-                               daysRemaining < 0 ? `${Math.abs(daysRemaining)} overdue` :
+                              {daysRemaining < 0 ? `${Math.abs(daysRemaining)} overdue` :
                                daysRemaining}
                             </span>
                           ) : (
@@ -1130,7 +1128,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             <label
                               htmlFor={`checkbox-${transaction.id}`}
                               className={`
-                                sophisticated-checkbox relative inline-flex items-center justify-center w-6 h-6
+                                sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
                                 ${transaction.status === 'paid' 
                                   ? 'gradient-emerald glow-emerald' 
                                   : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-md'
@@ -1151,7 +1149,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               {/* Checkmark with animated stroke */}
                               {transaction.status === 'paid' && (
                                 <svg
-                                  className="w-4 h-4 text-green-800 relative z-10"
+                                  className="w-3 h-3 text-green-800 relative z-10"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1235,7 +1233,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               {finalSortedTransactions.map((transaction) => {
                 // Calculate days remaining
                 const getDaysRemaining = () => {
-                  if (transaction.status === 'paid') return 0;
+                  if (transaction.status === 'paid') return null; // Changed from 0 to null
                   if (!transaction.deadline) return null;
                   
                   // Parse the date string the same way as displayed dates
@@ -1297,7 +1295,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         <span className="text-xs text-gray-500">Days Remaining:</span>
                         <div className="text-sm font-medium text-gray-900">
                           {daysRemaining !== null ? (
-                            daysRemaining === 0 ? '0' :
                             daysRemaining < 0 ? `${Math.abs(daysRemaining)} overdue` :
                             daysRemaining
                           ) : (
@@ -1330,7 +1327,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           <label
                             htmlFor={`checkbox-${transaction.id}`}
                             className={`
-                              sophisticated-checkbox relative inline-flex items-center justify-center w-6 h-6
+                              sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
                               ${transaction.status === 'paid' 
                                 ? 'gradient-emerald glow-emerald' 
                                 : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-md'
@@ -1351,7 +1348,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {/* Checkmark with animated stroke */}
                             {transaction.status === 'paid' && (
                               <svg
-                                className="w-4 h-4 text-green-800 relative z-10"
+                                className="w-3 h-3 text-green-800 relative z-10"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
