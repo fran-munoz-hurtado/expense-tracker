@@ -362,7 +362,24 @@ export default function MonthlyProgressBar({
           {progress > 0 && (
             <div
               className="absolute -top-10 transform -translate-x-1/2 transition-all duration-1000 ease-out"
-              style={{ left: `${Math.min(progress, 95)}%` }}
+              style={{ 
+                left: (() => {
+                  // Si el progreso está muy cerca del final (85% o más), mover el tooltip hacia la izquierda
+                  if (progress >= 85) {
+                    // Calcular una posición que deje espacio para el tooltip del total
+                    const adjustedPosition = Math.max(progress - 20, 10)
+                    return `${adjustedPosition}%`
+                  }
+                  // Si está entre 70-85%, usar una posición intermedia
+                  else if (progress >= 70) {
+                    return `${Math.min(progress - 5, 80)}%`
+                  }
+                  // Para progresos menores, usar la posición normal
+                  else {
+                    return `${Math.min(progress, 90)}%`
+                  }
+                })()
+              }}
             >
               <div className={`bg-gradient-to-r ${rangeConfig.color} text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-medium`}>
                 <div>{progress}%</div>
