@@ -63,6 +63,11 @@ export const texts = {
   due: "Vence",
   payingFrom: "Pagando desde",
   to: "hasta",
+  allExpenses: "Todos los Gastos",
+  yearlySummary: "Resumen anual por mes y tipo",
+  month: "Mes",
+  recurrent: "Recurrentes",
+  nonRecurrent: "No Recurrentes",
   
   // Categorías
   categories: {

@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react'
 import { supabase, type User } from '@/lib/supabase'
+import { texts } from '@/lib/translations'
 
 const months = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ]
 
 // Available years for selection - same as expense creation form
 const availableYears = [2025]
 
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('es-CO', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'COP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(Math.round(value))
@@ -95,7 +96,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user }: Genera
         }))
       )
     } catch (err: any) {
-      setError(err.message || 'Error loading data')
+      setError(err.message || 'Error al cargar datos')
     } finally {
       setLoading(false)
     }
@@ -124,11 +125,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user }: Genera
   return (
     <div className="flex-1 p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">All Expenses</h1>
-        <p className="text-gray-600 mt-2">Yearly summary by month and type</p>
+        <h1 className="text-3xl font-bold text-gray-900">{texts.allExpenses}</h1>
+        <p className="text-gray-600 mt-2">{texts.yearlySummary}</p>
       </div>
       <div className="mb-6 flex items-center gap-4">
-        <label className="block text-sm font-medium text-gray-700 mr-2">Year</label>
+        <label className="block text-sm font-medium text-gray-700 mr-2">{texts.date}</label>
         <select
           value={selectedYear}
           onChange={e => setSelectedYear(Number(e.target.value))}
@@ -146,15 +147,15 @@ export default function GeneralDashboardView({ onNavigateToMonth, user }: Genera
         <table className="min-w-full divide-y divide-gray-200">
           <thead>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Recurrent</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Non-Recurrent</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{texts.month}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{texts.recurrent}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{texts.nonRecurrent}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{texts.totalBalance}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-400">Loading...</td></tr>
+              <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-400">{texts.loading}</td></tr>
             ) : (
               monthlyData.map(row => {
                 const totalAmount = row.recurrent + row.nonRecurrent
@@ -198,7 +199,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user }: Genera
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-4">
         {loading ? (
-          <div className="text-center text-gray-400 py-8">Loading...</div>
+          <div className="text-center text-gray-400 py-8">{texts.loading}</div>
         ) : (
           monthlyData.map(row => {
             const totalAmount = row.recurrent + row.nonRecurrent
@@ -218,28 +219,28 @@ export default function GeneralDashboardView({ onNavigateToMonth, user }: Genera
                   <div className="text-right">
                     <div className="text-lg font-bold text-gray-900">{formatCurrency(totalAmount)}</div>
                     <div className={`text-sm ${getPercentageColor(totalPercentage, row.month)} font-semibold`}>
-                      {totalPercentage}% paid
+                      {totalPercentage}% {texts.paid}
                     </div>
                   </div>
                 </div>
                 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Recurrent:</span>
+                    <span className="text-sm text-gray-600">{texts.recurrent}:</span>
                     <div className="text-right">
                       <div className="text-sm font-semibold text-gray-900">{formatCurrency(row.recurrent)}</div>
                       <div className={`text-xs ${getPercentageColor(recurrentPercentage, row.month)}`}>
-                        {recurrentPercentage}% paid
+                        {recurrentPercentage}% {texts.paid}
                       </div>
                     </div>
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Non-Recurrent:</span>
+                    <span className="text-sm text-gray-600">{texts.nonRecurrent}:</span>
                     <div className="text-right">
                       <div className="text-sm font-semibold text-gray-900">{formatCurrency(row.nonRecurrent)}</div>
                       <div className={`text-xs ${getPercentageColor(nonRecurrentPercentage, row.month)}`}>
-                        {nonRecurrentPercentage}% paid
+                        {nonRecurrentPercentage}% {texts.paid}
                       </div>
                     </div>
                   </div>
