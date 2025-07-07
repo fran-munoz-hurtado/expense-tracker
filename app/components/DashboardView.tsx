@@ -19,6 +19,9 @@ interface DashboardViewProps {
 }
 
 export default function DashboardView({ navigationParams, user, onDataChange, refreshTrigger }: DashboardViewProps) {
+  // Remove excessive debug logging
+  // console.log('🔄 DashboardView rendered with refreshTrigger:', refreshTrigger)
+  
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
@@ -143,22 +146,6 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     return value.toString()
   }
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  // Refetch data when month/year selection changes
-  useEffect(() => {
-    fetchData()
-  }, [selectedMonth, selectedYear])
-
-  // Refetch data when refreshTrigger changes (from parent component)
-  useEffect(() => {
-    if (refreshTrigger) {
-      fetchData()
-    }
-  }, [refreshTrigger])
-
   const fetchData = async () => {
     try {
       setError(null)
@@ -176,7 +163,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           return { transactions, expenses }
         }
       )
-      
+
       setTransactions(result.transactions)
       setRecurrentExpenses(result.expenses.recurrent)
       setNonRecurrentExpenses(result.expenses.nonRecurrent)
@@ -189,12 +176,28 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       }
 
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchData()
+  }, [])
+
+  // Refetch data when month/year selection changes
+  useEffect(() => {
+    fetchData()
+  }, [selectedMonth, selectedYear])
+
+  // Refetch data when refreshTrigger changes (from parent component)
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      fetchData()
+    }
+  }, [refreshTrigger])
 
   // Filter transactions for selected month/year
   const filteredTransactions = transactions.filter(transaction => 
@@ -245,26 +248,26 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     }).reduce((sum, t) => sum + t.value, 0)
   }
 
-  // Debug logging
-  console.log('=== DEBUG MONTHLY STATS ===')
-  console.log('Selected month/year:', selectedMonth, selectedYear)
-  console.log('Filter type:', filterType)
-  console.log('All transactions count:', transactions.length)
-  console.log('Filtered transactions count:', filteredTransactions.length)
-  console.log('Type filtered transactions count:', typeFilteredTransactions.length)
-  console.log('Sorted transactions count:', sortedTransactions.length)
+  // Remove excessive debug logging
+  // console.log('=== DEBUG MONTHLY STATS ===')
+  // console.log('Selected month/year:', selectedMonth, selectedYear)
+  // console.log('Filter type:', filterType)
+  // console.log('All transactions count:', transactions.length)
+  // console.log('Filtered transactions count:', filteredTransactions.length)
+  // console.log('Type filtered transactions count:', typeFilteredTransactions.length)
+  // console.log('Sorted transactions count:', sortedTransactions.length)
   
-  console.log('All transactions for month:', filteredTransactions.map(t => ({
-    id: t.id,
-    description: t.description,
-    value: t.value,
-    status: t.status,
-    deadline: t.deadline,
-    isOverdue: t.deadline ? new Date(t.deadline) < new Date() : false,
-    source_type: t.source_type,
-    month: t.month,
-    year: t.year
-  })))
+  // console.log('All transactions for month:', filteredTransactions.map(t => ({
+  //   id: t.id,
+  //   description: t.description,
+  //   value: t.value,
+  //   status: t.status,
+  //   deadline: t.deadline,
+  //   isOverdue: t.deadline ? new Date(t.deadline) < new Date() : false,
+  //   source_type: t.source_type,
+  //   month: t.month,
+  //   year: t.year
+  // })))
   
   const paidTransactions = filteredTransactions.filter(t => t.status === 'paid')
   const pendingTransactions = filteredTransactions.filter(t => {
@@ -273,32 +276,33 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     return new Date(t.deadline) >= new Date()
   })
   const overdueTransactions = filteredTransactions.filter(t => {
-    if (!t.deadline) return false
-    return new Date(t.deadline) < new Date()
+    if (t.status !== 'pending') return false // Only include pending transactions
+    if (!t.deadline) return false // No deadline, can't be overdue
+    return new Date(t.deadline) < new Date() // Overdue
   })
   
-  console.log('Paid transactions:', paidTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
-  console.log('Pending transactions:', pendingTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
-  console.log('Overdue transactions:', overdueTransactions.map(t => ({ id: t.id, description: t.description, value: t.value, status: t.status })))
+  // console.log('Paid transactions:', paidTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
+  // console.log('Pending transactions:', pendingTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
+  // console.log('Overdue transactions:', overdueTransactions.map(t => ({ id: t.id, description: t.description, value: t.value, status: t.status })))
   
-  console.log('Monthly stats:', {
-    total: monthlyStats.total,
-    paid: monthlyStats.paid,
-    pending: monthlyStats.pending,
-    overdue: monthlyStats.overdue
-  })
+  // console.log('Monthly stats:', {
+  //   total: monthlyStats.total,
+  //   paid: monthlyStats.paid,
+  //   pending: monthlyStats.pending,
+  //   overdue: monthlyStats.overdue
+  // })
   
   // Verify totals
   const calculatedTotal = paidTransactions.reduce((sum, t) => sum + t.value, 0) + 
                          pendingTransactions.reduce((sum, t) => sum + t.value, 0) + 
                          overdueTransactions.reduce((sum, t) => sum + t.value, 0)
   
-  console.log('Verification:', {
-    calculatedTotal,
-    actualTotal: monthlyStats.total,
-    match: calculatedTotal === monthlyStats.total
-  })
-  console.log('=== END DEBUG ===')
+  // console.log('Verification:', {
+  //   calculatedTotal,
+  //   actualTotal: monthlyStats.total,
+  //   match: calculatedTotal === monthlyStats.total
+  // })
+  // console.log('=== END DEBUG ===')
 
   const calculateTransactionCount = (type: ExpenseType, formData: any): number => {
     if (type === 'recurrent') {
@@ -326,11 +330,22 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const handleCheckboxChange = async (transactionId: number, isChecked: boolean) => {
     try {
       setError(null)
-      console.log(`Updating transaction ${transactionId} checkbox to: ${isChecked}`)
+      console.log(`🔄 handleCheckboxChange called for transaction ${transactionId}, isChecked: ${isChecked}`)
       
       // Determine the new status based on checkbox and due date
       const transaction = transactions.find(t => t.id === transactionId)
-      if (!transaction) return
+      if (!transaction) {
+        console.error(`❌ Transaction ${transactionId} not found in transactions array`)
+        return
+      }
+
+      console.log(`📋 Found transaction:`, {
+        id: transaction.id,
+        description: transaction.description,
+        currentStatus: transaction.status,
+        deadline: transaction.deadline,
+        isOverdue: transaction.deadline ? new Date(transaction.deadline) < new Date() : false
+      })
 
       let newStatus: 'paid' | 'pending'
       if (isChecked) {
@@ -344,6 +359,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         }
       }
       
+      console.log(`🔄 Updating status from '${transaction.status}' to '${newStatus}'`)
+
+      // Optimistically update the local state first for immediate UI feedback
+      setTransactions(prevTransactions => 
+        prevTransactions.map(t => 
+          t.id === transactionId 
+            ? { ...t, status: newStatus }
+            : t
+        )
+      )
+
       const { data, error } = await supabase
         .from('transactions')
         .update({ status: newStatus })
@@ -351,23 +377,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         .eq('user_id', user.id)
 
       if (error) {
-        console.error('Supabase error (status update):', error)
+        console.error('❌ Supabase error (status update):', error)
         setError(`Error al actualizar estado: ${error.message}`)
+        
+        // Revert the optimistic update on error
+        setTransactions(prevTransactions => 
+          prevTransactions.map(t => 
+            t.id === transactionId 
+              ? { ...t, status: transaction.status }
+              : t
+          )
+        )
         throw error
       }
 
-      console.log('Status update successful:', data)
-
-      // Refresh data to ensure UI is in sync with database
-      await fetchData()
+      console.log('✅ Status update successful:', data)
       
-      // Notify parent component of data change
-      if (onDataChange) {
-        onDataChange()
-      }
+      // Don't call onDataChange() for status updates since we're using optimistic updates
+      // The optimistic update already provides immediate UI feedback
+      // Calling onDataChange() would trigger a refresh that overwrites the optimistic update
+      console.log('✅ Status update completed - optimistic update maintained')
       
     } catch (error) {
-      console.error('Error updating status:', error)
+      console.error('❌ Error updating status:', error)
       setError(`Error al actualizar estado: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
   }
@@ -1016,7 +1048,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                           <input
                             type="checkbox"
                             checked={transaction.status === 'paid'}
-                            onChange={(e) => handleCheckboxChange(transaction.id, e.target.checked)}
+                            onChange={(e) => {
+                              console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                              handleCheckboxChange(transaction.id, e.target.checked)
+                            }}
                             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                           />
                         </td>
@@ -1153,7 +1188,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         <input
                           type="checkbox"
                           checked={transaction.status === 'paid'}
-                          onChange={(e) => handleCheckboxChange(transaction.id, e.target.checked)}
+                          onChange={(e) => {
+                            console.log(`🔘 Mobile: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                            handleCheckboxChange(transaction.id, e.target.checked)
+                          }}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <span className="text-sm text-gray-600 ml-1">Mark as paid</span>
