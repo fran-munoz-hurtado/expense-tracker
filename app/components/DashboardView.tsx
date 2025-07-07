@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
@@ -26,15 +26,22 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   // Remove excessive debug logging
   // console.log('🔄 DashboardView rendered with refreshTrigger:', refreshTrigger)
   
+  // State for data
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
+  const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
+  
+  // Refs to track previous month/year values
+  const prevSelectedMonth = useRef<number>()
+  const prevSelectedYear = useRef<number>()
+  
+  // State for UI
   const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(navigationParams?.month || new Date().getMonth() + 1)
   const [error, setError] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
-  const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
   
   // Sorting state
   const [sortField, setSortField] = useState<'description' | 'deadline' | 'status' | 'value' | null>(null)
@@ -122,14 +129,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     console.log('selectedYear:', selectedYear)
     console.log('refreshTrigger:', refreshTrigger)
     
-    // Only fetch data if refreshTrigger is 0 (initial load) or if month/year changed
-    // Don't fetch when refreshTrigger > 0 to avoid duplication with optimistic updates
-    if (refreshTrigger === 0 || refreshTrigger === undefined) {
+    // Only fetch data on initial load (when refreshTrigger is undefined) or if month/year changed
+    // Don't fetch when refreshTrigger is 0 (which happens after adding movements)
+    if (refreshTrigger === undefined || (selectedMonth !== prevSelectedMonth.current || selectedYear !== prevSelectedYear.current)) {
       // Clear local state before fetching to avoid duplicates
       setTransactions([])
       setRecurrentExpenses([])
       setNonRecurrentExpenses([])
       fetchData()
+      
+      // Update refs to track month/year changes
+      prevSelectedMonth.current = selectedMonth
+      prevSelectedYear.current = selectedYear
     }
   }, [selectedMonth, selectedYear, refreshTrigger])
 
