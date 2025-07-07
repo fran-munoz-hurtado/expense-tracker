@@ -36,6 +36,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const prevSelectedMonth = useRef<number>()
   const prevSelectedYear = useRef<number>()
   const hasLoadedInitially = useRef(false)
+  const effectHasRun = useRef(false)
   
   // State for UI
   const [loading, setLoading] = useState(true)
@@ -130,6 +131,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     console.log('selectedYear:', selectedYear)
     console.log('refreshTrigger:', refreshTrigger)
     console.log('hasLoadedInitially:', hasLoadedInitially.current)
+    console.log('effectHasRun:', effectHasRun.current)
+    
+    // Prevent multiple executions in development mode
+    if (effectHasRun.current && !hasLoadedInitially.current) {
+      console.log('=== SKIPPING (effect already ran) ===')
+      return
+    }
     
     // Only fetch data on initial load (when hasLoadedInitially is false) or if month/year changed
     // Don't fetch when refreshTrigger changes (which happens after adding movements)
@@ -152,6 +160,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     } else {
       console.log('=== SKIPPING FETCH (already loaded or refreshTrigger change) ===')
     }
+    
+    // Mark that the effect has run
+    effectHasRun.current = true
   }, [selectedMonth, selectedYear, refreshTrigger])
 
   const filteredTransactions = transactions.filter(transaction => 
