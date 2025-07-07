@@ -1020,12 +1020,37 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         const deadline = addMovementFormData.payment_deadline ? 
           new Date(addMovementFormData.payment_deadline).toISOString().split('T')[0] : null
 
+        console.log('Creating non-recurrent expense record...')
+
+        // First, create the non-recurrent expense record
+        const { data: nonRecurrentExpense, error: nonRecurrentError } = await supabase
+          .from('non_recurrent_expenses')
+          .insert({
+            user_id: user.id,
+            description: addMovementFormData.description,
+            year: selectedYear,
+            month: selectedMonth,
+            value: addMovementFormData.value,
+            payment_deadline: deadline
+          })
+          .select()
+          .single()
+
+        if (nonRecurrentError) {
+          console.error('Non-recurrent expense error:', nonRecurrentError)
+          throw nonRecurrentError
+        }
+
+        console.log('Non-recurrent expense created:', nonRecurrentExpense)
+
         console.log('Creating non-recurrent transaction with deadline:', deadline)
 
         const { error: transactionError } = await supabase
           .from('transactions')
           .insert({
             user_id: user.id,
+            source_id: nonRecurrentExpense.id,
+            source_type: 'non_recurrent',
             description: addMovementFormData.description,
             value: addMovementFormData.value,
             month: selectedMonth,
