@@ -127,24 +127,14 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
 }
 
 /**
- * Milestone configuration for progress bar markers
- */
-const MILESTONES = [
-  { percentage: 25, label: '¼' },
-  { percentage: 50, label: '½' },
-  { percentage: 75, label: '¾' }
-]
-
-/**
  * MonthlyProgressBar Component
  * 
  * A sophisticated progress bar component that displays monthly financial progress
- * with motivational messages, milestone markers, and smooth animations.
+ * with motivational messages and smooth animations.
  * 
  * Features:
  * - Responsive design with accessibility support
  * - Smooth animations and transitions
- * - Milestone markers for visual progress indication
  * - Motivational messages focused on personal achievement
  * - Color-coded progress ranges
  * - Optimized performance with memoization
@@ -181,15 +171,6 @@ export default function MonthlyProgressBar({
   }, [range])
 
   const IconComponent = rangeConfig.icon
-
-  // Memoized milestone positions for performance
-  const milestonePositions = useMemo(() => {
-    return MILESTONES.map(milestone => ({
-      ...milestone,
-      position: `${milestone.percentage}%`,
-      isReached: percentage >= milestone.percentage
-    }))
-  }, [percentage])
 
   // Memoized message selection to prevent unnecessary re-renders
   const selectRandomMessage = useCallback((messages: string[]): string => {
@@ -258,7 +239,7 @@ export default function MonthlyProgressBar({
         </div>
       </div>
 
-      {/* Progress bar with milestones */}
+      {/* Progress bar */}
       <div className="mb-6">
         <div className="relative">
           {/* Background bar */}
@@ -274,24 +255,6 @@ export default function MonthlyProgressBar({
               <div className="h-full w-full bg-gradient-to-r from-white/30 via-white/10 to-transparent rounded-full animate-pulse"></div>
             </div>
           </div>
-          
-          {/* Milestone markers */}
-          {milestonePositions.map((milestone, index) => (
-            <div
-              key={milestone.percentage}
-              className={`absolute top-0 transform -translate-x-1/2 transition-all duration-500 ease-out ${
-                milestone.isReached ? 'opacity-100' : 'opacity-30'
-              }`}
-              style={{ left: milestone.position }}
-            >
-              <div className={`w-1 h-4 ${milestone.isReached ? rangeConfig.milestoneColor : 'bg-gray-300'} rounded-full`}></div>
-              <div className={`text-xs font-medium mt-1 text-center ${
-                milestone.isReached ? 'text-gray-700' : 'text-gray-400'
-              }`}>
-                {milestone.label}
-              </div>
-            </div>
-          ))}
           
           {/* Floating progress indicator */}
           {progress > 0 && (
