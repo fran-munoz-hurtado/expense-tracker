@@ -852,62 +852,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-8">
-        <div className="bg-white p-3 lg:p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-1.5 lg:p-2 bg-blue-100 rounded-lg">
-              <DollarSign className="h-4 w-4 lg:h-6 lg:w-6 text-blue-600" />
-            </div>
-            <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">Total del mes</p>
-              <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.total)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-3 lg:p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-1.5 lg:p-2 bg-green-100 rounded-lg">
-              <CheckCircle className="h-4 w-4 lg:h-6 lg:w-6 text-green-600" />
-            </div>
-            <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">{texts.paid}</p>
-              <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.paid)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-3 lg:p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-1.5 lg:p-2 bg-yellow-100 rounded-lg">
-              <AlertCircle className="h-4 w-4 lg:h-6 lg:w-6 text-yellow-600" />
-            </div>
-            <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">{texts.pending}</p>
-              <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.pending)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-3 lg:p-6 rounded-lg shadow-sm border">
-          <div className="flex items-center">
-            <div className="p-1.5 lg:p-2 bg-red-100 rounded-lg">
-              <AlertCircle className="h-4 w-4 lg:h-6 lg:w-6 text-red-600" />
-            </div>
-            <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">{texts.overdue}</p>
-              <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.overdue)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Progress Bar */}
+      {/* Monthly Progress Bar with Integrated Totals */}
       <div className="mb-8">
         <MonthlyProgressBar
           paid={monthlyStats.paid}
           total={monthlyStats.total}
+          pending={monthlyStats.pending}
+          overdue={monthlyStats.overdue}
         />
       </div>
 

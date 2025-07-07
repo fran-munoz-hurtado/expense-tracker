@@ -1,18 +1,22 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import { TrendingUp, Target, Award, Zap, Star, CheckCircle } from 'lucide-react'
+import { TrendingUp, Target, Award, Zap, Star, CheckCircle, AlertCircle, Clock, DollarSign } from 'lucide-react'
 
 /**
  * Interface for MonthlyProgressBar component props
  * @interface MonthlyProgressBarProps
  * @property {number} paid - Amount paid in the current month
  * @property {number} total - Total amount for the current month
+ * @property {number} pending - Amount pending (not overdue)
+ * @property {number} overdue - Amount overdue
  * @property {string} [className] - Additional CSS classes
  */
 interface MonthlyProgressBarProps {
   paid: number
   total: number
+  pending: number
+  overdue: number
   className?: string
 }
 
@@ -27,6 +31,7 @@ interface ProgressRangeConfig {
   icon: React.ComponentType<{ className?: string }>
   messages: string[]
   milestoneColor: string
+  overdueColor: string
 }
 
 /**
@@ -40,6 +45,7 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
     milestoneColor: 'bg-red-300',
+    overdueColor: 'bg-red-500',
     icon: Target,
     messages: [
       "¡Estás construyendo tu futuro financiero! 🚀",
@@ -55,6 +61,7 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
     bgColor: 'bg-orange-50',
     borderColor: 'border-orange-200',
     milestoneColor: 'bg-orange-300',
+    overdueColor: 'bg-orange-500',
     icon: TrendingUp,
     messages: [
       "¡Tu disciplina financiera está creciendo! 📈",
@@ -70,6 +77,7 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
     bgColor: 'bg-yellow-50',
     borderColor: 'border-yellow-200',
     milestoneColor: 'bg-yellow-300',
+    overdueColor: 'bg-yellow-500',
     icon: Star,
     messages: [
       "¡Tu consistencia financiera es admirable! 🌟",
@@ -85,6 +93,7 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
     milestoneColor: 'bg-green-300',
+    overdueColor: 'bg-green-500',
     icon: Award,
     messages: [
       "¡Tu excelencia financiera es notable! 🏆",
@@ -100,6 +109,7 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
     bgColor: 'bg-emerald-50',
     borderColor: 'border-emerald-200',
     milestoneColor: 'bg-emerald-300',
+    overdueColor: 'bg-emerald-500',
     icon: Zap,
     messages: [
       "¡Tu maestría financiera es excepcional! ⚡",
@@ -115,6 +125,7 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
     bgColor: 'bg-teal-50',
     borderColor: 'border-teal-200',
     milestoneColor: 'bg-teal-300',
+    overdueColor: 'bg-teal-500',
     icon: Award,
     messages: [
       "¡PERFECCIÓN FINANCIERA ALCANZADA! 🎉",
@@ -129,15 +140,18 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
 /**
  * MonthlyProgressBar Component
  * 
- * A sophisticated progress bar component that displays monthly financial progress
- * with motivational messages and smooth animations.
+ * A comprehensive financial progress component that displays monthly financial overview
+ * with integrated totals, progress tracking, and overdue status detection.
  * 
  * Features:
- * - Responsive design with accessibility support
- * - Smooth animations and transitions
+ * - Integrated display of all financial totals (total, paid, pending, overdue)
+ * - Sophisticated progress bar with smooth animations
+ * - Overdue status detection and warning messages
  * - Motivational messages focused on personal achievement
- * - Color-coded progress ranges
+ * - Color-coded progress ranges with enhanced visual feedback
  * - Optimized performance with memoization
+ * - Accessibility support with ARIA attributes
+ * - Responsive design for all screen sizes
  * 
  * @param {MonthlyProgressBarProps} props - Component props
  * @returns {JSX.Element} Rendered component
@@ -145,6 +159,8 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
 export default function MonthlyProgressBar({ 
   paid, 
   total, 
+  pending,
+  overdue,
   className = '' 
 }: MonthlyProgressBarProps): JSX.Element {
   // State management with proper typing
@@ -171,6 +187,15 @@ export default function MonthlyProgressBar({
   }, [range])
 
   const IconComponent = rangeConfig.icon
+
+  // Memoized overdue status detection
+  const hasOverdue = useMemo(() => {
+    return overdue > 0
+  }, [overdue])
+
+  const overduePercentage = useMemo(() => {
+    return total > 0 ? Math.round((overdue / total) * 100) : 0
+  }, [overdue, total])
 
   // Memoized message selection to prevent unnecessary re-renders
   const selectRandomMessage = useCallback((messages: string[]): string => {
@@ -215,7 +240,7 @@ export default function MonthlyProgressBar({
       aria-valuemax={100}
       aria-label={`Progreso del mes: ${percentage}% completado`}
     >
-      {/* Header with icon and title */}
+      {/* Header with icon and comprehensive financial overview */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <div className={`p-2.5 rounded-lg ${rangeConfig.bgColor} transition-colors duration-300`}>
@@ -226,9 +251,19 @@ export default function MonthlyProgressBar({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Progreso del Mes</h3>
-            <p className="text-sm text-gray-600">
-              {formatCurrency(paid)} de {formatCurrency(total)} pagados
-            </p>
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <span>
+                {formatCurrency(paid)} de {formatCurrency(total)} pagados
+              </span>
+              {hasOverdue && (
+                <div className="flex items-center space-x-1 text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="font-medium">
+                    {formatCurrency(overdue)} en mora ({overduePercentage}%)
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="text-right">
@@ -239,7 +274,74 @@ export default function MonthlyProgressBar({
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Integrated Financial Overview Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        {/* Total del Mes */}
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200">
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-blue-200 rounded-lg">
+              <DollarSign className="h-4 w-4 text-blue-700" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-blue-700">Total del mes</p>
+              <p className="text-sm font-bold text-blue-900">{formatCurrency(total)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Ya Pagado */}
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-green-200 rounded-lg">
+              <CheckCircle className="h-4 w-4 text-green-700" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-green-700">Ya pagado</p>
+              <p className="text-sm font-bold text-green-900">{formatCurrency(paid)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Pendiente */}
+        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200">
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-yellow-200 rounded-lg">
+              <Clock className="h-4 w-4 text-yellow-700" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-yellow-700">Pendiente</p>
+              <p className="text-sm font-bold text-yellow-900">{formatCurrency(pending)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* En Mora */}
+        <div className={`p-3 rounded-lg border ${
+          hasOverdue 
+            ? 'bg-gradient-to-br from-red-50 to-red-100 border-red-200' 
+            : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200'
+        }`}>
+          <div className="flex items-center space-x-2">
+            <div className={`p-1.5 rounded-lg ${
+              hasOverdue ? 'bg-red-200' : 'bg-gray-200'
+            }`}>
+              <AlertCircle className={`h-4 w-4 ${
+                hasOverdue ? 'text-red-700' : 'text-gray-500'
+              }`} />
+            </div>
+            <div>
+              <p className={`text-xs font-medium ${
+                hasOverdue ? 'text-red-700' : 'text-gray-500'
+              }`}>En mora</p>
+              <p className={`text-sm font-bold ${
+                hasOverdue ? 'text-red-900' : 'text-gray-500'
+              }`}>{formatCurrency(overdue)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Enhanced Progress Bar with Overdue Indicator */}
       <div className="mb-6">
         <div className="relative">
           {/* Background bar */}
@@ -254,28 +356,59 @@ export default function MonthlyProgressBar({
               {/* Shimmer effect */}
               <div className="h-full w-full bg-gradient-to-r from-white/30 via-white/10 to-transparent rounded-full animate-pulse"></div>
             </div>
+            
+            {/* Overdue indicator overlay */}
+            {hasOverdue && (
+              <div
+                className={`absolute top-0 h-full ${rangeConfig.overdueColor} opacity-60 rounded-full transition-all duration-1000 ease-out`}
+                style={{ 
+                  left: `${Math.max(0, progress - overduePercentage)}%`,
+                  width: `${Math.min(overduePercentage, 100 - Math.max(0, progress - overduePercentage))}%`
+                }}
+              >
+                <div className="h-full w-full bg-gradient-to-r from-red-400/40 to-red-600/40 rounded-full animate-pulse"></div>
+              </div>
+            )}
           </div>
           
-          {/* Floating progress indicator */}
+          {/* Floating progress indicator with paid amount */}
           {progress > 0 && (
             <div
               className="absolute -top-10 transform -translate-x-1/2 transition-all duration-1000 ease-out"
               style={{ left: `${Math.min(progress, 95)}%` }}
             >
               <div className={`bg-gradient-to-r ${rangeConfig.color} text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-medium`}>
-                {progress}%
+                <div>{progress}%</div>
+                <div className="text-xs opacity-90">{formatCurrency(paid)}</div>
               </div>
               <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-current mx-auto"></div>
             </div>
           )}
+
+          {/* Total amount indicator at the end */}
+          <div className="absolute -top-10 right-0 transform transition-all duration-1000 ease-out">
+            <div className="bg-gray-800 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-medium">
+              <div>Total</div>
+              <div className="text-xs opacity-90">{formatCurrency(total)}</div>
+            </div>
+            <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800 mx-auto"></div>
+          </div>
         </div>
       </div>
 
-      {/* Motivational message */}
+      {/* Enhanced Motivational Message with Overdue Warning */}
       <div className={`text-center p-4 rounded-xl ${rangeConfig.bgColor} border ${rangeConfig.borderColor} transition-all duration-300`}>
-        <p className={`text-sm font-medium bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent leading-relaxed`}>
+        <p className={`text-sm font-medium bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent leading-relaxed mb-2`}>
           {selectedMessage}
         </p>
+        {hasOverdue && (
+          <div className="flex items-center justify-center space-x-2 text-red-600 bg-red-50 rounded-lg p-2 mt-2">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-xs font-medium">
+              Atención: {formatCurrency(overdue)} ({overduePercentage}%) está en mora
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )
