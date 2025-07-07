@@ -10,6 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
+import MonthlyProgressBar from './MonthlyProgressBar'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -900,6 +901,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Monthly Progress Bar */}
+      <div className="mb-8">
+        <MonthlyProgressBar
+          paid={monthlyStats.paid}
+          total={monthlyStats.total}
+        />
       </div>
 
       {/* Filter */}
