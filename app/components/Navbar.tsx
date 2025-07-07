@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Bell, Settings, User as UserIcon, TrendingUp, DollarSign, Target, ChevronDown, Edit, Bug, LogOut, X } from 'lucide-react'
 import { supabase, type User } from '@/lib/supabase'
+import { texts } from '@/lib/translations'
 
 interface NavbarProps {
   user: User
@@ -55,25 +56,25 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
   useEffect(() => {
     const hour = currentTime.getHours()
     if (hour < 12) {
-      setGreeting('Good morning')
+      setGreeting('Buenos días')
     } else if (hour < 17) {
-      setGreeting('Good afternoon')
+      setGreeting('Buenas tardes')
     } else {
-      setGreeting('Good evening')
+      setGreeting('Buenas noches')
     }
   }, [currentTime])
 
   // Set financial wellness message
   useEffect(() => {
     const messages = [
-      "Let's make today financially productive! 💰",
-      "Your financial goals are within reach! 🎯",
-      "Smart money management starts here! 📊",
-      "Every expense tracked is progress made! 📈",
-      "Building wealth, one transaction at a time! 💎",
-      "Your financial future looks bright! ✨",
-      "Stay on top of your finances today! 📋",
-      "Financial freedom is a journey, not a destination! 🚀"
+      "¡Hagamos de hoy un día financieramente productivo! 💰",
+      "¡Tus metas financieras están al alcance! 🎯",
+      "¡El manejo inteligente del dinero comienza aquí! 📊",
+      "¡Cada gasto registrado es progreso logrado! 📈",
+      "¡Construyendo riqueza, una transacción a la vez! 💎",
+      "¡Tu futuro financiero se ve brillante! ✨",
+      "¡Mantente al día con tus finanzas hoy! 📋",
+      "¡La libertad financiera es un viaje, no un destino! 🚀"
     ]
     
     // Use the current day to select a consistent message
@@ -139,7 +140,7 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
       
     } catch (error) {
       console.error('Failed to update user:', error)
-      setEditError(error instanceof Error ? error.message : 'Failed to update profile. Please try again.')
+      setEditError(error instanceof Error ? error.message : 'Error al actualizar el perfil. Inténtalo de nuevo.')
     } finally {
       setEditLoading(false)
     }
@@ -172,7 +173,7 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
             {/* Current time */}
             <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span>{currentTime.toLocaleTimeString('en-US', { 
+              <span>{currentTime.toLocaleTimeString('es-CO', { 
                 hour: '2-digit', 
                 minute: '2-digit',
                 hour12: true 
@@ -182,7 +183,7 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
             {/* Quick stats indicator */}
             <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-blue-50 rounded-full">
               <DollarSign className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">Expense Tracker</span>
+              <span className="text-sm font-medium text-blue-700">{texts.appTitle}</span>
             </div>
 
             {/* Notifications */}
@@ -199,55 +200,47 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
             <div className="relative" ref={dropdownRef}>
               <button 
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex items-center space-x-1 sm:space-x-2 p-1.5 sm:p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center space-x-2 p-1.5 sm:p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                   <span className="text-xs sm:text-sm font-medium text-white">
                     {user.first_name.charAt(0)}{user.last_name.charAt(0)}
                   </span>
                 </div>
-                <span className="hidden md:block text-sm font-medium">{user.first_name}</span>
-                <ChevronDown className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
 
               {/* Dropdown menu */}
               {showUserDropdown && (
-                <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                  <div className="py-1">
-                    {/* User info header */}
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900 truncate">{user.first_name} {user.last_name}</p>
-                      <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                    </div>
-
-                    {/* Edit Profile */}
-                    <button
-                      onClick={handleEditProfile}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      <Edit className="h-4 w-4 mr-3 text-gray-500" />
-                      Edit Profile
-                    </button>
-
-                    {/* Debug Section */}
-                    <button
-                      onClick={handleDebugSection}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      <Bug className="h-4 w-4 mr-3 text-gray-500" />
-                      Debug Section
-                    </button>
-
-                    {/* Divider */}
-                    <div className="border-t border-gray-100 my-1"></div>
-
-                    {/* Logout */}
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">{user.first_name} {user.last_name}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </div>
+                  
+                  <button
+                    onClick={handleEditProfile}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    {texts.profile.updateProfile}
+                  </button>
+                  
+                  <button
+                    onClick={handleDebugSection}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <Bug className="h-4 w-4 mr-2" />
+                    Sección de Debug
+                  </button>
+                  
+                  <div className="border-t border-gray-100">
                     <button
                       onClick={onLogout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
                     >
-                      <LogOut className="h-4 w-4 mr-3" />
-                      Sign Out
+                      <LogOut className="h-4 w-4 mr-2" />
+                      {texts.logout}
                     </button>
                   </div>
                 </div>
@@ -255,92 +248,100 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
             </div>
           </div>
         </div>
-
-        {/* Progress bar for visual appeal */}
-        <div className="mt-3 w-full bg-gray-200 rounded-full h-1">
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-1 rounded-full animate-pulse" style={{ width: '60%' }}></div>
-        </div>
       </div>
 
       {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg sm:text-xl font-bold">Edit Profile</h2>
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">{texts.profile.updateProfile}</h2>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600 p-1"
+                className="text-gray-400 hover:text-gray-600"
               >
-                <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
+            {editError && (
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-sm text-red-700">{editError}</p>
+              </div>
+            )}
+
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                <input
-                  type="text"
-                  value={editFormData.first_name}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                  className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="edit_first_name" className="block text-sm font-medium text-gray-700">
+                    {texts.profile.name}
+                  </label>
+                  <input
+                    id="edit_first_name"
+                    type="text"
+                    value={editFormData.first_name}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit_last_name" className="block text-sm font-medium text-gray-700">
+                    {texts.profile.lastName}
+                  </label>
+                  <input
+                    id="edit_last_name"
+                    type="text"
+                    value={editFormData.last_name}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <label htmlFor="edit_username" className="block text-sm font-medium text-gray-700">
+                  Nombre de usuario
+                </label>
                 <input
-                  type="text"
-                  value={editFormData.last_name}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                  className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                <input
+                  id="edit_username"
                   type="text"
                   value={editFormData.username}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, username: e.target.value }))}
-                  className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label htmlFor="edit_email" className="block text-sm font-medium text-gray-700">
+                  {texts.email}
+                </label>
                 <input
+                  id="edit_email"
                   type="email"
                   value={editFormData.email}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   required
                 />
               </div>
-
-              {editError && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                  <p className="text-sm text-red-600">{editError}</p>
-                </div>
-              )}
 
               <div className="flex justify-end space-x-3 pt-4">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
                 >
-                  Cancel
+                  {texts.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={editLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
                 >
-                  {editLoading ? 'Saving...' : 'Save Changes'}
+                  {editLoading ? texts.saving : texts.save}
                 </button>
               </div>
             </form>
