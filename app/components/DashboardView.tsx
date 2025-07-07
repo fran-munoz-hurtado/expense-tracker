@@ -6,6 +6,7 @@ import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExp
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
+import { useRouter, useSearchParams } from 'next/navigation'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 
@@ -19,6 +20,9 @@ interface DashboardViewProps {
 }
 
 export default function DashboardView({ navigationParams, user, onDataChange, refreshTrigger }: DashboardViewProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
   // Remove excessive debug logging
   // console.log('🔄 DashboardView rendered with refreshTrigger:', refreshTrigger)
   
@@ -36,119 +40,43 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const [sortField, setSortField] = useState<'description' | 'deadline' | 'status' | 'value' | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
-  // Delete confirmation modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleteModalData, setDeleteModalData] = useState<{
-    transactionId: number
-    transaction: Transaction
-    isRecurrent: boolean
-  } | null>(null)
-
-  // Modify modal state
-  const [showModifyModal, setShowModifyModal] = useState(false)
-  const [modifyModalData, setModifyModalData] = useState<{
-    transactionId: number
-    transaction: Transaction
-    isRecurrent: boolean
-    modifySeries: boolean
-  } | null>(null)
-
-  // Modify form state
-  const [showModifyForm, setShowModifyForm] = useState(false)
-  const [modifyFormData, setModifyFormData] = useState<{
-    type: ExpenseType
-    description: string
-    month_from: number
-    month_to: number
-    year_from: number
-    year_to: number
-    value: number
-    payment_day_deadline: string
-    month: number
-    year: number
-    payment_deadline: string
-    originalId?: number
-    modifySeries?: boolean
-  } | null>(null)
-
-  // Modify confirmation state
-  const [showModifyConfirmation, setShowModifyConfirmation] = useState(false)
-  const [modifyConfirmationData, setModifyConfirmationData] = useState<{
-    type: ExpenseType
-    description: string
-    value: number
-    period: string
-    action: string
-  } | null>(null)
-
-  // Attachment modal state
-  const [showAttachmentModal, setShowAttachmentModal] = useState(false)
-  const [selectedTransactionForAttachment, setSelectedTransactionForAttachment] = useState<Transaction | null>(null)
-  const [showAttachmentsList, setShowAttachmentsList] = useState(false)
-  const [selectedTransactionForList, setSelectedTransactionForList] = useState<Transaction | null>(null)
-
-  const months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ]
-
-  const monthAbbreviations = [
-    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-  ]
-
-  // Available years for selection - easy to extend in the future
-  const availableYears = [2025]
-
-  // Helper function to format currency for display (rounded, no decimals)
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(Math.round(value))
-  }
-
-  // Helper function to parse currency string back to number
-  const parseCurrency = (value: string): number => {
-    if (!value || value.trim() === '') return 0
-    // Remove all non-numeric characters except decimal point
-    const cleanValue = value.replace(/[^0-9.]/g, '')
-    return parseFloat(cleanValue) || 0
-  }
-
-  // Helper function to format currency for display while typing
-  const formatCurrencyForInput = (value: string): string => {
-    if (!value || value.trim() === '') return ''
-    // Remove all non-numeric characters except decimal point
-    const cleanValue = value.replace(/[^0-9.]/g, '')
-    if (!cleanValue) return ''
+  // Parse URL parameters on mount and when URL changes
+  useEffect(() => {
+    const urlMonth = searchParams.get('month') ? parseInt(searchParams.get('month')!) : undefined
+    const urlYear = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
+    const urlFilter = searchParams.get('filter') as 'all' | 'recurrent' | 'non_recurrent' || 'all'
     
-    const numValue = parseFloat(cleanValue)
-    if (isNaN(numValue)) return ''
+    if (urlMonth && urlYear) {
+      setSelectedMonth(urlMonth)
+      setSelectedYear(urlYear)
+    }
     
-    // Format with thousands separators
-    return numValue.toLocaleString('es-CO', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    })
-  }
+    if (urlFilter) {
+      setFilterType(urlFilter)
+    }
+  }, [searchParams])
 
-  // Helper to format with dots as thousands separators
-  const formatWithDots = (value: string): string => {
-    if (!value) return ''
-    // Remove non-digits except decimal
-    let [int, dec] = value.replace(/[^\d.]/g, '').split('.')
-    int = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-    return dec !== undefined ? `${int}.${dec}` : int
-  }
-
-  // Helper function to get currency input value - just return the raw number as string
-  const getCurrencyInputValue = (value: number): string => {
-    if (value === 0) return ''
-    return value.toString()
-  }
+  // Update URL when filters or month/year selection changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString())
+    
+    // Always set view to dashboard
+    params.set('view', 'dashboard')
+    
+    // Set month and year
+    params.set('month', selectedMonth.toString())
+    params.set('year', selectedYear.toString())
+    
+    // Set filter (only if not 'all')
+    if (filterType !== 'all') {
+      params.set('filter', filterType)
+    } else {
+      params.delete('filter')
+    }
+    
+    const newUrl = `/?${params.toString()}`
+    router.replace(newUrl, { scroll: false })
+  }, [selectedMonth, selectedYear, filterType, router, searchParams])
 
   const fetchData = async () => {
     try {
@@ -874,6 +802,120 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     if (transaction.status === 'paid') return 'bg-green-100 text-green-800'
     if (transaction.deadline && new Date(transaction.deadline) < new Date()) return 'bg-red-100 text-red-800'
     return 'bg-yellow-100 text-yellow-800'
+  }
+
+  // Delete confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteModalData, setDeleteModalData] = useState<{
+    transactionId: number
+    transaction: Transaction
+    isRecurrent: boolean
+  } | null>(null)
+
+  // Modify modal state
+  const [showModifyModal, setShowModifyModal] = useState(false)
+  const [modifyModalData, setModifyModalData] = useState<{
+    transactionId: number
+    transaction: Transaction
+    isRecurrent: boolean
+    modifySeries: boolean
+  } | null>(null)
+
+  // Modify form state
+  const [showModifyForm, setShowModifyForm] = useState(false)
+  const [modifyFormData, setModifyFormData] = useState<{
+    type: ExpenseType
+    description: string
+    month_from: number
+    month_to: number
+    year_from: number
+    year_to: number
+    value: number
+    payment_day_deadline: string
+    month: number
+    year: number
+    payment_deadline: string
+    originalId?: number
+    modifySeries?: boolean
+  } | null>(null)
+
+  // Modify confirmation state
+  const [showModifyConfirmation, setShowModifyConfirmation] = useState(false)
+  const [modifyConfirmationData, setModifyConfirmationData] = useState<{
+    type: ExpenseType
+    description: string
+    value: number
+    period: string
+    action: string
+  } | null>(null)
+
+  // Attachment modal state
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false)
+  const [selectedTransactionForAttachment, setSelectedTransactionForAttachment] = useState<Transaction | null>(null)
+  const [showAttachmentsList, setShowAttachmentsList] = useState(false)
+  const [selectedTransactionForList, setSelectedTransactionForList] = useState<Transaction | null>(null)
+
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
+
+  const monthAbbreviations = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  ]
+
+  // Available years for selection - easy to extend in the future
+  const availableYears = [2025]
+
+  // Helper function to format currency for display (rounded, no decimals)
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.round(value))
+  }
+
+  // Helper function to parse currency string back to number
+  const parseCurrency = (value: string): number => {
+    if (!value || value.trim() === '') return 0
+    // Remove all non-numeric characters except decimal point
+    const cleanValue = value.replace(/[^0-9.]/g, '')
+    return parseFloat(cleanValue) || 0
+  }
+
+  // Helper function to format currency for display while typing
+  const formatCurrencyForInput = (value: string): string => {
+    if (!value || value.trim() === '') return ''
+    // Remove all non-numeric characters except decimal point
+    const cleanValue = value.replace(/[^0-9.]/g, '')
+    if (!cleanValue) return ''
+    
+    const numValue = parseFloat(cleanValue)
+    if (isNaN(numValue)) return ''
+    
+    // Format with thousands separators
+    return numValue.toLocaleString('es-CO', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    })
+  }
+
+  // Helper to format with dots as thousands separators
+  const formatWithDots = (value: string): string => {
+    if (!value) return ''
+    // Remove non-digits except decimal
+    let [int, dec] = value.replace(/[^\d.]/g, '').split('.')
+    int = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+    return dec !== undefined ? `${int}.${dec}` : int
+  }
+
+  // Helper function to get currency input value - just return the raw number as string
+  const getCurrencyInputValue = (value: number): string => {
+    if (value === 0) return ''
+    return value.toString()
   }
 
   return (

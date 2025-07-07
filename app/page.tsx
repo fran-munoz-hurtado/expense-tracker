@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Sidebar from './components/Sidebar'
 import DashboardView from './components/DashboardView'
 import DebugTest from './components/DebugTest'
@@ -15,6 +16,9 @@ import Navbar from './components/Navbar'
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
 export default function Home() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
   const [user, setUser] = useState<User | null>(null)
   const [activeView, setActiveView] = useState<'dashboard' | 'general-dashboard' | 'debug'>('general-dashboard')
   const [navigationParams, setNavigationParams] = useState<{ month?: number; year?: number } | null>(null)
@@ -55,7 +59,7 @@ export default function Home() {
     payment_deadline: ''
   })
 
-  // Load user from localStorage on component mount
+  // Load user from localStorage and parse URL params on component mount
   useEffect(() => {
     const savedUser = localStorage.getItem('expenseTrackerUser')
     if (savedUser) {
@@ -67,8 +71,39 @@ export default function Home() {
         localStorage.removeItem('expenseTrackerUser')
       }
     }
+    
+    // Parse URL parameters
+    const view = searchParams.get('view') as 'dashboard' | 'general-dashboard' | 'debug' || 'general-dashboard'
+    const month = searchParams.get('month') ? parseInt(searchParams.get('month')!) : undefined
+    const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
+    const filter = searchParams.get('filter') as 'all' | 'recurrent' | 'non_recurrent' || 'all'
+    
+    setActiveView(view)
+    if (month && year) {
+      setNavigationParams({ month, year })
+    }
+    
     setIsLoading(false)
-  }, [])
+  }, [searchParams])
+
+  // Update URL when view or navigation params change
+  useEffect(() => {
+    if (!isLoading) {
+      const params = new URLSearchParams()
+      
+      if (activeView !== 'general-dashboard') {
+        params.set('view', activeView)
+      }
+      
+      if (navigationParams?.month && navigationParams?.year) {
+        params.set('month', navigationParams.month.toString())
+        params.set('year', navigationParams.year.toString())
+      }
+      
+      const newUrl = params.toString() ? `/?${params.toString()}` : '/'
+      router.replace(newUrl, { scroll: false })
+    }
+  }, [activeView, navigationParams, isLoading, router])
 
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
