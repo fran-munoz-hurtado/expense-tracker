@@ -213,22 +213,77 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
 
-  // Calculate statistics for selected month
+  // Calculate statistics for selected month (use ALL transactions for the month, not filtered by type)
   const monthlyStats = {
-    total: sortedTransactions.reduce((sum, transaction) => sum + transaction.value, 0),
-    paid: sortedTransactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0),
-    pending: sortedTransactions.filter(t => {
+    total: filteredTransactions.reduce((sum, transaction) => sum + transaction.value, 0),
+    paid: filteredTransactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0),
+    pending: filteredTransactions.filter(t => {
       // Only include pending transactions that are NOT overdue
       if (t.status !== 'pending') return false
       if (!t.deadline) return true // No deadline means not overdue
       return new Date(t.deadline) >= new Date() // Not overdue
     }).reduce((sum, t) => sum + t.value, 0),
-    overdue: sortedTransactions.filter(t => {
+    overdue: filteredTransactions.filter(t => {
       // Include all overdue transactions regardless of status
       if (!t.deadline) return false
       return new Date(t.deadline) < new Date()
     }).reduce((sum, t) => sum + t.value, 0)
   }
+
+  // Debug logging
+  console.log('=== DEBUG MONTHLY STATS ===')
+  console.log('Selected month/year:', selectedMonth, selectedYear)
+  console.log('Filter type:', filterType)
+  console.log('All transactions count:', transactions.length)
+  console.log('Filtered transactions count:', filteredTransactions.length)
+  console.log('Type filtered transactions count:', typeFilteredTransactions.length)
+  console.log('Sorted transactions count:', sortedTransactions.length)
+  
+  console.log('All transactions for month:', filteredTransactions.map(t => ({
+    id: t.id,
+    description: t.description,
+    value: t.value,
+    status: t.status,
+    deadline: t.deadline,
+    isOverdue: t.deadline ? new Date(t.deadline) < new Date() : false,
+    source_type: t.source_type,
+    month: t.month,
+    year: t.year
+  })))
+  
+  const paidTransactions = filteredTransactions.filter(t => t.status === 'paid')
+  const pendingTransactions = filteredTransactions.filter(t => {
+    if (t.status !== 'pending') return false
+    if (!t.deadline) return true
+    return new Date(t.deadline) >= new Date()
+  })
+  const overdueTransactions = filteredTransactions.filter(t => {
+    if (!t.deadline) return false
+    return new Date(t.deadline) < new Date()
+  })
+  
+  console.log('Paid transactions:', paidTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
+  console.log('Pending transactions:', pendingTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
+  console.log('Overdue transactions:', overdueTransactions.map(t => ({ id: t.id, description: t.description, value: t.value, status: t.status })))
+  
+  console.log('Monthly stats:', {
+    total: monthlyStats.total,
+    paid: monthlyStats.paid,
+    pending: monthlyStats.pending,
+    overdue: monthlyStats.overdue
+  })
+  
+  // Verify totals
+  const calculatedTotal = paidTransactions.reduce((sum, t) => sum + t.value, 0) + 
+                         pendingTransactions.reduce((sum, t) => sum + t.value, 0) + 
+                         overdueTransactions.reduce((sum, t) => sum + t.value, 0)
+  
+  console.log('Verification:', {
+    calculatedTotal,
+    actualTotal: monthlyStats.total,
+    match: calculatedTotal === monthlyStats.total
+  })
+  console.log('=== END DEBUG ===')
 
   const calculateTransactionCount = (type: ExpenseType, formData: any): number => {
     if (type === 'recurrent') {
