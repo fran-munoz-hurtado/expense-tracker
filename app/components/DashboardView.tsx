@@ -32,12 +32,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
   
-  // Refs to track previous month/year values
+  // Refs to track previous month/year values and initial load
   const prevSelectedMonth = useRef<number>()
   const prevSelectedYear = useRef<number>()
-  
-  // State to track if data has been loaded initially
-  const [hasLoadedInitially, setHasLoadedInitially] = useState(false)
+  const hasLoadedInitially = useRef(false)
   
   // State for UI
   const [loading, setLoading] = useState(true)
@@ -131,11 +129,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     console.log('selectedMonth:', selectedMonth)
     console.log('selectedYear:', selectedYear)
     console.log('refreshTrigger:', refreshTrigger)
-    console.log('hasLoadedInitially:', hasLoadedInitially)
+    console.log('hasLoadedInitially:', hasLoadedInitially.current)
     
     // Only fetch data on initial load (when hasLoadedInitially is false) or if month/year changed
     // Don't fetch when refreshTrigger changes (which happens after adding movements)
-    if (!hasLoadedInitially || (selectedMonth !== prevSelectedMonth.current || selectedYear !== prevSelectedYear.current)) {
+    if (!hasLoadedInitially.current || (selectedMonth !== prevSelectedMonth.current || selectedYear !== prevSelectedYear.current)) {
       console.log('=== FETCHING DATA ===')
       // Clear local state before fetching to avoid duplicates
       setTransactions([])
@@ -148,13 +146,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       prevSelectedYear.current = selectedYear
       
       // Mark as loaded initially
-      if (!hasLoadedInitially) {
-        setHasLoadedInitially(true)
+      if (!hasLoadedInitially.current) {
+        hasLoadedInitially.current = true
       }
     } else {
       console.log('=== SKIPPING FETCH (already loaded or refreshTrigger change) ===')
     }
-  }, [selectedMonth, selectedYear, refreshTrigger, hasLoadedInitially])
+  }, [selectedMonth, selectedYear, refreshTrigger])
 
   const filteredTransactions = transactions.filter(transaction => 
     transaction.year === selectedYear && transaction.month === selectedMonth
