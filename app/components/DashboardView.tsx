@@ -125,6 +125,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     // Only fetch data if refreshTrigger is 0 (initial load) or if month/year changed
     // Don't fetch when refreshTrigger > 0 to avoid duplication with optimistic updates
     if (refreshTrigger === 0 || refreshTrigger === undefined) {
+      // Clear local state before fetching to avoid duplicates
+      setTransactions([])
+      setRecurrentExpenses([])
+      setNonRecurrentExpenses([])
       fetchData()
     }
   }, [selectedMonth, selectedYear, refreshTrigger])
