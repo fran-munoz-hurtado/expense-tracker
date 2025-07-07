@@ -79,10 +79,6 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   }, [selectedMonth, selectedYear, filterType, router, searchParams])
 
   const fetchData = async () => {
-    console.log('=== fetchData CALLED ===')
-    console.log('Current timestamp:', new Date().toISOString())
-    console.log('Stack trace:', new Error().stack)
-    
     try {
       setError(null)
       setLoading(true)
@@ -119,30 +115,38 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     }
   }
 
+  // Consolidated useEffect for data fetching
   useEffect(() => {
+    console.log('=== CONSOLIDATED useEffect triggered ===')
+    console.log('selectedMonth:', selectedMonth)
+    console.log('selectedYear:', selectedYear)
+    console.log('refreshTrigger:', refreshTrigger)
+    
     fetchData()
-  }, [])
+  }, [selectedMonth, selectedYear, refreshTrigger])
 
-  // Refetch data when month/year selection changes
-  useEffect(() => {
-    fetchData()
-  }, [selectedMonth, selectedYear])
+  // Remove the individual useEffects that were causing multiple calls
+  // useEffect(() => {
+  //   fetchData()
+  // }, [])
 
-  // Refetch data when refreshTrigger changes (from parent component)
-  useEffect(() => {
-    if (refreshTrigger !== undefined && refreshTrigger > 0) {
-      console.log('🔄 DashboardView useEffect triggered by refreshTrigger:', refreshTrigger)
-      
-      // Add a small delay to prevent multiple rapid calls
-      const timeoutId = setTimeout(() => {
-        fetchData()
-      }, 100)
-      
-      return () => clearTimeout(timeoutId)
-    }
-  }, [refreshTrigger])
+  // useEffect(() => {
+  //   fetchData()
+  // }, [selectedMonth, selectedYear])
 
-  // Filter transactions for selected month/year
+  // useEffect(() => {
+  //   if (refreshTrigger !== undefined && refreshTrigger > 0) {
+  //     console.log('🔄 DashboardView useEffect triggered by refreshTrigger:', refreshTrigger)
+  //     
+  //     // Add a small delay to prevent multiple rapid calls
+  //     const timeoutId = setTimeout(() => {
+  //       fetchData()
+  //     }, 100)
+  //     
+  //     return () => clearTimeout(timeoutId)
+  //   }
+  // }, [refreshTrigger])
+
   const filteredTransactions = transactions.filter(transaction => 
     transaction.year === selectedYear && transaction.month === selectedMonth
   )
