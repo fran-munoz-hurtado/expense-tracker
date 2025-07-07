@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User } from '@/lib/supabase'
+import { texts } from '@/lib/translations'
 
 interface DebugTestProps {
   user: User
@@ -48,16 +49,16 @@ export default function DebugTest({ user }: DebugTestProps) {
       setRecurrentExpenses(recurrentResult.data || [])
       setNonRecurrentExpenses(nonRecurrentResult.data || [])
       
-      setSuccess(`Loaded ${transactionsResult.data?.length || 0} transactions, ${recurrentResult.data?.length || 0} recurrent expenses, ${nonRecurrentResult.data?.length || 0} non-recurrent expenses`)
+      setSuccess(`Cargados ${transactionsResult.data?.length || 0} movimientos, ${recurrentResult.data?.length || 0} gastos recurrentes, ${nonRecurrentResult.data?.length || 0} gastos no recurrentes`)
     } catch (err: any) {
-      setError(err.message || 'Error fetching data')
+      setError(err.message || 'Error al cargar datos')
     } finally {
       setLoading(false)
     }
   }
 
   async function deleteAllData() {
-    if (!confirm('Are you sure you want to delete ALL data? This cannot be undone.')) {
+    if (!confirm('¿Estás seguro de que quieres eliminar TODOS los datos? Esto no se puede deshacer.')) {
       return
     }
 
@@ -90,9 +91,9 @@ export default function DebugTest({ user }: DebugTestProps) {
       setRecurrentExpenses([])
       setNonRecurrentExpenses([])
       
-      setSuccess('All data deleted successfully')
+      setSuccess('Todos los datos eliminados exitosamente')
     } catch (err: any) {
-      setError(err.message || 'Error deleting data')
+      setError(err.message || 'Error al eliminar datos')
     } finally {
       setLoading(false)
     }
@@ -113,9 +114,9 @@ export default function DebugTest({ user }: DebugTestProps) {
 
       if (error) throw error
 
-      setSuccess(`Database connection successful. User: ${data.username}`)
+      setSuccess(`Conexión a la base de datos exitosa. Usuario: ${data.username}`)
     } catch (err: any) {
-      setError(`Database connection failed: ${err.message}`)
+      setError(`Error de conexión a la base de datos: ${err.message}`)
     } finally {
       setLoading(false)
     }
@@ -124,8 +125,8 @@ export default function DebugTest({ user }: DebugTestProps) {
   return (
     <div className="flex-1 p-6 lg:p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Debug & Testing</h1>
-        <p className="text-gray-600 mt-2">Database testing and cleanup tools</p>
+        <h1 className="text-3xl font-bold text-gray-900">Depuración y Pruebas</h1>
+        <p className="text-gray-600 mt-2">Herramientas de prueba y limpieza de base de datos</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -134,8 +135,8 @@ export default function DebugTest({ user }: DebugTestProps) {
           disabled={loading}
           className="p-4 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
         >
-          <h3 className="font-semibold text-blue-900">Test Connection</h3>
-          <p className="text-sm text-blue-700 mt-1">Test database connectivity</p>
+          <h3 className="font-semibold text-blue-900">Probar Conexión</h3>
+          <p className="text-sm text-blue-700 mt-1">Probar conectividad de base de datos</p>
         </button>
 
         <button
@@ -143,8 +144,8 @@ export default function DebugTest({ user }: DebugTestProps) {
           disabled={loading}
           className="p-4 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
         >
-          <h3 className="font-semibold text-green-900">Load All Data</h3>
-          <p className="text-sm text-green-700 mt-1">Fetch all user data</p>
+          <h3 className="font-semibold text-green-900">Cargar Todos los Datos</h3>
+          <p className="text-sm text-green-700 mt-1">Obtener todos los datos del usuario</p>
         </button>
 
         <button
@@ -152,34 +153,34 @@ export default function DebugTest({ user }: DebugTestProps) {
           disabled={loading}
           className="p-4 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
         >
-          <h3 className="font-semibold text-red-900">Delete All Data</h3>
-          <p className="text-sm text-red-700 mt-1">Clear all user data</p>
+          <h3 className="font-semibold text-red-900">Eliminar Todos los Datos</h3>
+          <p className="text-sm text-red-700 mt-1">Limpiar todos los datos del usuario</p>
         </button>
       </div>
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <h3 className="text-sm font-medium text-red-800">Error</h3>
+          <h3 className="text-sm font-medium text-red-800">{texts.errorOccurred}</h3>
           <p className="mt-1 text-sm text-red-700">{error}</p>
         </div>
       )}
 
       {success && (
         <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <h3 className="text-sm font-medium text-green-800">Success</h3>
+          <h3 className="text-sm font-medium text-green-800">Éxito</h3>
           <p className="mt-1 text-sm text-green-700">{success}</p>
         </div>
       )}
 
       {loading && (
         <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-700">Loading...</p>
+          <p className="text-sm text-blue-700">{texts.loading}</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Transactions ({transactions.length})</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">{texts.transactions} ({transactions.length})</h3>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {transactions.map(transaction => (
               <div key={transaction.id} className="p-3 bg-gray-50 rounded border text-sm">
@@ -196,7 +197,7 @@ export default function DebugTest({ user }: DebugTestProps) {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Recurrent Expenses ({recurrentExpenses.length})</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">{texts.recurrent} ({recurrentExpenses.length})</h3>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {recurrentExpenses.map(expense => (
               <div key={expense.id} className="p-3 bg-gray-50 rounded border text-sm">
@@ -215,7 +216,7 @@ export default function DebugTest({ user }: DebugTestProps) {
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Non-Recurrent Expenses ({nonRecurrentExpenses.length})</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">{texts.nonRecurrent} ({nonRecurrentExpenses.length})</h3>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {nonRecurrentExpenses.map(expense => (
               <div key={expense.id} className="p-3 bg-gray-50 rounded border text-sm">

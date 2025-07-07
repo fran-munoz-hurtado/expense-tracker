@@ -3,6 +3,7 @@
 import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useState } from 'react'
+import { texts } from '@/lib/translations'
 
 interface SidebarProps {
   activeView: 'dashboard' | 'general-dashboard' | 'debug'
@@ -18,15 +19,15 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
   const menuItems = [
     {
       id: 'dashboard',
-      label: 'This Month',
+      label: texts.thisMonth,
       icon: Home,
-      description: 'Monthly expense overview'
+      description: texts.dashboard
     },
     {
       id: 'general-dashboard',
-      label: 'All Expenses',
+      label: texts.allExpenses,
       icon: BarChart3,
-      description: 'Yearly summary by month'
+      description: texts.yearlySummary
     }
   ]
 
@@ -75,7 +76,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         <div className="p-4 lg:p-6 border-b border-gray-200">
-          <h1 className="text-lg lg:text-xl font-bold text-gray-900">Expense Tracker</h1>
+          <h1 className="text-lg lg:text-xl font-bold text-gray-900">{texts.appTitle}</h1>
           <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
             <UserIcon className="h-4 w-4" />
             <span className="truncate">{user.first_name} {user.last_name}</span>
@@ -88,7 +89,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
             className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm lg:text-base"
           >
             <Plus className="h-4 w-4" />
-            Add Expense
+            {texts.addTransaction}
           </button>
           
           <nav className="space-y-2">
@@ -123,7 +124,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
             className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors text-sm lg:text-base"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            {texts.logout}
           </button>
         </div>
       </div>

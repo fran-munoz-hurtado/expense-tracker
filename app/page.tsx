@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, LogOut } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { texts } from '@/lib/translations'
 import Sidebar from './components/Sidebar'
 import DashboardView from './components/DashboardView'
 import DebugTest from './components/DebugTest'
@@ -69,8 +70,8 @@ export default function Home() {
   }, [])
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ]
 
   // Available years for selection - easy to extend in the future
@@ -78,9 +79,9 @@ export default function Home() {
 
   // Helper function to format currency for display (rounded, no decimals)
   const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(Math.round(value))
@@ -195,7 +196,7 @@ export default function Home() {
 
         if (error) {
           console.error('Supabase error (recurrent):', error)
-          setError(`Error saving recurrent expense: ${error.message}`)
+          setError(`Error al guardar gasto recurrente: ${error.message}`)
           throw error
         }
 
@@ -217,7 +218,7 @@ export default function Home() {
 
         if (error) {
           console.error('Supabase error (non-recurrent):', error)
-          setError(`Error saving non-recurrent expense: ${error.message}`)
+          setError(`Error al guardar gasto no recurrente: ${error.message}`)
           throw error
         }
 
@@ -231,7 +232,7 @@ export default function Home() {
       
     } catch (error) {
       console.error('Error saving expense:', error)
-      setError(`Failed to save expense: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setError(`Error al guardar gasto: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setLoading(false)
     }
@@ -281,7 +282,7 @@ export default function Home() {
       <div className="flex h-screen items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">{texts.loading}</p>
         </div>
       </div>
     )
@@ -325,7 +326,7 @@ export default function Home() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg sm:text-xl font-bold">Add New Expense</h2>
+              <h2 className="text-lg sm:text-xl font-bold">{texts.addTransaction}</h2>
               <button
                 onClick={resetForm}
                 className="text-gray-400 hover:text-gray-600 p-1"
@@ -336,7 +337,7 @@ export default function Home() {
 
             {!expenseType ? (
               <div className="space-y-4">
-                <p className="text-gray-600 mb-4">Select the type of expense you want to add:</p>
+                <p className="text-gray-600 mb-4">Selecciona el tipo de gasto que quieres agregar:</p>
                 
                 <button
                   onClick={() => setExpenseType('recurrent')}
@@ -345,8 +346,8 @@ export default function Home() {
                   <div className="flex items-center">
                     <Repeat className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-3" />
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Recurrent Expense</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">Expenses that repeat monthly (rent, utilities, subscriptions)</p>
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{texts.recurrent}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600">Gastos que se repiten mensualmente (arriendo, servicios, suscripciones)</p>
                     </div>
                   </div>
                 </button>
@@ -358,8 +359,8 @@ export default function Home() {
                   <div className="flex items-center">
                     <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mr-3" />
                     <div>
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Non-Recurrent Expense</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">One-time expenses (repairs, medical, special purchases)</p>
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{texts.nonRecurrent}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600">Gastos únicos (reparaciones, médicos, compras especiales)</p>
                     </div>
                   </div>
                 </button>
@@ -372,7 +373,7 @@ export default function Home() {
                     onClick={() => setExpenseType(null)}
                     className="text-blue-600 hover:text-blue-800 text-sm"
                   >
-                    ← Back to type selection
+                    ← Volver a selección de tipo
                   </button>
                 </div>
 
@@ -380,7 +381,7 @@ export default function Home() {
                   // Recurrent Expense Form
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{texts.description}</label>
                       <input
                         type="text"
                         value={recurrentFormData.description}
@@ -392,7 +393,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From Month</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Desde Mes</label>
                         <select
                           value={recurrentFormData.month_from}
                           onChange={(e) => setRecurrentFormData(prev => ({ ...prev, month_from: Number(e.target.value) }))}
@@ -405,7 +406,7 @@ export default function Home() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To Month</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Hasta Mes</label>
                         <select
                           value={recurrentFormData.month_to}
                           onChange={(e) => setRecurrentFormData(prev => ({ ...prev, month_to: Number(e.target.value) }))}
@@ -421,7 +422,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From Year</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Desde Año</label>
                         <select
                           value={recurrentFormData.year_from}
                           onChange={(e) => setRecurrentFormData(prev => ({ ...prev, year_from: Number(e.target.value) }))}
@@ -434,7 +435,7 @@ export default function Home() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To Year</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Hasta Año</label>
                         <select
                           value={recurrentFormData.year_to}
                           onChange={(e) => setRecurrentFormData(prev => ({ ...prev, year_to: Number(e.target.value) }))}
@@ -450,7 +451,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{texts.amount} ($)</label>
                         <input
                           type="text"
                           value={getCurrencyInputValue(recurrentFormData.value)}
@@ -464,7 +465,7 @@ export default function Home() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Day (1-31)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Día de Pago (1-31)</label>
                         <input
                           type="text"
                           value={recurrentFormData.payment_day_deadline}
@@ -478,7 +479,7 @@ export default function Home() {
                   // Non-Recurrent Expense Form
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{texts.description}</label>
                       <input
                         type="text"
                         value={nonRecurrentFormData.description}
@@ -490,7 +491,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{texts.month}</label>
                         <select
                           value={nonRecurrentFormData.month}
                           onChange={(e) => setNonRecurrentFormData(prev => ({ ...prev, month: Number(e.target.value) }))}
@@ -503,7 +504,7 @@ export default function Home() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{texts.date}</label>
                         <select
                           value={nonRecurrentFormData.year}
                           onChange={(e) => setNonRecurrentFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
@@ -519,7 +520,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">{texts.amount} ($)</label>
                         <input
                           type="text"
                           value={getCurrencyInputValue(nonRecurrentFormData.value)}
@@ -533,7 +534,7 @@ export default function Home() {
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Deadline</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Vencimiento</label>
                         <input
                           type="date"
                           value={nonRecurrentFormData.payment_deadline}
@@ -551,13 +552,13 @@ export default function Home() {
                     onClick={resetForm}
                     className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
                   >
-                    Cancel
+                    {texts.cancel}
                   </button>
                   <button
                     type="submit"
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
-                    Continue
+                    Continuar
                   </button>
                 </div>
               </form>
@@ -570,24 +571,24 @@ export default function Home() {
       {showConfirmation && confirmationData && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold mb-4">Confirm Expense Addition</h3>
+            <h3 className="text-lg font-bold mb-4">Confirmar Agregar Gasto</h3>
             
             <div className="space-y-3 mb-6">
               <div>
-                <span className="font-medium">Type:</span> {confirmationData.type === 'recurrent' ? 'Recurrent' : 'Non-Recurrent'}
+                <span className="font-medium">Tipo:</span> {confirmationData.type === 'recurrent' ? texts.recurrent : texts.nonRecurrent}
               </div>
               <div>
-                <span className="font-medium">Description:</span> {confirmationData.description}
+                <span className="font-medium">{texts.description}:</span> {confirmationData.description}
               </div>
               <div>
-                <span className="font-medium">Value:</span> {formatCurrency(confirmationData.value)}
+                <span className="font-medium">{texts.amount}:</span> {formatCurrency(confirmationData.value)}
               </div>
               <div>
-                <span className="font-medium">Period:</span> {confirmationData.period}
+                <span className="font-medium">Período:</span> {confirmationData.period}
               </div>
               <div className="bg-blue-50 p-3 rounded-md">
                 <span className="font-medium text-blue-800">
-                  This will create {confirmationData.transactionCount} transaction record{confirmationData.transactionCount !== 1 ? 's' : ''} in the transactions table.
+                  Esto creará {confirmationData.transactionCount} registro{confirmationData.transactionCount !== 1 ? 's' : ''} en la tabla de transacciones.
                 </span>
               </div>
             </div>
@@ -600,14 +601,14 @@ export default function Home() {
                 }}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
-                Cancel
+                {texts.cancel}
               </button>
               <button
                 onClick={handleConfirmSubmit}
                 disabled={loading}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
-                {loading ? 'Adding...' : 'Confirm & Add'}
+                {loading ? 'Agregando...' : 'Confirmar y Agregar'}
               </button>
             </div>
           </div>

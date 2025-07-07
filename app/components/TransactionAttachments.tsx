@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Paperclip, Eye, Download, Trash2, X, FileText, Image, File } from 'lucide-react'
 import { supabase, type TransactionAttachment } from '@/lib/supabase'
+import { texts } from '@/lib/translations'
 
 interface TransactionAttachmentsProps {
   transactionId: number
@@ -43,14 +44,14 @@ export default function TransactionAttachments({
       
       setAttachments(data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load attachments')
+      setError(err instanceof Error ? err.message : 'Error al cargar archivos adjuntos')
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (attachment: TransactionAttachment) => {
-    if (!confirm(`Are you sure you want to delete "${attachment.file_name}"?`)) {
+    if (!confirm(`¿Estás seguro de que quieres eliminar "${attachment.file_name}"?`)) {
       return
     }
     
@@ -63,7 +64,7 @@ export default function TransactionAttachments({
         .remove([attachment.file_path])
       
       if (storageError) {
-        throw new Error(`Storage error: ${storageError.message}`)
+        throw new Error(`Error de almacenamiento: ${storageError.message}`)
       }
       
       // Delete from database
@@ -73,7 +74,7 @@ export default function TransactionAttachments({
         .eq('id', attachment.id)
       
       if (dbError) {
-        throw new Error(`Database error: ${dbError.message}`)
+        throw new Error(`Error de base de datos: ${dbError.message}`)
       }
       
       // Update local state
@@ -81,7 +82,7 @@ export default function TransactionAttachments({
       onAttachmentDeleted?.(attachment.id)
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete attachment')
+      setError(err instanceof Error ? err.message : 'Error al eliminar archivo adjunto')
     } finally {
       setDeleting(null)
     }
@@ -108,7 +109,7 @@ export default function TransactionAttachments({
       URL.revokeObjectURL(url)
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to download file')
+      setError(err instanceof Error ? err.message : 'Error al descargar archivo')
     }
   }
 
@@ -132,7 +133,7 @@ export default function TransactionAttachments({
       }
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to preview file')
+      setError(err instanceof Error ? err.message : 'Error al previsualizar archivo')
     }
   }
 
@@ -151,7 +152,7 @@ export default function TransactionAttachments({
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('es-CO', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -163,7 +164,7 @@ export default function TransactionAttachments({
   if (loading) {
     return (
       <div className="p-4 text-center text-gray-500">
-        Loading attachments...
+        {texts.loading}
       </div>
     )
   }
@@ -180,7 +181,7 @@ export default function TransactionAttachments({
     return (
       <div className="p-4 text-center text-gray-500">
         <Paperclip className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-        <p>No attachments uploaded yet</p>
+        <p>{texts.empty.noAttachments}</p>
       </div>
     )
   }
@@ -213,7 +214,7 @@ export default function TransactionAttachments({
               <button
                 onClick={() => handlePreview(attachment)}
                 className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title="Preview"
+                title={texts.files.viewFile}
               >
                 <Eye className="h-4 w-4" />
               </button>
@@ -221,7 +222,7 @@ export default function TransactionAttachments({
               <button
                 onClick={() => handleDownload(attachment)}
                 className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title="Download"
+                title={texts.files.downloadFile}
               >
                 <Download className="h-4 w-4" />
               </button>
@@ -230,7 +231,7 @@ export default function TransactionAttachments({
                 onClick={() => handleDelete(attachment)}
                 disabled={deleting === attachment.id}
                 className="p-1 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                title="Delete"
+                title={texts.delete}
               >
                 <Trash2 className="h-4 w-4" />
               </button>
