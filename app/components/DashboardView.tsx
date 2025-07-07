@@ -1110,7 +1110,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
       console.log('=== MOVEMENT ADDED SUCCESSFULLY ===', operationId)
       
-      // Close modal and refresh data
+      // OPTIMISTIC UPDATE: Add the new transaction to the local state immediately
+      // This provides instant UI feedback without waiting for refreshTrigger
+      const newTransaction: Transaction = {
+        id: Date.now(), // Temporary ID for optimistic update
+        user_id: user.id,
+        description: addMovementFormData.description,
+        value: addMovementFormData.value,
+        status: 'pending',
+        deadline: addMovementFormData.payment_deadline || null,
+        source_id: addMovementType === 'recurrent' ? 
+          (await supabase.from('recurrent_expenses').select('id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1)).data?.[0]?.id || 0 :
+          (await supabase.from('non_recurrent_expenses').select('id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1)).data?.[0]?.id || 0,
+        source_type: addMovementType || 'non_recurrent',
+        year: selectedYear,
+        month: selectedMonth,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      
+      // Add to local state immediately for instant UI update
+      setTransactions(prev => [...prev, newTransaction])
+      
+      // Close modal and reset form
       setShowAddMovementModal(false)
       setAddMovementType(null)
       setAddMovementFormData({
@@ -1120,9 +1142,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         payment_day_deadline: ''
       })
       
-      // Don't call onDataChange here - let the parent component handle the refresh
-      // This prevents duplicate refreshTrigger increments
-      console.log('=== NOT calling onDataChange to avoid duplication ===', operationId)
+      // Don't call onDataChange to avoid duplication
+      // The optimistic update provides immediate feedback
+      console.log('=== OPTIMISTIC UPDATE APPLIED ===', operationId)
 
     } catch (error) {
       console.error('=== ERROR ADDING MOVEMENT ===', operationId)
