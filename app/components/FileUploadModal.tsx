@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { Upload, X, FileText, Image, File, Trash2, Eye, Download } from 'lucide-react'
 import { supabase, type TransactionAttachment, type FileUploadResponse } from '@/lib/supabase'
+import { texts } from '@/lib/translations'
 
 interface FileUploadModalProps {
   isOpen: boolean
@@ -66,13 +67,13 @@ export default function FileUploadModal({
     
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setError('File type not supported. Please upload images (JPEG, PNG, GIF, WebP), PDFs, or Office documents.')
+      setError(texts.files.unsupportedFileType)
       return
     }
     
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      setError('File size too large. Maximum size is 10MB.')
+      setError(texts.files.fileTooLarge)
       return
     }
     
@@ -115,7 +116,7 @@ export default function FileUploadModal({
         .upload(filePath, selectedFile)
       
       if (uploadError) {
-        throw new Error(`Upload failed: ${uploadError.message}`)
+        throw new Error(`${texts.files.uploadFailed}: ${uploadError.message}`)
       }
       
       // Get public URL
@@ -146,7 +147,7 @@ export default function FileUploadModal({
         await supabase.storage
           .from('transaction-attachments')
           .remove([filePath])
-        throw new Error(`Database error: ${dbError.message}`)
+        throw new Error(`${texts.files.databaseError}: ${dbError.message}`)
       }
       
       // Success
@@ -154,7 +155,7 @@ export default function FileUploadModal({
       handleClose()
       
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed')
+      setError(err instanceof Error ? err.message : texts.files.uploadFailed)
     } finally {
       setUploading(false)
     }
@@ -189,7 +190,7 @@ export default function FileUploadModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">Upload Payment Proof</h2>
+          <h2 className="text-xl font-bold">{texts.files.uploadPaymentProof}</h2>
           <button
             onClick={handleClose}
             className="text-gray-400 hover:text-gray-600"
@@ -212,19 +213,19 @@ export default function FileUploadModal({
           >
             <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-lg font-medium text-gray-900 mb-2">
-              Drop your file here, or click to browse
+              {texts.files.dragAndDrop}
             </p>
             <p className="text-sm text-gray-500 mb-4">
-              Supported formats: Images (JPEG, PNG, GIF, WebP), PDF, Word, Excel
+              {texts.files.supportedFormats}
             </p>
             <p className="text-xs text-gray-400 mb-4">
-              Maximum file size: 10MB
+              {texts.files.maxFileSize}
             </p>
             <button
               onClick={() => fileInputRef.current?.click()}
               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
-              Choose File
+              {texts.files.chooseFile}
             </button>
             <input
               ref={fileInputRef}
@@ -267,13 +268,13 @@ export default function FileUploadModal({
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description (optional)
+                {texts.files.description} ({texts.optional})
               </label>
               <input
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., Receipt, Invoice, Bank statement"
+                placeholder={texts.files.descriptionPlaceholder}
                 className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -289,14 +290,14 @@ export default function FileUploadModal({
                 onClick={handleClose}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
-                Cancel
+                {texts.cancel}
               </button>
               <button
                 onClick={handleUpload}
                 disabled={uploading}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
-                {uploading ? 'Uploading...' : 'Upload File'}
+                {uploading ? texts.uploading : texts.files.uploadFile}
               </button>
             </div>
           </div>

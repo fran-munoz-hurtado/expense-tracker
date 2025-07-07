@@ -68,6 +68,7 @@ export const texts = {
   month: "Mes",
   recurrent: "Recurrentes",
   nonRecurrent: "No Recurrentes",
+  optional: "opcional",
   
   // Categorías
   categories: {
@@ -187,7 +188,15 @@ export const texts = {
     fileUploaded: "Archivo subido correctamente",
     fileDeleted: "Archivo eliminado",
     downloadFile: "Descargar archivo",
-    viewFile: "Ver archivo"
+    viewFile: "Ver archivo",
+    unsupportedFileType: "Tipo de archivo no soportado. Por favor sube imágenes (JPEG, PNG, GIF, WebP), PDFs o documentos de Office.",
+    fileTooLarge: "El archivo es muy grande. Tamaño máximo: 10MB.",
+    uploadFailed: "Error al subir",
+    databaseError: "Error de base de datos",
+    uploadPaymentProof: "Subir Comprobante de Pago",
+    chooseFile: "Seleccionar Archivo",
+    description: "Descripción",
+    descriptionPlaceholder: "ej. Recibo, Factura, Extracto bancario"
   },
   
   // Mensajes de navegación
