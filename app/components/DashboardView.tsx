@@ -1130,7 +1130,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               daysRemaining <= 7 ? 'text-black' :
                               'text-black'
                             }`}>
-                              {daysRemaining < 0 ? `${Math.abs(daysRemaining)} overdue` :
+                              {daysRemaining < 0 ? Math.abs(daysRemaining) :
                                daysRemaining}
                             </span>
                           ) : (
@@ -1327,7 +1327,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         <span className="text-xs text-gray-500">Days Remaining:</span>
                         <div className="text-sm font-medium text-gray-900">
                           {daysRemaining !== null ? (
-                            daysRemaining < 0 ? `${Math.abs(daysRemaining)} overdue` :
+                            daysRemaining < 0 ? Math.abs(daysRemaining) :
                             daysRemaining
                           ) : (
                             '-'
