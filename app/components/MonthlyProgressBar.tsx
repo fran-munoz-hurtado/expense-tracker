@@ -259,7 +259,7 @@ export default function MonthlyProgressBar({
                 <div className="flex items-center space-x-1 text-red-600">
                   <AlertCircle className="h-4 w-4" />
                   <span className="font-medium">
-                    {formatCurrency(overdue)} en mora ({overduePercentage}%)
+                    {formatCurrency(overdue)} se pasó la fecha ({overduePercentage}%)
                   </span>
                 </div>
               )}
@@ -289,33 +289,33 @@ export default function MonthlyProgressBar({
           </div>
         </div>
 
-        {/* Ya Pagado */}
+        {/* Ya Pagué */}
         <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-green-200 rounded-lg">
               <CheckCircle className="h-4 w-4 text-green-700" />
             </div>
             <div>
-              <p className="text-xs font-medium text-green-700">Ya pagado</p>
+              <p className="text-xs font-medium text-green-700">Ya pagué</p>
               <p className="text-sm font-bold text-green-900">{formatCurrency(paid)}</p>
             </div>
           </div>
         </div>
 
-        {/* Pendiente */}
+        {/* Falta Pagar */}
         <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200">
           <div className="flex items-center space-x-2">
             <div className="p-1.5 bg-yellow-200 rounded-lg">
               <Clock className="h-4 w-4 text-yellow-700" />
             </div>
             <div>
-              <p className="text-xs font-medium text-yellow-700">Pendiente</p>
+              <p className="text-xs font-medium text-yellow-700">Falta pagar</p>
               <p className="text-sm font-bold text-yellow-900">{formatCurrency(pending)}</p>
             </div>
           </div>
         </div>
 
-        {/* En Mora */}
+        {/* Se pasó la fecha */}
         <div className={`p-3 rounded-lg border ${
           hasOverdue 
             ? 'bg-gradient-to-br from-red-50 to-red-100 border-red-200' 
@@ -332,7 +332,7 @@ export default function MonthlyProgressBar({
             <div>
               <p className={`text-xs font-medium ${
                 hasOverdue ? 'text-red-700' : 'text-gray-500'
-              }`}>En mora</p>
+              }`}>Se pasó la fecha</p>
               <p className={`text-sm font-bold ${
                 hasOverdue ? 'text-red-900' : 'text-gray-500'
               }`}>{formatCurrency(overdue)}</p>
@@ -405,7 +405,7 @@ export default function MonthlyProgressBar({
           <div className="flex items-center justify-center space-x-2 text-red-600 bg-red-50 rounded-lg p-2 mt-2">
             <AlertCircle className="h-4 w-4" />
             <span className="text-xs font-medium">
-              Atención: {formatCurrency(overdue)} ({overduePercentage}%) está en mora
+              Atención: {formatCurrency(overdue)} ({overduePercentage}%) se pasó la fecha
             </span>
           </div>
         )}

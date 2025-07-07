@@ -822,32 +822,75 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         </div>
       )}
 
-      {/* Month/Year Selector */}
-      <div className="mb-6 flex flex-wrap items-center gap-4">
-        <div className="flex items-center space-x-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{texts.date}</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            >
-              {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{texts.date}</label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            >
-              {months.map((month, index) => (
-                <option key={index + 1} value={index + 1}>{month}</option>
-              ))}
-            </select>
+      {/* Unified Filters Section */}
+      <div className="mb-6">
+        <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Filtros</h3>
+          <div className="flex flex-wrap items-center gap-6">
+            {/* Year Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Año</label>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              >
+                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Month Filter */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mes</label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                className="px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              >
+                {months.map((month, index) => (
+                  <option key={index + 1} value={index + 1}>{month}</option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Type Filter */}
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">{texts.filterByType}</label>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    value="all"
+                    checked={filterType === 'all'}
+                    onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                  />
+                  <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.allTypes}</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    value="recurrent"
+                    checked={filterType === 'recurrent'}
+                    onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                  />
+                  <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.recurrentOnly}</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    value="non_recurrent"
+                    checked={filterType === 'non_recurrent'}
+                    onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
+                  />
+                  <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.nonRecurrentOnly}</span>
+                </label>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -860,45 +903,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
           pending={monthlyStats.pending}
           overdue={monthlyStats.overdue}
         />
-      </div>
-
-      {/* Filter */}
-      <div className="mb-6">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">{texts.filterByType}</h3>
-          <div className="flex flex-wrap gap-4">
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                value="all"
-                checked={filterType === 'all'}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
-              />
-              <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.allTypes}</span>
-            </label>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                value="recurrent"
-                checked={filterType === 'recurrent'}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
-              />
-              <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.recurrentOnly}</span>
-            </label>
-            <label className="flex items-center cursor-pointer">
-              <input
-                type="radio"
-                value="non_recurrent"
-                checked={filterType === 'non_recurrent'}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
-              />
-              <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.nonRecurrentOnly}</span>
-            </label>
-          </div>
-        </div>
       </div>
 
       {/* Transactions List */}
