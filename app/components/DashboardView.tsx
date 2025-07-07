@@ -911,10 +911,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     return dec !== undefined ? `${int}.${dec}` : int
   }
 
-  // Helper function to get currency input value - just return the raw number as string
+  // Helper function to get currency input value - format it properly for display
   const getCurrencyInputValue = (value: number): string => {
     if (value === 0) return ''
-    return value.toString()
+    return value.toLocaleString('es-CO', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    })
   }
 
   // Add movement modal state
@@ -1077,8 +1080,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         payment_day_deadline: ''
       })
       
-      // Refresh data
-      fetchData()
+      // Refresh data - only call onDataChange to avoid duplication
       if (onDataChange) {
         onDataChange()
       }
