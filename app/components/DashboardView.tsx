@@ -1151,7 +1151,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               {/* Checkmark with animated stroke */}
                               {transaction.status === 'paid' && (
                                 <svg
-                                  className="w-4 h-4 text-white relative z-10"
+                                  className="w-4 h-4 text-green-800 relative z-10"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1159,7 +1159,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   style={{
                                     strokeDasharray: '50',
                                     strokeDashoffset: '50',
-                                    animation: 'checkmark 0.6s ease-out forwards'
+                                    animation: 'checkmark 0.15s ease-out forwards'
                                   }}
                                 >
                                   <path
@@ -1351,7 +1351,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {/* Checkmark with animated stroke */}
                             {transaction.status === 'paid' && (
                               <svg
-                                className="w-4 h-4 text-white relative z-10"
+                                className="w-4 h-4 text-green-800 relative z-10"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -1359,7 +1359,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 style={{
                                   strokeDasharray: '50',
                                   strokeDashoffset: '50',
-                                  animation: 'checkmark 0.6s ease-out forwards'
+                                  animation: 'checkmark 0.15s ease-out forwards'
                                 }}
                               >
                                 <path
