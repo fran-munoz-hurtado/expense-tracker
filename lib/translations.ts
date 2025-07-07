@@ -51,6 +51,18 @@ export const texts = {
   time: "Hora",
   notes: "Notas",
   attachments: "Archivos adjuntos",
+  paid: "Pagado",
+  pending: "Pendiente",
+  overdue: "Vencido",
+  recurrentOnly: "Solo Recurrentes",
+  nonRecurrentOnly: "Solo No Recurrentes",
+  forMonth: "Movimientos para",
+  daysRemaining: "Días Restantes",
+  status: "Estado",
+  actions: "Acciones",
+  due: "Vence",
+  payingFrom: "Pagando desde",
+  to: "hasta",
   
   // Categorías
   categories: {

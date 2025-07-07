@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
+import { texts } from '@/lib/translations'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 
@@ -78,13 +79,13 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
   const [selectedTransactionForList, setSelectedTransactionForList] = useState<Transaction | null>(null)
 
   const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ]
 
   const monthAbbreviations = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
   ]
 
   // Available years for selection - easy to extend in the future
@@ -92,9 +93,9 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
 
   // Helper function to format currency for display (rounded, no decimals)
   const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('es-CO', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(Math.round(value))
@@ -119,7 +120,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
     if (isNaN(numValue)) return ''
     
     // Format with thousands separators
-    return numValue.toLocaleString('en-US', {
+    return numValue.toLocaleString('es-CO', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 2
     })
@@ -175,7 +176,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
 
     } catch (error) {
       console.error('Error fetching data:', error)
-      setError(`Failed to fetch data: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setLoading(false)
     }
@@ -275,7 +276,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
 
       if (error) {
         console.error('Supabase error (status update):', error)
-        setError(`Error updating status: ${error.message}`)
+        setError(`Error al actualizar estado: ${error.message}`)
         throw error
       }
 
@@ -286,7 +287,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
       
     } catch (error) {
       console.error('Error updating status:', error)
-      setError(`Failed to update status: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setError(`Error al actualizar estado: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
   }
 
@@ -333,7 +334,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
       await fetchData()
     } catch (error) {
       console.error('Error deleting:', error)
-      setError(`Failed to delete: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setError(`Error al eliminar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setShowDeleteModal(false)
       setDeleteModalData(null)
@@ -445,7 +446,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
 
     } catch (error) {
       console.error('Error setting up modify form:', error)
-      setError(`Failed to set up modify form: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setError(`Error al configurar el formulario de modificación: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
   }
 
@@ -579,7 +580,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
       
     } catch (error) {
       console.error('Error modifying expense:', error)
-      setError(`Failed to modify expense: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setError(`Error al modificar gasto: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setLoading(false)
     }
@@ -631,9 +632,9 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
   }
 
   const getStatusText = (transaction: Transaction) => {
-    if (transaction.status === 'paid') return 'Paid'
-    if (transaction.deadline && new Date(transaction.deadline) < new Date()) return 'Overdue'
-    return 'Pending'
+    if (transaction.status === 'paid') return texts.paid
+    if (transaction.deadline && new Date(transaction.deadline) < new Date()) return texts.overdue
+    return texts.pending
   }
 
   const getStatusColor = (transaction: Transaction) => {
@@ -646,8 +647,8 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
     <div className="flex-1 p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">This Month</h1>
-        <p className="text-gray-600 mt-2">Monthly overview of your expenses</p>
+        <h1 className="text-3xl font-bold text-gray-900">{texts.thisMonth}</h1>
+        <p className="text-gray-600 mt-2">{texts.dashboard}</p>
       </div>
 
       {/* Error Display */}
@@ -656,7 +657,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Database Error</h3>
+              <h3 className="text-sm font-medium text-red-800">{texts.errorOccurred}</h3>
               <div className="mt-2 text-sm text-red-700">
                 {error}
               </div>
@@ -669,7 +670,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <div className="flex items-center space-x-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{texts.date}</label>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -681,7 +682,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{texts.date}</label>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
@@ -703,7 +704,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
               <DollarSign className="h-4 w-4 lg:h-6 lg:w-6 text-blue-600" />
             </div>
             <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">Total</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600">{texts.totalBalance}</p>
               <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.total)}</p>
             </div>
           </div>
@@ -715,7 +716,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
               <CheckCircle className="h-4 w-4 lg:h-6 lg:w-6 text-green-600" />
             </div>
             <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">Paid</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600">{texts.paid}</p>
               <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.paid)}</p>
             </div>
           </div>
@@ -727,7 +728,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
               <AlertCircle className="h-4 w-4 lg:h-6 lg:w-6 text-yellow-600" />
             </div>
             <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">Pending</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600">{texts.pending}</p>
               <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.pending)}</p>
             </div>
           </div>
@@ -739,7 +740,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
               <AlertCircle className="h-4 w-4 lg:h-6 lg:w-6 text-red-600" />
             </div>
             <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">Overdue</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600">{texts.overdue}</p>
               <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.overdue)}</p>
             </div>
           </div>
@@ -749,7 +750,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
       {/* Filter */}
       <div className="mb-6">
         <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Filter by Type</h3>
+          <h3 className="text-sm font-medium text-gray-700 mb-3">{texts.filterByType}</h3>
           <div className="flex flex-wrap gap-4">
             <label className="flex items-center cursor-pointer">
               <input
@@ -759,7 +760,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
                 onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
               />
-              <span className="ml-2 text-sm text-gray-700 cursor-pointer">All Expenses</span>
+              <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.allTypes}</span>
             </label>
             <label className="flex items-center cursor-pointer">
               <input
@@ -769,7 +770,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
                 onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
               />
-              <span className="ml-2 text-sm text-gray-700 cursor-pointer">Recurrent Only</span>
+              <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.recurrentOnly}</span>
             </label>
             <label className="flex items-center cursor-pointer">
               <input
@@ -779,7 +780,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
                 onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
               />
-              <span className="ml-2 text-sm text-gray-700 cursor-pointer">Non-Recurrent Only</span>
+              <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.nonRecurrentOnly}</span>
             </label>
           </div>
         </div>
@@ -789,14 +790,14 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
-            Transactions for {months[selectedMonth - 1]} {selectedYear}
+            {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
           </h2>
         </div>
 
         {loading ? (
-          <div className="p-6 text-center text-gray-500">Loading...</div>
+          <div className="p-6 text-center text-gray-500">{texts.loading}</div>
         ) : sortedTransactions.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">No transactions for this month</div>
+          <div className="p-6 text-center text-gray-500">{texts.empty.noTransactions}</div>
         ) : (
           <>
             {/* Desktop Table View */}
@@ -805,22 +806,22 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Description
+                      {texts.description}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Days Remaining
+                      {texts.daysRemaining}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                      {texts.status}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Value
+                      {texts.amount}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Paid
+                      {texts.paid}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
+                      {texts.actions}
                     </th>
                   </tr>
                 </thead>
@@ -868,7 +869,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
                               <div className="flex items-center space-x-2 mt-1">
                                 {transaction.deadline && (
                                   <span className="text-xs text-gray-500">
-                                    Due: {(() => {
+                                    {texts.due}: {(() => {
                                       // Parse the date string directly to avoid timezone issues
                                       const [year, month, day] = transaction.deadline.split('-').map(Number);
                                       return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
@@ -883,7 +884,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
                                         <>
                                           {transaction.deadline && <span className="text-xs text-gray-400">•</span>}
                                           <span className="text-xs text-gray-500">
-                                            Paying from {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} to {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
+                                            {texts.payingFrom} {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} {texts.to} {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
                                           </span>
                                         </>
                                       )
@@ -1015,7 +1016,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
                           <div className="flex items-center space-x-2 mt-1">
                             {transaction.deadline && (
                               <span className="text-xs text-gray-500">
-                                Due: {(() => {
+                                {texts.due}: {(() => {
                                   const [year, month, day] = transaction.deadline.split('-').map(Number);
                                   return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
                                 })()}
