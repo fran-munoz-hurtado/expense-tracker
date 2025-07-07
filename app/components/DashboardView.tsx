@@ -14,9 +14,11 @@ type ExpenseType = 'recurrent' | 'non_recurrent' | null
 interface DashboardViewProps {
   navigationParams?: { month?: number; year?: number } | null
   user: User
+  onDataChange?: () => void
+  refreshTrigger?: number
 }
 
-export default function DashboardView({ navigationParams, user }: DashboardViewProps) {
+export default function DashboardView({ navigationParams, user, onDataChange, refreshTrigger }: DashboardViewProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
@@ -144,6 +146,18 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
   useEffect(() => {
     fetchData()
   }, [])
+
+  // Refetch data when month/year selection changes
+  useEffect(() => {
+    fetchData()
+  }, [selectedMonth, selectedYear])
+
+  // Refetch data when refreshTrigger changes (from parent component)
+  useEffect(() => {
+    if (refreshTrigger) {
+      fetchData()
+    }
+  }, [refreshTrigger])
 
   const fetchData = async () => {
     try {
@@ -347,6 +361,11 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
       // Refresh data to ensure UI is in sync with database
       await fetchData()
       
+      // Notify parent component of data change
+      if (onDataChange) {
+        onDataChange()
+      }
+      
     } catch (error) {
       console.error('Error updating status:', error)
       setError(`Error al actualizar estado: ${error instanceof Error ? error.message : 'Error desconocido'}`)
@@ -394,6 +413,12 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
       }
 
       await fetchData()
+      
+      // Notify parent component of data change
+      if (onDataChange) {
+        onDataChange()
+      }
+      
     } catch (error) {
       console.error('Error deleting:', error)
       setError(`Error al eliminar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
@@ -634,6 +659,11 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
 
       // Refresh data
       await fetchData()
+      
+      // Notify parent component of data change
+      if (onDataChange) {
+        onDataChange()
+      }
       
       // Reset form and close dialogs
       resetModifyForm()

@@ -19,6 +19,7 @@ export default function Home() {
   const [activeView, setActiveView] = useState<'dashboard' | 'general-dashboard' | 'debug'>('general-dashboard')
   const [navigationParams, setNavigationParams] = useState<{ month?: number; year?: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [refreshTrigger, setRefreshTrigger] = useState(0) // Trigger to refresh child components
   
   // Form state
   const [showForm, setShowForm] = useState(false)
@@ -144,6 +145,11 @@ export default function Home() {
     localStorage.setItem('expenseTrackerUser', JSON.stringify(updatedUser))
   }
 
+  const handleDataChange = () => {
+    // Increment refresh trigger to notify child components
+    setRefreshTrigger(prev => prev + 1)
+  }
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -230,6 +236,9 @@ export default function Home() {
       setShowConfirmation(false)
       setConfirmationData(null)
       
+      // Trigger refresh of child components
+      handleDataChange()
+      
     } catch (error) {
       console.error('Error saving expense:', error)
       setError(`Error al guardar gasto: ${error instanceof Error ? error.message : 'Error desconocido'}`)
@@ -309,6 +318,8 @@ export default function Home() {
             <DashboardView 
               navigationParams={navigationParams} 
               user={user}
+              onDataChange={handleDataChange}
+              refreshTrigger={refreshTrigger}
             />
           ) : activeView === 'general-dashboard' ? (
             <GeneralDashboardView 
