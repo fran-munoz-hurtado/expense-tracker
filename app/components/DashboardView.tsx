@@ -1177,7 +1177,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                               daysRemaining <= 7 ? 'text-black' :
                               'text-black'
                             }`}>
-                              {daysRemaining === 0 ? '0' :
+                              {transaction.status === 'paid' ? '-' :
+                               daysRemaining === 0 ? '0' :
                                daysRemaining < 0 ? `${Math.abs(daysRemaining)} overdue` :
                                daysRemaining}
                             </span>
@@ -1315,6 +1316,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         <span className="text-xs text-gray-500">Days Remaining:</span>
                         <div className="text-sm font-medium text-gray-900">
                           {daysRemaining !== null ? (
+                            transaction.status === 'paid' ? '-' :
                             daysRemaining === 0 ? '0' :
                             daysRemaining < 0 ? `${Math.abs(daysRemaining)} overdue` :
                             daysRemaining
