@@ -251,19 +251,14 @@ export default function MonthlyProgressBar({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Progreso del Mes</h3>
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>
-                {formatCurrency(paid)} de {formatCurrency(total)} pagados
-              </span>
-              {hasOverdue && (
-                <div className="flex items-center space-x-1 text-red-600">
-                  <AlertCircle className="h-4 w-4" />
-                  <span className="font-medium">
-                    {formatCurrency(overdue)} se pasó la fecha ({overduePercentage}%)
-                  </span>
-                </div>
-              )}
-            </div>
+            {hasOverdue && (
+              <div className="flex items-center space-x-1 text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                <span className="font-medium">
+                  {formatCurrency(overdue)} se pasó la fecha ({overduePercentage}%)
+                </span>
+              </div>
+            )}
           </div>
         </div>
         <div className="text-right">
