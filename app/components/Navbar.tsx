@@ -52,36 +52,29 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
     return () => clearInterval(timer)
   }, [])
 
-  // Set greeting based on time of day
+  // Set greeting to a friendly but neutral 'Hola'
   useEffect(() => {
-    const hour = currentTime.getHours()
-    if (hour < 12) {
-      setGreeting('Buenos días')
-    } else if (hour < 17) {
-      setGreeting('Buenas tardes')
-    } else {
-      setGreeting('Buenas noches')
-    }
-  }, [currentTime])
+    setGreeting('Hola')
+  }, [])
 
-  // Set financial wellness message
+  // Set a positive, responsible financial message
   useEffect(() => {
     const messages = [
-      "¡Hagamos de hoy un día financieramente productivo! 💰",
-      "¡Tus metas financieras están al alcance! 🎯",
-      "¡El manejo inteligente del dinero comienza aquí! 📊",
-      "¡Cada gasto registrado es progreso logrado! 📈",
-      "¡Construyendo riqueza, una transacción a la vez! 💎",
-      "¡Tu futuro financiero se ve brillante! ✨",
-      "¡Mantente al día con tus finanzas hoy! 📋",
-      "¡La libertad financiera es un viaje, no un destino! 🚀"
+      "¡Estás tomando el control de tus gastos! 🧾",
+      "¡Ser responsable con tus finanzas es un gran paso! 💡",
+      "¡Cada registro te acerca a tus metas! 🚀",
+      "¡Medir tus gastos es cuidar de ti! 🌱",
+      "¡Buen trabajo manteniendo tus cuentas claras! 👏",
+      "¡La constancia es clave para una vida financiera sana! 🔑",
+      "¡Sigue así, tu futuro yo te lo agradecerá! 🙌",
+      "¡Registrar tus gastos es un acto de responsabilidad! 🛡️"
     ]
-    
     // Use the current day to select a consistent message
-    const dayOfYear = Math.floor((currentTime.getTime() - new Date(currentTime.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
+    const now = new Date()
+    const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
     const messageIndex = dayOfYear % messages.length
     setFinancialMessage(messages[messageIndex])
-  }, [currentTime])
+  }, [])
 
   // Update edit form data when user changes
   useEffect(() => {
@@ -170,16 +163,6 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
 
           {/* Right side - Actions and time */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-            {/* Current time */}
-            <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span>{currentTime.toLocaleTimeString('es-CO', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-              })}</span>
-            </div>
-
             {/* Quick stats indicator */}
             <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-blue-50 rounded-full">
               <DollarSign className="h-4 w-4 text-blue-600" />
