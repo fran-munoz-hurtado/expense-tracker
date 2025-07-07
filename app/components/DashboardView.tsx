@@ -1116,11 +1116,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         payment_day_deadline: ''
       })
       
-      // Refresh data - only call onDataChange to avoid duplication
-      console.log('Calling onDataChange to refresh...', operationId)
-      if (onDataChange) {
-        onDataChange()
-      }
+      // Don't call onDataChange here - let the parent component handle the refresh
+      // This prevents duplicate refreshTrigger increments
+      console.log('=== NOT calling onDataChange to avoid duplication ===', operationId)
 
     } catch (error) {
       console.error('=== ERROR ADDING MOVEMENT ===', operationId)
