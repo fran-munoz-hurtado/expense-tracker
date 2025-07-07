@@ -1004,17 +1004,14 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         console.log('Value to insert:', addMovementFormData.value)
         
         // Handle recurrent expense
+        console.log('=== DB INSERT 1 START: recurrent_expenses ===', operationId)
         const { data: recurrentExpense, error: recurrentError } = await supabase
           .from('recurrent_expenses')
           .insert({
             user_id: user.id,
             description: addMovementFormData.description,
             value: addMovementFormData.value,
-            month_from: selectedMonth,
-            month_to: 12, // Default to end of year
-            year_from: selectedYear,
-            year_to: selectedYear,
-            payment_day_deadline: addMovementFormData.payment_day_deadline
+            payment_day: parseInt(addMovementFormData.payment_day_deadline)
           })
           .select()
           .single()
@@ -1024,32 +1021,34 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           throw recurrentError
         }
 
+        console.log('=== DB INSERT 1 SUCCESS: recurrent_expenses ===', operationId)
         console.log('Recurrent expense created:', recurrentExpense)
 
-        // Generate transactions for the current month
-        const deadline = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${addMovementFormData.payment_day_deadline.padStart(2, '0')}`
-        
-        console.log('Creating transaction with deadline:', deadline)
+        console.log('Creating recurrent transaction...')
         console.log('Transaction value:', addMovementFormData.value)
-        
+
+        console.log('=== DB INSERT 2 START: transactions (recurrent) ===', operationId)
         const { error: transactionError } = await supabase
           .from('transactions')
           .insert({
             user_id: user.id,
-            recurrent_expense_id: recurrentExpense.id,
+            source_id: recurrentExpense.id,
+            source_type: 'recurrent',
             description: addMovementFormData.description,
             value: addMovementFormData.value,
             month: selectedMonth,
             year: selectedYear,
-            deadline: deadline,
+            deadline: addMovementFormData.payment_day_deadline ? 
+              new Date(selectedYear, selectedMonth - 1, parseInt(addMovementFormData.payment_day_deadline)).toISOString().split('T')[0] : null,
             status: 'pending'
           })
 
         if (transactionError) {
-          console.error('Transaction error:', transactionError)
+          console.error('Recurrent transaction error:', transactionError)
           throw transactionError
         }
 
+        console.log('=== DB INSERT 2 SUCCESS: transactions (recurrent) ===', operationId)
         console.log('Recurrent transaction created successfully')
 
         // OPTIMISTIC UPDATE for recurrent expenses
@@ -1084,6 +1083,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         console.log('Creating non-recurrent expense record...')
 
         // First, create the non-recurrent expense record
+        console.log('=== DB INSERT 1 START: non_recurrent_expenses ===', operationId)
         const { data: nonRecurrentExpense, error: nonRecurrentError } = await supabase
           .from('non_recurrent_expenses')
           .insert({
@@ -1102,11 +1102,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           throw nonRecurrentError
         }
 
+        console.log('=== DB INSERT 1 SUCCESS: non_recurrent_expenses ===', operationId)
         console.log('Non-recurrent expense created:', nonRecurrentExpense)
 
         console.log('Creating non-recurrent transaction with deadline:', deadline)
         console.log('Transaction value:', addMovementFormData.value)
 
+        console.log('=== DB INSERT 2 START: transactions ===', operationId)
         const { error: transactionError } = await supabase
           .from('transactions')
           .insert({
@@ -1126,6 +1128,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           throw transactionError
         }
 
+        console.log('=== DB INSERT 2 SUCCESS: transactions ===', operationId)
         console.log('Non-recurrent transaction created successfully')
 
         // OPTIMISTIC UPDATE for non-recurrent expenses
