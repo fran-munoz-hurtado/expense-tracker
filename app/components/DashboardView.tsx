@@ -947,6 +947,14 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     setAddMovementError(null)
     setAddMovementLoading(true)
 
+    console.log('Starting add movement with data:', {
+      type: addMovementType,
+      formData: addMovementFormData,
+      user: user?.id,
+      selectedMonth,
+      selectedYear
+    })
+
     if (!addMovementType || !user) {
       setAddMovementError('Tipo de movimiento no seleccionado')
       setAddMovementLoading(false)
@@ -955,6 +963,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
     try {
       if (addMovementType === 'recurrent') {
+        console.log('Adding recurrent expense...')
+        
         // Handle recurrent expense
         const { data: recurrentExpense, error: recurrentError } = await supabase
           .from('recurrent_expenses')
@@ -971,10 +981,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           .select()
           .single()
 
-        if (recurrentError) throw recurrentError
+        if (recurrentError) {
+          console.error('Recurrent expense error:', recurrentError)
+          throw recurrentError
+        }
+
+        console.log('Recurrent expense created:', recurrentExpense)
 
         // Generate transactions for the current month
         const deadline = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${addMovementFormData.payment_day_deadline.padStart(2, '0')}`
+        
+        console.log('Creating transaction with deadline:', deadline)
         
         const { error: transactionError } = await supabase
           .from('transactions')
@@ -989,12 +1006,21 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             status: 'pending'
           })
 
-        if (transactionError) throw transactionError
+        if (transactionError) {
+          console.error('Transaction error:', transactionError)
+          throw transactionError
+        }
+
+        console.log('Transaction created successfully')
 
       } else {
+        console.log('Adding non-recurrent expense...')
+        
         // Handle non-recurrent expense
         const deadline = addMovementFormData.payment_deadline ? 
           new Date(addMovementFormData.payment_deadline).toISOString().split('T')[0] : null
+
+        console.log('Creating non-recurrent transaction with deadline:', deadline)
 
         const { error: transactionError } = await supabase
           .from('transactions')
@@ -1008,7 +1034,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             status: 'pending'
           })
 
-        if (transactionError) throw transactionError
+        if (transactionError) {
+          console.error('Non-recurrent transaction error:', transactionError)
+          throw transactionError
+        }
+
+        console.log('Non-recurrent transaction created successfully')
       }
 
       // Close modal and refresh data
@@ -1029,7 +1060,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
     } catch (error) {
       console.error('Error adding movement:', error)
-      setAddMovementError('Error al agregar el movimiento. Intenta de nuevo.')
+      setAddMovementError(`Error al agregar el movimiento: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setAddMovementLoading(false)
     }
