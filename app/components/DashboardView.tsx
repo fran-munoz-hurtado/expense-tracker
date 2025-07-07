@@ -822,74 +822,142 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         </div>
       )}
 
-      {/* Unified Filters Section */}
+      {/* Modern Compact Filters Section */}
       <div className="mb-6">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Filtros</h3>
-          <div className="flex flex-wrap items-center gap-6">
-            {/* Year Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Año</label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              >
-                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Month Filter */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mes</label>
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              >
-                {months.map((month, index) => (
-                  <option key={index + 1} value={index + 1}>{month}</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Type Filter */}
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">{texts.filterByType}</label>
-              <div className="flex flex-wrap gap-4">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    value="all"
-                    checked={filterType === 'all'}
-                    onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
-                  />
-                  <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.allTypes}</span>
-                </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    value="recurrent"
-                    checked={filterType === 'recurrent'}
-                    onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
-                  />
-                  <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.recurrentOnly}</span>
-                </label>
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="radio"
-                    value="non_recurrent"
-                    checked={filterType === 'non_recurrent'}
-                    onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
-                  />
-                  <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.nonRecurrentOnly}</span>
-                </label>
+        <div className="bg-gradient-to-r from-white to-gray-50 p-4 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <div className="p-1.5 bg-blue-100 rounded-lg">
+                <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+                </svg>
               </div>
+              <h3 className="text-sm font-semibold text-gray-800">Filtros Avanzados</h3>
+            </div>
+            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              {finalSortedTransactions.length} resultados
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Modern Year Filter */}
+            <div className="relative group">
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Año</label>
+              <div className="relative">
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md"
+                >
+                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            {/* Modern Month Filter */}
+            <div className="relative group">
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Mes</label>
+              <div className="relative">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md"
+                >
+                  {months.map((month, index) => (
+                    <option key={index + 1} value={index + 1}>{month}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            
+            {/* Modern Type Filter - Compact Radio Buttons */}
+            <div className="relative group">
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Tipo</label>
+              <div className="flex space-x-1 bg-gray-50 p-1 rounded-lg">
+                <button
+                  onClick={() => setFilterType('all')}
+                  className={`flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
+                    filterType === 'all'
+                      ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  onClick={() => setFilterType('recurrent')}
+                  className={`flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
+                    filterType === 'recurrent'
+                      ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  }`}
+                >
+                  Recurrentes
+                </button>
+                <button
+                  onClick={() => setFilterType('non_recurrent')}
+                  className={`flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all duration-200 ${
+                    filterType === 'non_recurrent'
+                      ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                  }`}
+                >
+                  Únicos
+                </button>
+              </div>
+            </div>
+            
+            {/* Quick Actions */}
+            <div className="relative group">
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">Acciones</label>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    setSelectedYear(new Date().getFullYear());
+                    setSelectedMonth(new Date().getMonth() + 1);
+                    setFilterType('all');
+                  }}
+                  className="flex-1 px-3 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-lg shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+                >
+                  Mes Actual
+                </button>
+                <button
+                  onClick={() => setFilterType('all')}
+                  className="px-3 py-2.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-200 transition-all duration-200"
+                  title="Limpiar filtros"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Active Filters Summary */}
+          <div className="mt-3 pt-3 border-t border-gray-100">
+            <div className="flex items-center space-x-2 text-xs text-gray-500">
+              <span>Filtros activos:</span>
+              <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                {months[selectedMonth - 1]} {selectedYear}
+              </span>
+              {filterType !== 'all' && (
+                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                  {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
+                </span>
+              )}
             </div>
           </div>
         </div>
