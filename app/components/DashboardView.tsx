@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 
-type ExpenseType = 'recurrent' | 'non_recurrent' | null
+type ExpenseType = 'recurrent' | 'non_recurrent' | 'all' | null
 
 interface DashboardViewProps {
   navigationParams?: { month?: number; year?: number } | null
@@ -36,56 +36,152 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const prevSelectedMonth = useRef<number>()
   const prevSelectedYear = useRef<number>()
   const hasLoadedInitially = useRef(false)
-  const effectHasRun = useRef(false)
   
   // State for UI
   const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(navigationParams?.month || new Date().getMonth() + 1)
   const [error, setError] = useState<string | null>(null)
-  const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
-  
-  // Sorting state
+  const [filterType, setFilterType] = useState<ExpenseType>('all')
   const [sortField, setSortField] = useState<'description' | 'deadline' | 'status' | 'value' | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-
-  // Parse URL parameters on mount and when URL changes
+  
+  // Modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [showModifyModal, setShowModifyModal] = useState(false)
+  const [showAddMovementModal, setShowAddMovementModal] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction & { isRecurrent?: boolean } | null>(null)
+  const [transactionToModify, setTransactionToModify] = useState<Transaction & { isRecurrent?: boolean } | null>(null)
+  const [deleteSeries, setDeleteSeries] = useState(false)
+  const [modifySeries, setModifySeries] = useState(false)
+  
+  // Form states
+  const [showModifyForm, setShowModifyForm] = useState(false)
+  const [modifyForm, setModifyForm] = useState({
+    description: '',
+    value: '',
+    payment_deadline: '',
+    payment_day_deadline: '',
+    month_from: 1,
+    month_to: 1,
+    year_from: 2025,
+    year_to: 2025,
+    month: 1,
+    year: 2025,
+    originalId: 0,
+    modifySeries: false,
+    type: 'non_recurrent' as ExpenseType
+  })
+  
+  // Add movement form states
+  const [addMovementForm, setAddMovementForm] = useState({
+    description: '',
+    value: 0,
+    payment_deadline: '',
+    payment_day_deadline: '',
+    type: 'non_recurrent' as 'recurrent' | 'non_recurrent'
+  })
+  const [addMovementLoading, setAddMovementLoading] = useState(false)
+  const [isProcessingAddMovement, setIsProcessingAddMovement] = useState(false)
+  const [addMovementError, setAddMovementError] = useState<string | null>(null)
+  
+  // Modify confirmation state
+  const [showModifyConfirmation, setShowModifyConfirmation] = useState(false)
+  const [modifyConfirmationData, setModifyConfirmationData] = useState<{
+    type: ExpenseType
+    description: string
+    value: number
+    period: string
+    action: string
+  } | null>(null)
+  
+  // Attachment modal state
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false)
+  const [selectedTransactionForAttachment, setSelectedTransactionForAttachment] = useState<Transaction | null>(null)
+  const [showAttachmentsList, setShowAttachmentsList] = useState(false)
+  const [selectedTransactionForList, setSelectedTransactionForList] = useState<Transaction | null>(null)
+  
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
+  
+  const monthAbbreviations = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  ]
+  
+  // Available years for selection - easy to extend in the future
+  const availableYears = [2025]
+  
+  // Helper function to format currency for display (rounded, no decimals)
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.round(value))
+  }
+  
+  // Helper function to parse currency string back to number
+  const parseCurrency = (value: string): number => {
+    if (!value || value.trim() === '') return 0
+    // Remove all non-numeric characters except decimal point
+    const cleanValue = value.replace(/[^0-9.]/g, '')
+    return parseFloat(cleanValue) || 0
+  }
+  
+  // Helper function to format currency for display while typing
+  const formatCurrencyForInput = (value: string): string => {
+    if (!value || value.trim() === '') return ''
+    // Remove all non-numeric characters except decimal point
+    const cleanValue = value.replace(/[^0-9.]/g, '')
+    if (!cleanValue) return ''
+    
+    const numValue = parseFloat(cleanValue)
+    if (isNaN(numValue)) return ''
+    
+    // Format with thousands separators
+    return numValue.toLocaleString('es-CO', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    })
+  }
+  
+  // Helper to format with dots as thousands separators
+  const formatWithDots = (value: string): string => {
+    if (!value) return ''
+    // Remove non-digits except decimal
+    let [int, dec] = value.replace(/[^\d.]/g, '').split('.')
+    int = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+    return dec !== undefined ? `${int}.${dec}` : int
+  }
+  
+  // Helper function to get currency input value - just return the raw number as string
+  const getCurrencyInputValue = (value: number): string => {
+    if (value === 0) return ''
+    return value.toString()
+  }
+  
+  // Load data on component mount only
   useEffect(() => {
-    const urlMonth = searchParams.get('month') ? parseInt(searchParams.get('month')!) : undefined
-    const urlYear = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
-    const urlFilter = searchParams.get('filter') as 'all' | 'recurrent' | 'non_recurrent' || 'all'
-    
-    if (urlMonth && urlYear) {
-      setSelectedMonth(urlMonth)
-      setSelectedYear(urlYear)
+    if (!hasLoadedInitially.current) {
+      console.log('=== INITIAL DATA LOAD ===')
+      fetchData()
+      hasLoadedInitially.current = true
     }
-    
-    if (urlFilter) {
-      setFilterType(urlFilter)
-    }
-  }, [searchParams])
-
-  // Update URL when filters or month/year selection changes
+  }, [])
+  
+  // Handle month/year changes
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString())
-    
-    // Always set view to dashboard
-    params.set('view', 'dashboard')
-    
-    // Set month and year
-    params.set('month', selectedMonth.toString())
-    params.set('year', selectedYear.toString())
-    
-    // Set filter (only if not 'all')
-    if (filterType !== 'all') {
-      params.set('filter', filterType)
-    } else {
-      params.delete('filter')
+    if (hasLoadedInitially.current && (selectedMonth !== prevSelectedMonth.current || selectedYear !== prevSelectedYear.current)) {
+      console.log('=== MONTH/YEAR CHANGED, RELOADING DATA ===')
+      fetchData()
+      prevSelectedMonth.current = selectedMonth
+      prevSelectedYear.current = selectedYear
     }
-    
-    const newUrl = `/?${params.toString()}`
-    router.replace(newUrl, { scroll: false })
-  }, [selectedMonth, selectedYear, filterType, router, searchParams])
+  }, [selectedMonth, selectedYear])
 
   const fetchData = async () => {
     try {
@@ -123,23 +219,6 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       setLoading(false)
     }
   }
-
-  // Consolidated useEffect for data fetching
-  useEffect(() => {
-    console.log('=== CONSOLIDATED useEffect triggered ===')
-    console.log('selectedMonth:', selectedMonth)
-    console.log('selectedYear:', selectedYear)
-    console.log('refreshTrigger:', refreshTrigger)
-    
-    // Only fetch data on initial load or if month/year changed
-    // Don't fetch when refreshTrigger changes to avoid duplication with optimistic updates
-    if (refreshTrigger === 0 || refreshTrigger === undefined) {
-      console.log('=== FETCHING DATA ===')
-      fetchData()
-    } else {
-      console.log('=== SKIPPING FETCH (refreshTrigger change) ===')
-    }
-  }, [selectedMonth, selectedYear])
 
   const filteredTransactions = transactions.filter(transaction => 
     transaction.year === selectedYear && transaction.month === selectedMonth
@@ -339,32 +418,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     if (!transaction) return
 
     // Show custom delete modal
-    setDeleteModalData({
-      transactionId: id,
-      transaction,
+    setTransactionToDelete({
+      ...transaction,
       isRecurrent: transaction.source_type === 'recurrent'
     })
     setShowDeleteModal(true)
   }
 
   const handleConfirmDelete = async (deleteSeries: boolean = false) => {
-    if (!deleteModalData) return
-
-    const { transactionId, transaction } = deleteModalData
+    if (!transactionToDelete) return
 
     try {
       // Optimistically update the local state first for immediate UI feedback
       setTransactions(prevTransactions => 
-        prevTransactions.filter(t => t.id !== transactionId)
+        prevTransactions.filter(t => t.id !== transactionToDelete.id)
       )
 
       let error = null
-      if (transaction.source_type === 'recurrent' && deleteSeries) {
+      if (transactionToDelete.source_type === 'recurrent' && deleteSeries) {
         // Delete the entire recurrent series
         const res = await supabase
           .from('recurrent_expenses')
           .delete()
-          .eq('id', transaction.source_id)
+          .eq('id', transactionToDelete.source_id)
           .eq('user_id', user.id)
         error = res.error
       } else {
@@ -372,14 +448,14 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         const res = await supabase
           .from('transactions')
           .delete()
-          .eq('id', transactionId)
+          .eq('id', transactionToDelete.id)
           .eq('user_id', user.id)
         error = res.error
       }
 
       if (error) {
         // Revert the optimistic update on error
-        setTransactions(prevTransactions => [...prevTransactions, transaction])
+        setTransactions(prevTransactions => [...prevTransactions, transactionToDelete])
         setError('Error al eliminar: ' + (error.message || 'Error desconocido'))
         return
       }
@@ -389,17 +465,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       console.log('✅ Delete operation completed - optimistic update maintained')
       
     } catch (error) {
-      setTransactions(prevTransactions => [...prevTransactions, transaction])
+      setTransactions(prevTransactions => [...prevTransactions, transactionToDelete])
       setError('Error al eliminar: ' + (error instanceof Error ? error.message : 'Error desconocido'))
     } finally {
       setShowDeleteModal(false)
-      setDeleteModalData(null)
+      setTransactionToDelete(null)
     }
   }
 
   const handleCancelDelete = () => {
     setShowDeleteModal(false)
-    setDeleteModalData(null)
+    setTransactionToDelete(null)
   }
 
   const handleModifyTransaction = async (id: number) => {
@@ -408,32 +484,27 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     if (!transaction) return
 
     // Show modify modal
-    setModifyModalData({
-      transactionId: id,
-      transaction,
-      isRecurrent: transaction.source_type === 'recurrent',
-      modifySeries: false
+    setTransactionToModify({
+      ...transaction,
+      isRecurrent: transaction.source_type === 'recurrent'
     })
     setShowModifyModal(true)
   }
 
   const handleConfirmModify = async (modifySeries: boolean) => {
-    if (!modifyModalData) return
-
-    const { transaction } = modifyModalData
+    if (!transactionToModify) return
 
     try {
-      if (transaction.source_type === 'recurrent' && modifySeries) {
+      if (transactionToModify.source_type === 'recurrent' && modifySeries) {
         // Get the original recurrent expense data
-        const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+        const recurrentExpense = recurrentExpenses.find(re => re.id === transactionToModify.source_id)
         if (!recurrentExpense) {
           setError('Original recurrent expense not found')
           return
         }
 
         // Set up form data for editing the entire series
-        setModifyFormData({
-          type: 'recurrent',
+        setModifyForm({
           description: recurrentExpense.description,
           month_from: recurrentExpense.month_from,
           month_to: recurrentExpense.month_to,
@@ -449,37 +520,35 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         })
       } else {
         // Set up form data for editing individual transaction
-        if (transaction.source_type === 'recurrent') {
-          const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+        if (transactionToModify.source_type === 'recurrent') {
+          const recurrentExpense = recurrentExpenses.find(re => re.id === transactionToModify.source_id)
           if (!recurrentExpense) {
             setError('Original recurrent expense not found')
             return
           }
 
-          setModifyFormData({
-            type: 'recurrent',
+          setModifyForm({
             description: recurrentExpense.description,
-            month_from: transaction.month,
-            month_to: transaction.month,
-            year_from: transaction.year,
-            year_to: transaction.year,
-            value: transaction.value,
+            month_from: transactionToModify.month,
+            month_to: transactionToModify.month,
+            year_from: transactionToModify.year,
+            year_to: transactionToModify.year,
+            value: transactionToModify.value,
             payment_day_deadline: recurrentExpense.payment_day_deadline?.toString() || '',
-            month: transaction.month,
-            year: transaction.year,
-            payment_deadline: transaction.deadline || '',
-            originalId: transaction.id,
+            month: transactionToModify.month,
+            year: transactionToModify.year,
+            payment_deadline: transactionToModify.deadline || '',
+            originalId: transactionToModify.id,
             modifySeries: false
           })
         } else {
-          const nonRecurrentExpense = nonRecurrentExpenses.find(nre => nre.id === transaction.source_id)
+          const nonRecurrentExpense = nonRecurrentExpenses.find(nre => nre.id === transactionToModify.source_id)
           if (!nonRecurrentExpense) {
             setError('Original non-recurrent expense not found')
             return
           }
 
-          setModifyFormData({
-            type: 'non_recurrent',
+          setModifyForm({
             description: nonRecurrentExpense.description,
             month_from: 1,
             month_to: 12,
@@ -497,7 +566,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       }
 
       setShowModifyModal(false)
-      setModifyModalData(null)
+      setTransactionToModify(null)
       setShowModifyForm(true)
 
     } catch (error) {
@@ -508,28 +577,28 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
   const handleCancelModify = () => {
     setShowModifyModal(false)
-    setModifyModalData(null)
+    setTransactionToModify(null)
   }
 
   const handleModifyFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     
-    if (!modifyFormData) return
+    if (!modifyForm) return
 
-    const period = modifyFormData.type === 'recurrent' 
-      ? `${months[modifyFormData.month_from - 1]} ${modifyFormData.year_from} to ${months[modifyFormData.month_to - 1]} ${modifyFormData.year_to}`
-      : `${months[modifyFormData.month - 1]} ${modifyFormData.year}`
+    const period = modifyForm.modifySeries 
+      ? `${months[modifyForm.month_from - 1]} ${modifyForm.year_from} to ${months[modifyForm.month_to - 1]} ${modifyForm.year_to}`
+      : `${months[modifyForm.month - 1]} ${modifyForm.year}`
 
-    const action = modifyFormData.type === 'recurrent' && modifyFormData.modifySeries 
+    const action = modifyForm.modifySeries 
       ? 'modify entire series' 
       : 'modify transaction'
 
     // Show confirmation dialog
     setModifyConfirmationData({
-      type: modifyFormData.type,
-      description: modifyFormData.description,
-      value: modifyFormData.value,
+      type: modifyForm.type,
+      description: modifyForm.description,
+      value: Number(modifyForm.value),
       period,
       action
     })
@@ -537,7 +606,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   }
 
   const handleConfirmModifySubmit = async () => {
-    if (!modifyConfirmationData || !modifyFormData) return
+    if (!modifyConfirmationData || !modifyForm) return
 
     setError(null)
     setLoading(true)
@@ -546,54 +615,54 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       // Optimistically update the local state first for immediate UI feedback
       setTransactions(prevTransactions => 
         prevTransactions.map(t => {
-          if (t.id === modifyFormData.originalId) {
+          if (t.id === modifyForm.originalId) {
             return {
               ...t,
-              description: modifyFormData.description,
-              value: Number(modifyFormData.value),
-              deadline: modifyFormData.payment_deadline || null
+              description: modifyForm.description,
+              value: Number(modifyForm.value),
+              deadline: modifyForm.payment_deadline || null
             }
           }
           return t
         })
       )
 
-      if (modifyFormData.type === 'recurrent') {
+      if (modifyForm.type === 'recurrent') {
         const recurrentData = {
-          description: modifyFormData.description,
-          month_from: modifyFormData.month_from,
-          month_to: modifyFormData.month_to,
-          year_from: modifyFormData.year_from,
-          year_to: modifyFormData.year_to,
-          value: Number(modifyFormData.value),
-          payment_day_deadline: modifyFormData.payment_day_deadline ? Number(modifyFormData.payment_day_deadline) : null
+          description: modifyForm.description,
+          month_from: modifyForm.month_from,
+          month_to: modifyForm.month_to,
+          year_from: modifyForm.year_from,
+          year_to: modifyForm.year_to,
+          value: Number(modifyForm.value),
+          payment_day_deadline: modifyForm.payment_day_deadline ? Number(modifyForm.payment_day_deadline) : null
         }
 
         console.log('Modifying recurrent expense:', {
-          modifySeries: modifyFormData.modifySeries,
-          originalId: modifyFormData.originalId,
+          modifySeries: modifyForm.modifySeries,
+          originalId: modifyForm.originalId,
           recurrentData
         })
 
-        if (modifyFormData.modifySeries && modifyFormData.originalId) {
+        if (modifyForm.modifySeries && modifyForm.originalId) {
           // Update the entire series
           console.log('Updating entire recurrent series...')
           const { data, error } = await supabase
             .from('recurrent_expenses')
             .update(recurrentData)
-            .eq('id', modifyFormData.originalId)
+            .eq('id', modifyForm.originalId)
             .eq('user_id', user.id)
 
           if (error) {
             // Revert the optimistic update on error
             setTransactions(prevTransactions => 
               prevTransactions.map(t => {
-                if (t.id === modifyFormData.originalId) {
+                if (t.id === modifyForm.originalId) {
                   return {
                     ...t,
-                    description: modifyFormData.description || t.description,
-                    value: modifyFormData.value || t.value,
-                    deadline: modifyFormData.payment_deadline || t.deadline
+                    description: modifyForm.description || t.description,
+                    value: modifyForm.value || t.value,
+                    deadline: modifyForm.payment_deadline || t.deadline
                   }
                 }
                 return t
@@ -608,7 +677,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           const { data: transactions, error: transError } = await supabase
             .from('transactions')
             .select('*')
-            .eq('source_id', modifyFormData.originalId)
+            .eq('source_id', modifyForm.originalId)
             .eq('source_type', 'recurrent')
             .eq('user_id', user.id)
 
@@ -623,25 +692,25 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           const { error } = await supabase
             .from('transactions')
             .update({
-              description: modifyFormData.description,
-              value: Number(modifyFormData.value),
-              month: modifyFormData.month_from,
-              year: modifyFormData.year_from,
-              deadline: modifyFormData.payment_deadline || null
+              description: modifyForm.description,
+              value: Number(modifyForm.value),
+              month: modifyForm.month_from,
+              year: modifyForm.year_from,
+              deadline: modifyForm.payment_deadline || null
             })
-            .eq('id', modifyFormData.originalId)
+            .eq('id', modifyForm.originalId)
             .eq('user_id', user.id)
 
           if (error) {
             // Revert the optimistic update on error
             setTransactions(prevTransactions => 
               prevTransactions.map(t => {
-                if (t.id === modifyFormData.originalId) {
+                if (t.id === modifyForm.originalId) {
                   return {
                     ...t,
-                    description: modifyFormData.description || t.description,
-                    value: modifyFormData.value || t.value,
-                    deadline: modifyFormData.payment_deadline || t.deadline
+                    description: modifyForm.description || t.description,
+                    value: modifyForm.value || t.value,
+                    deadline: modifyForm.payment_deadline || t.deadline
                   }
                 }
                 return t
@@ -652,30 +721,30 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         }
       } else {
         const nonRecurrentData = {
-          description: modifyFormData.description,
-          year: modifyFormData.year,
-          month: modifyFormData.month,
-          value: Number(modifyFormData.value),
-          payment_deadline: modifyFormData.payment_deadline || null
+          description: modifyForm.description,
+          year: modifyForm.year,
+          month: modifyForm.month,
+          value: Number(modifyForm.value),
+          payment_deadline: modifyForm.payment_deadline || null
         }
 
-        if (modifyFormData.originalId) {
+        if (modifyForm.originalId) {
           const { error } = await supabase
             .from('non_recurrent_expenses')
             .update(nonRecurrentData)
-            .eq('id', modifyFormData.originalId)
+            .eq('id', modifyForm.originalId)
             .eq('user_id', user.id)
 
           if (error) {
             // Revert the optimistic update on error
             setTransactions(prevTransactions => 
               prevTransactions.map(t => {
-                if (t.id === modifyFormData.originalId) {
+                if (t.id === modifyForm.originalId) {
                   return {
                     ...t,
-                    description: modifyFormData.description || t.description,
-                    value: modifyFormData.value || t.value,
-                    deadline: modifyFormData.payment_deadline || t.deadline
+                    description: modifyForm.description || t.description,
+                    value: modifyForm.value || t.value,
+                    deadline: modifyForm.payment_deadline || t.deadline
                   }
                 }
                 return t
@@ -704,7 +773,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   }
 
   const resetModifyForm = () => {
-    setModifyFormData(null)
+    setModifyForm(null)
     setShowModifyForm(false)
     setShowModifyConfirmation(false)
     setModifyConfirmationData(null)
@@ -770,144 +839,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     return 'bg-yellow-100 text-yellow-800'
   }
 
-  // Delete confirmation modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleteModalData, setDeleteModalData] = useState<{
-    transactionId: number
-    transaction: Transaction
-    isRecurrent: boolean
-  } | null>(null)
-
-  // Modify modal state
-  const [showModifyModal, setShowModifyModal] = useState(false)
-  const [modifyModalData, setModifyModalData] = useState<{
-    transactionId: number
-    transaction: Transaction
-    isRecurrent: boolean
-    modifySeries: boolean
-  } | null>(null)
-
-  // Modify form state
-  const [showModifyForm, setShowModifyForm] = useState(false)
-  const [modifyFormData, setModifyFormData] = useState<{
-    type: ExpenseType
-    description: string
-    month_from: number
-    month_to: number
-    year_from: number
-    year_to: number
-    value: number
-    payment_day_deadline: string
-    month: number
-    year: number
-    payment_deadline: string
-    originalId?: number
-    modifySeries?: boolean
-  } | null>(null)
-
-  // Modify confirmation state
-  const [showModifyConfirmation, setShowModifyConfirmation] = useState(false)
-  const [modifyConfirmationData, setModifyConfirmationData] = useState<{
-    type: ExpenseType
-    description: string
-    value: number
-    period: string
-    action: string
-  } | null>(null)
-
-  // Attachment modal state
-  const [showAttachmentModal, setShowAttachmentModal] = useState(false)
-  const [selectedTransactionForAttachment, setSelectedTransactionForAttachment] = useState<Transaction | null>(null)
-  const [showAttachmentsList, setShowAttachmentsList] = useState(false)
-  const [selectedTransactionForList, setSelectedTransactionForList] = useState<Transaction | null>(null)
-
-  const months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ]
-
-  const monthAbbreviations = [
-    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-  ]
-
-  // Available years for selection - easy to extend in the future
-  const availableYears = [2025]
-
-  // Helper function to format currency for display (rounded, no decimals)
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(Math.round(value))
-  }
-
-  // Helper function to parse currency string back to number
-  const parseCurrency = (value: string): number => {
-    if (!value || value.trim() === '') return 0
-    // Remove all non-numeric characters except decimal point
-    const cleanValue = value.replace(/[^0-9.]/g, '')
-    return parseFloat(cleanValue) || 0
-  }
-
-  // Helper function to format currency for display while typing
-  const formatCurrencyForInput = (value: string): string => {
-    if (!value || value.trim() === '') return ''
-    // Remove all non-numeric characters except decimal point
-    const cleanValue = value.replace(/[^0-9.]/g, '')
-    if (!cleanValue) return ''
-    
-    const numValue = parseFloat(cleanValue)
-    if (isNaN(numValue)) return ''
-    
-    // Format with thousands separators
-    return numValue.toLocaleString('es-CO', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    })
-  }
-
-  // Helper to format with dots as thousands separators
-  const formatWithDots = (value: string): string => {
-    if (!value) return ''
-    // Remove non-digits except decimal
-    let [int, dec] = value.replace(/[^\d.]/g, '').split('.')
-    int = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-    return dec !== undefined ? `${int}.${dec}` : int
-  }
-
-  // Helper function to get currency input value - just return the raw number as string
-  const getCurrencyInputValue = (value: number): string => {
-    if (value === 0) return ''
-    return value.toString()
-  }
-
-  // Add movement modal state
-  const [showAddMovementModal, setShowAddMovementModal] = useState(false)
-  const [addMovementType, setAddMovementType] = useState<'recurrent' | 'non_recurrent' | null>(null)
-  const [addMovementFormData, setAddMovementFormData] = useState({
-    description: '',
-    value: 0,
-    payment_deadline: '',
-    payment_day_deadline: ''
-  })
-  const [addMovementError, setAddMovementError] = useState<string | null>(null)
-  const [addMovementLoading, setAddMovementLoading] = useState(false)
-  const [isProcessingAddMovement, setIsProcessingAddMovement] = useState(false)
-
   // Add movement functions
   const handleAddMovement = () => {
     setShowAddMovementModal(true)
-    setAddMovementType(null)
-    setAddMovementFormData({
+    setAddMovementForm({
       description: '',
-      value: 0,
+      value: '',
       payment_deadline: '',
-      payment_day_deadline: ''
+      payment_day_deadline: '',
+      type: 'non_recurrent' as 'recurrent' | 'non_recurrent'
     })
-    setAddMovementError(null)
+    setAddMovementLoading(false)
+    setIsProcessingAddMovement(false)
   }
 
   const handleAddMovementSubmit = async (e: React.FormEvent) => {
@@ -928,12 +871,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       return
     }
     
-    setAddMovementError(null)
     setAddMovementLoading(true)
     setIsProcessingAddMovement(true)
 
     // Validar máximo permitido por la base de datos
-    if (addMovementFormData.value > 99999999) {
+    if (addMovementForm.value > 99999999) {
       setAddMovementError('El valor máximo permitido es $99,999,999')
       setAddMovementLoading(false)
       return
@@ -942,21 +884,21 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     // Generate unique operation ID to prevent duplicates
     const operationId = `add_movement_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     console.log('=== STARTING ADD MOVEMENT ===', operationId)
-    console.log('Form data:', addMovementFormData)
-    console.log('Type:', addMovementType)
+    console.log('Form data:', addMovementForm)
+    console.log('Type:', addMovementForm.type)
     console.log('User ID:', user?.id)
     console.log('Selected month/year:', selectedMonth, selectedYear)
 
-    if (!addMovementType || !user) {
+    if (!addMovementForm.type || !user) {
       setAddMovementError('Tipo de movimiento no seleccionado')
       setAddMovementLoading(false)
       return
     }
 
     try {
-      if (addMovementType === 'recurrent') {
+      if (addMovementForm.type === 'recurrent') {
         console.log('=== ADDING RECURRENT EXPENSE ===', operationId)
-        console.log('Value to insert:', addMovementFormData.value)
+        console.log('Value to insert:', addMovementForm.value)
         
         // Handle recurrent expense
         console.log('=== DB INSERT 1 START: recurrent_expenses ===', operationId)
@@ -964,9 +906,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           .from('recurrent_expenses')
           .insert({
             user_id: user.id,
-            description: addMovementFormData.description,
-            value: addMovementFormData.value,
-            payment_day: parseInt(addMovementFormData.payment_day_deadline)
+            description: addMovementForm.description,
+            value: addMovementForm.value,
+            payment_day: parseInt(addMovementForm.payment_day_deadline)
           })
           .select()
           .single()
@@ -980,7 +922,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         console.log('Recurrent expense created:', recurrentExpense)
 
         console.log('Creating recurrent transaction...')
-        console.log('Transaction value:', addMovementFormData.value)
+        console.log('Transaction value:', addMovementForm.value)
 
         console.log('=== DB INSERT 2 START: transactions (recurrent) ===', operationId)
         const { error: transactionError } = await supabase
@@ -989,12 +931,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             user_id: user.id,
             source_id: recurrentExpense.id,
             source_type: 'recurrent',
-            description: addMovementFormData.description,
-            value: addMovementFormData.value,
+            description: addMovementForm.description,
+            value: addMovementForm.value,
             month: selectedMonth,
             year: selectedYear,
-            deadline: addMovementFormData.payment_day_deadline ? 
-              new Date(selectedYear, selectedMonth - 1, parseInt(addMovementFormData.payment_day_deadline)).toISOString().split('T')[0] : null,
+            deadline: addMovementForm.payment_day_deadline ? 
+              new Date(selectedYear, selectedMonth - 1, parseInt(addMovementForm.payment_day_deadline)).toISOString().split('T')[0] : null,
             status: 'pending'
           })
 
@@ -1011,11 +953,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         const newRecurrentTransaction: Transaction = {
           id: Date.now(), // Temporary ID for optimistic update
           user_id: user.id,
-          description: addMovementFormData.description,
-          value: addMovementFormData.value,
+          description: addMovementForm.description,
+          value: addMovementForm.value,
           status: 'pending',
-          deadline: addMovementFormData.payment_day_deadline ? 
-            new Date(selectedYear, selectedMonth - 1, parseInt(addMovementFormData.payment_day_deadline)).toISOString().split('T')[0] : null,
+          deadline: addMovementForm.payment_day_deadline ? 
+            new Date(selectedYear, selectedMonth - 1, parseInt(addMovementForm.payment_day_deadline)).toISOString().split('T')[0] : null,
           source_id: recurrentSourceId,
           source_type: 'recurrent',
           year: selectedYear,
@@ -1029,11 +971,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
       } else {
         console.log('=== ADDING NON-RECURRENT EXPENSE ===', operationId)
-        console.log('Value to insert:', addMovementFormData.value)
+        console.log('Value to insert:', addMovementForm.value)
         
         // Handle non-recurrent expense
-        const deadline = addMovementFormData.payment_deadline ? 
-          new Date(addMovementFormData.payment_deadline).toISOString().split('T')[0] : null
+        const deadline = addMovementForm.payment_deadline ? 
+          new Date(addMovementForm.payment_deadline).toISOString().split('T')[0] : null
 
         console.log('Creating non-recurrent expense record...')
 
@@ -1043,10 +985,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           .from('non_recurrent_expenses')
           .insert({
             user_id: user.id,
-            description: addMovementFormData.description,
+            description: addMovementForm.description,
             year: selectedYear,
             month: selectedMonth,
-            value: addMovementFormData.value,
+            value: addMovementForm.value,
             payment_deadline: deadline
           })
           .select()
@@ -1061,7 +1003,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         console.log('Non-recurrent expense created:', nonRecurrentExpense)
 
         console.log('Creating non-recurrent transaction with deadline:', deadline)
-        console.log('Transaction value:', addMovementFormData.value)
+        console.log('Transaction value:', addMovementForm.value)
 
         console.log('=== DB INSERT 2 START: transactions ===', operationId)
         const { error: transactionError } = await supabase
@@ -1070,8 +1012,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             user_id: user.id,
             source_id: nonRecurrentExpense.id,
             source_type: 'non_recurrent',
-            description: addMovementFormData.description,
-            value: addMovementFormData.value,
+            description: addMovementForm.description,
+            value: addMovementForm.value,
             month: selectedMonth,
             year: selectedYear,
             deadline: deadline,
@@ -1090,11 +1032,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         const newNonRecurrentTransaction: Transaction = {
           id: Date.now(), // Temporary ID for optimistic update
           user_id: user.id,
-          description: addMovementFormData.description,
-          value: addMovementFormData.value,
+          description: addMovementForm.description,
+          value: addMovementForm.value,
           status: 'pending',
-          deadline: addMovementFormData.payment_deadline ? 
-            new Date(addMovementFormData.payment_deadline).toISOString().split('T')[0] : null,
+          deadline: addMovementForm.payment_deadline ? 
+            new Date(addMovementForm.payment_deadline).toISOString().split('T')[0] : null,
           source_id: nonRecurrentExpense.id,
           source_type: 'non_recurrent',
           year: selectedYear,
@@ -1111,12 +1053,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       
       // Close modal and reset form
       setShowAddMovementModal(false)
-      setAddMovementType(null)
-      setAddMovementFormData({
+      setAddMovementForm({
         description: '',
-        value: 0,
+        value: '',
         payment_deadline: '',
-        payment_day_deadline: ''
+        payment_day_deadline: '',
+        type: 'non_recurrent' as 'recurrent' | 'non_recurrent'
       })
       
       // Don't call onDataChange to avoid duplication
@@ -1135,12 +1077,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
   const handleCancelAddMovement = () => {
     setShowAddMovementModal(false)
-    setAddMovementType(null)
-    setAddMovementFormData({
+    setAddMovementForm({
       description: '',
-      value: 0,
+      value: '',
       payment_deadline: '',
-      payment_day_deadline: ''
+      payment_day_deadline: '',
+      type: 'non_recurrent' as 'recurrent' | 'non_recurrent'
     })
     setAddMovementError(null)
   }
@@ -1259,7 +1201,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                 type="radio"
                 value="all"
                 checked={filterType === 'all'}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
+                onChange={(e) => setFilterType(e.target.value as ExpenseType)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
               />
               <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.allTypes}</span>
@@ -1269,7 +1211,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                 type="radio"
                 value="recurrent"
                 checked={filterType === 'recurrent'}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
+                onChange={(e) => setFilterType(e.target.value as ExpenseType)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
               />
               <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.recurrentOnly}</span>
@@ -1279,7 +1221,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                 type="radio"
                 value="non_recurrent"
                 checked={filterType === 'non_recurrent'}
-                onChange={(e) => setFilterType(e.target.value as 'all' | 'recurrent' | 'non_recurrent')}
+                onChange={(e) => setFilterType(e.target.value as ExpenseType)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 cursor-pointer"
               />
               <span className="ml-2 text-sm text-gray-700 cursor-pointer">{texts.nonRecurrentOnly}</span>
@@ -1672,7 +1614,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && deleteModalData && (
+      {showDeleteModal && transactionToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center mb-4">
@@ -1685,21 +1627,21 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             <div className="space-y-3 mb-6">
               <div className="bg-gray-50 p-3 rounded-md">
                 <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Description:</span> {deleteModalData.transaction.description}
+                  <span className="font-medium">Description:</span> {transactionToDelete.description}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Value:</span> {formatCurrency(deleteModalData.transaction.value)}
+                  <span className="font-medium">Value:</span> {formatCurrency(transactionToDelete.value)}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Date:</span> {deleteModalData.transaction.deadline ? (() => {
+                  <span className="font-medium">Date:</span> {transactionToDelete.deadline ? (() => {
                     // Parse the date string directly to avoid timezone issues
-                    const [year, month, day] = deleteModalData.transaction.deadline!.split('-').map(Number);
+                    const [year, month, day] = transactionToDelete.deadline!.split('-').map(Number);
                     return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                  })() : `${months[deleteModalData.transaction.month - 1]} ${deleteModalData.transaction.year}`}
+                  })() : `${months[transactionToDelete.month - 1]} ${transactionToDelete.year}`}
                 </p>
               </div>
 
-              {deleteModalData.isRecurrent ? (
+              {transactionToDelete.isRecurrent ? (
                 <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
                   <p className="text-sm text-blue-800 font-medium mb-2">This is a recurrent expense transaction.</p>
                   <p className="text-sm text-blue-700">Choose what you want to delete:</p>
@@ -1712,7 +1654,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             </div>
 
             <div className="flex flex-col space-y-2">
-              {deleteModalData.isRecurrent ? (
+              {transactionToDelete.isRecurrent ? (
                 <>
                   <button
                     onClick={() => handleConfirmDelete(true)}
@@ -1748,7 +1690,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       )}
 
       {/* Modify Confirmation Modal */}
-      {showModifyModal && modifyModalData && (
+      {showModifyModal && transactionToModify && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
             <div className="flex items-center mb-4">
@@ -1761,21 +1703,21 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             <div className="space-y-3 mb-6">
               <div className="bg-gray-50 p-3 rounded-md">
                 <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Description:</span> {modifyModalData.transaction.description}
+                  <span className="font-medium">Description:</span> {transactionToModify.description}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Value:</span> {formatCurrency(modifyModalData.transaction.value)}
+                  <span className="font-medium">Value:</span> {formatCurrency(transactionToModify.value)}
                 </p>
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Date:</span> {modifyModalData.transaction.deadline ? (() => {
+                  <span className="font-medium">Date:</span> {transactionToModify.deadline ? (() => {
                     // Parse the date string directly to avoid timezone issues
-                    const [year, month, day] = modifyModalData.transaction.deadline!.split('-').map(Number);
+                    const [year, month, day] = transactionToModify.deadline!.split('-').map(Number);
                     return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                  })() : `${months[modifyModalData.transaction.month - 1]} ${modifyModalData.transaction.year}`}
+                  })() : `${months[transactionToModify.month - 1]} ${transactionToModify.year}`}
                 </p>
               </div>
 
-              {modifyModalData.isRecurrent ? (
+              {transactionToModify.isRecurrent ? (
                 <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
                   <p className="text-sm text-blue-800 font-medium mb-2">This is a recurrent expense transaction.</p>
                   <p className="text-sm text-blue-700">Choose what you want to modify:</p>
@@ -1788,7 +1730,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             </div>
 
             <div className="flex flex-col space-y-2">
-              {modifyModalData.isRecurrent ? (
+              {transactionToModify.isRecurrent ? (
                 <>
                   <button
                     onClick={() => handleConfirmModify(true)}
@@ -1837,12 +1779,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
               </button>
             </div>
 
-            {!addMovementType ? (
+            {!addMovementForm.type ? (
               <div className="space-y-4">
                 <p className="text-gray-600 mb-4">Selecciona el tipo de movimiento que quieres agregar:</p>
                 
                 <button
-                  onClick={() => setAddMovementType('recurrent')}
+                  onClick={() => setAddMovementForm({ ...addMovementForm, type: 'recurrent' })}
                   className="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
                 >
                   <div className="flex items-center">
@@ -1855,7 +1797,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                 </button>
 
                 <button
-                  onClick={() => setAddMovementType('non_recurrent')}
+                  onClick={() => setAddMovementForm({ ...addMovementForm, type: 'non_recurrent' })}
                   className="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
                 >
                   <div className="flex items-center">
@@ -1872,7 +1814,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                 <div className="mb-4">
                   <button
                     type="button"
-                    onClick={() => setAddMovementType(null)}
+                    onClick={() => setAddMovementForm({ ...addMovementForm, type: null })}
                     className="text-blue-600 hover:text-blue-800 text-sm"
                   >
                     ← Volver a selección de tipo
@@ -1885,15 +1827,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                   </div>
                 )}
 
-                {addMovementType === 'recurrent' ? (
+                {addMovementForm.type === 'recurrent' ? (
                   // Recurrent Expense Form
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                       <input
                         type="text"
-                        value={addMovementFormData.description}
-                        onChange={(e) => setAddMovementFormData(prev => ({ ...prev, description: e.target.value }))}
+                        value={addMovementForm.description}
+                        onChange={(e) => setAddMovementForm(prev => ({ ...prev, description: e.target.value }))}
                         className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
@@ -1904,12 +1846,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         <label className="block text-sm font-medium text-gray-700 mb-1">Valor ($)</label>
                         <input
                           type="text"
-                          value={getCurrencyInputValue(addMovementFormData.value)}
+                          value={addMovementForm.value}
                           onChange={(e) => {
                             let rawValue = e.target.value.replace(/[^0-9]/g, '')
                             if (rawValue.length > 8) rawValue = rawValue.slice(0, 8)
                             const numericValue = rawValue ? parseInt(rawValue, 10) : 0
-                            setAddMovementFormData(prev => ({ 
+                            setAddMovementForm(prev => ({ 
                               ...prev, 
                               value: numericValue
                             }))
@@ -1923,8 +1865,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         <label className="block text-sm font-medium text-gray-700 mb-1">Día de Pago (1-31)</label>
                         <input
                           type="text"
-                          value={addMovementFormData.payment_day_deadline}
-                          onChange={(e) => setAddMovementFormData(prev => ({ ...prev, payment_day_deadline: e.target.value }))}
+                          value={addMovementForm.payment_day_deadline}
+                          onChange={(e) => setAddMovementForm(prev => ({ ...prev, payment_day_deadline: e.target.value }))}
                           placeholder="15"
                           className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                           required
@@ -1945,8 +1887,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                       <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                       <input
                         type="text"
-                        value={addMovementFormData.description}
-                        onChange={(e) => setAddMovementFormData(prev => ({ ...prev, description: e.target.value }))}
+                        value={addMovementForm.description}
+                        onChange={(e) => setAddMovementForm(prev => ({ ...prev, description: e.target.value }))}
                         className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
@@ -1957,12 +1899,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         <label className="block text-sm font-medium text-gray-700 mb-1">Valor ($)</label>
                         <input
                           type="text"
-                          value={getCurrencyInputValue(addMovementFormData.value)}
+                          value={addMovementForm.value}
                           onChange={(e) => {
                             let rawValue = e.target.value.replace(/[^0-9]/g, '')
                             if (rawValue.length > 8) rawValue = rawValue.slice(0, 8)
                             const numericValue = rawValue ? parseInt(rawValue, 10) : 0
-                            setAddMovementFormData(prev => ({ 
+                            setAddMovementForm(prev => ({ 
                               ...prev, 
                               value: numericValue
                             }))
@@ -1976,8 +1918,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Vencimiento</label>
                         <input
                           type="date"
-                          value={addMovementFormData.payment_deadline}
-                          onChange={(e) => setAddMovementFormData(prev => ({ ...prev, payment_deadline: e.target.value }))}
+                          value={addMovementForm.payment_deadline}
+                          onChange={(e) => setAddMovementForm(prev => ({ ...prev, payment_deadline: e.target.value }))}
                           className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
