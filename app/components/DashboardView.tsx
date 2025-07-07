@@ -217,9 +217,15 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
   const monthlyStats = {
     total: sortedTransactions.reduce((sum, transaction) => sum + transaction.value, 0),
     paid: sortedTransactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0),
-    pending: sortedTransactions.filter(t => t.status === 'pending').reduce((sum, t) => sum + t.value, 0),
+    pending: sortedTransactions.filter(t => {
+      // Only include pending transactions that are NOT overdue
+      if (t.status !== 'pending') return false
+      if (!t.deadline) return true // No deadline means not overdue
+      return new Date(t.deadline) >= new Date() // Not overdue
+    }).reduce((sum, t) => sum + t.value, 0),
     overdue: sortedTransactions.filter(t => {
-      if (t.status === 'paid' || !t.deadline) return false
+      // Include all overdue transactions regardless of status
+      if (!t.deadline) return false
       return new Date(t.deadline) < new Date()
     }).reduce((sum, t) => sum + t.value, 0)
   }
