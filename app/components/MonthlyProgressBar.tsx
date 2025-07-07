@@ -1,148 +1,247 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import { TrendingUp, Target, Award, Zap, Star } from 'lucide-react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { TrendingUp, Target, Award, Zap, Star, CheckCircle } from 'lucide-react'
 
+/**
+ * Interface for MonthlyProgressBar component props
+ * @interface MonthlyProgressBarProps
+ * @property {number} paid - Amount paid in the current month
+ * @property {number} total - Total amount for the current month
+ * @property {string} [className] - Additional CSS classes
+ */
 interface MonthlyProgressBarProps {
   paid: number
   total: number
   className?: string
 }
 
-// Definición de rangos de progreso con mensajes motivacionales
-const PROGRESS_RANGES = {
-  // 0-20%: Necesita motivación inicial
+/**
+ * Interface for progress range configuration
+ * @interface ProgressRangeConfig
+ */
+interface ProgressRangeConfig {
+  color: string
+  bgColor: string
+  borderColor: string
+  icon: React.ComponentType<{ className?: string }>
+  messages: string[]
+  milestoneColor: string
+}
+
+/**
+ * Progress ranges configuration with motivational messages focused on personal achievement
+ * Each range has specific colors, icons, and messages that encourage without comparison
+ */
+const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
+  // 0-20%: Building momentum
   '0-20': {
     color: 'from-red-400 to-orange-400',
     bgColor: 'bg-red-50',
     borderColor: 'border-red-200',
+    milestoneColor: 'bg-red-300',
     icon: Target,
     messages: [
-      "¡Cada paso cuenta! 🚀",
-      "¡Empieza con fuerza! 💪",
-      "¡El primer paso es el más importante! 🌱",
-      "¡Vamos a construir algo increíble! 🏗️",
-      "¡Cada peso cuenta para tu futuro! 💰"
+      "¡Estás construyendo tu futuro financiero! 🚀",
+      "¡Cada decisión cuenta para tu bienestar! 💪",
+      "¡El control financiero empieza aquí! 🌱",
+      "¡Estás tomando las riendas de tu economía! 🎯",
+      "¡Cada peso invertido en ti mismo! 💎"
     ]
   },
-  // 21-40%: Progreso inicial
+  // 21-40%: Gaining momentum
   '21-40': {
     color: 'from-orange-400 to-yellow-400',
     bgColor: 'bg-orange-50',
     borderColor: 'border-orange-200',
+    milestoneColor: 'bg-orange-300',
     icon: TrendingUp,
     messages: [
-      "¡Ya estás en movimiento! 📈",
-      "¡El progreso se siente bien! ✨",
-      "¡Sigues avanzando! 🎯",
-      "¡Cada día es una oportunidad! 🌅",
-      "¡Mantén el ritmo! 🏃‍♂️"
+      "¡Tu disciplina financiera está creciendo! 📈",
+      "¡El progreso se siente increíble! ✨",
+      "¡Estás desarrollando excelentes hábitos! 🌟",
+      "¡Tu futuro financiero se ve prometedor! 🎯",
+      "¡Sigues fortaleciendo tu economía! 💪"
     ]
   },
-  // 41-60%: Mitad del camino
+  // 41-60%: Strong foundation
   '41-60': {
     color: 'from-yellow-400 to-green-400',
     bgColor: 'bg-yellow-50',
     borderColor: 'border-yellow-200',
+    milestoneColor: 'bg-yellow-300',
     icon: Star,
     messages: [
-      "¡Ya estás a mitad de camino! 🎯",
-      "¡Excelente progreso! 🌟",
-      "¡Sigues fuerte! 💪",
-      "¡La constancia es tu superpoder! ⚡",
-      "¡Vas por buen camino! 🛤️"
+      "¡Tu consistencia financiera es admirable! 🌟",
+      "¡Estás creando una base sólida! 🏗️",
+      "¡Tu dedicación está dando frutos! 🎯",
+      "¡Sigues fortaleciendo tu independencia! 💎",
+      "¡Tu futuro financiero se ve brillante! ⭐"
     ]
   },
-  // 61-80%: Casi terminando
+  // 61-80%: Excellence in progress
   '61-80': {
     color: 'from-green-400 to-emerald-400',
     bgColor: 'bg-green-50',
     borderColor: 'border-green-200',
+    milestoneColor: 'bg-green-300',
     icon: Award,
     messages: [
-      "¡Casi llegas a la meta! 🏆",
-      "¡Increíble trabajo! 🎉",
-      "¡Estás muy cerca! 🎯",
-      "¡El final está a la vista! 👀",
-      "¡Sigue así, eres un campeón! 🏅"
+      "¡Tu excelencia financiera es notable! 🏆",
+      "¡Estás alcanzando tus metas con maestría! 🎯",
+      "¡Tu disciplina es verdaderamente inspiradora! ⚡",
+      "¡Sigues demostrando tu compromiso! 💎",
+      "¡Tu futuro financiero es extraordinario! 🌟"
     ]
   },
-  // 81-99%: Casi perfecto
+  // 81-99%: Near perfection
   '81-99': {
     color: 'from-emerald-400 to-teal-400',
     bgColor: 'bg-emerald-50',
     borderColor: 'border-emerald-200',
+    milestoneColor: 'bg-emerald-300',
     icon: Zap,
     messages: [
-      "¡Casi perfecto! ⚡",
-      "¡Estás a un paso de la excelencia! 🌟",
-      "¡Increíble dedicación! 💎",
-      "¡El éxito está a tu alcance! 🎯",
-      "¡Eres un ejemplo a seguir! 👑"
+      "¡Tu maestría financiera es excepcional! ⚡",
+      "¡Estás en el camino de la excelencia total! 🌟",
+      "¡Tu dedicación es verdaderamente admirable! 💎",
+      "¡Sigues superando tus propias expectativas! 🎯",
+      "¡Tu futuro financiero es extraordinario! 👑"
     ]
   },
-  // 100%: Perfecto
+  // 100%: Perfect achievement
   '100': {
     color: 'from-teal-400 to-cyan-400',
     bgColor: 'bg-teal-50',
     borderColor: 'border-teal-200',
+    milestoneColor: 'bg-teal-300',
     icon: Award,
     messages: [
-      "¡PERFECTO! ¡MISIÓN CUMPLIDA! 🎉",
-      "¡100% COMPLETADO! ¡ERES INCREÍBLE! 🏆",
-      "¡EXCELENCIA TOTAL! ¡FELICITACIONES! ⭐",
-      "¡OBJETIVO ALCANZADO! ¡ERES UN MAESTRO! 👑",
-      "¡MES PERFECTO! ¡INSPIRAS A OTROS! 🌟"
+      "¡PERFECCIÓN FINANCIERA ALCANZADA! 🎉",
+      "¡MAESTRÍA TOTAL EN CONTROL FINANCIERO! 🏆",
+      "¡EXCELENCIA ABSOLUTA LOGRADA! ⭐",
+      "¡OBJETIVO PERFECTO CUMPLIDO! 💎",
+      "¡INSPIRACIÓN FINANCIERA TOTAL! 👑"
     ]
   }
 }
 
-export default function MonthlyProgressBar({ paid, total, className = '' }: MonthlyProgressBarProps) {
-  const [progress, setProgress] = useState(0)
-  const [selectedMessage, setSelectedMessage] = useState('')
-  const [isAnimating, setIsAnimating] = useState(false)
+/**
+ * Milestone configuration for progress bar markers
+ */
+const MILESTONES = [
+  { percentage: 25, label: '¼' },
+  { percentage: 50, label: '½' },
+  { percentage: 75, label: '¾' }
+]
 
-  // Calcular porcentaje de progreso
-  const percentage = total > 0 ? Math.round((paid / total) * 100) : 0
+/**
+ * MonthlyProgressBar Component
+ * 
+ * A sophisticated progress bar component that displays monthly financial progress
+ * with motivational messages, milestone markers, and smooth animations.
+ * 
+ * Features:
+ * - Responsive design with accessibility support
+ * - Smooth animations and transitions
+ * - Milestone markers for visual progress indication
+ * - Motivational messages focused on personal achievement
+ * - Color-coded progress ranges
+ * - Optimized performance with memoization
+ * 
+ * @param {MonthlyProgressBarProps} props - Component props
+ * @returns {JSX.Element} Rendered component
+ */
+export default function MonthlyProgressBar({ 
+  paid, 
+  total, 
+  className = '' 
+}: MonthlyProgressBarProps): JSX.Element {
+  // State management with proper typing
+  const [progress, setProgress] = useState<number>(0)
+  const [selectedMessage, setSelectedMessage] = useState<string>('')
+  const [isAnimating, setIsAnimating] = useState<boolean>(false)
 
-  // Determinar el rango de progreso
-  const getProgressRange = (percent: number) => {
-    if (percent === 100) return '100'
-    if (percent >= 81) return '81-99'
-    if (percent >= 61) return '61-80'
-    if (percent >= 41) return '41-60'
-    if (percent >= 21) return '21-40'
+  // Memoized calculations for performance optimization
+  const percentage = useMemo(() => {
+    return total > 0 ? Math.round((paid / total) * 100) : 0
+  }, [paid, total])
+
+  const range = useMemo(() => {
+    if (percentage === 100) return '100'
+    if (percentage >= 81) return '81-99'
+    if (percentage >= 61) return '61-80'
+    if (percentage >= 41) return '41-60'
+    if (percentage >= 21) return '21-40'
     return '0-20'
-  }
-
-  const range = getProgressRange(percentage)
-  const rangeConfig = PROGRESS_RANGES[range as keyof typeof PROGRESS_RANGES]
-  const IconComponent = rangeConfig.icon
-
-  // Seleccionar mensaje aleatorio
-  useEffect(() => {
-    const messages = rangeConfig.messages
-    const randomIndex = Math.floor(Math.random() * messages.length)
-    setSelectedMessage(messages[randomIndex])
   }, [percentage])
 
-  // Animación de progreso
+  const rangeConfig = useMemo(() => {
+    return PROGRESS_RANGES[range]
+  }, [range])
+
+  const IconComponent = rangeConfig.icon
+
+  // Memoized milestone positions for performance
+  const milestonePositions = useMemo(() => {
+    return MILESTONES.map(milestone => ({
+      ...milestone,
+      position: `${milestone.percentage}%`,
+      isReached: percentage >= milestone.percentage
+    }))
+  }, [percentage])
+
+  // Memoized message selection to prevent unnecessary re-renders
+  const selectRandomMessage = useCallback((messages: string[]): string => {
+    const randomIndex = Math.floor(Math.random() * messages.length)
+    return messages[randomIndex]
+  }, [])
+
+  // Effect for message selection with proper cleanup
+  useEffect(() => {
+    const message = selectRandomMessage(rangeConfig.messages)
+    setSelectedMessage(message)
+  }, [percentage, rangeConfig.messages, selectRandomMessage])
+
+  // Effect for progress animation with proper cleanup
   useEffect(() => {
     setIsAnimating(true)
     const timer = setTimeout(() => {
       setProgress(percentage)
       setIsAnimating(false)
-    }, 100)
+    }, 150) // Slightly longer for smoother animation
+
     return () => clearTimeout(timer)
   }, [percentage])
 
+  // Early return for edge cases
+  if (total <= 0) {
+    return (
+      <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-6 ${className}`}>
+        <div className="text-center text-gray-500">
+          <p>No hay datos disponibles para mostrar el progreso</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className={`bg-white rounded-xl shadow-sm border ${rangeConfig.borderColor} p-6 ${className}`}>
-      {/* Header con icono y título */}
-      <div className="flex items-center justify-between mb-4">
+    <div 
+      className={`bg-white rounded-xl shadow-sm border ${rangeConfig.borderColor} p-6 ${className}`}
+      role="progressbar"
+      aria-valuenow={percentage}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={`Progreso del mes: ${percentage}% completado`}
+    >
+      {/* Header with icon and title */}
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-lg ${rangeConfig.bgColor}`}>
-            <IconComponent className={`h-5 w-5 bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent`} />
+          <div className={`p-2.5 rounded-lg ${rangeConfig.bgColor} transition-colors duration-300`}>
+            <IconComponent 
+              className={`h-5 w-5 bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent`} 
+              aria-hidden="true"
+            />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Progreso del Mes</h3>
@@ -159,30 +258,48 @@ export default function MonthlyProgressBar({ paid, total, className = '' }: Mont
         </div>
       </div>
 
-      {/* Barra de progreso */}
-      <div className="mb-4">
+      {/* Progress bar with milestones */}
+      <div className="mb-6">
         <div className="relative">
-          {/* Barra de fondo */}
-          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-            {/* Barra de progreso animada */}
+          {/* Background bar */}
+          <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+            {/* Progress bar with enhanced animations */}
             <div
               className={`h-full bg-gradient-to-r ${rangeConfig.color} rounded-full transition-all duration-1000 ease-out ${
                 isAnimating ? 'animate-pulse' : ''
               }`}
               style={{ width: `${progress}%` }}
             >
-              {/* Efecto de brillo */}
-              <div className="h-full w-full bg-gradient-to-r from-white/20 to-transparent rounded-full"></div>
+              {/* Shimmer effect */}
+              <div className="h-full w-full bg-gradient-to-r from-white/30 via-white/10 to-transparent rounded-full animate-pulse"></div>
             </div>
           </div>
           
-          {/* Indicador de progreso flotante */}
+          {/* Milestone markers */}
+          {milestonePositions.map((milestone, index) => (
+            <div
+              key={milestone.percentage}
+              className={`absolute top-0 transform -translate-x-1/2 transition-all duration-500 ease-out ${
+                milestone.isReached ? 'opacity-100' : 'opacity-30'
+              }`}
+              style={{ left: milestone.position }}
+            >
+              <div className={`w-1 h-4 ${milestone.isReached ? rangeConfig.milestoneColor : 'bg-gray-300'} rounded-full`}></div>
+              <div className={`text-xs font-medium mt-1 text-center ${
+                milestone.isReached ? 'text-gray-700' : 'text-gray-400'
+              }`}>
+                {milestone.label}
+              </div>
+            </div>
+          ))}
+          
+          {/* Floating progress indicator */}
           {progress > 0 && (
             <div
-              className="absolute -top-8 transform -translate-x-1/2 transition-all duration-1000 ease-out"
+              className="absolute -top-10 transform -translate-x-1/2 transition-all duration-1000 ease-out"
               style={{ left: `${Math.min(progress, 95)}%` }}
             >
-              <div className={`bg-gradient-to-r ${rangeConfig.color} text-white text-xs px-2 py-1 rounded-md shadow-lg`}>
+              <div className={`bg-gradient-to-r ${rangeConfig.color} text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-medium`}>
                 {progress}%
               </div>
               <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-current mx-auto"></div>
@@ -191,29 +308,23 @@ export default function MonthlyProgressBar({ paid, total, className = '' }: Mont
         </div>
       </div>
 
-      {/* Mensaje motivacional */}
-      <div className={`text-center p-3 rounded-lg ${rangeConfig.bgColor} border ${rangeConfig.borderColor}`}>
-        <p className={`text-sm font-medium bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent`}>
+      {/* Motivational message */}
+      <div className={`text-center p-4 rounded-xl ${rangeConfig.bgColor} border ${rangeConfig.borderColor} transition-all duration-300`}>
+        <p className={`text-sm font-medium bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent leading-relaxed`}>
           {selectedMessage}
         </p>
-      </div>
-
-      {/* Información adicional */}
-      <div className="mt-4 grid grid-cols-2 gap-4 text-center">
-        <div className="p-3 bg-gray-50 rounded-lg">
-          <div className="text-lg font-bold text-gray-900">{formatCurrency(paid)}</div>
-          <div className="text-xs text-gray-600">Pagado</div>
-        </div>
-        <div className="p-3 bg-gray-50 rounded-lg">
-          <div className="text-lg font-bold text-gray-900">{formatCurrency(total - paid)}</div>
-          <div className="text-xs text-gray-600">Pendiente</div>
-        </div>
       </div>
     </div>
   )
 }
 
-// Función auxiliar para formatear moneda
+/**
+ * Utility function to format currency values
+ * Uses Intl.NumberFormat for proper localization and formatting
+ * 
+ * @param {number} value - The value to format
+ * @returns {string} Formatted currency string
+ */
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
