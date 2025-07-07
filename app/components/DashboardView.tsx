@@ -213,20 +213,21 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
 
-  // Calculate statistics for selected month (use ALL transactions for the month, not filtered by type)
+  // Calcular totales del mes según la lógica del usuario
   const monthlyStats = {
-    total: filteredTransactions.reduce((sum, transaction) => sum + transaction.value, 0),
-    paid: filteredTransactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0),
+    total: filteredTransactions.reduce((sum, t) => sum + t.value, 0), // Total del mes
+    paid: filteredTransactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0), // Ya pagué
     pending: filteredTransactions.filter(t => {
-      // Only include pending transactions that are NOT overdue
+      // Falta pagar: status 'pending' y NO vencidas
       if (t.status !== 'pending') return false
-      if (!t.deadline) return true // No deadline means not overdue
-      return new Date(t.deadline) >= new Date() // Not overdue
+      if (!t.deadline) return true // Sin fecha límite, no está vencida
+      return new Date(t.deadline) >= new Date() // No vencida
     }).reduce((sum, t) => sum + t.value, 0),
     overdue: filteredTransactions.filter(t => {
-      // Include all overdue transactions regardless of status
-      if (!t.deadline) return false
-      return new Date(t.deadline) < new Date()
+      // Se pasó la fecha: status 'pending' y vencidas
+      if (t.status !== 'pending') return false
+      if (!t.deadline) return false // Sin fecha límite, no puede estar vencida
+      return new Date(t.deadline) < new Date() // Vencida
     }).reduce((sum, t) => sum + t.value, 0)
   }
 
@@ -765,7 +766,7 @@ export default function DashboardView({ navigationParams, user }: DashboardViewP
               <DollarSign className="h-4 w-4 lg:h-6 lg:w-6 text-blue-600" />
             </div>
             <div className="ml-2 lg:ml-4">
-              <p className="text-xs lg:text-sm font-medium text-gray-600">{texts.totalBalance}</p>
+              <p className="text-xs lg:text-sm font-medium text-gray-600">Total del mes</p>
               <p className="text-base lg:text-2xl font-bold text-gray-900">{formatCurrency(monthlyStats.total)}</p>
             </div>
           </div>
