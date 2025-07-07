@@ -1052,6 +1052,27 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
         console.log('Recurrent transaction created successfully')
 
+        // OPTIMISTIC UPDATE for recurrent expenses
+        const recurrentSourceId = (await supabase.from('recurrent_expenses').select('id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1)).data?.[0]?.id || 0
+        const newRecurrentTransaction: Transaction = {
+          id: Date.now(), // Temporary ID for optimistic update
+          user_id: user.id,
+          description: addMovementFormData.description,
+          value: addMovementFormData.value,
+          status: 'pending',
+          deadline: addMovementFormData.payment_day_deadline ? 
+            new Date(selectedYear, selectedMonth - 1, parseInt(addMovementFormData.payment_day_deadline)).toISOString().split('T')[0] : null,
+          source_id: recurrentSourceId,
+          source_type: 'recurrent',
+          year: selectedYear,
+          month: selectedMonth,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        // Add to local state immediately for instant UI update
+        setTransactions(prev => [...prev, newRecurrentTransaction])
+
       } else {
         console.log('=== ADDING NON-RECURRENT EXPENSE ===', operationId)
         console.log('Value to insert:', addMovementFormData.value)
@@ -1106,31 +1127,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         }
 
         console.log('Non-recurrent transaction created successfully')
+
+        // OPTIMISTIC UPDATE for non-recurrent expenses
+        const newNonRecurrentTransaction: Transaction = {
+          id: Date.now(), // Temporary ID for optimistic update
+          user_id: user.id,
+          description: addMovementFormData.description,
+          value: addMovementFormData.value,
+          status: 'pending',
+          deadline: addMovementFormData.payment_deadline ? 
+            new Date(addMovementFormData.payment_deadline).toISOString().split('T')[0] : null,
+          source_id: nonRecurrentExpense.id,
+          source_type: 'non_recurrent',
+          year: selectedYear,
+          month: selectedMonth,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        // Add to local state immediately for instant UI update
+        setTransactions(prev => [...prev, newNonRecurrentTransaction])
       }
 
       console.log('=== MOVEMENT ADDED SUCCESSFULLY ===', operationId)
-      
-      // OPTIMISTIC UPDATE: Add the new transaction to the local state immediately
-      // This provides instant UI feedback without waiting for refreshTrigger
-      const newTransaction: Transaction = {
-        id: Date.now(), // Temporary ID for optimistic update
-        user_id: user.id,
-        description: addMovementFormData.description,
-        value: addMovementFormData.value,
-        status: 'pending',
-        deadline: addMovementFormData.payment_deadline || null,
-        source_id: addMovementType === 'recurrent' ? 
-          (await supabase.from('recurrent_expenses').select('id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1)).data?.[0]?.id || 0 :
-          (await supabase.from('non_recurrent_expenses').select('id').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1)).data?.[0]?.id || 0,
-        source_type: addMovementType || 'non_recurrent',
-        year: selectedYear,
-        month: selectedMonth,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      
-      // Add to local state immediately for instant UI update
-      setTransactions(prev => [...prev, newTransaction])
       
       // Close modal and reset form
       setShowAddMovementModal(false)
