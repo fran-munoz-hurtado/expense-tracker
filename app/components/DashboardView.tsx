@@ -7,6 +7,7 @@ import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttac
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 
@@ -16,15 +17,12 @@ interface DashboardViewProps {
   navigationParams?: { month?: number; year?: number } | null
   user: User
   onDataChange?: () => void
-  refreshTrigger?: number
 }
 
-export default function DashboardView({ navigationParams, user, onDataChange, refreshTrigger }: DashboardViewProps) {
+export default function DashboardView({ navigationParams, user, onDataChange }: DashboardViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  
-  // Remove excessive debug logging
-  // console.log('🔄 DashboardView rendered with refreshTrigger:', refreshTrigger)
+  const { refreshData } = useDataSync()
   
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
@@ -170,6 +168,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       setError(null)
       setLoading(true)
       
+      console.log(`🔄 DashboardView: Fetching data for month ${selectedMonth}, year ${selectedYear}`)
+      
       // Use optimized data fetching with performance monitoring
       const result = await measureQueryPerformance(
         'fetchDashboardData',
@@ -182,6 +182,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           return { transactions, expenses }
         }
       )
+
+      console.log(`📊 DashboardView: Fetched ${result.transactions.length} transactions for month ${selectedMonth}, year ${selectedYear}`)
+      console.log('📋 DashboardView: Transaction details:', result.transactions.map((t: Transaction) => ({
+        id: t.id,
+        description: t.description,
+        month: t.month,
+        year: t.year,
+        value: t.value,
+        status: t.status
+      })))
 
       setTransactions(result.transactions)
       setRecurrentExpenses(result.expenses.recurrent)
@@ -202,22 +212,22 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     }
   }
 
+  // Initial data fetch
   useEffect(() => {
     fetchData()
   }, [])
 
-  // Refetch data when month/year selection changes
-  useEffect(() => {
+  // Use the new data synchronization system - only depend on dataVersion and lastOperation
+  useDataSyncEffect(() => {
+    console.log('🔄 DashboardView: Data sync triggered, refetching data')
     fetchData()
-  }, [selectedMonth, selectedYear])
+  }, []) // Empty dependency array to avoid conflicts
 
-  // Refetch data when refreshTrigger changes (from parent component)
+  // Separate effect for user, selectedMonth, and selectedYear changes
   useEffect(() => {
-    if (refreshTrigger !== undefined && refreshTrigger > 0) {
-      console.log('🔄 DashboardView useEffect triggered by refreshTrigger:', refreshTrigger)
-      fetchData()
-    }
-  }, [refreshTrigger])
+    console.log('🔄 DashboardView: User, selectedMonth, or selectedYear changed, refetching data')
+    fetchData()
+  }, [user, selectedMonth, selectedYear])
 
   // Filter transactions for selected month/year
   const filteredTransactions = transactions.filter(transaction => 
@@ -295,27 +305,6 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     }).reduce((sum, t) => sum + t.value, 0)
   }
 
-  // Remove excessive debug logging
-  // console.log('=== DEBUG MONTHLY STATS ===')
-  // console.log('Selected month/year:', selectedMonth, selectedYear)
-  // console.log('Filter type:', filterType)
-  // console.log('All transactions count:', transactions.length)
-  // console.log('Filtered transactions count:', filteredTransactions.length)
-  // console.log('Type filtered transactions count:', typeFilteredTransactions.length)
-  // console.log('Sorted transactions count:', sortedTransactions.length)
-  
-  // console.log('All transactions for month:', filteredTransactions.map(t => ({
-  //   id: t.id,
-  //   description: t.description,
-  //   value: t.value,
-  //   status: t.status,
-  //   deadline: t.deadline,
-  //   isOverdue: t.deadline ? new Date(t.deadline) < new Date() : false,
-  //   source_type: t.source_type,
-  //   month: t.month,
-  //   year: t.year
-  // })))
-  
   const paidTransactions = filteredTransactions.filter(t => t.status === 'paid')
   const pendingTransactions = filteredTransactions.filter(t => {
     if (t.status !== 'pending') return false
@@ -328,29 +317,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     return new Date(t.deadline) < new Date() // Overdue
   })
   
-  // console.log('Paid transactions:', paidTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
-  // console.log('Pending transactions:', pendingTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
-  // console.log('Overdue transactions:', overdueTransactions.map(t => ({ id: t.id, description: t.description, value: t.value, status: t.status })))
-  
-  // console.log('Monthly stats:', {
-  //   total: monthlyStats.total,
-  //   paid: monthlyStats.paid,
-  //   pending: monthlyStats.pending,
-  //   overdue: monthlyStats.overdue
-  // })
-  
   // Verify totals
   const calculatedTotal = paidTransactions.reduce((sum, t) => sum + t.value, 0) + 
                          pendingTransactions.reduce((sum, t) => sum + t.value, 0) + 
                          overdueTransactions.reduce((sum, t) => sum + t.value, 0)
   
-  // console.log('Verification:', {
-  //   calculatedTotal,
-  //   actualTotal: monthlyStats.total,
-  //   match: calculatedTotal === monthlyStats.total
-  // })
-  // console.log('=== END DEBUG ===')
-
   const calculateTransactionCount = (type: ExpenseType, formData: any): number => {
     if (type === 'recurrent') {
       const { month_from, month_to, year_from, year_to } = formData
@@ -440,10 +411,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
       console.log('✅ Status update successful:', data)
       
-      // Don't call onDataChange() for status updates since we're using optimistic updates
-      // The optimistic update already provides immediate UI feedback
-      // Calling onDataChange() would trigger a refresh that overwrites the optimistic update
-      console.log('✅ Status update completed - optimistic update maintained')
+      // Trigger global data refresh to synchronize all views
+      console.log('🔄 Triggering global data refresh after status update')
+      refreshData(user.id, 'update_status')
+      
+      console.log('✅ Status update completed - optimistic update maintained and global sync triggered')
       
     } catch (error) {
       console.error('❌ Error updating status:', error)
@@ -471,10 +443,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     const { transactionId, transaction } = deleteModalData
 
     try {
-      // Optimistically update the local state first for immediate UI feedback
-      setTransactions(prevTransactions => 
-        prevTransactions.filter(t => t.id !== transactionId)
-      )
+      setLoading(true)
+      setError(null)
 
       if (transaction.source_type === 'recurrent' && deleteSeries) {
         // Delete the entire recurrent series
@@ -484,11 +454,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           .eq('id', transaction.source_id)
           .eq('user_id', user.id)
 
-        if (error) {
-          // Revert the optimistic update on error
-          setTransactions(prevTransactions => [...prevTransactions, transaction])
-          throw error
-        }
+        if (error) throw error
       } else {
         // Delete only this transaction
         const { error } = await supabase
@@ -497,21 +463,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           .eq('id', transactionId)
           .eq('user_id', user.id)
 
-        if (error) {
-          // Revert the optimistic update on error
-          setTransactions(prevTransactions => [...prevTransactions, transaction])
-          throw error
-        }
+        if (error) throw error
       }
 
-      // Don't call onDataChange() since we're using optimistic updates
-      // The optimistic update already provides immediate UI feedback
-      console.log('✅ Delete operation completed - optimistic update maintained')
+      // Trigger global data refresh using the new system
+      console.log('🔄 Triggering global data refresh after deletion')
+      refreshData(user.id, 'delete_transaction')
       
     } catch (error) {
       console.error('Error deleting:', error)
       setError(`Error al eliminar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
+      setLoading(false)
       setShowDeleteModal(false)
       setDeleteModalData(null)
     }
@@ -663,21 +626,6 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     setLoading(true)
 
     try {
-      // Optimistically update the local state first for immediate UI feedback
-      setTransactions(prevTransactions => 
-        prevTransactions.map(t => {
-          if (t.id === modifyFormData.originalId) {
-            return {
-              ...t,
-              description: modifyFormData.description,
-              value: Number(modifyFormData.value),
-              deadline: modifyFormData.payment_deadline || null
-            }
-          }
-          return t
-        })
-      )
-
       if (modifyFormData.type === 'recurrent') {
         const recurrentData = {
           description: modifyFormData.description,
@@ -704,23 +652,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             .eq('id', modifyFormData.originalId)
             .eq('user_id', user.id)
 
-          if (error) {
-            // Revert the optimistic update on error
-            setTransactions(prevTransactions => 
-              prevTransactions.map(t => {
-                if (t.id === modifyFormData.originalId) {
-                  return {
-                    ...t,
-                    description: modifyFormData.description || t.description,
-                    value: modifyFormData.value || t.value,
-                    deadline: modifyFormData.payment_deadline || t.deadline
-                  }
-                }
-                return t
-              })
-            )
-            throw error
-          }
+          if (error) throw error
 
           console.log('Recurrent expense updated successfully:', data)
 
@@ -739,87 +671,48 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           }
         } else {
           // Update individual transaction
-          console.log('Updating individual transaction...')
           const { error } = await supabase
             .from('transactions')
             .update({
               description: modifyFormData.description,
               value: Number(modifyFormData.value),
-              month: modifyFormData.month_from,
-              year: modifyFormData.year_from,
               deadline: modifyFormData.payment_deadline || null
             })
             .eq('id', modifyFormData.originalId)
             .eq('user_id', user.id)
 
-          if (error) {
-            // Revert the optimistic update on error
-            setTransactions(prevTransactions => 
-              prevTransactions.map(t => {
-                if (t.id === modifyFormData.originalId) {
-                  return {
-                    ...t,
-                    description: modifyFormData.description || t.description,
-                    value: modifyFormData.value || t.value,
-                    deadline: modifyFormData.payment_deadline || t.deadline
-                  }
-                }
-                return t
-              })
-            )
-            throw error
-          }
+          if (error) throw error
         }
-      } else {
-        const nonRecurrentData = {
-          description: modifyFormData.description,
-          year: modifyFormData.year,
-          month: modifyFormData.month,
-          value: Number(modifyFormData.value),
-          payment_deadline: modifyFormData.payment_deadline || null
-        }
+      } else if (modifyFormData.type === 'non_recurrent') {
+        // Update non-recurrent expense
+        const { error } = await supabase
+          .from('non_recurrent_expenses')
+          .update({
+            description: modifyFormData.description,
+            month: modifyFormData.month,
+            year: modifyFormData.year,
+            value: Number(modifyFormData.value),
+            payment_deadline: modifyFormData.payment_deadline || null
+          })
+          .eq('id', modifyFormData.originalId)
+          .eq('user_id', user.id)
 
-        if (modifyFormData.originalId) {
-          const { error } = await supabase
-            .from('non_recurrent_expenses')
-            .update(nonRecurrentData)
-            .eq('id', modifyFormData.originalId)
-            .eq('user_id', user.id)
-
-          if (error) {
-            // Revert the optimistic update on error
-            setTransactions(prevTransactions => 
-              prevTransactions.map(t => {
-                if (t.id === modifyFormData.originalId) {
-                  return {
-                    ...t,
-                    description: modifyFormData.description || t.description,
-                    value: modifyFormData.value || t.value,
-                    deadline: modifyFormData.payment_deadline || t.deadline
-                  }
-                }
-                return t
-              })
-            )
-            throw error
-          }
-        }
+        if (error) throw error
       }
 
-      // Don't call onDataChange() since we're using optimistic updates
-      // The optimistic update already provides immediate UI feedback
-      console.log('✅ Modify operation completed - optimistic update maintained')
-      
-      // Reset form and close dialogs
-      resetModifyForm()
-      setShowModifyConfirmation(false)
-      setModifyConfirmationData(null)
-      
+      // Trigger global data refresh using the new system
+      console.log('🔄 Triggering global data refresh after modification')
+      refreshData(user.id, 'modify_transaction')
+
     } catch (error) {
-      console.error('Error modifying expense:', error)
-      setError(`Error al modificar gasto: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      console.error('Error modifying:', error)
+      setError(`Error al modificar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setLoading(false)
+      setShowModifyConfirmation(false)
+      setModifyConfirmationData(null)
+      setShowModifyForm(false)
+      setModifyFormData(null)
     }
   }
 

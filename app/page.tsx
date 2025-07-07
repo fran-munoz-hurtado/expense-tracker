@@ -6,6 +6,7 @@ import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExp
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
+import { DataSyncProvider, useDataSync } from '@/lib/hooks/useDataSync'
 import Sidebar from './components/Sidebar'
 import DashboardView from './components/DashboardView'
 import DebugTest from './components/DebugTest'
@@ -15,12 +16,21 @@ import Navbar from './components/Navbar'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
-export default function Home() {
+// Main application component wrapped with DataSyncProvider
+export default function App() {
+  return (
+    <DataSyncProvider>
+      <Home />
+    </DataSyncProvider>
+  )
+}
+
+function Home() {
   const navigation = useAppNavigation()
+  const { refreshData } = useDataSync()
   
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [refreshTrigger, setRefreshTrigger] = useState(0) // Trigger to refresh child components
   
   // Form state
   const [showForm, setShowForm] = useState(false)
@@ -146,16 +156,6 @@ export default function Home() {
     localStorage.setItem('expenseTrackerUser', JSON.stringify(updatedUser))
   }
 
-  const handleDataChange = () => {
-    // Increment refresh trigger to notify child components
-    console.log('🔄 handleDataChange called, incrementing refreshTrigger')
-    setRefreshTrigger(prev => {
-      const newValue = prev + 1
-      console.log('🔄 refreshTrigger updated from', prev, 'to', newValue)
-      return newValue
-    })
-  }
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -242,15 +242,9 @@ export default function Home() {
       setShowConfirmation(false)
       setConfirmationData(null)
       
-      // Provide immediate UI feedback by triggering refresh
-      // This will update the UI immediately after adding the expense
-      handleDataChange()
-      
-      // Add a small delay to ensure the database operation completes
-      // and then refresh again to get the latest data with proper IDs
-      setTimeout(() => {
-        handleDataChange()
-      }, 500)
+      // Trigger global data refresh using the new system
+      console.log('🔄 Triggering global data refresh after expense creation')
+      refreshData(user.id, 'create_expense')
       
     } catch (error) {
       console.error('Error saving expense:', error)
@@ -349,8 +343,7 @@ export default function Home() {
               year: navigation.currentRoute.year 
             }} 
             user={user}
-            onDataChange={handleDataChange}
-            refreshTrigger={refreshTrigger}
+            onDataChange={refreshData}
           />
         )
       case 'general-dashboard':
