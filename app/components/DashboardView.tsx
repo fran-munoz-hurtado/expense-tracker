@@ -79,6 +79,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   }, [selectedMonth, selectedYear, filterType, router, searchParams])
 
   const fetchData = async () => {
+    console.log('=== fetchData CALLED ===')
+    console.log('Current timestamp:', new Date().toISOString())
+    console.log('Stack trace:', new Error().stack)
+    
     try {
       setError(null)
       setLoading(true)
@@ -950,9 +954,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const handleAddMovementSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
+    console.log('=== handleAddMovementSubmit CALLED ===')
+    console.log('Event type:', e.type)
+    console.log('Event target:', e.target)
+    console.log('Current addMovementLoading:', addMovementLoading)
+    console.log('Current isProcessingAddMovement:', isProcessingAddMovement)
+    console.log('Stack trace:', new Error().stack)
+    
     // Prevent multiple submissions
     if (addMovementLoading || isProcessingAddMovement) {
       console.log('=== PREVENTING DUPLICATE SUBMISSION ===')
+      console.log('addMovementLoading:', addMovementLoading)
+      console.log('isProcessingAddMovement:', isProcessingAddMovement)
       return
     }
     
@@ -1988,6 +2001,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                   <button
                     type="submit"
                     disabled={addMovementLoading || isProcessingAddMovement}
+                    onClick={() => {
+                      console.log('=== SUBMIT BUTTON CLICKED ===')
+                      console.log('addMovementLoading:', addMovementLoading)
+                      console.log('isProcessingAddMovement:', isProcessingAddMovement)
+                    }}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                   >
                     {addMovementLoading || isProcessingAddMovement ? 'Agregando...' : 'Agregar Movimiento'}
