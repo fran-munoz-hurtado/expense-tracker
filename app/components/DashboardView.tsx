@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip } from 'lucide-react'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
@@ -32,6 +32,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
   
+  // Sorting state
+  const [sortField, setSortField] = useState<'description' | 'deadline' | 'status' | 'value' | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteModalData, setDeleteModalData] = useState<{
@@ -211,14 +215,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     return transaction.source_type === filterType
   })
 
-  // Sort transactions by deadline (closest first) and then by status (pending first)
+  // Sort transactions by deadline (closest first) only
   const sortedTransactions = [...typeFilteredTransactions].sort((a, b) => {
-    // First, sort by status (pending first)
-    if (a.status !== b.status) {
-      return a.status === 'pending' ? -1 : 1
-    }
-    
-    // Then sort by deadline (closest first)
+    // Sort by deadline (closest first)
     if (a.deadline && b.deadline) {
       return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
     }
@@ -230,6 +229,38 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     // If neither has deadline, sort by creation date
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   })
+
+  // Apply custom sorting if a sort field is selected
+  const applyCustomSorting = (transactions: Transaction[]) => {
+    if (!sortField) return transactions
+
+    return [...transactions].sort((a, b) => {
+      let comparison = 0
+
+      switch (sortField) {
+        case 'description':
+          comparison = a.description.localeCompare(b.description)
+          break
+        case 'deadline':
+          // Handle cases where deadline might be null
+          if (!a.deadline && !b.deadline) comparison = 0
+          else if (!a.deadline) comparison = 1
+          else if (!b.deadline) comparison = -1
+          else comparison = new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
+          break
+        case 'status':
+          comparison = a.status.localeCompare(b.status)
+          break
+        case 'value':
+          comparison = a.value - b.value
+          break
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+  }
+
+  const finalSortedTransactions = applyCustomSorting(sortedTransactions)
 
   // Calcular totales del mes según la lógica del usuario
   const monthlyStats = {
@@ -810,6 +841,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     console.log('Attachment deleted:', attachmentId)
   }
 
+  const handleSort = (field: 'description' | 'deadline' | 'status' | 'value') => {
+    if (sortField === field) {
+      // If clicking the same field, toggle direction
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      // If clicking a new field, set it as the sort field and default to ascending
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
   const getStatusIcon = (transaction: Transaction) => {
     if (transaction.status === 'paid') {
       return <CheckCircle className="h-4 w-4 text-green-600" />
@@ -987,7 +1029,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
         {loading ? (
           <div className="p-6 text-center text-gray-500">{texts.loading}</div>
-        ) : sortedTransactions.length === 0 ? (
+        ) : finalSortedTransactions.length === 0 ? (
           <div className="p-6 text-center text-gray-500">{texts.empty.noTransactions}</div>
         ) : (
           <>
@@ -996,17 +1038,57 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {texts.description}
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort('description')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{texts.description}</span>
+                        {sortField === 'description' && (
+                          sortDirection === 'asc' ? 
+                            <ChevronUp className="h-4 w-4" /> : 
+                            <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {texts.daysRemaining}
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort('deadline')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{texts.daysRemaining}</span>
+                        {sortField === 'deadline' && (
+                          sortDirection === 'asc' ? 
+                            <ChevronUp className="h-4 w-4" /> : 
+                            <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {texts.status}
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort('status')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{texts.status}</span>
+                        {sortField === 'status' && (
+                          sortDirection === 'asc' ? 
+                            <ChevronUp className="h-4 w-4" /> : 
+                            <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {texts.amount}
+                    <th 
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      onClick={() => handleSort('value')}
+                    >
+                      <div className="flex items-center space-x-1">
+                        <span>{texts.amount}</span>
+                        {sortField === 'value' && (
+                          sortDirection === 'asc' ? 
+                            <ChevronUp className="h-4 w-4" /> : 
+                            <ChevronDown className="h-4 w-4" />
+                        )}
+                      </div>
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       {texts.paid}
@@ -1017,7 +1099,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {sortedTransactions.map((transaction) => {
+                  {finalSortedTransactions.map((transaction) => {
                     // Calculate days remaining
                     const getDaysRemaining = () => {
                       if (transaction.status === 'paid') return 0;
@@ -1168,7 +1250,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
             {/* Mobile Card View */}
             <div className="lg:hidden space-y-4">
-              {sortedTransactions.map((transaction) => {
+              {finalSortedTransactions.map((transaction) => {
                 // Calculate days remaining
                 const getDaysRemaining = () => {
                   if (transaction.status === 'paid') return 0;
