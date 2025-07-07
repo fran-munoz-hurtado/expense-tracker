@@ -364,15 +364,18 @@ export default function MonthlyProgressBar({
               className="absolute -top-10 transform -translate-x-1/2 transition-all duration-1000 ease-out"
               style={{ 
                 left: (() => {
-                  // Si el progreso está muy cerca del final (85% o más), mover el tooltip hacia la izquierda
-                  if (progress >= 85) {
-                    // Calcular una posición que deje espacio para el tooltip del total
-                    const adjustedPosition = Math.max(progress - 20, 10)
-                    return `${adjustedPosition}%`
+                  // Si el progreso está muy cerca del final (90% o más), poner el tooltip muy cerca del total
+                  if (progress >= 90) {
+                    // Posición muy cercana al total para crear sensación de proximidad
+                    return `${Math.max(progress - 5, 88)}%`
+                  }
+                  // Si está entre 85-90%, usar una posición intermedia
+                  else if (progress >= 85) {
+                    return `${Math.max(progress - 8, 82)}%`
                   }
                   // Si está entre 70-85%, usar una posición intermedia
                   else if (progress >= 70) {
-                    return `${Math.min(progress - 5, 80)}%`
+                    return `${Math.min(progress - 3, 85)}%`
                   }
                   // Para progresos menores, usar la posición normal
                   else {
