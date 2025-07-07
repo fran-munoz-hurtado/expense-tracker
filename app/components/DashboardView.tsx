@@ -194,7 +194,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
   // Refetch data when refreshTrigger changes (from parent component)
   useEffect(() => {
-    if (refreshTrigger && refreshTrigger > 0) {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      console.log('🔄 DashboardView useEffect triggered by refreshTrigger:', refreshTrigger)
       fetchData()
     }
   }, [refreshTrigger])
@@ -424,6 +425,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     const { transactionId, transaction } = deleteModalData
 
     try {
+      // Optimistically update the local state first for immediate UI feedback
+      setTransactions(prevTransactions => 
+        prevTransactions.filter(t => t.id !== transactionId)
+      )
+
       if (transaction.source_type === 'recurrent' && deleteSeries) {
         // Delete the entire recurrent series
         const { error } = await supabase
@@ -432,7 +438,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           .eq('id', transaction.source_id)
           .eq('user_id', user.id)
 
-        if (error) throw error
+        if (error) {
+          // Revert the optimistic update on error
+          setTransactions(prevTransactions => [...prevTransactions, transaction])
+          throw error
+        }
       } else {
         // Delete only this transaction
         const { error } = await supabase
@@ -441,15 +451,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           .eq('id', transactionId)
           .eq('user_id', user.id)
 
-        if (error) throw error
+        if (error) {
+          // Revert the optimistic update on error
+          setTransactions(prevTransactions => [...prevTransactions, transaction])
+          throw error
+        }
       }
 
-      await fetchData()
-      
-      // Notify parent component of data change
-      if (onDataChange) {
-        onDataChange()
-      }
+      // Don't call onDataChange() since we're using optimistic updates
+      // The optimistic update already provides immediate UI feedback
+      console.log('✅ Delete operation completed - optimistic update maintained')
       
     } catch (error) {
       console.error('Error deleting:', error)
@@ -606,6 +617,21 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     setLoading(true)
 
     try {
+      // Optimistically update the local state first for immediate UI feedback
+      setTransactions(prevTransactions => 
+        prevTransactions.map(t => {
+          if (t.id === modifyFormData.originalId) {
+            return {
+              ...t,
+              description: modifyFormData.description,
+              value: Number(modifyFormData.value),
+              deadline: modifyFormData.payment_deadline || null
+            }
+          }
+          return t
+        })
+      )
+
       if (modifyFormData.type === 'recurrent') {
         const recurrentData = {
           description: modifyFormData.description,
@@ -633,7 +659,20 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             .eq('user_id', user.id)
 
           if (error) {
-            console.error('Error updating recurrent expense:', error)
+            // Revert the optimistic update on error
+            setTransactions(prevTransactions => 
+              prevTransactions.map(t => {
+                if (t.id === modifyFormData.originalId) {
+                  return {
+                    ...t,
+                    description: modifyFormData.description || t.description,
+                    value: modifyFormData.value || t.value,
+                    deadline: modifyFormData.payment_deadline || t.deadline
+                  }
+                }
+                return t
+              })
+            )
             throw error
           }
 
@@ -667,7 +706,23 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             .eq('id', modifyFormData.originalId)
             .eq('user_id', user.id)
 
-          if (error) throw error
+          if (error) {
+            // Revert the optimistic update on error
+            setTransactions(prevTransactions => 
+              prevTransactions.map(t => {
+                if (t.id === modifyFormData.originalId) {
+                  return {
+                    ...t,
+                    description: modifyFormData.description || t.description,
+                    value: modifyFormData.value || t.value,
+                    deadline: modifyFormData.payment_deadline || t.deadline
+                  }
+                }
+                return t
+              })
+            )
+            throw error
+          }
         }
       } else {
         const nonRecurrentData = {
@@ -685,17 +740,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             .eq('id', modifyFormData.originalId)
             .eq('user_id', user.id)
 
-          if (error) throw error
+          if (error) {
+            // Revert the optimistic update on error
+            setTransactions(prevTransactions => 
+              prevTransactions.map(t => {
+                if (t.id === modifyFormData.originalId) {
+                  return {
+                    ...t,
+                    description: modifyFormData.description || t.description,
+                    value: modifyFormData.value || t.value,
+                    deadline: modifyFormData.payment_deadline || t.deadline
+                  }
+                }
+                return t
+              })
+            )
+            throw error
+          }
         }
       }
 
-      // Refresh data
-      await fetchData()
-      
-      // Notify parent component of data change
-      if (onDataChange) {
-        onDataChange()
-      }
+      // Don't call onDataChange() since we're using optimistic updates
+      // The optimistic update already provides immediate UI feedback
+      console.log('✅ Modify operation completed - optimistic update maintained')
       
       // Reset form and close dialogs
       resetModifyForm()

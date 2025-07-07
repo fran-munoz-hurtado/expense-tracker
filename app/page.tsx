@@ -147,7 +147,12 @@ export default function Home() {
 
   const handleDataChange = () => {
     // Increment refresh trigger to notify child components
-    setRefreshTrigger(prev => prev + 1)
+    console.log('🔄 handleDataChange called, incrementing refreshTrigger')
+    setRefreshTrigger(prev => {
+      const newValue = prev + 1
+      console.log('🔄 refreshTrigger updated from', prev, 'to', newValue)
+      return newValue
+    })
   }
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -236,8 +241,15 @@ export default function Home() {
       setShowConfirmation(false)
       setConfirmationData(null)
       
-      // Trigger refresh of child components
+      // Provide immediate UI feedback by triggering refresh
+      // This will update the UI immediately after adding the expense
       handleDataChange()
+      
+      // Add a small delay to ensure the database operation completes
+      // and then refresh again to get the latest data with proper IDs
+      setTimeout(() => {
+        handleDataChange()
+      }, 500)
       
     } catch (error) {
       console.error('Error saving expense:', error)
