@@ -764,9 +764,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   }
 
   const handleAttachmentDeleted = (attachmentId: number) => {
-    // Refresh attachment counts by refetching data
+    // Refresh data after attachment deletion
     fetchData()
-    console.log('Attachment deleted:', attachmentId)
   }
 
   const handleSort = (field: 'description' | 'deadline' | 'status' | 'value') => {
@@ -916,6 +915,136 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const getCurrencyInputValue = (value: number): string => {
     if (value === 0) return ''
     return value.toString()
+  }
+
+  // Add movement modal state
+  const [showAddMovementModal, setShowAddMovementModal] = useState(false)
+  const [addMovementType, setAddMovementType] = useState<'recurrent' | 'non_recurrent' | null>(null)
+  const [addMovementFormData, setAddMovementFormData] = useState({
+    description: '',
+    value: 0,
+    payment_deadline: '',
+    payment_day_deadline: ''
+  })
+  const [addMovementError, setAddMovementError] = useState<string | null>(null)
+  const [addMovementLoading, setAddMovementLoading] = useState(false)
+
+  // Add movement functions
+  const handleAddMovement = () => {
+    setShowAddMovementModal(true)
+    setAddMovementType(null)
+    setAddMovementFormData({
+      description: '',
+      value: 0,
+      payment_deadline: '',
+      payment_day_deadline: ''
+    })
+    setAddMovementError(null)
+  }
+
+  const handleAddMovementSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAddMovementError(null)
+    setAddMovementLoading(true)
+
+    if (!addMovementType || !user) {
+      setAddMovementError('Tipo de movimiento no seleccionado')
+      setAddMovementLoading(false)
+      return
+    }
+
+    try {
+      if (addMovementType === 'recurrent') {
+        // Handle recurrent expense
+        const { data: recurrentExpense, error: recurrentError } = await supabase
+          .from('recurrent_expenses')
+          .insert({
+            user_id: user.id,
+            description: addMovementFormData.description,
+            value: addMovementFormData.value,
+            month_from: selectedMonth,
+            month_to: 12, // Default to end of year
+            year_from: selectedYear,
+            year_to: selectedYear,
+            payment_day_deadline: addMovementFormData.payment_day_deadline
+          })
+          .select()
+          .single()
+
+        if (recurrentError) throw recurrentError
+
+        // Generate transactions for the current month
+        const deadline = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${addMovementFormData.payment_day_deadline.padStart(2, '0')}`
+        
+        const { error: transactionError } = await supabase
+          .from('transactions')
+          .insert({
+            user_id: user.id,
+            recurrent_expense_id: recurrentExpense.id,
+            description: addMovementFormData.description,
+            value: addMovementFormData.value,
+            month: selectedMonth,
+            year: selectedYear,
+            deadline: deadline,
+            status: 'pending'
+          })
+
+        if (transactionError) throw transactionError
+
+      } else {
+        // Handle non-recurrent expense
+        const deadline = addMovementFormData.payment_deadline ? 
+          new Date(addMovementFormData.payment_deadline).toISOString().split('T')[0] : null
+
+        const { error: transactionError } = await supabase
+          .from('transactions')
+          .insert({
+            user_id: user.id,
+            description: addMovementFormData.description,
+            value: addMovementFormData.value,
+            month: selectedMonth,
+            year: selectedYear,
+            deadline: deadline,
+            status: 'pending'
+          })
+
+        if (transactionError) throw transactionError
+      }
+
+      // Close modal and refresh data
+      setShowAddMovementModal(false)
+      setAddMovementType(null)
+      setAddMovementFormData({
+        description: '',
+        value: 0,
+        payment_deadline: '',
+        payment_day_deadline: ''
+      })
+      
+      // Refresh data
+      fetchData()
+      if (onDataChange) {
+        onDataChange()
+      }
+
+    } catch (error) {
+      console.error('Error adding movement:', error)
+      setAddMovementError('Error al agregar el movimiento. Intenta de nuevo.')
+    } finally {
+      setAddMovementLoading(false)
+    }
+  }
+
+  const handleCancelAddMovement = () => {
+    setShowAddMovementModal(false)
+    setAddMovementType(null)
+    setAddMovementFormData({
+      description: '',
+      value: 0,
+      payment_deadline: '',
+      payment_day_deadline: ''
+    })
+    setAddMovementError(null)
   }
 
   return (
@@ -1431,6 +1560,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
             </div>
           </>
         )}
+
+        {/* Add Movement Button */}
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <button
+            onClick={handleAddMovement}
+            className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Agregar Movimiento
+          </button>
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -1585,305 +1725,182 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         </div>
       )}
 
-      {/* Modify Form Modal */}
-      {showModifyForm && modifyFormData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      {/* Add Movement Modal */}
+      {showAddMovementModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">
-                {modifyFormData.modifySeries 
-                  ? `Modify ${modifyFormData.type === 'recurrent' ? 'Recurrent' : 'Non-Recurrent'} Series`
-                  : 'Modify Transaction'
-                }
-              </h2>
+              <h2 className="text-lg sm:text-xl font-bold">Agregar Movimiento</h2>
               <button
-                onClick={resetModifyForm}
-                className="text-gray-400 hover:text-gray-600"
+                onClick={handleCancelAddMovement}
+                className="text-gray-400 hover:text-gray-600 p-1"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
 
-            <form onSubmit={handleModifyFormSubmit} className="space-y-4">
-              {modifyFormData.modifySeries ? (
-                // Full form for series modification
-                modifyFormData.type === 'recurrent' ? (
+            {!addMovementType ? (
+              <div className="space-y-4">
+                <p className="text-gray-600 mb-4">Selecciona el tipo de movimiento que quieres agregar:</p>
+                
+                <button
+                  onClick={() => setAddMovementType('recurrent')}
+                  className="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                >
+                  <div className="flex items-center">
+                    <Repeat className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-3" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Recurrente</h3>
+                      <p className="text-xs sm:text-sm text-gray-600">Gastos que se repiten mensualmente (arriendo, servicios, suscripciones)</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setAddMovementType('non_recurrent')}
+                  className="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                >
+                  <div className="flex items-center">
+                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mr-3" />
+                    <div>
+                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">No Recurrente</h3>
+                      <p className="text-xs sm:text-sm text-gray-600">Gastos únicos (reparaciones, médicos, compras especiales)</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleAddMovementSubmit} className="space-y-4">
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setAddMovementType(null)}
+                    className="text-blue-600 hover:text-blue-800 text-sm"
+                  >
+                    ← Volver a selección de tipo
+                  </button>
+                </div>
+
+                {addMovementError && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                    {addMovementError}
+                  </div>
+                )}
+
+                {addMovementType === 'recurrent' ? (
                   // Recurrent Expense Form
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                       <input
                         type="text"
-                        value={modifyFormData.description}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
+                        value={addMovementFormData.description}
+                        onChange={(e) => setAddMovementFormData(prev => ({ ...prev, description: e.target.value }))}
                         className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From Month</label>
-                        <select
-                          value={modifyFormData.month_from}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_from: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To Month</label>
-                        <select
-                          value={modifyFormData.month_to}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_to: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From Year</label>
-                        <select
-                          value={modifyFormData.year_from}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_from: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To Year</label>
-                        <select
-                          value={modifyFormData.year_to}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_to: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Valor ($)</label>
                         <input
                           type="text"
-                          value={getCurrencyInputValue(modifyFormData.value)}
-                          onChange={(e) => setModifyFormData(prev => prev ? { 
+                          value={getCurrencyInputValue(addMovementFormData.value)}
+                          onChange={(e) => setAddMovementFormData(prev => ({ 
                             ...prev, 
                             value: parseCurrency(e.target.value)
-                          } : null)}
+                          }))}
                           placeholder="$1,200.00"
                           className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                           required
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Day (1-31)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Día de Pago (1-31)</label>
                         <input
                           type="text"
-                          value={modifyFormData.payment_day_deadline}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_day_deadline: e.target.value } : null)}
+                          value={addMovementFormData.payment_day_deadline}
+                          onChange={(e) => setAddMovementFormData(prev => ({ ...prev, payment_day_deadline: e.target.value }))}
+                          placeholder="15"
                           className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                          required
                         />
                       </div>
+                    </div>
+
+                    <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+                      <p className="text-sm text-blue-800">
+                        <strong>Nota:</strong> Este gasto recurrente se creará para {months[selectedMonth - 1]} {selectedYear} y se extenderá hasta diciembre {selectedYear}.
+                      </p>
                     </div>
                   </div>
                 ) : (
                   // Non-Recurrent Expense Form
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
                       <input
                         type="text"
-                        value={modifyFormData.description}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
+                        value={addMovementFormData.description}
+                        onChange={(e) => setAddMovementFormData(prev => ({ ...prev, description: e.target.value }))}
                         className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         required
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
-                        <select
-                          value={modifyFormData.month}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                        <select
-                          value={modifyFormData.year}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Valor ($)</label>
                         <input
                           type="text"
-                          value={getCurrencyInputValue(modifyFormData.value)}
-                          onChange={(e) => setModifyFormData(prev => prev ? { 
+                          value={getCurrencyInputValue(addMovementFormData.value)}
+                          onChange={(e) => setAddMovementFormData(prev => ({ 
                             ...prev, 
                             value: parseCurrency(e.target.value)
-                          } : null)}
+                          }))}
                           placeholder="$500.00"
                           className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                           required
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Deadline</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Vencimiento</label>
                         <input
                           type="date"
-                          value={modifyFormData.payment_deadline}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
+                          value={addMovementFormData.payment_deadline}
+                          onChange={(e) => setAddMovementFormData(prev => ({ ...prev, payment_deadline: e.target.value }))}
                           className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                     </div>
-                  </div>
-                )
-              ) : (
-                // Simple form for individual transaction modification
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <input
-                      type="text"
-                      value={modifyFormData.description}
-                      onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                      className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
-                      <input
-                        type="text"
-                        value={getCurrencyInputValue(modifyFormData.value)}
-                        onChange={(e) => setModifyFormData(prev => prev ? { 
-                          ...prev, 
-                          value: parseCurrency(e.target.value)
-                        } : null)}
-                        placeholder="$500.00"
-                        className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Payment Deadline</label>
-                      <input
-                        type="date"
-                        value={modifyFormData.payment_deadline}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                        className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      />
+                    <div className="bg-green-50 p-3 rounded-md border border-green-200">
+                      <p className="text-sm text-green-800">
+                        <strong>Nota:</strong> Este gasto se agregará para {months[selectedMonth - 1]} {selectedYear}.
+                      </p>
                     </div>
                   </div>
+                )}
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={handleCancelAddMovement}
+                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={addMovementLoading}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {addMovementLoading ? 'Agregando...' : 'Agregar Movimiento'}
+                  </button>
                 </div>
-              )}
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={resetModifyForm}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Modify Confirmation Modal */}
-      {showModifyConfirmation && modifyConfirmationData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold mb-4">Confirm Modification</h3>
-            
-            <div className="space-y-3 mb-6">
-              <div>
-                <span className="font-medium">Action:</span> {modifyConfirmationData.action}
-              </div>
-              <div>
-                <span className="font-medium">Type:</span> {modifyConfirmationData.type === 'recurrent' ? 'Recurrent' : 'Non-Recurrent'}
-              </div>
-              <div>
-                <span className="font-medium">Description:</span> {modifyConfirmationData.description}
-              </div>
-              <div>
-                <span className="font-medium">Value:</span> {formatCurrency(modifyConfirmationData.value)}
-              </div>
-              <div>
-                <span className="font-medium">Period:</span> {modifyConfirmationData.period}
-              </div>
-              <div className="bg-yellow-50 p-3 rounded-md">
-                <span className="font-medium text-yellow-800">
-                  Are you sure you want to {modifyConfirmationData.action}?
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowModifyConfirmation(false)
-                  setModifyConfirmationData(null)
-                }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmModifySubmit}
-                disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? 'Saving...' : 'Confirm & Save'}
-              </button>
-            </div>
+              </form>
+            )}
           </div>
         </div>
       )}
