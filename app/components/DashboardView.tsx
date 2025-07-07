@@ -122,30 +122,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     console.log('selectedYear:', selectedYear)
     console.log('refreshTrigger:', refreshTrigger)
     
-    fetchData()
+    // Only fetch data if refreshTrigger is 0 (initial load) or if month/year changed
+    // Don't fetch when refreshTrigger > 0 to avoid duplication with optimistic updates
+    if (refreshTrigger === 0 || refreshTrigger === undefined) {
+      fetchData()
+    }
   }, [selectedMonth, selectedYear, refreshTrigger])
-
-  // Remove the individual useEffects that were causing multiple calls
-  // useEffect(() => {
-  //   fetchData()
-  // }, [])
-
-  // useEffect(() => {
-  //   fetchData()
-  // }, [selectedMonth, selectedYear])
-
-  // useEffect(() => {
-  //   if (refreshTrigger !== undefined && refreshTrigger > 0) {
-  //     console.log('🔄 DashboardView useEffect triggered by refreshTrigger:', refreshTrigger)
-  //     
-  //     // Add a small delay to prevent multiple rapid calls
-  //     const timeoutId = setTimeout(() => {
-  //       fetchData()
-  //     }, 100)
-  //     
-  //     return () => clearTimeout(timeoutId)
-  //   }
-  // }, [refreshTrigger])
 
   const filteredTransactions = transactions.filter(transaction => 
     transaction.year === selectedYear && transaction.month === selectedMonth
@@ -222,27 +204,6 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     }).reduce((sum, t) => sum + t.value, 0)
   }
 
-  // Remove excessive debug logging
-  // console.log('=== DEBUG MONTHLY STATS ===')
-  // console.log('Selected month/year:', selectedMonth, selectedYear)
-  // console.log('Filter type:', filterType)
-  // console.log('All transactions count:', transactions.length)
-  // console.log('Filtered transactions count:', filteredTransactions.length)
-  // console.log('Type filtered transactions count:', typeFilteredTransactions.length)
-  // console.log('Sorted transactions count:', sortedTransactions.length)
-  
-  // console.log('All transactions for month:', filteredTransactions.map(t => ({
-  //   id: t.id,
-  //   description: t.description,
-  //   value: t.value,
-  //   status: t.status,
-  //   deadline: t.deadline,
-  //   isOverdue: t.deadline ? new Date(t.deadline) < new Date() : false,
-  //   source_type: t.source_type,
-  //   month: t.month,
-  //   year: t.year
-  // })))
-  
   const paidTransactions = filteredTransactions.filter(t => t.status === 'paid')
   const pendingTransactions = filteredTransactions.filter(t => {
     if (t.status !== 'pending') return false
@@ -255,29 +216,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     return new Date(t.deadline) < new Date() // Overdue
   })
   
-  // console.log('Paid transactions:', paidTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
-  // console.log('Pending transactions:', pendingTransactions.map(t => ({ id: t.id, description: t.description, value: t.value })))
-  // console.log('Overdue transactions:', overdueTransactions.map(t => ({ id: t.id, description: t.description, value: t.value, status: t.status })))
-  
-  // console.log('Monthly stats:', {
-  //   total: monthlyStats.total,
-  //   paid: monthlyStats.paid,
-  //   pending: monthlyStats.pending,
-  //   overdue: monthlyStats.overdue
-  // })
-  
   // Verify totals
   const calculatedTotal = paidTransactions.reduce((sum, t) => sum + t.value, 0) + 
                          pendingTransactions.reduce((sum, t) => sum + t.value, 0) + 
                          overdueTransactions.reduce((sum, t) => sum + t.value, 0)
   
-  // console.log('Verification:', {
-  //   calculatedTotal,
-  //   actualTotal: monthlyStats.total,
-  //   match: calculatedTotal === monthlyStats.total
-  // })
-  // console.log('=== END DEBUG ===')
-
   const calculateTransactionCount = (type: ExpenseType, formData: any): number => {
     if (type === 'recurrent') {
       const { month_from, month_to, year_from, year_to } = formData
