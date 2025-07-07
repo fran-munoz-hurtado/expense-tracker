@@ -5,6 +5,7 @@ import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
+import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import Sidebar from './components/Sidebar'
 import DashboardView from './components/DashboardView'
 import DebugTest from './components/DebugTest'
@@ -15,9 +16,9 @@ import Navbar from './components/Navbar'
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
 export default function Home() {
+  const navigation = useAppNavigation()
+  
   const [user, setUser] = useState<User | null>(null)
-  const [activeView, setActiveView] = useState<'dashboard' | 'general-dashboard' | 'debug'>('general-dashboard')
-  const [navigationParams, setNavigationParams] = useState<{ month?: number; year?: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0) // Trigger to refresh child components
   
@@ -60,10 +61,10 @@ export default function Home() {
     const savedUser = localStorage.getItem('expenseTrackerUser')
     if (savedUser) {
       try {
-        const userData = JSON.parse(savedUser)
-        setUser(userData)
+        const parsedUser = JSON.parse(savedUser)
+        setUser(parsedUser)
       } catch (error) {
-        console.error('Error parsing saved user data:', error)
+        console.error('Error parsing saved user:', error)
         localStorage.removeItem('expenseTrackerUser')
       }
     }
@@ -133,8 +134,8 @@ export default function Home() {
 
   const handleLogout = () => {
     setUser(null)
-    setActiveView('general-dashboard')
-    setNavigationParams(null)
+    // Navigate to home on logout
+    navigation.navigateToHome()
     // Remove user from localStorage
     localStorage.removeItem('expenseTrackerUser')
   }
@@ -280,17 +281,40 @@ export default function Home() {
     })
   }
 
-  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug') => {
-    setActiveView(view)
-    // Clear navigation params when manually changing views
-    if (view !== 'dashboard') {
-      setNavigationParams(null)
+  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug') => {
+    console.log('🔄 handleViewChange called with view:', view)
+    try {
+      switch (view) {
+        case 'dashboard':
+          console.log('📍 Navigating to dashboard...')
+          // Navigate to current month dashboard
+          const currentMonth = new Date().getMonth() + 1
+          const currentYear = new Date().getFullYear()
+          await navigation.navigateToDashboard(currentMonth, currentYear)
+          console.log('✅ Dashboard navigation completed')
+          break
+        case 'general-dashboard':
+          console.log('📍 Navigating to general-dashboard...')
+          await navigation.navigateToGeneralDashboard(new Date().getFullYear())
+          console.log('✅ General dashboard navigation completed')
+          break
+        case 'debug':
+          console.log('📍 Navigating to debug...')
+          await navigation.navigateToDebug()
+          console.log('✅ Debug navigation completed')
+          break
+      }
+    } catch (error) {
+      console.error('❌ Navigation error:', error)
     }
   }
 
-  const handleNavigateToMonth = (month: number, year: number) => {
-    setNavigationParams({ month, year })
-    setActiveView('dashboard')
+  const handleNavigateToMonth = async (month: number, year: number) => {
+    try {
+      await navigation.navigateToDashboard(month, year)
+    } catch (error) {
+      console.error('Navigation error:', error)
+    }
   }
 
   const handleAddExpense = () => {
@@ -314,10 +338,47 @@ export default function Home() {
     return <LoginPage onLogin={handleLogin} />
   }
 
+  // Determine which view to render based on current route
+  const renderView = () => {
+    switch (navigation.currentRoute.type) {
+      case 'dashboard':
+        return (
+          <DashboardView 
+            navigationParams={{ 
+              month: navigation.currentRoute.month, 
+              year: navigation.currentRoute.year 
+            }} 
+            user={user}
+            onDataChange={handleDataChange}
+            refreshTrigger={refreshTrigger}
+          />
+        )
+      case 'general-dashboard':
+        return (
+          <GeneralDashboardView 
+            onNavigateToMonth={handleNavigateToMonth} 
+            user={user}
+            navigationParams={{ year: navigation.currentRoute.year }}
+          />
+        )
+      case 'debug':
+        return <DebugTest user={user} />
+      default:
+        // Default to general dashboard for home route
+        return (
+          <GeneralDashboardView 
+            onNavigateToMonth={handleNavigateToMonth} 
+            user={user}
+            navigationParams={null}
+          />
+        )
+    }
+  }
+
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
       <Sidebar 
-        activeView={activeView} 
+        activeView={navigation.currentRoute.type === 'home' ? 'general-dashboard' : navigation.currentRoute.type} 
         onViewChange={handleViewChange} 
         onAddExpense={handleAddExpense}
         user={user}
@@ -326,21 +387,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col min-h-0">
         <Navbar user={user} onLogout={handleLogout} onViewChange={handleViewChange} onUserUpdate={handleUserUpdate} />
         <main className="flex-1 overflow-auto">
-          {activeView === 'dashboard' ? (
-            <DashboardView 
-              navigationParams={navigationParams} 
-              user={user}
-              onDataChange={handleDataChange}
-              refreshTrigger={refreshTrigger}
-            />
-          ) : activeView === 'general-dashboard' ? (
-            <GeneralDashboardView 
-              onNavigateToMonth={handleNavigateToMonth} 
-              user={user}
-            />
-          ) : (
-            <DebugTest user={user} />
-          )}
+          {renderView()}
         </main>
       </div>
 

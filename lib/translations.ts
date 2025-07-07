@@ -29,7 +29,7 @@ export const texts = {
   startTracking: "Empezar a registrar",
   
   // Dashboard y estadísticas - lenguaje más cercano
-  totalBalance: "Cuánto tienes",
+  totalBalance: "Total del Mes",
   totalIncome: "Cuánto entra",
   totalExpenses: "Cuánto sale",
   thisMonth: "Este mes",
@@ -65,8 +65,8 @@ export const texts = {
   paid: "Ya pagué",
   pending: "Falta pagar",
   overdue: "Se pasó la fecha",
-  recurrentOnly: "Solo Recurrentes",
-  nonRecurrentOnly: "Solo No Recurrentes",
+  recurrentOnly: "Solo Mensuales",
+  nonRecurrentOnly: "Solo Únicos",
   forMonth: "Movimientos para",
   daysRemaining: "Días Restantes",
   status: "Estado",
@@ -77,8 +77,8 @@ export const texts = {
   allExpenses: "Todos los Gastos",
   yearlySummary: "Resumen anual por mes y tipo",
   month: "Mes",
-  recurrent: "Recurrentes",
-  nonRecurrent: "No Recurrentes",
+  recurrent: "Mensuales",
+  nonRecurrent: "Únicos",
   optional: "opcional",
   
   // Categorías
@@ -127,6 +127,12 @@ export const texts = {
   confirmDelete: "¿Estás seguro de que quieres eliminar este movimiento?",
   confirmLogout: "¿Estás seguro de que quieres cerrar sesión?",
   unsavedChanges: "Tienes cambios sin guardar. ¿Quieres salir sin guardar?",
+  confirmDeleteTitle: "Confirmar Eliminación",
+  modifyTransactionTitle: "Modificar Movimiento",
+  deleteEntireSeries: "Eliminar Toda la Serie (Todos los Movimientos Relacionados)",
+  deleteOnlyThis: "Eliminar Solo Este Movimiento",
+  modifyEntireSeries: "Modificar Toda la Serie (Todos los Movimientos Relacionados)",
+  modifyOnlyThis: "Modificar Solo Este Movimiento",
   
   // Botones
   save: "Guardar",

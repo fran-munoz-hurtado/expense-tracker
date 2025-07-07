@@ -6,6 +6,7 @@ import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExp
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
+import { useRouter, useSearchParams } from 'next/navigation'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 
@@ -19,6 +20,9 @@ interface DashboardViewProps {
 }
 
 export default function DashboardView({ navigationParams, user, onDataChange, refreshTrigger }: DashboardViewProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
   // Remove excessive debug logging
   // console.log('🔄 DashboardView rendered with refreshTrigger:', refreshTrigger)
   
@@ -86,6 +90,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   const [selectedTransactionForAttachment, setSelectedTransactionForAttachment] = useState<Transaction | null>(null)
   const [showAttachmentsList, setShowAttachmentsList] = useState(false)
   const [selectedTransactionForList, setSelectedTransactionForList] = useState<Transaction | null>(null)
+
+  // Sync with URL parameters
+  useEffect(() => {
+    const urlMonth = searchParams.get('month') ? parseInt(searchParams.get('month')!) : undefined
+    const urlYear = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
+    
+    if (urlMonth && urlYear) {
+      setSelectedMonth(urlMonth)
+      setSelectedYear(urlYear)
+    }
+  }, [searchParams])
 
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -1302,7 +1317,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         </div>
                       </div>
                       <div className="text-right ml-2">
-                        <div className="text-lg font-bold text-gray-900">{formatCurrency(transaction.value)}</div>
+                        <div className="text-lg text-gray-900">{formatCurrency(transaction.value)}</div>
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", getStatusColor(transaction))}>
                           {getStatusText(transaction)}
                         </span>
@@ -1324,9 +1339,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         </div>
                       </div>
                       <div>
-                        <span className="text-xs text-gray-500">Type:</span>
+                        <span className="text-xs text-gray-500">Tipo:</span>
                         <div className="text-sm font-medium text-gray-900 capitalize">
-                          {transaction.source_type.replace('_', ' ')}
+                          {transaction.source_type === 'recurrent' ? texts.recurrent : texts.nonRecurrent}
                         </div>
                       </div>
                     </div>

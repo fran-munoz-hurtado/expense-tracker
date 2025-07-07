@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase, type User } from '@/lib/supabase'
 import { texts } from '@/lib/translations'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 const months = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -22,9 +23,13 @@ function formatCurrency(value: number): string {
 interface GeneralDashboardViewProps {
   onNavigateToMonth: (month: number, year: number) => void
   user: User
+  navigationParams?: { month?: number; year?: number } | null
 }
 
-export default function GeneralDashboardView({ onNavigateToMonth, user }: GeneralDashboardViewProps) {
+export default function GeneralDashboardView({ onNavigateToMonth, user, navigationParams }: GeneralDashboardViewProps) {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  
   const [selectedYear, setSelectedYear] = useState(availableYears[0])
   const [monthlyData, setMonthlyData] = useState<{ 
     month: number, 
@@ -35,6 +40,17 @@ export default function GeneralDashboardView({ onNavigateToMonth, user }: Genera
   }[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Sync with URL parameters
+  useEffect(() => {
+    const yearFromUrl = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
+    if (yearFromUrl && yearFromUrl !== selectedYear) {
+      setSelectedYear(yearFromUrl)
+    }
+  }, [searchParams])
+
+  // Remove the problematic useEffect that was causing navigation cycles
+  // The parent component (app/page.tsx) now handles URL updates through the navigation service
 
   useEffect(() => {
     fetchMonthlyData()
