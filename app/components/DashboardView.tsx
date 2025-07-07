@@ -128,7 +128,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   useEffect(() => {
     if (refreshTrigger !== undefined && refreshTrigger > 0) {
       console.log('🔄 DashboardView useEffect triggered by refreshTrigger:', refreshTrigger)
-      fetchData()
+      
+      // Add a small delay to prevent multiple rapid calls
+      const timeoutId = setTimeout(() => {
+        fetchData()
+      }, 100)
+      
+      return () => clearTimeout(timeoutId)
     }
   }, [refreshTrigger])
 
@@ -389,32 +395,30 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         prevTransactions.filter(t => t.id !== transactionId)
       )
 
+      let error = null
       if (transaction.source_type === 'recurrent' && deleteSeries) {
         // Delete the entire recurrent series
-        const { error } = await supabase
+        const res = await supabase
           .from('recurrent_expenses')
           .delete()
           .eq('id', transaction.source_id)
           .eq('user_id', user.id)
-
-        if (error) {
-          // Revert the optimistic update on error
-          setTransactions(prevTransactions => [...prevTransactions, transaction])
-          throw error
-        }
+        error = res.error
       } else {
         // Delete only this transaction
-        const { error } = await supabase
+        const res = await supabase
           .from('transactions')
           .delete()
           .eq('id', transactionId)
           .eq('user_id', user.id)
+        error = res.error
+      }
 
-        if (error) {
-          // Revert the optimistic update on error
-          setTransactions(prevTransactions => [...prevTransactions, transaction])
-          throw error
-        }
+      if (error) {
+        // Revert the optimistic update on error
+        setTransactions(prevTransactions => [...prevTransactions, transaction])
+        setError('Error al eliminar: ' + (error.message || 'Error desconocido'))
+        return
       }
 
       // Don't call onDataChange() since we're using optimistic updates
@@ -422,8 +426,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       console.log('✅ Delete operation completed - optimistic update maintained')
       
     } catch (error) {
-      console.error('Error deleting:', error)
-      setError(`Error al eliminar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      setTransactions(prevTransactions => [...prevTransactions, transaction])
+      setError('Error al eliminar: ' + (error instanceof Error ? error.message : 'Error desconocido'))
     } finally {
       setShowDeleteModal(false)
       setDeleteModalData(null)
@@ -911,13 +915,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
     return dec !== undefined ? `${int}.${dec}` : int
   }
 
-  // Helper function to get currency input value - format it properly for display
+  // Helper function to get currency input value - just return the raw number as string
   const getCurrencyInputValue = (value: number): string => {
     if (value === 0) return ''
-    return value.toLocaleString('es-CO', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    })
+    return value.toString()
   }
 
   // Add movement modal state
@@ -931,6 +932,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
   })
   const [addMovementError, setAddMovementError] = useState<string | null>(null)
   const [addMovementLoading, setAddMovementLoading] = useState(false)
+  const [isProcessingAddMovement, setIsProcessingAddMovement] = useState(false)
 
   // Add movement functions
   const handleAddMovement = () => {
@@ -947,16 +949,31 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
   const handleAddMovementSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Prevent multiple submissions
+    if (addMovementLoading || isProcessingAddMovement) {
+      console.log('=== PREVENTING DUPLICATE SUBMISSION ===')
+      return
+    }
+    
     setAddMovementError(null)
     setAddMovementLoading(true)
+    setIsProcessingAddMovement(true)
 
-    console.log('Starting add movement with data:', {
-      type: addMovementType,
-      formData: addMovementFormData,
-      user: user?.id,
-      selectedMonth,
-      selectedYear
-    })
+    // Validar máximo permitido por la base de datos
+    if (addMovementFormData.value > 99999999) {
+      setAddMovementError('El valor máximo permitido es $99,999,999')
+      setAddMovementLoading(false)
+      return
+    }
+
+    // Generate unique operation ID to prevent duplicates
+    const operationId = `add_movement_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    console.log('=== STARTING ADD MOVEMENT ===', operationId)
+    console.log('Form data:', addMovementFormData)
+    console.log('Type:', addMovementType)
+    console.log('User ID:', user?.id)
+    console.log('Selected month/year:', selectedMonth, selectedYear)
 
     if (!addMovementType || !user) {
       setAddMovementError('Tipo de movimiento no seleccionado')
@@ -966,7 +983,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
 
     try {
       if (addMovementType === 'recurrent') {
-        console.log('Adding recurrent expense...')
+        console.log('=== ADDING RECURRENT EXPENSE ===', operationId)
+        console.log('Value to insert:', addMovementFormData.value)
         
         // Handle recurrent expense
         const { data: recurrentExpense, error: recurrentError } = await supabase
@@ -995,6 +1013,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         const deadline = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${addMovementFormData.payment_day_deadline.padStart(2, '0')}`
         
         console.log('Creating transaction with deadline:', deadline)
+        console.log('Transaction value:', addMovementFormData.value)
         
         const { error: transactionError } = await supabase
           .from('transactions')
@@ -1014,10 +1033,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
           throw transactionError
         }
 
-        console.log('Transaction created successfully')
+        console.log('Recurrent transaction created successfully')
 
       } else {
-        console.log('Adding non-recurrent expense...')
+        console.log('=== ADDING NON-RECURRENT EXPENSE ===', operationId)
+        console.log('Value to insert:', addMovementFormData.value)
         
         // Handle non-recurrent expense
         const deadline = addMovementFormData.payment_deadline ? 
@@ -1047,6 +1067,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         console.log('Non-recurrent expense created:', nonRecurrentExpense)
 
         console.log('Creating non-recurrent transaction with deadline:', deadline)
+        console.log('Transaction value:', addMovementFormData.value)
 
         const { error: transactionError } = await supabase
           .from('transactions')
@@ -1070,6 +1091,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
         console.log('Non-recurrent transaction created successfully')
       }
 
+      console.log('=== MOVEMENT ADDED SUCCESSFULLY ===', operationId)
+      
       // Close modal and refresh data
       setShowAddMovementModal(false)
       setAddMovementType(null)
@@ -1081,15 +1104,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
       })
       
       // Refresh data - only call onDataChange to avoid duplication
+      console.log('Calling onDataChange to refresh...', operationId)
       if (onDataChange) {
         onDataChange()
       }
 
     } catch (error) {
-      console.error('Error adding movement:', error)
+      console.error('=== ERROR ADDING MOVEMENT ===', operationId)
+      console.error('Error details:', error)
       setAddMovementError(`Error al agregar el movimiento: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
       setAddMovementLoading(false)
+      setIsProcessingAddMovement(false)
     }
   }
 
@@ -1865,10 +1891,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         <input
                           type="text"
                           value={getCurrencyInputValue(addMovementFormData.value)}
-                          onChange={(e) => setAddMovementFormData(prev => ({ 
-                            ...prev, 
-                            value: parseCurrency(e.target.value)
-                          }))}
+                          onChange={(e) => {
+                            let rawValue = e.target.value.replace(/[^0-9]/g, '')
+                            if (rawValue.length > 8) rawValue = rawValue.slice(0, 8)
+                            const numericValue = rawValue ? parseInt(rawValue, 10) : 0
+                            setAddMovementFormData(prev => ({ 
+                              ...prev, 
+                              value: numericValue
+                            }))
+                          }}
                           placeholder="$1,200.00"
                           className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                           required
@@ -1913,10 +1944,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                         <input
                           type="text"
                           value={getCurrencyInputValue(addMovementFormData.value)}
-                          onChange={(e) => setAddMovementFormData(prev => ({ 
-                            ...prev, 
-                            value: parseCurrency(e.target.value)
-                          }))}
+                          onChange={(e) => {
+                            let rawValue = e.target.value.replace(/[^0-9]/g, '')
+                            if (rawValue.length > 8) rawValue = rawValue.slice(0, 8)
+                            const numericValue = rawValue ? parseInt(rawValue, 10) : 0
+                            setAddMovementFormData(prev => ({ 
+                              ...prev, 
+                              value: numericValue
+                            }))
+                          }}
                           placeholder="$500.00"
                           className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
                           required
@@ -1951,10 +1987,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, re
                   </button>
                   <button
                     type="submit"
-                    disabled={addMovementLoading}
+                    disabled={addMovementLoading || isProcessingAddMovement}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                   >
-                    {addMovementLoading ? 'Agregando...' : 'Agregar Movimiento'}
+                    {addMovementLoading || isProcessingAddMovement ? 'Agregando...' : 'Agregar Movimiento'}
                   </button>
                 </div>
               </form>
