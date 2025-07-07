@@ -347,8 +347,22 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   const handleCheckboxChange = async (transactionId: number, isChecked: boolean) => {
     try {
-      setError(null)
+      // Add ripple effect
+      const checkbox = document.getElementById(`checkbox-${transactionId}`)?.nextElementSibling as HTMLElement;
+      if (checkbox) {
+        const ripple = document.createElement('div');
+        ripple.className = 'absolute inset-0 bg-white/40 rounded-lg animate-ripple pointer-events-none';
+        ripple.style.animation = 'ripple 0.6s ease-out';
+        checkbox.appendChild(ripple);
+        
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      }
+
       console.log(`🔄 handleCheckboxChange called for transaction ${transactionId}, isChecked: ${isChecked}`)
+      
+      setError(null)
       
       // Determine the new status based on checkbox and due date
       const transaction = transactions.find(t => t.id === transactionId)
@@ -1102,15 +1116,75 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           {formatCurrency(transaction.value)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={transaction.status === 'paid'}
-                            onChange={(e) => {
-                              console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
-                              handleCheckboxChange(transaction.id, e.target.checked)
-                            }}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={transaction.status === 'paid'}
+                              onChange={(e) => {
+                                console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                                handleCheckboxChange(transaction.id, e.target.checked)
+                              }}
+                              className="sr-only"
+                              id={`checkbox-${transaction.id}`}
+                            />
+                            <label
+                              htmlFor={`checkbox-${transaction.id}`}
+                              className={`
+                                sophisticated-checkbox relative inline-flex items-center justify-center w-6 h-6
+                                ${transaction.status === 'paid' 
+                                  ? 'gradient-emerald glow-emerald' 
+                                  : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-md'
+                                }
+                                rounded-lg overflow-hidden
+                                ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
+                              `}
+                            >
+                              {/* Ripple effect background */}
+                              <div className={`
+                                absolute inset-0 rounded-lg
+                                ${transaction.status === 'paid' 
+                                  ? 'bg-gradient-to-br from-emerald-300/30 via-teal-400/30 to-cyan-500/30 animate-pulse-soft' 
+                                  : ''
+                                }
+                              `} />
+                              
+                              {/* Checkmark with animated stroke */}
+                              {transaction.status === 'paid' && (
+                                <svg
+                                  className="w-4 h-4 text-white relative z-10"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  style={{
+                                    strokeDasharray: '50',
+                                    strokeDashoffset: '50',
+                                    animation: 'checkmark 0.6s ease-out forwards'
+                                  }}
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={3}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              )}
+                              
+                              {/* Hover effect with gradient overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-lg" />
+                              
+                              {/* Glow effect when checked */}
+                              {transaction.status === 'paid' && (
+                                <div className="absolute -inset-2 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 rounded-xl blur-md opacity-40 animate-glow" />
+                              )}
+                              
+                              {/* Click ripple effect */}
+                              <div className="absolute inset-0 rounded-lg pointer-events-none">
+                                <div className="absolute inset-0 bg-white/30 rounded-lg scale-0 opacity-0 transition-all duration-300 ease-out" />
+                              </div>
+                            </label>
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-2">
@@ -1242,15 +1316,75 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                       <div className="flex items-center space-x-1">
-                        <input
-                          type="checkbox"
-                          checked={transaction.status === 'paid'}
-                          onChange={(e) => {
-                            console.log(`🔘 Mobile: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
-                            handleCheckboxChange(transaction.id, e.target.checked)
-                          }}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={transaction.status === 'paid'}
+                            onChange={(e) => {
+                              console.log(`🔘 Mobile: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                              handleCheckboxChange(transaction.id, e.target.checked)
+                            }}
+                            className="sr-only"
+                            id={`checkbox-${transaction.id}`}
+                          />
+                          <label
+                            htmlFor={`checkbox-${transaction.id}`}
+                            className={`
+                              sophisticated-checkbox relative inline-flex items-center justify-center w-6 h-6
+                              ${transaction.status === 'paid' 
+                                ? 'gradient-emerald glow-emerald' 
+                                : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-md'
+                              }
+                              rounded-lg overflow-hidden
+                              ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
+                            `}
+                          >
+                            {/* Ripple effect background */}
+                            <div className={`
+                              absolute inset-0 rounded-lg
+                              ${transaction.status === 'paid' 
+                                ? 'bg-gradient-to-br from-emerald-300/30 via-teal-400/30 to-cyan-500/30 animate-pulse-soft' 
+                                : ''
+                              }
+                            `} />
+                            
+                            {/* Checkmark with animated stroke */}
+                            {transaction.status === 'paid' && (
+                              <svg
+                                className="w-4 h-4 text-white relative z-10"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                                style={{
+                                  strokeDasharray: '50',
+                                  strokeDashoffset: '50',
+                                  animation: 'checkmark 0.6s ease-out forwards'
+                                }}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={3}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                            
+                            {/* Hover effect with gradient overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-lg" />
+                            
+                            {/* Glow effect when checked */}
+                            {transaction.status === 'paid' && (
+                              <div className="absolute -inset-2 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 rounded-xl blur-md opacity-40 animate-glow" />
+                            )}
+                            
+                            {/* Click ripple effect */}
+                            <div className="absolute inset-0 rounded-lg pointer-events-none">
+                              <div className="absolute inset-0 bg-white/30 rounded-lg scale-0 opacity-0 transition-all duration-300 ease-out" />
+                            </div>
+                          </label>
+                        </div>
                         <span className="text-sm text-gray-600 ml-1">Mark as paid</span>
                       </div>
                       <div className="flex items-center space-x-2">
