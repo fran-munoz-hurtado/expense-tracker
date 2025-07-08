@@ -112,7 +112,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   ]
 
   // Available years for selection - easy to extend in the future
-  const availableYears = [2025]
+  const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
 
   // Helper function to format currency for display (rounded, no decimals)
   const formatCurrency = (value: number): string => {
@@ -191,8 +191,26 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         month: t.month,
         year: t.year,
         value: t.value,
-        status: t.status
+        status: t.status,
+        type: t.type,
+        source_type: t.source_type
       })))
+
+      // Log detailed transaction breakdown
+      const expenseTransactions = result.transactions.filter(t => t.type === 'expense')
+      const recurrentTransactions = expenseTransactions.filter(t => t.source_type === 'recurrent')
+      const nonRecurrentTransactions = expenseTransactions.filter(t => t.source_type === 'non_recurrent')
+      
+      console.log('📊 DashboardView: Transaction breakdown:', {
+        total: result.transactions.length,
+        expense: expenseTransactions.length,
+        income: result.transactions.filter(t => t.type === 'income').length,
+        recurrent: recurrentTransactions.length,
+        nonRecurrent: nonRecurrentTransactions.length,
+        totalValue: expenseTransactions.reduce((sum, t) => sum + t.value, 0),
+        recurrentValue: recurrentTransactions.reduce((sum, t) => sum + t.value, 0),
+        nonRecurrentValue: nonRecurrentTransactions.reduce((sum, t) => sum + t.value, 0)
+      })
 
       setTransactions(result.transactions)
       setRecurrentExpenses(result.expenses.recurrent)
@@ -895,7 +913,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   onChange={(e) => setSelectedYear(Number(e.target.value))}
                   className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md"
                 >
-                  {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                  {availableYears.map(year => (
                     <option key={year} value={year}>{year}</option>
                   ))}
                 </select>

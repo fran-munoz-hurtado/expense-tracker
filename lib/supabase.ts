@@ -133,7 +133,6 @@ export type Transaction = {
   deadline: string | null
   type: 'expense' | 'income'
   category: string
-  isgoal: boolean
   created_at: string
   updated_at: string
 }

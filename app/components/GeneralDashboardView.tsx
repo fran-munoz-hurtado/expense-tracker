@@ -131,7 +131,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   ]
 
   // Available years for selection - easy to extend in the future
-  const availableYears = [2025]
+  const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
 
   // Helper function to format currency for display (rounded, no decimals)
   const formatCurrency = (value: number): string => {
@@ -153,6 +153,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       const result = await measureQueryPerformance(
         'fetchGeneralDashboardData',
         async () => {
+          // Get all transactions for the year at once, then process by month
           const [transactions, expenses] = await Promise.all([
             fetchUserTransactions(user, undefined, selectedYear),
             fetchUserExpenses(user)
@@ -222,8 +223,14 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
       setMonthlyData(monthlyStats)
 
-      // Log some sample percentages for debugging
+      // Log detailed debugging information
       console.log('🔄 GeneralDashboardView: Monthly data calculated')
+      console.log('🔄 GeneralDashboardView: Total transactions for year:', result.transactions.length)
+      console.log('🔄 GeneralDashboardView: Transactions by type:', {
+        expense: result.transactions.filter(t => t.type === 'expense').length,
+        income: result.transactions.filter(t => t.type === 'income').length
+      })
+      
       Object.entries(monthlyStats).forEach(([month, data]) => {
         if (data.total > 0) {
           // Calculate how much of each type is paid
@@ -238,7 +245,10 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           const recurrentPercentage = calculatePercentage(recurrentPaid, data.recurrent)
           const nonRecurrentPercentage = calculatePercentage(nonRecurrentPaid, data.nonRecurrent)
           const totalPercentage = calculatePercentage(data.paid, data.total)
-          console.log(`🔄 Month ${month}: Recurrent ${recurrentPercentage}%, NonRecurrent ${nonRecurrentPercentage}%, Total ${totalPercentage}%`)
+          
+          console.log(`🔄 Month ${month}: ${data.transactions.length} transactions, Total: ${formatCurrency(data.total)}, Recurrent: ${formatCurrency(data.recurrent)} (${recurrentPercentage}%), NonRecurrent: ${formatCurrency(data.nonRecurrent)} (${nonRecurrentPercentage}%), Overall: ${totalPercentage}%`)
+        } else {
+          console.log(`🔄 Month ${month}: No transactions`)
         }
       })
 
@@ -584,7 +594,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
         <div className="relative">
           <select
             value={selectedYear}
-            onChange={e => setSelectedYear(Number(e.target.value))}
+            onChange={e => {
+              const newYear = Number(e.target.value)
+              console.log(`🔄 GeneralDashboardView: Year changed from ${selectedYear} to ${newYear}`)
+              setSelectedYear(newYear)
+            }}
             className="appearance-none px-4 py-2 border border-blue-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white text-blue-700 font-semibold transition-all duration-150 hover:border-blue-400 cursor-pointer pr-8"
           >
             {availableYears.map(year => (

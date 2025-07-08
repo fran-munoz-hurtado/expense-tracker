@@ -87,7 +87,7 @@ function Home() {
   ]
 
   // Available years for selection - easy to extend in the future
-  const availableYears = [2025]
+  const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
 
   // Helper function to format currency for display (rounded, no decimals)
   const formatCurrency = (value: number): string => {

@@ -37,6 +37,12 @@ export const fetchUserTransactions = asyncHandler(async (
   
   if (month && year) {
     query = query.eq('month', month).eq('year', year)
+  } else if (year) {
+    // Apply year filter even when month is not specified
+    query = query.eq('year', year)
+  } else if (month) {
+    // Apply month filter even when year is not specified
+    query = query.eq('month', month)
   }
   
   if (type) {
@@ -124,7 +130,7 @@ export const fetchMonthlyStats = asyncHandler(async (user: User, month: number, 
 
   const { data, error } = await supabase
     .from('transactions')
-    .select('value, status, type, category, isgoal')
+    .select('value, status, type, category')
     .eq('user_id', user.id)
     .eq('month', month)
     .eq('year', year)
@@ -133,13 +139,34 @@ export const fetchMonthlyStats = asyncHandler(async (user: User, month: number, 
     throw AppError.database(`Failed to fetch monthly stats: ${error.message}`, error)
   }
 
+  // For goals calculation, we need to fetch from recurrent_expenses since isgoal is there
+  const { data: goalData, error: goalError } = await supabase
+    .from('recurrent_expenses')
+    .select(`
+      id,
+      value,
+      transactions!inner(
+        id,
+        month,
+        year
+      )
+    `)
+    .eq('user_id', user.id)
+    .eq('isgoal', true)
+    .eq('transactions.month', month)
+    .eq('transactions.year', year)
+
+  if (goalError) {
+    console.warn('Failed to fetch goal data for stats:', goalError.message)
+  }
+
   const stats = {
     total: data?.reduce((sum, t) => sum + t.value, 0) || 0,
     paid: data?.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0) || 0,
     pending: data?.filter(t => t.status === 'pending').reduce((sum, t) => sum + t.value, 0) || 0,
     expenses: data?.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0) || 0,
     income: data?.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0) || 0,
-    goals: data?.filter(t => t.isgoal).reduce((sum, t) => sum + t.value, 0) || 0,
+    goals: goalData?.reduce((sum, g) => sum + g.value, 0) || 0,
     overdue: data?.filter(t => {
       // Calculate overdue logic here if needed
       return false
@@ -181,7 +208,6 @@ export const batchUpdateTransactions = asyncHandler(async (user: User, updates: 
   status?: 'paid' | 'pending';
   type?: TransactionType;
   category?: Category;
-  isgoal?: boolean;
 }>) => {
   if (!user || !user.id) {
     throw AppError.validation('Invalid user provided to batchUpdateTransactions')
@@ -305,7 +331,6 @@ export const createTransaction = asyncHandler(async (
     deadline?: string | null
     type?: TransactionType
     category?: Category
-    isgoal?: boolean
   }
 ) => {
   if (!user || !user.id) {
@@ -330,7 +355,6 @@ export const createTransaction = asyncHandler(async (
       status: transactionData.status || DEFAULT_VALUES.TRANSACTION.STATUS,
       type: transactionData.type || DEFAULT_VALUES.TRANSACTION.TYPE,
       category: transactionData.category || DEFAULT_VALUES.TRANSACTION.CATEGORY,
-      isgoal: transactionData.isgoal || DEFAULT_VALUES.TRANSACTION.ISGOAL,
     })
     .select()
     .single()
@@ -459,7 +483,6 @@ export const updateTransaction = asyncHandler(async (
     deadline?: string | null
     type?: TransactionType
     category?: Category
-    isgoal?: boolean
   }
 ) => {
   if (!user || !user.id) {
@@ -564,6 +587,8 @@ export const fetchTransactionsByType = asyncHandler(async (user: User, type: Tra
   return result
 })
 
+// Note: fetchGoalTransactions function needs to be updated to work with recurrent_expenses table
+// since isgoal only exists in that table, not in transactions
 export const fetchGoalTransactions = asyncHandler(async (user: User, month?: number, year?: number) => {
   if (!user || !user.id) {
     throw AppError.validation('Invalid user provided to fetchGoalTransactions')
@@ -576,11 +601,38 @@ export const fetchGoalTransactions = asyncHandler(async (user: User, month?: num
     return cached
   }
 
-  let query = createOptimizedQuery('transactions', user.id)
+  // Since isgoal is in recurrent_expenses table, we need to join with transactions
+  // to get the actual transaction records for goal expenses
+  let query = supabase
+    .from('recurrent_expenses')
+    .select(`
+      id,
+      description,
+      type,
+      category,
+      isgoal,
+      transactions!inner(
+        id,
+        user_id,
+        year,
+        month,
+        description,
+        source_id,
+        source_type,
+        value,
+        status,
+        deadline,
+        type,
+        category,
+        created_at,
+        updated_at
+      )
+    `)
+    .eq('user_id', user.id)
     .eq('isgoal', true)
   
   if (month && year) {
-    query = query.eq('month', month).eq('year', year)
+    query = query.eq('transactions.month', month).eq('transactions.year', year)
   }
   
   const { data, error } = await query.order('created_at', { ascending: false })
@@ -589,9 +641,10 @@ export const fetchGoalTransactions = asyncHandler(async (user: User, month?: num
     throw AppError.database(`Failed to fetch goal transactions: ${error.message}`, error)
   }
 
-  const result = data || []
-  globalCaches.transactions.set(cacheKey, result)
-  return result
+  // Extract transactions from the joined result
+  const transactions = data?.flatMap(item => item.transactions || []) || []
+  globalCaches.transactions.set(cacheKey, transactions)
+  return transactions
 })
 
 // Cache management utilities
