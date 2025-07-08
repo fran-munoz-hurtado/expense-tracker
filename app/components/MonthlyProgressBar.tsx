@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { TrendingUp, Target, Award, Zap, Star, CheckCircle, AlertCircle, Clock, DollarSign } from 'lucide-react'
+import { texts } from '@/lib/translations'
 
 /**
  * Interface for MonthlyProgressBar component props
@@ -395,7 +396,7 @@ export default function MonthlyProgressBar({
               <DollarSign className="h-4 w-4 text-blue-700" />
             </div>
             <div>
-              <p className="text-xs font-medium text-blue-700">Total del mes</p>
+              <p className="text-xs font-medium text-blue-700">{texts.monthlyTotal}</p>
               <p className="text-sm font-bold text-blue-900">{formatCurrency(total)}</p>
             </div>
           </div>
@@ -408,7 +409,7 @@ export default function MonthlyProgressBar({
               <CheckCircle className="h-4 w-4 text-green-700" />
             </div>
             <div>
-              <p className="text-xs font-medium text-green-700">Ya pagué</p>
+              <p className="text-xs font-medium text-green-700">{texts.alreadyPaid}</p>
               <p className="text-sm font-bold text-green-900">{formatCurrency(paid)}</p>
             </div>
           </div>
@@ -421,7 +422,7 @@ export default function MonthlyProgressBar({
               <Clock className="h-4 w-4 text-yellow-700" />
             </div>
             <div>
-              <p className="text-xs font-medium text-yellow-700">Falta pagar</p>
+              <p className="text-xs font-medium text-yellow-700">{texts.stillPending}</p>
               <p className="text-sm font-bold text-yellow-900">{formatCurrency(pending)}</p>
             </div>
           </div>
@@ -444,7 +445,7 @@ export default function MonthlyProgressBar({
             <div>
               <p className={`text-xs font-medium ${
                 hasOverdue ? 'text-red-700' : 'text-gray-500'
-              }`}>Se pasó la fecha</p>
+              }`}>{texts.overdueAmount}</p>
               <p className={`text-sm font-bold ${
                 hasOverdue ? 'text-red-900' : 'text-gray-500'
               }`}>{formatCurrency(overdue)}</p>
@@ -523,7 +524,7 @@ export default function MonthlyProgressBar({
           <div className="flex items-center justify-center space-x-2 text-red-600 bg-red-50 rounded-lg p-2 mt-2">
             <AlertCircle className="h-4 w-4" />
             <span className="text-xs font-medium">
-              Atención: {formatCurrency(overdue)} ({overduePercentage}%) se pasó la fecha
+              Atención: {formatCurrency(overdue)} ({overduePercentage}%) {texts.overdueAmount}
             </span>
           </div>
         )}

@@ -1,149 +1,170 @@
+/**
+ * Centralized translations for the application.
+ *
+ * This file contains all text strings used throughout the application.
+ * For section titles, use SECTION_TITLES for easy customization.
+ */
+
 export const translations = {
   // App general
-  appTitle: 'Expense Tracker',
-  loading: 'Loading...',
-  saving: 'Saving...',
-  save: 'Save',
-  cancel: 'Cancel',
-  delete: 'Delete',
-  errorOccurred: 'An error occurred',
+  appTitle: 'CuandoQueda',
+  loading: 'Cargando...',
+  saving: 'Guardando...',
+  save: 'Guardar',
+  cancel: 'Cancelar',
+  delete: 'Eliminar',
+  errorOccurred: 'Ocurrió un error',
   
   // Navigation
-  thisMonth: 'This Month',
-  allExpenses: 'All Expenses',
+  thisMonth: 'Control del mes',
+  allExpenses: 'Panorama General',
   dashboard: 'Dashboard',
-  yearlySummary: 'Yearly Summary',
+  yearlySummary: 'Resumen Anual',
   
   // Dashboard
-  totalBalance: 'Total Balance',
-  totalExpenses: 'Total Expenses',
-  totalIncome: 'Total Income',
-  pendingPayments: 'Pending Payments',
-  paidExpenses: 'Paid Expenses',
-  overdueExpenses: 'Overdue Expenses',
+  totalBalance: 'Total General',
+  totalExpenses: 'Total de Gastos',
+  totalIncome: 'Total de Ingresos',
+  pendingPayments: 'Pagos Pendientes',
+  paidExpenses: 'Gastos Pagados',
+  overdueExpenses: 'Gastos Vencidos',
+  
+  // Monthly totals
+  monthlyTotal: 'Total del mes',
+  alreadyPaid: 'Ya pagué',
+  stillPending: 'Falta pagar',
+  overdueAmount: 'Se pasó la fecha',
   
   // Transactions
-  addTransaction: 'Add Transaction',
-  editTransaction: 'Edit Transaction',
-  deleteTransaction: 'Delete Transaction',
-  transactions: 'Transactions',
-  description: 'Description',
-  amount: 'Amount',
-  date: 'Date',
-  status: 'Status',
-  category: 'Category',
-  type: 'Type',
+  addTransaction: 'Añadir movimiento',
+  editTransaction: 'Editar Transacción',
+  deleteTransaction: 'Eliminar Transacción',
+  transactions: 'Transacciones',
+  description: 'Descripción',
+  amount: 'Monto',
+  date: 'Fecha',
+  status: 'Estado',
+  category: 'Categoría',
+  type: 'Tipo',
   
   // Status
-  paid: 'Paid',
-  pending: 'Pending',
-  overdue: 'Overdue',
+  paid: 'Ya pagué',
+  pending: 'Falta pagar',
+  overdue: 'Se pasó la fecha',
   
   // Types
-  expense: 'Expense',
-  income: 'Income',
-  recurrent: 'Recurrent',
-  nonRecurrent: 'Non-Recurrent',
+  expense: 'Gasto',
+  income: 'Ingreso',
+  recurrent: 'Mensual',
+  nonRecurrent: 'Único',
   
   // Categories
-  food: 'Food',
-  transportation: 'Transportation',
-  entertainment: 'Entertainment',
-  utilities: 'Utilities',
-  healthcare: 'Healthcare',
-  education: 'Education',
-  shopping: 'Shopping',
-  other: 'Other',
+  food: 'Comida',
+  transportation: 'Transporte',
+  entertainment: 'Entretenimiento',
+  utilities: 'Servicios',
+  healthcare: 'Salud',
+  education: 'Educación',
+  shopping: 'Compras',
+  other: 'Otro',
   
   // Goals
-  isGoal: 'Is Goal',
-  goal: 'Goal',
+  isGoal: 'Es Meta',
+  goal: 'Meta',
   
   // Attachments
-  attachments: 'Attachments',
-  uploadFile: 'Upload File',
-  uploading: 'Uploading...',
+  attachments: 'Adjuntos',
+  uploadFile: 'Subir Archivo',
+  uploading: 'Subiendo...',
   
   // Modals
-  confirmDelete: 'Confirm Delete',
-  confirmModify: 'Confirm Modify',
-  areYouSure: 'Are you sure?',
+  confirmDelete: 'Confirmar Eliminación',
+  confirmModify: 'Confirmar Modificación',
+  areYouSure: '¿Estás seguro?',
   
   // Errors
-  invalidAmount: 'Invalid amount',
-  invalidDate: 'Invalid date',
-  requiredField: 'This field is required',
+  invalidAmount: 'Monto inválido',
+  invalidDate: 'Fecha inválida',
+  requiredField: 'Este campo es requerido',
   
   // Success
-  savedSuccessfully: 'Saved successfully',
-  deletedSuccessfully: 'Deleted successfully',
+  savedSuccessfully: 'Guardado exitosamente',
+  deletedSuccessfully: 'Eliminado exitosamente',
   
   // Months
-  january: 'January',
-  february: 'February',
-  march: 'March',
-  april: 'April',
-  may: 'May',
-  june: 'June',
-  july: 'July',
-  august: 'August',
-  september: 'September',
-  october: 'October',
-  november: 'November',
-  december: 'December',
+  january: 'Enero',
+  february: 'Febrero',
+  march: 'Marzo',
+  april: 'Abril',
+  may: 'Mayo',
+  june: 'Junio',
+  july: 'Julio',
+  august: 'Agosto',
+  september: 'Septiembre',
+  october: 'Octubre',
+  november: 'Noviembre',
+  december: 'Diciembre',
   
   // Additional fields for compatibility
-  month: 'Month',
-  email: 'Email',
-  password: 'Password',
-  logout: 'Logout',
-  actions: 'Actions',
-  due: 'Due',
-  payingFrom: 'Paying from',
-  to: 'to',
-  daysRemaining: 'Days Remaining',
-  forMonth: 'For the month of',
+  month: 'Mes',
+  email: 'Correo Electrónico',
+  password: 'Contraseña',
+  logout: 'Cerrar Sesión',
+  actions: 'Acciones',
+  due: 'Vencimiento',
+  payingFrom: 'Pagando desde',
+  to: 'hasta',
+  daysRemaining: 'Días Restantes',
+  forMonth: 'Para el mes de',
   
   // Empty states
   empty: {
-    noTransactions: 'No transactions',
-    noAttachments: 'No attachments'
+    noTransactions: 'No hay transacciones',
+    noAttachments: 'No hay adjuntos'
   },
   
   // Profile
   profile: {
-    name: 'Name',
-    lastName: 'Last Name',
-    updateProfile: 'Update Profile'
+    name: 'Nombre',
+    lastName: 'Apellido',
+    updateProfile: 'Actualizar Perfil',
+    debugSection: 'Sección de Debug',
+    username: 'Nombre de usuario'
   },
   
   // Authentication
-  login: 'Login',
-  createAccount: 'Create Account',
-  haveAccount: 'Already have an account?',
-  noAccount: "Don't have an account?",
+  login: 'Iniciar Sesión',
+  createAccount: 'Crear Cuenta',
+  haveAccount: '¿Ya tienes una cuenta?',
+  noAccount: "¿No tienes una cuenta?",
   
   // Files
   files: {
-    uploadPaymentProof: 'Upload Payment Proof',
-    dragAndDrop: 'Drag and drop files here, or',
-    chooseFile: 'Choose a file',
-    supportedFormats: 'Supported formats: PDF, JPG, PNG',
-    maxFileSize: 'Max file size: 5MB',
-    description: 'Description',
-    descriptionPlaceholder: 'File description...',
-    uploadFile: 'Upload File',
-    viewFile: 'View File',
-    downloadFile: 'Download File',
-    unsupportedFileType: 'Unsupported file type',
-    fileTooLarge: 'File is too large',
-    uploadFailed: 'Upload failed',
-    databaseError: 'Database error'
+    uploadPaymentProof: 'Subir Comprobante de Pago',
+    dragAndDrop: 'Arrastra y suelta archivos aquí, o',
+    chooseFile: 'Elegir archivo',
+    supportedFormats: 'Formatos soportados: PDF, JPG, PNG',
+    maxFileSize: 'Tamaño máximo: 5MB',
+    description: 'Descripción',
+    descriptionPlaceholder: 'Descripción del archivo...',
+    uploadFile: 'Subir Archivo',
+    viewFile: 'Ver Archivo',
+    downloadFile: 'Descargar Archivo',
+    unsupportedFileType: 'Tipo de archivo no soportado',
+    fileTooLarge: 'El archivo es muy grande',
+    uploadFailed: 'Error al subir',
+    databaseError: 'Error de base de datos'
   },
   
   // Optional
-  optional: 'Optional'
+  optional: 'Opcional'
 } as const
 
 // Alias for backward compatibility
-export const texts = translations 
+export const texts = translations
+
+// Section titles for easy customization
+export const SECTION_TITLES = {
+  MONTH_CONTROL: 'Control del mes',
+  GENERAL_OVERVIEW: 'Panorama General',
+} as const; 

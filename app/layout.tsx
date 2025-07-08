@@ -1,17 +1,18 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { texts } from '@/lib/translations'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Expense Tracker',
+  title: texts.appTitle,
   description: 'Track your monthly expenses and incomes',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Expense Tracker',
+    title: texts.appTitle,
   },
 }
 
@@ -35,7 +36,7 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Expense Tracker" />
+        <meta name="apple-mobile-web-app-title" content={texts.appTitle} />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
       </head>
       <body className={inter.className}>{children}</body>

@@ -214,7 +214,7 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                     className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   >
                     <Bug className="h-4 w-4 mr-2" />
-                    Sección de Debug
+                    {texts.profile.debugSection}
                   </button>
                   
                   <div className="border-t border-gray-100">
@@ -285,7 +285,7 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
 
               <div>
                 <label htmlFor="edit_username" className="block text-sm font-medium text-gray-700">
-                  Nombre de usuario
+                  {texts.profile.username}
                 </label>
                 <input
                   id="edit_username"
