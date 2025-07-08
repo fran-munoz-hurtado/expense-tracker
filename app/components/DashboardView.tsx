@@ -288,6 +288,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   const finalSortedTransactions = applyCustomSorting(sortedTransactions)
 
+  // Helper function to compare dates without time
+  const isDateOverdue = (deadline: string): boolean => {
+    const [year, month, day] = deadline.split('-').map(Number);
+    const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+    
+    // Create today's date without time
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return deadlineDate < todayDate;
+  }
+
   // Calcular totales del mes según la lógica del usuario
   const monthlyStats = {
     total: filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0), // Total del mes (solo gastos)
@@ -296,13 +308,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       // Falta pagar: status 'pending', tipo 'expense' y NO vencidas
       if (t.type !== 'expense' || t.status !== 'pending') return false
       if (!t.deadline) return true // Sin fecha límite, no está vencida
-      return new Date(t.deadline) >= new Date() // No vencida
+      return !isDateOverdue(t.deadline) // No vencida
     }).reduce((sum, t) => sum + t.value, 0),
     overdue: filteredTransactions.filter(t => {
       // Se pasó la fecha: status 'pending', tipo 'expense' y vencidas
       if (t.type !== 'expense' || t.status !== 'pending') return false
       if (!t.deadline) return false // Sin fecha límite, no puede estar vencida
-      return new Date(t.deadline) < new Date() // Vencida
+      return isDateOverdue(t.deadline) // Vencida
     }).reduce((sum, t) => sum + t.value, 0)
   }
 
@@ -310,12 +322,12 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const pendingTransactions = filteredTransactions.filter(t => {
     if (t.type !== 'expense' || t.status !== 'pending') return false
     if (!t.deadline) return true
-    return new Date(t.deadline) >= new Date()
+    return !isDateOverdue(t.deadline)
   })
   const overdueTransactions = filteredTransactions.filter(t => {
     if (t.type !== 'expense' || t.status !== 'pending') return false // Only include expense pending transactions
     if (!t.deadline) return false // No deadline, can't be overdue
-    return new Date(t.deadline) < new Date() // Overdue
+    return isDateOverdue(t.deadline) // Overdue
   })
   
   // Verify totals
@@ -377,7 +389,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         description: transaction.description,
         currentStatus: transaction.status,
         deadline: transaction.deadline,
-        isOverdue: transaction.deadline ? new Date(transaction.deadline) < new Date() : false
+        isOverdue: transaction.deadline ? isDateOverdue(transaction.deadline) : false
       })
 
       let newStatus: 'paid' | 'pending'
@@ -385,7 +397,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         newStatus = 'paid'
       } else {
         // If unchecked, check if it's overdue
-        if (transaction.deadline && new Date(transaction.deadline) < new Date()) {
+        if (transaction.deadline && isDateOverdue(transaction.deadline)) {
           newStatus = 'pending' // Will show as overdue in UI
         } else {
           newStatus = 'pending'
@@ -780,8 +792,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       return <CheckCircle className="h-4 w-4 text-green-600" />
     }
     
-    if (transaction.deadline && new Date(transaction.deadline) < new Date()) {
-      return <AlertCircle className="h-4 w-4 text-red-600" />
+    if (transaction.deadline) {
+      // Parse the date string to avoid timezone issues and compare only dates
+      const [year, month, day] = transaction.deadline.split('-').map(Number);
+      const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+      
+      // Create today's date without time
+      const today = new Date();
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      if (deadlineDate < todayDate) {
+        return <AlertCircle className="h-4 w-4 text-red-600" />
+      }
     }
     
     return null
@@ -789,13 +811,37 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   const getStatusText = (transaction: Transaction) => {
     if (transaction.status === 'paid') return texts.paid
-    if (transaction.deadline && new Date(transaction.deadline) < new Date()) return texts.overdue
+    if (transaction.deadline) {
+      // Parse the date string to avoid timezone issues and compare only dates
+      const [year, month, day] = transaction.deadline.split('-').map(Number);
+      const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+      
+      // Create today's date without time
+      const today = new Date();
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      if (deadlineDate < todayDate) {
+        return texts.overdue
+      }
+    }
     return texts.pending
   }
 
   const getStatusColor = (transaction: Transaction) => {
     if (transaction.status === 'paid') return 'bg-green-100 text-green-800'
-    if (transaction.deadline && new Date(transaction.deadline) < new Date()) return 'bg-red-100 text-red-800'
+    if (transaction.deadline) {
+      // Parse the date string to avoid timezone issues and compare only dates
+      const [year, month, day] = transaction.deadline.split('-').map(Number);
+      const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+      
+      // Create today's date without time
+      const today = new Date();
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      if (deadlineDate < todayDate) {
+        return 'bg-red-100 text-red-800'
+      }
+    }
     return 'bg-yellow-100 text-yellow-800'
   }
 

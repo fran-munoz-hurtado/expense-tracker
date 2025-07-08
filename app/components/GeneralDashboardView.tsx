@@ -38,6 +38,18 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     overdue: number
   }>>({})
 
+  // Helper function to compare dates without time
+  const isDateOverdue = (deadline: string): boolean => {
+    const [year, month, day] = deadline.split('-').map(Number);
+    const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+    
+    // Create today's date without time
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return deadlineDate < todayDate;
+  }
+
   // Delete confirmation modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteModalData, setDeleteModalData] = useState<{
@@ -189,12 +201,12 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
         const pending = monthTransactions.filter((t: Transaction) => {
           if (t.status !== 'pending') return false
           if (!t.deadline) return true
-          return new Date(t.deadline) >= new Date()
+          return !isDateOverdue(t.deadline)
         }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
         const overdue = monthTransactions.filter((t: Transaction) => {
           if (t.status !== 'pending') return false
           if (!t.deadline) return false
-          return new Date(t.deadline) < new Date()
+          return isDateOverdue(t.deadline)
         }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
 
         monthlyStats[month] = {
