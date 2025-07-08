@@ -1,40 +1,33 @@
-import { supabase, createOptimizedQuery, batchQuery, CACHE_CONFIG, type User, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type TransactionAttachment } from './supabase'
-import { CATEGORIES, TRANSACTION_TYPES, DEFAULT_VALUES, type Category, type TransactionType } from './constants'
+import { supabase, createOptimizedQuery, batchQuery, type User, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type TransactionAttachment } from './supabase'
+import { CATEGORIES, TRANSACTION_TYPES, DEFAULT_VALUES, type Category, type TransactionType } from './config/constants'
+import { AppError, asyncHandler, ErrorHandler } from './errors/AppError'
+import { TransactionValidator, ExpenseValidator, ValidationHelper } from './validation/validators'
+import { globalCaches } from './cache/CacheManager'
+import { APP_CONFIG } from './config/constants'
 
-// Simple in-memory cache for performance
-const cache = new Map<string, { data: any; timestamp: number }>()
-
-// Cache management utilities
-const getCacheKey = (userId: number, operation: string, params?: any) => {
-  return `${userId}-${operation}-${JSON.stringify(params || {})}`
-}
-
-const getCachedData = (key: string, duration: number) => {
-  const cached = cache.get(key)
-  if (cached && Date.now() - cached.timestamp < duration) {
-    return cached.data
+// Enhanced data fetching functions with comprehensive error handling and validation
+export const fetchUserTransactions = asyncHandler(async (
+  user: User, 
+  month?: number, 
+  year?: number, 
+  type?: TransactionType, 
+  category?: Category
+): Promise<Transaction[]> => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to fetchUserTransactions')
   }
-  return null
-}
-
-const setCachedData = (key: string, data: any) => {
-  cache.set(key, { data, timestamp: Date.now() })
-}
-
-const clearUserCache = (userId: number) => {
-  const keysToDelete: string[] = []
-  Array.from(cache.keys()).forEach(key => {
-    if (key.startsWith(`${userId}-`)) {
-      keysToDelete.push(key)
-    }
-  })
-  keysToDelete.forEach(key => cache.delete(key))
-}
-
-// Optimized data fetching functions
-export const fetchUserTransactions = async (user: User, month?: number, year?: number, type?: TransactionType, category?: Category) => {
-  const cacheKey = getCacheKey(user.id, 'transactions', { month, year, type, category })
-  const cached = getCachedData(cacheKey, CACHE_CONFIG.TRANSACTIONS_CACHE_DURATION)
+  
+  // Validate month and year if provided
+  if (month !== undefined && (month < 1 || month > 12)) {
+    throw AppError.validation('Invalid month provided to fetchUserTransactions')
+  }
+  
+  if (year !== undefined && (year < 1900 || year > 2100)) {
+    throw AppError.validation('Invalid year provided to fetchUserTransactions')
+  }
+  
+  const cacheKey = `transactions-${user.id}-${month || 'all'}-${year || 'all'}-${type || 'all'}-${category || 'all'}`
+  const cached = globalCaches.transactions.get<Transaction[]>(cacheKey)
   
   if (cached) {
     return cached
@@ -56,15 +49,22 @@ export const fetchUserTransactions = async (user: User, month?: number, year?: n
   
   const { data, error } = await query.order('created_at', { ascending: false })
   
-  if (error) throw error
+  if (error) {
+    throw AppError.database(`Failed to fetch transactions: ${error.message}`, error)
+  }
   
-  setCachedData(cacheKey, data)
-  return data
-}
+  const result = data || []
+  globalCaches.transactions.set(cacheKey, result)
+  return result
+})
 
-export const fetchUserExpenses = async (user: User, type?: TransactionType, category?: Category) => {
-  const cacheKey = getCacheKey(user.id, 'expenses', { type, category })
-  const cached = getCachedData(cacheKey, CACHE_CONFIG.USER_DATA_CACHE_DURATION)
+export const fetchUserExpenses = asyncHandler(async (user: User, type?: TransactionType, category?: Category) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to fetchUserExpenses')
+  }
+
+  const cacheKey = `expenses-${user.id}-${type || 'all'}-${category || 'all'}`
+  const cached = globalCaches.userData.get(cacheKey)
   
   if (cached) {
     return cached
@@ -88,21 +88,38 @@ export const fetchUserExpenses = async (user: User, type?: TransactionType, cate
     nonRecurrentQuery.order('created_at', { ascending: false })
   ])
 
-  if (recurrentResult.error) throw recurrentResult.error
-  if (nonRecurrentResult.error) throw nonRecurrentResult.error
+  if (recurrentResult.error) {
+    throw AppError.database(`Failed to fetch recurrent expenses: ${recurrentResult.error.message}`, recurrentResult.error)
+  }
+  
+  if (nonRecurrentResult.error) {
+    throw AppError.database(`Failed to fetch non-recurrent expenses: ${nonRecurrentResult.error.message}`, nonRecurrentResult.error)
+  }
 
   const result = {
     recurrent: recurrentResult.data || [],
     nonRecurrent: nonRecurrentResult.data || []
   }
 
-  setCachedData(cacheKey, result)
+  globalCaches.userData.set(cacheKey, result)
   return result
-}
+})
 
-export const fetchMonthlyStats = async (user: User, month: number, year: number) => {
-  const cacheKey = getCacheKey(user.id, 'monthly-stats', { month, year })
-  const cached = getCachedData(cacheKey, CACHE_CONFIG.STATS_CACHE_DURATION)
+export const fetchMonthlyStats = asyncHandler(async (user: User, month: number, year: number) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to fetchMonthlyStats')
+  }
+
+  if (month < 1 || month > 12) {
+    throw AppError.validation('Invalid month provided to fetchMonthlyStats')
+  }
+
+  if (year < 1900 || year > 2100) {
+    throw AppError.validation('Invalid year provided to fetchMonthlyStats')
+  }
+
+  const cacheKey = `monthly-stats-${user.id}-${month}-${year}`
+  const cached = globalCaches.stats.get(cacheKey)
   
   if (cached) {
     return cached
@@ -115,7 +132,9 @@ export const fetchMonthlyStats = async (user: User, month: number, year: number)
     .eq('month', month)
     .eq('year', year)
 
-  if (error) throw error
+  if (error) {
+    throw AppError.database(`Failed to fetch monthly stats: ${error.message}`, error)
+  }
 
   const stats = {
     total: data?.reduce((sum, t) => sum + t.value, 0) || 0,
@@ -130,11 +149,15 @@ export const fetchMonthlyStats = async (user: User, month: number, year: number)
     }).reduce((sum, t) => sum + t.value, 0) || 0
   }
 
-  setCachedData(cacheKey, stats)
+  globalCaches.stats.set(cacheKey, stats)
   return stats
-}
+})
 
-export const fetchAttachmentCounts = async (user: User, transactionIds: number[]) => {
+export const fetchAttachmentCounts = asyncHandler(async (user: User, transactionIds: number[]) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to fetchAttachmentCounts')
+  }
+
   if (transactionIds.length === 0) return {}
 
   const { data, error } = await supabase
@@ -143,7 +166,9 @@ export const fetchAttachmentCounts = async (user: User, transactionIds: number[]
     .in('transaction_id', transactionIds)
     .eq('user_id', user.id)
 
-  if (error) throw error
+  if (error) {
+    throw AppError.database(`Failed to fetch attachment counts: ${error.message}`, error)
+  }
 
   const counts: Record<number, number> = {}
   data?.forEach(attachment => {
@@ -151,53 +176,87 @@ export const fetchAttachmentCounts = async (user: User, transactionIds: number[]
   })
 
   return counts
-}
+})
 
-// Optimized batch operations
-export const batchUpdateTransactions = async (user: User, updates: Array<{ 
+// Enhanced batch operations with validation and error handling
+export const batchUpdateTransactions = asyncHandler(async (user: User, updates: Array<{ 
   id: number; 
   status?: 'paid' | 'pending';
   type?: TransactionType;
   category?: Category;
   isgoal?: boolean;
 }>) => {
-  const promises = updates.map(update => {
-    const updateData: any = {}
-    if (update.status) updateData.status = update.status
-    if (update.type) updateData.type = update.type
-    if (update.category) updateData.category = update.category
-    if (update.isgoal !== undefined) updateData.isgoal = update.isgoal
-    
-    return supabase
-      .from('transactions')
-      .update(updateData)
-      .eq('id', update.id)
-      .eq('user_id', user.id)
-  })
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to batchUpdateTransactions')
+  }
 
-  const results = await Promise.all(promises)
-  
-  // Clear cache after updates
-  clearUserCache(user.id)
-  
-  return results
-}
+  if (!Array.isArray(updates) || updates.length === 0) {
+    throw AppError.validation('Invalid updates array provided to batchUpdateTransactions')
+  }
 
-export const batchDeleteTransactions = async (user: User, transactionIds: number[]) => {
+  // Validate each update
+  for (const update of updates) {
+    if (!update.id || update.id <= 0) {
+      throw AppError.validation('Invalid transaction ID in batch update')
+    }
+  }
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .upsert(updates.map(update => ({
+      ...update,
+      user_id: user.id,
+      updated_at: new Date().toISOString()
+    })))
+    .select()
+
+  if (error) {
+    throw AppError.database(`Failed to batch update transactions: ${error.message}`, error)
+  }
+
+  // Clear related caches
+  globalCaches.transactions.clear()
+  globalCaches.stats.clear()
+
+  return data || []
+})
+
+export const batchDeleteTransactions = asyncHandler(async (user: User, transactionIds: number[]) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to batchDeleteTransactions')
+  }
+
+  if (!Array.isArray(transactionIds) || transactionIds.length === 0) {
+    throw AppError.validation('Invalid transaction IDs array provided to batchDeleteTransactions')
+  }
+
   const { error } = await supabase
     .from('transactions')
     .delete()
     .in('id', transactionIds)
     .eq('user_id', user.id)
 
-  if (error) throw error
-  
-  // Clear cache after deletion
-  clearUserCache(user.id)
-}
+  if (error) {
+    throw AppError.database(`Failed to batch delete transactions: ${error.message}`, error)
+  }
 
-// Real-time subscription helpers (for future use)
+  // Clear related caches
+  globalCaches.transactions.clear()
+  globalCaches.stats.clear()
+
+  return { deletedCount: transactionIds.length }
+})
+
+// Real-time subscription with error handling
 export const subscribeToUserData = (user: User, callback: (payload: any) => void) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to subscribeToUserData')
+  }
+
+  if (typeof callback !== 'function') {
+    throw AppError.validation('Invalid callback provided to subscribeToUserData')
+  }
+
   return supabase
     .channel(`user-${user.id}`)
     .on('postgres_changes', 
@@ -212,32 +271,31 @@ export const subscribeToUserData = (user: User, callback: (payload: any) => void
     .subscribe()
 }
 
-// Performance monitoring
+// Performance measurement utility
 export const measureQueryPerformance = async <T>(
   operation: string,
   queryFn: () => Promise<T>
 ): Promise<T> => {
-  const start = performance.now()
+  const startTime = performance.now()
   
   try {
     const result = await queryFn()
-    const duration = performance.now() - start
+    const duration = performance.now() - startTime
     
-    // Log slow queries (over 1 second)
-    if (duration > 1000) {
-      console.warn(`Slow query detected: ${operation} took ${duration.toFixed(2)}ms`)
+    if (APP_CONFIG.MONITORING.ENABLE_PERFORMANCE_TRACKING) {
+      console.info(`Query performance - ${operation}: ${duration.toFixed(2)}ms`)
     }
     
     return result
   } catch (error) {
-    const duration = performance.now() - start
-    console.error(`Query failed: ${operation} after ${duration.toFixed(2)}ms`, error)
+    const duration = performance.now() - startTime
+    console.error(`Query failed - ${operation}: ${duration.toFixed(2)}ms`, error)
     throw error
   }
 }
 
-// New transaction creation with enhanced fields
-export const createTransaction = async (
+// Enhanced transaction creation with validation
+export const createTransaction = asyncHandler(async (
   user: User,
   transactionData: {
     year: number
@@ -253,37 +311,46 @@ export const createTransaction = async (
     isgoal?: boolean
   }
 ) => {
-  const newTransaction = {
-    user_id: user.id,
-    year: transactionData.year,
-    month: transactionData.month,
-    description: transactionData.description,
-    source_id: transactionData.source_id,
-    source_type: transactionData.source_type,
-    value: transactionData.value,
-    status: transactionData.status || DEFAULT_VALUES.STATUS,
-    deadline: transactionData.deadline || null,
-    type: transactionData.type || DEFAULT_VALUES.TYPE,
-    category: transactionData.category || DEFAULT_VALUES.CATEGORY,
-    isgoal: transactionData.isgoal || DEFAULT_VALUES.ISGOAL
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to createTransaction')
+  }
+
+  // Validate transaction data
+  const validationResult = TransactionValidator.validateCreation({
+    ...transactionData,
+    user_id: user.id
+  })
+  
+  if (!validationResult.isValid) {
+    throw AppError.validation('Invalid transaction data', { fields: validationResult.errors })
   }
 
   const { data, error } = await supabase
     .from('transactions')
-    .insert(newTransaction)
+    .insert({
+      ...transactionData,
+      user_id: user.id,
+      status: transactionData.status || DEFAULT_VALUES.TRANSACTION.STATUS,
+      type: transactionData.type || DEFAULT_VALUES.TRANSACTION.TYPE,
+      category: transactionData.category || DEFAULT_VALUES.TRANSACTION.CATEGORY,
+      isgoal: transactionData.isgoal || DEFAULT_VALUES.TRANSACTION.ISGOAL,
+    })
     .select()
     .single()
 
-  if (error) throw error
-  
-  // Clear cache after creation
-  clearUserCache(user.id)
-  
-  return data
-}
+  if (error) {
+    throw AppError.database(`Failed to create transaction: ${error.message}`, error)
+  }
 
-// Create recurrent expense with enhanced fields
-export const createRecurrentExpense = async (
+  // Clear related caches
+  globalCaches.transactions.clear()
+  globalCaches.stats.clear()
+
+  return data
+})
+
+// Enhanced recurrent expense creation with validation
+export const createRecurrentExpense = asyncHandler(async (
   user: User,
   expenseData: {
     description: string
@@ -298,36 +365,44 @@ export const createRecurrentExpense = async (
     isgoal?: boolean
   }
 ) => {
-  const newExpense = {
-    user_id: user.id,
-    description: expenseData.description,
-    month_from: expenseData.month_from,
-    month_to: expenseData.month_to,
-    year_from: expenseData.year_from,
-    year_to: expenseData.year_to,
-    value: expenseData.value,
-    payment_day_deadline: expenseData.payment_day_deadline || null,
-    type: expenseData.type || DEFAULT_VALUES.TYPE,
-    category: expenseData.category || DEFAULT_VALUES.CATEGORY,
-    isgoal: expenseData.isgoal || DEFAULT_VALUES.ISGOAL
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to createRecurrentExpense')
+  }
+
+  // Validate expense data
+  const validationResult = ExpenseValidator.validateRecurrentCreation({
+    ...expenseData,
+    user_id: user.id
+  })
+  
+  if (!validationResult.isValid) {
+    throw AppError.validation('Invalid recurrent expense data', { fields: validationResult.errors })
   }
 
   const { data, error } = await supabase
     .from('recurrent_expenses')
-    .insert(newExpense)
+    .insert({
+      ...expenseData,
+      user_id: user.id,
+      type: expenseData.type || DEFAULT_VALUES.EXPENSE.TYPE,
+      category: expenseData.category || DEFAULT_VALUES.EXPENSE.CATEGORY,
+      isgoal: expenseData.isgoal || DEFAULT_VALUES.EXPENSE.ISGOAL,
+    })
     .select()
     .single()
 
-  if (error) throw error
-  
-  // Clear cache after creation
-  clearUserCache(user.id)
-  
-  return data
-}
+  if (error) {
+    throw AppError.database(`Failed to create recurrent expense: ${error.message}`, error)
+  }
 
-// Create non-recurrent expense with enhanced fields
-export const createNonRecurrentExpense = async (
+  // Clear related caches
+  globalCaches.userData.clear()
+
+  return data
+})
+
+// Enhanced non-recurrent expense creation with validation
+export const createNonRecurrentExpense = asyncHandler(async (
   user: User,
   expenseData: {
     description: string
@@ -340,34 +415,44 @@ export const createNonRecurrentExpense = async (
     isgoal?: boolean
   }
 ) => {
-  const newExpense = {
-    user_id: user.id,
-    description: expenseData.description,
-    year: expenseData.year,
-    month: expenseData.month,
-    value: expenseData.value,
-    payment_deadline: expenseData.payment_deadline || null,
-    type: expenseData.type || DEFAULT_VALUES.TYPE,
-    category: expenseData.category || DEFAULT_VALUES.CATEGORY,
-    isgoal: expenseData.isgoal || DEFAULT_VALUES.ISGOAL
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to createNonRecurrentExpense')
+  }
+
+  // Validate expense data
+  const validationResult = ExpenseValidator.validateNonRecurrentCreation({
+    ...expenseData,
+    user_id: user.id
+  })
+  
+  if (!validationResult.isValid) {
+    throw AppError.validation('Invalid non-recurrent expense data', { fields: validationResult.errors })
   }
 
   const { data, error } = await supabase
     .from('non_recurrent_expenses')
-    .insert(newExpense)
+    .insert({
+      ...expenseData,
+      user_id: user.id,
+      type: expenseData.type || DEFAULT_VALUES.EXPENSE.TYPE,
+      category: expenseData.category || DEFAULT_VALUES.EXPENSE.CATEGORY,
+      isgoal: expenseData.isgoal || DEFAULT_VALUES.EXPENSE.ISGOAL,
+    })
     .select()
     .single()
 
-  if (error) throw error
-  
-  // Clear cache after creation
-  clearUserCache(user.id)
-  
-  return data
-}
+  if (error) {
+    throw AppError.database(`Failed to create non-recurrent expense: ${error.message}`, error)
+  }
 
-// Update transaction with enhanced fields
-export const updateTransaction = async (
+  // Clear related caches
+  globalCaches.userData.clear()
+
+  return data
+})
+
+// Enhanced transaction update with validation
+export const updateTransaction = asyncHandler(async (
   user: User,
   transactionId: number,
   updateData: {
@@ -380,35 +465,61 @@ export const updateTransaction = async (
     isgoal?: boolean
   }
 ) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to updateTransaction')
+  }
+
+  if (!transactionId || transactionId <= 0) {
+    throw AppError.validation('Invalid transaction ID provided to updateTransaction')
+  }
+
+  // Validate update data
+  const validationResult = TransactionValidator.validateUpdate(updateData)
+  
+  if (!validationResult.isValid) {
+    throw AppError.validation('Invalid transaction update data', { fields: validationResult.errors })
+  }
+
   const { data, error } = await supabase
     .from('transactions')
-    .update(updateData)
+    .update({
+      ...updateData,
+      updated_at: new Date().toISOString()
+    })
     .eq('id', transactionId)
     .eq('user_id', user.id)
     .select()
     .single()
 
-  if (error) throw error
-  
-  // Clear cache after update
-  clearUserCache(user.id)
-  
-  return data
-}
+  if (error) {
+    throw AppError.database(`Failed to update transaction: ${error.message}`, error)
+  }
 
-// Get transactions by category
-export const fetchTransactionsByCategory = async (user: User, category: Category, month?: number, year?: number) => {
-  const cacheKey = getCacheKey(user.id, 'transactions-by-category', { category, month, year })
-  const cached = getCachedData(cacheKey, CACHE_CONFIG.TRANSACTIONS_CACHE_DURATION)
+  if (!data) {
+    throw AppError.notFound('Transaction not found')
+  }
+
+  // Clear related caches
+  globalCaches.transactions.clear()
+  globalCaches.stats.clear()
+
+  return data
+})
+
+// Enhanced category-based queries
+export const fetchTransactionsByCategory = asyncHandler(async (user: User, category: Category, month?: number, year?: number) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to fetchTransactionsByCategory')
+  }
+
+  const cacheKey = `transactions-category-${user.id}-${category}-${month || 'all'}-${year || 'all'}`
+  const cached = globalCaches.transactions.get<Transaction[]>(cacheKey)
   
   if (cached) {
     return cached
   }
 
-  let query = supabase
-    .from('transactions')
-    .select('*')
-    .eq('user_id', user.id)
+  let query = createOptimizedQuery('transactions', user.id)
     .eq('category', category)
   
   if (month && year) {
@@ -417,25 +528,28 @@ export const fetchTransactionsByCategory = async (user: User, category: Category
   
   const { data, error } = await query.order('created_at', { ascending: false })
   
-  if (error) throw error
-  
-  setCachedData(cacheKey, data)
-  return data
-}
+  if (error) {
+    throw AppError.database(`Failed to fetch transactions by category: ${error.message}`, error)
+  }
 
-// Get transactions by type (expense/income)
-export const fetchTransactionsByType = async (user: User, type: TransactionType, month?: number, year?: number) => {
-  const cacheKey = getCacheKey(user.id, 'transactions-by-type', { type, month, year })
-  const cached = getCachedData(cacheKey, CACHE_CONFIG.TRANSACTIONS_CACHE_DURATION)
+  const result = data || []
+  globalCaches.transactions.set(cacheKey, result)
+  return result
+})
+
+export const fetchTransactionsByType = asyncHandler(async (user: User, type: TransactionType, month?: number, year?: number) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to fetchTransactionsByType')
+  }
+
+  const cacheKey = `transactions-type-${user.id}-${type}-${month || 'all'}-${year || 'all'}`
+  const cached = globalCaches.transactions.get<Transaction[]>(cacheKey)
   
   if (cached) {
     return cached
   }
 
-  let query = supabase
-    .from('transactions')
-    .select('*')
-    .eq('user_id', user.id)
+  let query = createOptimizedQuery('transactions', user.id)
     .eq('type', type)
   
   if (month && year) {
@@ -444,25 +558,28 @@ export const fetchTransactionsByType = async (user: User, type: TransactionType,
   
   const { data, error } = await query.order('created_at', { ascending: false })
   
-  if (error) throw error
-  
-  setCachedData(cacheKey, data)
-  return data
-}
+  if (error) {
+    throw AppError.database(`Failed to fetch transactions by type: ${error.message}`, error)
+  }
 
-// Get goal transactions
-export const fetchGoalTransactions = async (user: User, month?: number, year?: number) => {
-  const cacheKey = getCacheKey(user.id, 'goal-transactions', { month, year })
-  const cached = getCachedData(cacheKey, CACHE_CONFIG.TRANSACTIONS_CACHE_DURATION)
+  const result = data || []
+  globalCaches.transactions.set(cacheKey, result)
+  return result
+})
+
+export const fetchGoalTransactions = asyncHandler(async (user: User, month?: number, year?: number) => {
+  if (!user || !user.id) {
+    throw AppError.validation('Invalid user provided to fetchGoalTransactions')
+  }
+
+  const cacheKey = `transactions-goals-${user.id}-${month || 'all'}-${year || 'all'}`
+  const cached = globalCaches.transactions.get<Transaction[]>(cacheKey)
   
   if (cached) {
     return cached
   }
 
-  let query = supabase
-    .from('transactions')
-    .select('*')
-    .eq('user_id', user.id)
+  let query = createOptimizedQuery('transactions', user.id)
     .eq('isgoal', true)
   
   if (month && year) {
@@ -471,11 +588,33 @@ export const fetchGoalTransactions = async (user: User, month?: number, year?: n
   
   const { data, error } = await query.order('created_at', { ascending: false })
   
-  if (error) throw error
+  if (error) {
+    throw AppError.database(`Failed to fetch goal transactions: ${error.message}`, error)
+  }
+
+  const result = data || []
+  globalCaches.transactions.set(cacheKey, result)
+  return result
+})
+
+// Cache management utilities
+export const clearUserCache = (userId: number): void => {
+  if (!userId || userId <= 0) {
+    return
+  }
   
-  setCachedData(cacheKey, data)
-  return data
+  // Clear all caches for the user
+  globalCaches.transactions.clear()
+  globalCaches.userData.clear()
+  globalCaches.stats.clear()
+  globalCaches.attachments.clear()
 }
 
-// Export cache utilities for manual cache management
-export { clearUserCache, getCachedData, setCachedData } 
+export const getCacheStats = () => {
+  return {
+    transactions: globalCaches.transactions.getStats(),
+    userData: globalCaches.userData.getStats(),
+    stats: globalCaches.stats.getStats(),
+    attachments: globalCaches.attachments.getStats(),
+  }
+} 

@@ -3,6 +3,7 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # Next.js
 .next/
@@ -16,6 +17,7 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
 
 # Vercel
 .vercel
@@ -29,14 +31,21 @@ next-env.d.ts
 .idea/
 *.swp
 *.swo
+*~
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -46,6 +55,7 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+*.lcov
 
 # nyc test coverage
 .nyc_output
@@ -107,4 +117,31 @@ temp/
 *.sw?
 
 # Local Netlify folder
-.netlify 
+.netlify
+
+# Sentry Config File
+.sentryclirc
+
+# Turbo
+.turbo
+
+# Vite
+.vite
+
+# Rollup
+.rollup.cache
+
+# Webpack
+.webpack
+
+# Bundle analyzer
+.next/analyze/
+
+# Testing
+coverage/
+.nyc_output/
+junit.xml
+
+# Misc
+*.tgz
+*.tar.gz 

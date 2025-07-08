@@ -1,44 +1,59 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+// Environment validation for security
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Enhanced Supabase client with performance optimizations
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Please check your .env.local file.')
+}
+
+// Enhanced Supabase client with security and performance optimizations
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  // Connection pooling for better performance
+  // Database configuration
   db: {
     schema: 'public'
   },
-  // Global headers for consistent user context
+  // Global headers for security and monitoring
   global: {
     headers: {
-      'X-Client-Info': 'expense-tracker-web'
+      'X-Client-Info': 'expense-tracker-web',
+      'X-Client-Version': '1.0.0'
     }
   },
-  // Real-time configuration (if needed later)
+  // Real-time configuration with rate limiting
   realtime: {
     params: {
       eventsPerSecond: 10
     }
   },
-  // Auth configuration
+  // Auth configuration with security best practices
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   }
 })
 
-// Performance-optimized query helpers
+// Performance-optimized query helpers with error handling
 export const createOptimizedQuery = (table: string, userId: number) => {
+  if (!userId || userId <= 0) {
+    throw new Error('Invalid user ID provided to createOptimizedQuery')
+  }
+  
   return supabase
     .from(table)
     .select('*')
     .eq('user_id', userId)
 }
 
-// Batch query helper for multiple operations
+// Batch query helper for multiple operations with error handling
 export const batchQuery = async (queries: Promise<any>[]) => {
+  if (!Array.isArray(queries) || queries.length === 0) {
+    throw new Error('Invalid queries array provided to batchQuery')
+  }
+  
   return Promise.all(queries)
 }
 
@@ -48,7 +63,8 @@ export const CACHE_CONFIG = {
   TRANSACTIONS_CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
   USER_DATA_CACHE_DURATION: 10 * 60 * 1000,   // 10 minutes
   STATS_CACHE_DURATION: 2 * 60 * 1000,        // 2 minutes
-}
+  ATTACHMENTS_CACHE_DURATION: 15 * 60 * 1000, // 15 minutes
+} as const
 
 // User type
 export type User = {
