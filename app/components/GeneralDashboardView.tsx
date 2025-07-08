@@ -172,7 +172,10 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
       // Initialize all months
       for (let month = 1; month <= 12; month++) {
-        const monthTransactions = result.transactions.filter((t: Transaction) => t.month === month)
+        // Only consider expense transactions, not income
+        const monthTransactions = result.transactions.filter((t: Transaction) => 
+          t.month === month && t.type === 'expense'
+        )
         
         // Separate recurrent and non-recurrent expenses
         const recurrentTransactions = monthTransactions.filter((t: Transaction) => t.source_type === 'recurrent')

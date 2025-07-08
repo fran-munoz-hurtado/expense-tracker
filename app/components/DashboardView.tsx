@@ -290,30 +290,30 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   // Calcular totales del mes según la lógica del usuario
   const monthlyStats = {
-    total: filteredTransactions.reduce((sum, t) => sum + t.value, 0), // Total del mes
-    paid: filteredTransactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0), // Ya pagué
+    total: filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0), // Total del mes (solo gastos)
+    paid: filteredTransactions.filter(t => t.type === 'expense' && t.status === 'paid').reduce((sum, t) => sum + t.value, 0), // Ya pagué (solo gastos)
     pending: filteredTransactions.filter(t => {
-      // Falta pagar: status 'pending' y NO vencidas
-      if (t.status !== 'pending') return false
+      // Falta pagar: status 'pending', tipo 'expense' y NO vencidas
+      if (t.type !== 'expense' || t.status !== 'pending') return false
       if (!t.deadline) return true // Sin fecha límite, no está vencida
       return new Date(t.deadline) >= new Date() // No vencida
     }).reduce((sum, t) => sum + t.value, 0),
     overdue: filteredTransactions.filter(t => {
-      // Se pasó la fecha: status 'pending' y vencidas
-      if (t.status !== 'pending') return false
+      // Se pasó la fecha: status 'pending', tipo 'expense' y vencidas
+      if (t.type !== 'expense' || t.status !== 'pending') return false
       if (!t.deadline) return false // Sin fecha límite, no puede estar vencida
       return new Date(t.deadline) < new Date() // Vencida
     }).reduce((sum, t) => sum + t.value, 0)
   }
 
-  const paidTransactions = filteredTransactions.filter(t => t.status === 'paid')
+  const paidTransactions = filteredTransactions.filter(t => t.type === 'expense' && t.status === 'paid')
   const pendingTransactions = filteredTransactions.filter(t => {
-    if (t.status !== 'pending') return false
+    if (t.type !== 'expense' || t.status !== 'pending') return false
     if (!t.deadline) return true
     return new Date(t.deadline) >= new Date()
   })
   const overdueTransactions = filteredTransactions.filter(t => {
-    if (t.status !== 'pending') return false // Only include pending transactions
+    if (t.type !== 'expense' || t.status !== 'pending') return false // Only include expense pending transactions
     if (!t.deadline) return false // No deadline, can't be overdue
     return new Date(t.deadline) < new Date() // Overdue
   })
@@ -934,7 +934,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   Mes Actual
                 </button>
                 <button
-                  onClick={() => setFilterType('all')}
+                  onClick={() => {
+                    setFilterType('all');
+                  }}
                   className="px-3 py-2.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-200 transition-all duration-200"
                   title="Limpiar filtros"
                 >
