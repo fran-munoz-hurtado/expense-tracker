@@ -76,6 +76,9 @@ export type RecurrentExpense = {
   year_to: number
   value: number
   payment_day_deadline: number | null
+  type: 'expense' | 'income'
+  category: string
+  isgoal: boolean
   created_at: string
   updated_at: string
 }
@@ -91,6 +94,9 @@ export type NonRecurrentExpense = {
   month: number
   value: number
   payment_deadline: string | null
+  type: 'expense' | 'income'
+  category: string
+  isgoal: boolean
   created_at: string
   updated_at: string
 }
@@ -109,6 +115,9 @@ export type Transaction = {
   value: number
   status: 'paid' | 'pending'
   deadline: string | null
+  type: 'expense' | 'income'
+  category: string
+  isgoal: boolean
   created_at: string
   updated_at: string
 }
