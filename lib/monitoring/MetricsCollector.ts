@@ -323,7 +323,7 @@ export class MetricsCollector {
     performanceMetrics: PerformanceMetric[]
     errorMetrics: ErrorMetric[]
     userActivityMetrics: UserActivityMetric[]
-    summary: ReturnType<typeof this.getMetricsSummary>
+    summary: ReturnType<MetricsCollector['getMetricsSummary']>
   } {
     return {
       metrics: [...this.metrics],
@@ -434,7 +434,8 @@ export function monitorPerformance(operationName?: string) {
         }
       } catch (error) {
         const duration = performance.now() - startTime
-        globalMetrics.recordPerformance(name, duration, false, error.message)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        globalMetrics.recordPerformance(name, duration, false, errorMessage)
         throw error
       }
     }
@@ -456,10 +457,11 @@ export function monitorErrors() {
         
         if (result instanceof Promise) {
           return result.catch((error) => {
+            const errorObj = error instanceof Error ? error : new Error(String(error))
             globalMetrics.recordError(
-              error.code || 'UNKNOWN_ERROR',
-              error.message,
-              error.stack,
+              (errorObj as any).code || 'UNKNOWN_ERROR',
+              errorObj.message,
+              errorObj.stack,
               { method: propertyName, className: target.constructor.name },
               args[0]?.id, // Assume first argument might be user
             )
@@ -469,10 +471,11 @@ export function monitorErrors() {
           return result
         }
       } catch (error) {
+        const errorObj = error instanceof Error ? error : new Error(String(error))
         globalMetrics.recordError(
-          error.code || 'UNKNOWN_ERROR',
-          error.message,
-          error.stack,
+          (errorObj as any).code || 'UNKNOWN_ERROR',
+          errorObj.message,
+          errorObj.stack,
           { method: propertyName, className: target.constructor.name },
           args[0]?.id, // Assume first argument might be user
         )

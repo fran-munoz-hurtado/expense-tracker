@@ -233,7 +233,8 @@ export class SecurityManager {
         try {
           if (field === 'value' || field === 'year' || field === 'month') {
             sanitizedData[field] = Number(transactionData[field])
-            if (!rules[0].customValidator!(sanitizedData[field])) {
+            const firstRule = rules[0] as ValidationRule
+            if (firstRule.customValidator && !firstRule.customValidator(sanitizedData[field])) {
               throw new Error(`Invalid ${field} value`)
             }
           } else {

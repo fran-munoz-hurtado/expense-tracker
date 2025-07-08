@@ -58,13 +58,19 @@ export const fetchUserTransactions = asyncHandler(async (
   return result
 })
 
-export const fetchUserExpenses = asyncHandler(async (user: User, type?: TransactionType, category?: Category) => {
+export const fetchUserExpenses = asyncHandler(async (user: User, type?: TransactionType, category?: Category): Promise<{
+  recurrent: RecurrentExpense[]
+  nonRecurrent: NonRecurrentExpense[]
+}> => {
   if (!user || !user.id) {
     throw AppError.validation('Invalid user provided to fetchUserExpenses')
   }
 
   const cacheKey = `expenses-${user.id}-${type || 'all'}-${category || 'all'}`
-  const cached = globalCaches.userData.get(cacheKey)
+  const cached = globalCaches.userData.get<{
+    recurrent: RecurrentExpense[]
+    nonRecurrent: NonRecurrentExpense[]
+  }>(cacheKey)
   
   if (cached) {
     return cached
@@ -83,24 +89,15 @@ export const fetchUserExpenses = asyncHandler(async (user: User, type?: Transact
     nonRecurrentQuery = nonRecurrentQuery.eq('category', category)
   }
 
-  const [recurrentResult, nonRecurrentResult] = await Promise.all([
-    recurrentQuery.order('created_at', { ascending: false }),
-    nonRecurrentQuery.order('created_at', { ascending: false })
+  const [recurrent, nonRecurrent] = await Promise.all([
+    recurrentQuery.select('*'),
+    nonRecurrentQuery.select('*')
   ])
 
-  if (recurrentResult.error) {
-    throw AppError.database(`Failed to fetch recurrent expenses: ${recurrentResult.error.message}`, recurrentResult.error)
-  }
-  
-  if (nonRecurrentResult.error) {
-    throw AppError.database(`Failed to fetch non-recurrent expenses: ${nonRecurrentResult.error.message}`, nonRecurrentResult.error)
-  }
-
   const result = {
-    recurrent: recurrentResult.data || [],
-    nonRecurrent: nonRecurrentResult.data || []
+    recurrent: recurrent.data || [],
+    nonRecurrent: nonRecurrent.data || []
   }
-
   globalCaches.userData.set(cacheKey, result)
   return result
 })

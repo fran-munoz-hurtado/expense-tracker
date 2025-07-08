@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #f9fafb;
+  color: #222;
+}
+
+html, body, #__next {
+  height: 100%;
+}
