@@ -1,13 +1,5 @@
-import { supabase, createOptimizedQuery, batchQuery, type User, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type TransactionAttachment } from './supabase'
+import { supabase, createOptimizedQuery, batchQuery, CACHE_CONFIG, type User, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type TransactionAttachment } from './supabase'
 import { CATEGORIES, TRANSACTION_TYPES, DEFAULT_VALUES, type Category, type TransactionType } from './constants'
-
-// Cache configuration for better performance
-const CACHE_CONFIG = {
-  // Cache duration in milliseconds
-  TRANSACTIONS_CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
-  USER_DATA_CACHE_DURATION: 10 * 60 * 1000,   // 10 minutes
-  STATS_CACHE_DURATION: 2 * 60 * 1000,        // 2 minutes
-}
 
 // Simple in-memory cache for performance
 const cache = new Map<string, { data: any; timestamp: number }>()
