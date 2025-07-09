@@ -539,14 +539,40 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const transaction = transactions.find(t => t.id === id)
     if (!transaction) return
 
-    // Show modify modal
-    setModifyModalData({
-      transactionId: id,
-      transaction,
-      isRecurrent: transaction.source_type === 'recurrent',
-      modifySeries: false
-    })
-    setShowModifyModal(true)
+    // For non-recurrent transactions, go directly to the form
+    if (transaction.source_type === 'non_recurrent') {
+      const nonRecurrentExpense = nonRecurrentExpenses.find(nre => nre.id === transaction.source_id)
+      if (!nonRecurrentExpense) {
+        setError('Original non-recurrent expense not found')
+        return
+      }
+
+      setModifyFormData({
+        type: 'non_recurrent',
+        description: nonRecurrentExpense.description,
+        month_from: 1,
+        month_to: 12,
+        year_from: 2025,
+        year_to: 2025,
+        value: nonRecurrentExpense.value,
+        payment_day_deadline: '',
+        month: nonRecurrentExpense.month,
+        year: nonRecurrentExpense.year,
+        payment_deadline: nonRecurrentExpense.payment_deadline || '',
+        originalId: nonRecurrentExpense.id,
+        modifySeries: false
+      })
+      setShowModifyForm(true)
+    } else {
+      // For recurrent transactions, show the confirmation modal
+      setModifyModalData({
+        transactionId: id,
+        transaction,
+        isRecurrent: transaction.source_type === 'recurrent',
+        modifySeries: false
+      })
+      setShowModifyModal(true)
+    }
   }
 
   const handleConfirmModify = async (modifySeries: boolean) => {
@@ -1674,287 +1700,216 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
       {/* Modify Confirmation Modal */}
       {showModifyModal && modifyModalData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center mb-4">
-              <div className="p-2 bg-blue-100 rounded-lg mr-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={handleCancelModify}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="p-5 flex flex-col gap-4 items-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-2">
                 <Edit className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Modify Transaction</h3>
-            </div>
-            
-            <div className="space-y-3 mb-6">
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Description:</span> {modifyModalData.transaction.description}
-                </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Value:</span> {formatCurrency(modifyModalData.transaction.value)}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Date:</span> {modifyModalData.transaction.deadline ? (() => {
-                    // Parse the date string directly to avoid timezone issues
-                    const [year, month, day] = modifyModalData.transaction.deadline!.split('-').map(Number);
-                    return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                  })() : `${months[modifyModalData.transaction.month - 1]} ${modifyModalData.transaction.year}`}
-                </p>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Modificar Transacción</h2>
+              <p className="text-gray-700 text-sm font-medium mb-4 text-center">Selecciona cómo quieres modificar esta transacción</p>
+              
+              {/* Información de la transacción */}
+              <div className="w-full bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Descripción:</span>
+                    <span className="text-sm text-gray-900 font-semibold">{modifyModalData.transaction.description}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Valor:</span>
+                    <span className="text-sm text-gray-900 font-semibold">{formatCurrency(modifyModalData.transaction.value)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Fecha:</span>
+                    <span className="text-sm text-gray-900 font-semibold">
+                      {modifyModalData.transaction.deadline ? (() => {
+                        const [year, month, day] = modifyModalData.transaction.deadline!.split('-').map(Number);
+                        return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
+                      })() : `${months[modifyModalData.transaction.month - 1]} ${modifyModalData.transaction.year}`}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               {modifyModalData.isRecurrent ? (
-                <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
-                  <p className="text-sm text-blue-800 font-medium mb-2">This is a recurrent expense transaction.</p>
-                  <p className="text-sm text-blue-700">Choose what you want to modify:</p>
+                <div className="w-full bg-blue-50 rounded-xl p-4 border border-blue-200">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-xs font-bold">i</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-blue-800 font-medium mb-1">Esta es una transacción recurrente</p>
+                      <p className="text-xs text-blue-700">Elige qué quieres modificar:</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200">
-                  <p className="text-sm text-yellow-800">Are you sure you want to modify this transaction?</p>
+                <div className="w-full bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <span className="text-yellow-600 text-xs font-bold">!</span>
+                    </div>
+                    <div>
+                      <p className="text-sm text-yellow-800 font-medium">¿Estás seguro de que quieres modificar esta transacción?</p>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
 
-            <div className="flex flex-col space-y-2">
-              {modifyModalData.isRecurrent ? (
-                <>
-                  <button
-                    onClick={() => handleConfirmModify(true)}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Modify Entire Series (All Related Transactions)
-                  </button>
+              <div className="w-full space-y-3">
+                {modifyModalData.isRecurrent ? (
+                  <>
+                    <button
+                      onClick={() => handleConfirmModify(true)}
+                      className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                    >
+                      Modificar Toda la Serie
+                    </button>
+                    <button
+                      onClick={() => handleConfirmModify(false)}
+                      className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                    >
+                      Modificar Solo Esta Transacción
+                    </button>
+                  </>
+                ) : (
                   <button
                     onClick={() => handleConfirmModify(false)}
-                    className="w-full px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
                   >
-                    Modify Only This Transaction
+                    Modificar Transacción
                   </button>
-                </>
-              ) : (
+                )}
+                
                 <button
-                  onClick={() => handleConfirmModify(false)}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  onClick={handleCancelModify}
+                  className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
                 >
-                  Modify Transaction
+                  Cancelar
                 </button>
-              )}
-              
-              <button
-                onClick={handleCancelModify}
-                className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       )}
 
       {/* Modify Form Modal */}
       {showModifyForm && modifyFormData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">
-                {modifyFormData.modifySeries 
-                  ? `Modify ${modifyFormData.type === 'recurrent' ? 'Recurrent' : 'Non-Recurrent'} Series`
-                  : 'Modify Transaction'
-                }
-              </h2>
-              <button
-                onClick={resetModifyForm}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={resetModifyForm}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
 
-            <form onSubmit={handleModifyFormSubmit} className="space-y-4">
-              {modifyFormData.modifySeries ? (
-                // Full form for series modification
-                modifyFormData.type === 'recurrent' ? (
-                  // Recurrent Expense Form
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                      <input
-                        type="text"
-                        value={modifyFormData.description}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                        className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From Month</label>
-                        <select
-                          value={modifyFormData.month_from}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_from: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To Month</label>
-                        <select
-                          value={modifyFormData.month_to}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_to: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">From Year</label>
-                        <select
-                          value={modifyFormData.year_from}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_from: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">To Year</label>
-                        <select
-                          value={modifyFormData.year_to}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_to: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
-                        <input
-                          type="text"
-                          value={getCurrencyInputValue(modifyFormData.value)}
-                          onChange={(e) => setModifyFormData(prev => prev ? { 
-                            ...prev, 
-                            value: parseCurrency(e.target.value)
-                          } : null)}
-                          placeholder="$1,200.00"
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Day (1-31)</label>
-                        <input
-                          type="text"
-                          value={modifyFormData.payment_day_deadline}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_day_deadline: e.target.value } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
+            {modifyFormData.modifySeries ? (
+              // Full form for series modification
+              modifyFormData.type === 'recurrent' ? (
+                // Recurrent Expense Form
+                <form onSubmit={handleModifyFormSubmit} className="flex flex-col gap-6 p-6 sm:p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-lg mx-auto animate-fade-in">
+                  <div className="flex justify-between items-center mb-2">
+                    <button
+                      type="button"
+                      onClick={resetModifyForm}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:underline"
+                    >
+                      ← Cancelar
+                    </button>
                   </div>
-                ) : (
-                  // Non-Recurrent Expense Form
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                      <input
-                        type="text"
-                        value={modifyFormData.description}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                        className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Month</label>
-                        <select
-                          value={modifyFormData.month}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-                        <select
-                          value={modifyFormData.year}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
-                        <input
-                          type="text"
-                          value={getCurrencyInputValue(modifyFormData.value)}
-                          onChange={(e) => setModifyFormData(prev => prev ? { 
-                            ...prev, 
-                            value: parseCurrency(e.target.value)
-                          } : null)}
-                          placeholder="$500.00"
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Deadline</label>
-                        <input
-                          type="date"
-                          value={modifyFormData.payment_deadline}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )
-              ) : (
-                // Simple form for individual transaction modification
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  {/* Descripción */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">Descripción</label>
                     <input
                       type="text"
                       value={modifyFormData.description}
                       onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                      className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                      placeholder="Descripción"
                       required
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Value ($)</label>
+                  {/* Mes y Año */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-4">
+                      <div className="flex-1 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Mes desde</label>
+                        <select
+                          value={modifyFormData.month_from}
+                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_from: Number(e.target.value) } : null)}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          required
+                        >
+                          {months.map((month, index) => (
+                            <option key={index + 1} value={index + 1}>{month}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex-1 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Año desde</label>
+                        <select
+                          value={modifyFormData.year_from}
+                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_from: Number(e.target.value) } : null)}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          required
+                        >
+                          {availableYears.map((year, index) => (
+                            <option key={index} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex gap-4 mt-2">
+                      <div className="flex-1 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Mes hasta</label>
+                        <select
+                          value={modifyFormData.month_to}
+                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_to: Number(e.target.value) } : null)}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          required
+                        >
+                          {months.map((month, index) => (
+                            <option key={index + 1} value={index + 1}>{month}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex-1 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Año hasta</label>
+                        <select
+                          value={modifyFormData.year_to}
+                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_to: Number(e.target.value) } : null)}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          required
+                        >
+                          {availableYears.map((year, index) => (
+                            <option key={index} value={year}>{year}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Monto y Día de Vencimiento */}
+                  <div className="flex gap-4 items-end">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Monto ($)</label>
                       <input
                         type="text"
                         value={getCurrencyInputValue(modifyFormData.value)}
@@ -1962,92 +1917,312 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           ...prev, 
                           value: parseCurrency(e.target.value)
                         } : null)}
-                        placeholder="$500.00"
-                        className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="$0.00"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
                         required
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Payment Deadline</label>
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Día de Vencimiento (1-31)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="31"
+                        value={modifyFormData.payment_day_deadline}
+                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_day_deadline: e.target.value } : null)}
+                        placeholder="15"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Botones */}
+                  <div className="flex justify-end gap-3 mt-2">
+                    <button
+                      type="button"
+                      onClick={resetModifyForm}
+                      className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                    >
+                      Guardar Cambios
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                // Non-Recurrent Expense Form
+                <form onSubmit={handleModifyFormSubmit} className="flex flex-col gap-6 p-6 sm:p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-lg mx-auto animate-fade-in">
+                  <div className="flex justify-between items-center mb-2">
+                    <button
+                      type="button"
+                      onClick={resetModifyForm}
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:underline"
+                    >
+                      ← Cancelar
+                    </button>
+                  </div>
+
+                  {/* Descripción */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">Descripción</label>
+                    <input
+                      type="text"
+                      value={modifyFormData.description}
+                      onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                      placeholder="Descripción"
+                      required
+                    />
+                  </div>
+
+                  {/* Mes y Año */}
+                  <div className="flex gap-4">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Mes</label>
+                      <select
+                        value={modifyFormData.month}
+                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month: Number(e.target.value) } : null)}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                        required
+                      >
+                        {months.map((month, index) => (
+                          <option key={index + 1} value={index + 1}>{month}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Año</label>
+                      <select
+                        value={modifyFormData.year}
+                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                        required
+                      >
+                        {availableYears.map((year, index) => (
+                          <option key={index} value={year}>{year}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Monto y Fecha de Vencimiento */}
+                  <div className="flex gap-4">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Monto ($)</label>
+                      <input
+                        type="text"
+                        value={getCurrencyInputValue(modifyFormData.value)}
+                        onChange={(e) => setModifyFormData(prev => prev ? { 
+                          ...prev, 
+                          value: parseCurrency(e.target.value)
+                        } : null)}
+                        placeholder="$0.00"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        required
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
                       <input
                         type="date"
                         value={modifyFormData.payment_deadline}
                         onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                        className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
                       />
                     </div>
                   </div>
-                </div>
-              )}
 
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={resetModifyForm}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
+                  {/* Botones */}
+                  <div className="flex justify-end gap-3 mt-2">
+                    <button
+                      type="button"
+                      onClick={resetModifyForm}
+                      className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-all"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                    >
+                      Guardar Cambios
+                    </button>
+                  </div>
+                </form>
+              )
+            ) : (
+              // Simple form for individual transaction modification
+              <form onSubmit={handleModifyFormSubmit} className="flex flex-col gap-6 p-6 sm:p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-lg mx-auto animate-fade-in">
+                <div className="flex justify-between items-center mb-2">
+                  <button
+                    type="button"
+                    onClick={resetModifyForm}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:underline"
+                  >
+                    ← Cancelar
+                  </button>
+                </div>
+
+                {/* Descripción */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-gray-700">Descripción</label>
+                  <input
+                    type="text"
+                    value={modifyFormData.description}
+                    onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                    placeholder="Descripción"
+                    required
+                  />
+                </div>
+
+                {/* Monto y Fecha de Vencimiento */}
+                <div className="flex gap-4">
+                  <div className="flex-1 flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">Monto ($)</label>
+                    <input
+                      type="text"
+                      value={getCurrencyInputValue(modifyFormData.value)}
+                      onChange={(e) => setModifyFormData(prev => prev ? { 
+                        ...prev, 
+                        value: parseCurrency(e.target.value)
+                      } : null)}
+                      placeholder="$0.00"
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                      required
+                    />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-2">
+                    <label className="text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+                    <input
+                      type="date"
+                      value={modifyFormData.payment_deadline}
+                      onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                    />
+                  </div>
+                </div>
+
+                {/* Botones */}
+                <div className="flex justify-end gap-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={resetModifyForm}
+                    className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                  >
+                    Guardar Cambios
+                  </button>
+                </div>
+              </form>
+            )}
+          </section>
         </div>
       )}
 
       {/* Modify Confirmation Modal */}
       {showModifyConfirmation && modifyConfirmationData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold mb-4">Confirm Modification</h3>
-            
-            <div className="space-y-3 mb-6">
-              <div>
-                <span className="font-medium">Action:</span> {modifyConfirmationData.action}
-              </div>
-              <div>
-                <span className="font-medium">Type:</span> {modifyConfirmationData.type === 'recurrent' ? 'Recurrent' : 'Non-Recurrent'}
-              </div>
-              <div>
-                <span className="font-medium">Description:</span> {modifyConfirmationData.description}
-              </div>
-              <div>
-                <span className="font-medium">Value:</span> {formatCurrency(modifyConfirmationData.value)}
-              </div>
-              <div>
-                <span className="font-medium">Period:</span> {modifyConfirmationData.period}
-              </div>
-              <div className="bg-yellow-50 p-3 rounded-md">
-                <span className="font-medium text-yellow-800">
-                  Are you sure you want to {modifyConfirmationData.action}?
-                </span>
-              </div>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={() => {
+                setShowModifyConfirmation(false)
+                setModifyConfirmationData(null)
+              }}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
 
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  setShowModifyConfirmation(false)
-                  setModifyConfirmationData(null)
-                }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmModifySubmit}
-                disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
-                {loading ? 'Saving...' : 'Confirm & Save'}
-              </button>
+            <div className="p-5 flex flex-col gap-4 items-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-2">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Confirmar Modificación</h2>
+              <p className="text-gray-700 text-sm font-medium mb-4 text-center">Revisa los cambios antes de confirmar</p>
+              
+              {/* Información de la modificación */}
+              <div className="w-full bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Acción:</span>
+                    <span className="text-sm text-gray-900 font-semibold capitalize">{modifyConfirmationData.action}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Tipo:</span>
+                    <span className="text-sm text-gray-900 font-semibold">
+                      {modifyConfirmationData.type === 'recurrent' ? 'Recurrente' : 'No Recurrente'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Descripción:</span>
+                    <span className="text-sm text-gray-900 font-semibold">{modifyConfirmationData.description}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Valor:</span>
+                    <span className="text-sm text-gray-900 font-semibold">{formatCurrency(modifyConfirmationData.value)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-600">Período:</span>
+                    <span className="text-sm text-gray-900 font-semibold">{modifyConfirmationData.period}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span className="text-yellow-600 text-xs font-bold">!</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-yellow-800 font-medium">
+                      ¿Estás seguro de que quieres {modifyConfirmationData.action}?
+                    </p>
+                    <p className="text-xs text-yellow-700 mt-1">Esta acción no se puede deshacer</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full space-y-3">
+                <button
+                  onClick={handleConfirmModifySubmit}
+                  disabled={loading}
+                  className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow-md hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Guardando...
+                    </div>
+                  ) : (
+                    'Confirmar y Guardar'
+                  )}
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowModifyConfirmation(false)
+                    setModifyConfirmationData(null)
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       )}
 
