@@ -1640,21 +1640,21 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   <>
                     <button
                       onClick={() => handleConfirmDelete(true)}
-                      className="w-full px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
+                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
                     >
-                      Eliminar Serie Completa (Todas las Transacciones Relacionadas)
+                      Eliminar Serie Completa
                     </button>
                     <button
                       onClick={() => handleConfirmDelete(false)}
-                      className="w-full px-4 py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700 transition-colors shadow-sm"
+                      className="w-full px-4 py-3 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors shadow-sm"
                     >
-                      Eliminar Solo Esta Transacción
+                      Eliminar Solo Esta
                     </button>
                   </>
                 ) : (
                   <button
                     onClick={() => handleConfirmDelete(false)}
-                    className="w-full px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
+                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
                   >
                     Eliminar Transacción
                   </button>
