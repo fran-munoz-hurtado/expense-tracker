@@ -28,7 +28,7 @@ export function getMonthlyColumnStats(
   if (type === 'recurrent') filtered = transactions.filter(t => t.type === 'expense' && t.source_type === 'recurrent')
   else if (type === 'non_recurrent') filtered = transactions.filter(t => t.type === 'expense' && t.source_type === 'non_recurrent')
   else if (type === 'income') filtered = transactions.filter(t => t.type === 'income')
-  // 'total' usa todas las transacciones del mes (gastos)
+  else if (type === 'total') filtered = transactions.filter(t => t.type === 'expense') // Solo gastos, no ingresos
   
   const total = filtered.reduce((sum, t) => sum + t.value, 0)
   const paid = filtered.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
