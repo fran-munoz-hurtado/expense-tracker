@@ -31,7 +31,7 @@ export const translations = {
   
   // Monthly totals
   monthlyTotal: 'Total del mes',
-  alreadyPaid: 'Ya pagué',
+  alreadyPaid: 'Ya pagado',
   stillPending: 'Falta pagar',
   overdueAmount: 'Se pasó la fecha',
   
@@ -48,7 +48,7 @@ export const translations = {
   type: 'Tipo',
   
   // Status
-  paid: 'Ya pagué',
+  paid: 'Ya pagado',
   pending: 'Falta pagar',
   overdue: 'Se pasó la fecha',
   
