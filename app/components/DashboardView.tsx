@@ -1582,77 +1582,93 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && deleteModalData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center mb-4">
-              <div className="p-2 bg-red-100 rounded-lg mr-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={handleCancelDelete}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="p-5 flex flex-col gap-4 items-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-2">
                 <Trash2 className="h-6 w-6 text-red-600" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Confirm Delete</h3>
-            </div>
-            
-            <div className="space-y-3 mb-6">
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Description:</span> {deleteModalData.transaction.description}
-                </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Value:</span> {formatCurrency(deleteModalData.transaction.value)}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Date:</span> {deleteModalData.transaction.deadline ? (() => {
-                    // Parse the date string directly to avoid timezone issues
-                    const [year, month, day] = deleteModalData.transaction.deadline!.split('-').map(Number);
-                    return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                  })() : `${months[deleteModalData.transaction.month - 1]} ${deleteModalData.transaction.year}`}
-                </p>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Confirmar Eliminación</h2>
+              <p className="text-gray-700 text-sm font-medium mb-4 text-center">¿Estás seguro de que quieres eliminar esta transacción?</p>
+              
+              {/* Información de la transacción */}
+              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Descripción:</span>
+                  <span className="text-sm text-gray-900 font-semibold">{deleteModalData.transaction.description}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Valor:</span>
+                  <span className="text-sm text-gray-900 font-semibold">{formatCurrency(deleteModalData.transaction.value)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Fecha:</span>
+                  <span className="text-sm text-gray-900 font-semibold">
+                    {deleteModalData.transaction.deadline ? (() => {
+                      const [year, month, day] = deleteModalData.transaction.deadline!.split('-').map(Number);
+                      return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
+                    })() : `${months[deleteModalData.transaction.month - 1]} ${deleteModalData.transaction.year}`}
+                  </span>
+                </div>
               </div>
 
+              {/* Mensaje específico según el tipo */}
               {deleteModalData.isRecurrent ? (
-                <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
-                  <p className="text-sm text-blue-800 font-medium mb-2">This is a recurrent expense transaction.</p>
-                  <p className="text-sm text-blue-700">Choose what you want to delete:</p>
+                <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 font-medium mb-2">Esta es una transacción de gasto recurrente.</p>
+                  <p className="text-sm text-blue-700">Elige qué quieres eliminar:</p>
                 </div>
               ) : (
-                <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200">
-                  <p className="text-sm text-yellow-800">Are you sure you want to delete this transaction?</p>
+                <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800">¿Estás seguro de que quieres eliminar esta transacción?</p>
                 </div>
               )}
-            </div>
 
-            <div className="flex flex-col space-y-2">
-              {deleteModalData.isRecurrent ? (
-                <>
-                  <button
-                    onClick={() => handleConfirmDelete(true)}
-                    className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    Delete Entire Series (All Related Transactions)
-                  </button>
+              {/* Botones de acción */}
+              <div className="w-full space-y-3">
+                {deleteModalData.isRecurrent ? (
+                  <>
+                    <button
+                      onClick={() => handleConfirmDelete(true)}
+                      className="w-full px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
+                    >
+                      Eliminar Serie Completa (Todas las Transacciones Relacionadas)
+                    </button>
+                    <button
+                      onClick={() => handleConfirmDelete(false)}
+                      className="w-full px-4 py-3 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700 transition-colors shadow-sm"
+                    >
+                      Eliminar Solo Esta Transacción
+                    </button>
+                  </>
+                ) : (
                   <button
                     onClick={() => handleConfirmDelete(false)}
-                    className="w-full px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
+                    className="w-full px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm"
                   >
-                    Delete Only This Transaction
+                    Eliminar Transacción
                   </button>
-                </>
-              ) : (
+                )}
+                
                 <button
-                  onClick={() => handleConfirmDelete(false)}
-                  className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  onClick={handleCancelDelete}
+                  className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
                 >
-                  Delete Transaction
+                  Cancelar
                 </button>
-              )}
-              
-              <button
-                onClick={handleCancelDelete}
-                className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       )}
 
