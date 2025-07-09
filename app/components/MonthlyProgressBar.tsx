@@ -139,14 +139,17 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
 }
 
 /**
- * Motivational messages for overdue amounts - short and direct
+ * Motivational messages for overdue amounts - focused on getting back on track
  */
 const OVERDUE_MESSAGES = [
-  "¡Deberías estar acá! ⚡",
-  "¡Ponte al día! 🎯",
-  "¡Actúa ahora! 💪",
-  "¡No más excusas! ⏰",
-  "¡Es momento! 🚀"
+  "¡Es momento de ponerte al día! ⚡",
+  "¡Actúa ahora para recuperar el control! 🎯",
+  "¡No dejes que la mora crezca más! 💪",
+  "¡Cada día cuenta para salir adelante! ⏰",
+  "¡Tu futuro financiero te espera! 🚀",
+  "¡La disciplina financiera empieza hoy! 🌟",
+  "¡Tú puedes superar este desafío! 💎",
+  "¡Cada peso pagado es un paso hacia la libertad! 🎯"
 ]
 
 /**
@@ -305,13 +308,13 @@ export default function MonthlyProgressBar({
       if (percentage >= 20) return 'from-green-200 to-green-400'
       return 'from-green-100 to-green-300'
     } else {
-      // When overdue: green to red gradient
+      // When overdue: ALWAYS green to red gradient (no yellow/orange)
       const paidRatio = paid / (paid + overdue)
-      if (paidRatio >= 0.8) return 'from-green-500 via-yellow-500 to-red-500'
-      if (paidRatio >= 0.6) return 'from-green-400 via-orange-500 to-red-500'
-      if (paidRatio >= 0.4) return 'from-green-300 via-red-400 to-red-500'
-      if (paidRatio >= 0.2) return 'from-green-200 via-red-300 to-red-500'
-      return 'from-green-100 via-red-200 to-red-500'
+      if (paidRatio >= 0.8) return 'from-green-500 to-red-500'
+      if (paidRatio >= 0.6) return 'from-green-400 to-red-500'
+      if (paidRatio >= 0.4) return 'from-green-300 to-red-500'
+      if (paidRatio >= 0.2) return 'from-green-200 to-red-500'
+      return 'from-green-100 to-red-500'
     }
   }, [hasOverdue, percentage, paid, overdue])
 
@@ -480,7 +483,11 @@ export default function MonthlyProgressBar({
               zIndex: 20
             }}
           >
-            <div className={`bg-gradient-to-r ${rangeConfig.color} text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-medium`}>
+            <div className={`text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-medium ${
+              hasOverdue 
+                ? 'bg-red-400' // Soft red when there's overdue
+                : 'bg-green-500' // Solid green when up-to-date
+            }`}>
               <div>{percentage}%</div>
               <div className="text-xs opacity-90">{formatCurrency(paid)}</div>
             </div>
@@ -516,9 +523,17 @@ export default function MonthlyProgressBar({
       </div>
 
       {/* Enhanced Motivational Message with Overdue Warning */}
-      <div className={`text-center p-4 rounded-xl ${rangeConfig.bgColor} border ${rangeConfig.borderColor} transition-all duration-300`}>
-        <p className={`text-sm font-medium bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent leading-relaxed mb-2`}>
-          {selectedMessage}
+      <div className={`text-center p-4 rounded-xl border transition-all duration-300 ${
+        hasOverdue 
+          ? 'bg-red-50 border-red-200' // Red background when there's overdue
+          : 'bg-green-50 border-green-200' // Green background when up-to-date
+      }`}>
+        <p className={`text-sm font-medium leading-relaxed mb-2 ${
+          hasOverdue 
+            ? 'text-red-600' // Red text when there's overdue
+            : 'bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent' // Green gradient when up-to-date
+        }`}>
+          {hasOverdue ? selectedOverdueMessage : selectedMessage}
         </p>
         {hasOverdue && (
           <div className="flex items-center justify-center space-x-2 text-red-600 bg-red-50 rounded-lg p-2 mt-2">
