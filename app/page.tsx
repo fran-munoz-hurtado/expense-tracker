@@ -403,57 +403,62 @@ function Home() {
 
             {/* Selección unificada de tipo de movimiento y tipo de recurrencia */}
             {!(movementType && expenseType) && (
-              <div className="space-y-4 mb-4">
-                <p className="text-gray-600 mb-2">¿Qué tipo de movimiento quieres añadir?</p>
-                <div className="flex flex-col sm:flex-row gap-3 mb-2">
-                  <button
-                    onClick={() => setMovementType('expense')}
-                    className={`flex-1 p-4 border-2 rounded-lg transition-colors text-center font-semibold text-lg shadow-sm
-                      ${movementType === 'expense' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 bg-white text-gray-700 hover:border-red-400 hover:bg-red-50'}`}
-                  >
-                    <DollarSign className="inline-block mr-2 h-6 w-6 text-red-500 align-middle" />
-                    Gasto
-                  </button>
-                  <button
-                    onClick={() => setMovementType('income')}
-                    className={`flex-1 p-4 border-2 rounded-lg transition-colors text-center font-semibold text-lg shadow-sm
-                      ${movementType === 'income' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-700 hover:border-green-400 hover:bg-green-50'}`}
-                  >
-                    <TrendingUp className="inline-block mr-2 h-6 w-6 text-green-500 align-middle" />
-                    Ingreso
-                  </button>
-                </div>
-                {/* Toggle Recurrente/Único */}
-                <div className="flex items-center justify-center gap-4 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setExpenseType('recurrent')}
-                    className={`px-6 py-2 rounded-full font-semibold text-sm border transition-all duration-150
-                      ${expenseType === 'recurrent' ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-gray-100 text-blue-700 border-gray-300 hover:bg-blue-50'}`}
-                    disabled={!movementType}
-                  >
-                    Recurrente
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setExpenseType('non_recurrent')}
-                    className={`px-6 py-2 rounded-full font-semibold text-sm border transition-all duration-150
-                      ${expenseType === 'non_recurrent' ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-gray-100 text-blue-700 border-gray-300 hover:bg-blue-50'}`}
-                    disabled={!movementType}
-                  >
-                    Único
-                  </button>
-                </div>
-                <div className="flex justify-center mt-2">
-                  {(movementType || expenseType) && (
+              <div className="mb-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col gap-4 items-center max-w-md mx-auto shadow-sm">
+                  <p className="text-gray-700 text-sm font-medium mb-1">Selecciona el tipo de movimiento y periodicidad</p>
+                  {/* Toggle Gasto/Ingreso */}
+                  <div className="flex w-full gap-0 rounded-lg overflow-hidden border border-gray-200 bg-white">
                     <button
                       type="button"
-                      onClick={() => { setMovementType(null); setExpenseType(null); }}
-                      className="text-blue-600 hover:text-blue-800 text-xs"
+                      onClick={() => setMovementType('expense')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold transition-all
+                        ${movementType === 'expense' ? 'bg-red-100 text-red-700 border-r border-red-400 shadow-inner' : 'bg-white text-gray-700 hover:bg-red-50 border-r border-gray-200'}`}
                     >
-                      ← Cambiar selección
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-red-500 text-white font-bold text-xs">-</span>
+                      Gasto
                     </button>
-                  )}
+                    <button
+                      type="button"
+                      onClick={() => setMovementType('income')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 text-sm font-semibold transition-all
+                        ${movementType === 'income' ? 'bg-green-100 text-green-700 shadow-inner' : 'bg-white text-gray-700 hover:bg-green-50'}`}
+                    >
+                      <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-500 text-white font-bold text-xs">+</span>
+                      Ingreso
+                    </button>
+                  </div>
+                  {/* Toggle Recurrente/Único */}
+                  <div className="flex w-full gap-0 rounded-lg overflow-hidden border border-gray-200 bg-white mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setExpenseType('recurrent')}
+                      className={`flex-1 py-2 px-4 text-sm font-semibold transition-all
+                        ${expenseType === 'recurrent' ? 'bg-blue-600 text-white shadow-inner' : 'bg-white text-blue-700 hover:bg-blue-50'}`}
+                      disabled={!movementType}
+                    >
+                      Recurrente
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setExpenseType('non_recurrent')}
+                      className={`flex-1 py-2 px-4 text-sm font-semibold transition-all
+                        ${expenseType === 'non_recurrent' ? 'bg-blue-600 text-white shadow-inner' : 'bg-white text-blue-700 hover:bg-blue-50'}`}
+                      disabled={!movementType}
+                    >
+                      Único
+                    </button>
+                  </div>
+                  <div className="flex justify-center mt-2">
+                    {(movementType || expenseType) && (
+                      <button
+                        type="button"
+                        onClick={() => { setMovementType(null); setExpenseType(null); }}
+                        className="text-blue-600 hover:text-blue-800 text-xs"
+                      >
+                        ← Cambiar selección
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
