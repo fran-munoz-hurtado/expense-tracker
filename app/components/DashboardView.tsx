@@ -1073,19 +1073,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     </th>
                     <th 
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
-                      onClick={() => handleSort('deadline')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>{texts.daysRemaining}</span>
-                        {sortField === 'deadline' && (
-                          sortDirection === 'asc' ? 
-                            <ChevronUp className="h-4 w-4" /> : 
-                            <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
                       onClick={() => handleSort('status')}
                     >
                       <div className="flex items-center space-x-1">
@@ -1120,45 +1107,53 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {finalSortedTransactions.map((transaction) => {
-                    // Calculate days remaining
-                    const getDaysRemaining = () => {
-                      if (transaction.status === 'paid') return null; // Changed from 0 to null
-                      if (!transaction.deadline) return null;
-                      
-                      // Parse the date string the same way as displayed dates
-                      const [year, month, day] = transaction.deadline.split('-').map(Number);
-                      
-                      // Create today's date in the same format
-                      const today = new Date();
-                      const todayYear = today.getFullYear();
-                      const todayMonth = today.getMonth() + 1; // getMonth() returns 0-11
-                      const todayDay = today.getDate();
-                      
-                      // Calculate days difference
-                      const todayDate = new Date(todayYear, todayMonth - 1, todayDay); // month is 0-indexed
-                      const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
-                      
-                      const diffTime = deadlineDate.getTime() - todayDate.getTime();
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                      
-                      return diffDays;
-                    };
-                    
-                    const daysRemaining = getDaysRemaining();
-                    
                     return (
                       <tr key={transaction.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
                               {transaction.source_type === 'recurrent' ? (
-                                <Repeat className="h-4 w-4 text-blue-600" />
+                                transaction.type === 'income' ?
+                                  <Repeat className="h-4 w-4 text-green-600" /> :
+                                  <Repeat className="h-4 w-4 text-blue-600" />
                               ) : (
-                                <FileText className="h-4 w-4 text-green-600" />
+                                transaction.type === 'income' ?
+                                  <FileText className="h-4 w-4 text-green-600" /> :
+                                  <FileText className="h-4 w-4 text-blue-600" />
                               )}
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-gray-900">{transaction.description}</div>
+                              <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                {transaction.description}
+                                {(() => {
+                                  if (!transaction.deadline || transaction.status === 'paid') return null;
+                                  const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                  const today = new Date();
+                                  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                  const deadlineDate = new Date(year, month - 1, day);
+                                  const diffTime = deadlineDate.getTime() - todayDate.getTime();
+                                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                  if (diffDays > 0) {
+                                    return (
+                                      <span className="ml-2 text-xs text-yellow-600" style={{lineHeight: '1.2'}}>
+                                        {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
+                                      </span>
+                                    );
+                                  } else if (diffDays === 0) {
+                                    return (
+                                      <span className="ml-2 text-xs text-yellow-600" style={{lineHeight: '1.2'}}>
+                                        Vence hoy
+                                      </span>
+                                    );
+                                  } else {
+                                    return (
+                                      <span className="ml-2 text-xs text-red-600" style={{lineHeight: '1.2'}}>
+                                        {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
+                                      </span>
+                                    );
+                                  }
+                                })()}
+                              </div>
                               <div className="flex items-center space-x-2 mt-1">
                                 {transaction.deadline && (
                                   <span className="text-xs text-gray-500">
@@ -1188,20 +1183,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               </div>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {daysRemaining !== null ? (
-                            <span className={`text-sm font-medium ${
-                              daysRemaining < 0 ? 'text-black' :
-                              daysRemaining <= 7 ? 'text-black' :
-                              'text-black'
-                            }`}>
-                              {daysRemaining < 0 ? Math.abs(daysRemaining) :
-                               daysRemaining}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-gray-400">-</span>
-                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", getStatusColor(transaction))}>
@@ -1329,41 +1310,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
             {/* Mobile Card View */}
             <div className="lg:hidden space-y-4">
               {finalSortedTransactions.map((transaction) => {
-                // Calculate days remaining
-                const getDaysRemaining = () => {
-                  if (transaction.status === 'paid') return null; // Changed from 0 to null
-                  if (!transaction.deadline) return null;
-                  
-                  // Parse the date string the same way as displayed dates
-                  const [year, month, day] = transaction.deadline.split('-').map(Number);
-                  
-                  // Create today's date in the same format
-                  const today = new Date();
-                  const todayYear = today.getFullYear();
-                  const todayMonth = today.getMonth() + 1; // getMonth() returns 0-11
-                  const todayDay = today.getDate();
-                  
-                  // Calculate days difference
-                  const todayDate = new Date(todayYear, todayMonth - 1, todayDay); // month is 0-indexed
-                  const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
-                  
-                  const diffTime = deadlineDate.getTime() - todayDate.getTime();
-                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                  
-                  return diffDays;
-                };
-                
-                const daysRemaining = getDaysRemaining();
-                
                 return (
                   <div key={transaction.id} className="bg-white rounded-lg shadow-sm border p-4 mobile-card">
                     {/* Header */}
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
                         {transaction.source_type === 'recurrent' ? (
-                          <Repeat className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                          transaction.type === 'income' ?
+                            <Repeat className="h-5 w-5 text-green-600 flex-shrink-0" /> :
+                            <Repeat className="h-5 w-5 text-blue-600 flex-shrink-0" />
                         ) : (
-                          <FileText className="h-5 w-5 text-green-600 flex-shrink-0" />
+                          transaction.type === 'income' ?
+                            <FileText className="h-5 w-5 text-green-600 flex-shrink-0" /> :
+                            <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-medium text-gray-900 truncate">{transaction.description}</h3>
@@ -1371,10 +1330,27 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {transaction.deadline && (
                               <span className="text-xs text-gray-500">
                                 {texts.due}: {(() => {
+                                  // Parse the date string directly to avoid timezone issues
                                   const [year, month, day] = transaction.deadline.split('-').map(Number);
                                   return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
                                 })()}
                               </span>
+                            )}
+                            {transaction.source_type === 'recurrent' && (
+                              (() => {
+                                const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+                                if (recurrentExpense) {
+                                  return (
+                                    <>
+                                      {transaction.deadline && <span className="text-xs text-gray-400">•</span>}
+                                      <span className="text-xs text-gray-500">
+                                        {texts.payingFrom} {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} {texts.to} {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
+                                      </span>
+                                    </>
+                                  )
+                                }
+                                return null
+                              })()
                             )}
                           </div>
                         </div>
@@ -1389,17 +1365,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
                     {/* Details */}
                     <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div>
-                        <span className="text-xs text-gray-500">Days Remaining:</span>
-                        <div className="text-sm font-medium text-gray-900">
-                          {daysRemaining !== null ? (
-                            daysRemaining < 0 ? Math.abs(daysRemaining) :
-                            daysRemaining
-                          ) : (
-                            '-'
-                          )}
-                        </div>
-                      </div>
                       <div>
                         <span className="text-xs text-gray-500">Tipo:</span>
                         <div className="text-sm font-medium text-gray-900 capitalize">
