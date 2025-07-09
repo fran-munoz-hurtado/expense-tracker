@@ -463,38 +463,42 @@ function Home() {
             )}
 
             {expenseType && movementType && (
-              <form onSubmit={handleFormSubmit} className="space-y-4">
-                <div className="mb-4">
+              <form onSubmit={handleFormSubmit} className="flex flex-col gap-6 p-6 sm:p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-lg mx-auto animate-fade-in">
+                <div className="flex justify-between items-center mb-2">
                   <button
                     type="button"
                     onClick={() => setExpenseType(null)}
-                    className="text-blue-600 hover:text-blue-800 text-sm"
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:underline"
                   >
                     ← Volver a selección
                   </button>
                 </div>
 
-                {expenseType === 'recurrent' ? (
-                  // Recurrent Expense Form
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{texts.description}</label>
-                      <input
-                        type="text"
-                        value={recurrentFormData.description}
-                        onChange={(e) => setRecurrentFormData(prev => ({ ...prev, description: e.target.value }))}
-                        className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        required
-                      />
-                    </div>
+                {/* Descripción */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-gray-700">{texts.description}</label>
+                  <input
+                    type="text"
+                    value={expenseType === 'recurrent' ? recurrentFormData.description : nonRecurrentFormData.description}
+                    onChange={(e) => expenseType === 'recurrent'
+                      ? setRecurrentFormData(prev => ({ ...prev, description: e.target.value }))
+                      : setNonRecurrentFormData(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                    placeholder="Descripción"
+                    required
+                  />
+                </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Desde Mes</label>
+                {/* Mes y Año */}
+                {expenseType === 'recurrent' ? (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-4">
+                      <div className="flex-1 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Mes desde</label>
                         <select
                           value={recurrentFormData.month_from}
-                          onChange={(e) => setRecurrentFormData(prev => ({ ...prev, month_from: Number(e.target.value) }))}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                          onChange={e => setRecurrentFormData(prev => ({ ...prev, month_from: Number(e.target.value) }))}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
                           required
                         >
                           {months.map((month, index) => (
@@ -502,41 +506,12 @@ function Home() {
                           ))}
                         </select>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Hasta Mes</label>
-                        <select
-                          value={recurrentFormData.month_to}
-                          onChange={(e) => setRecurrentFormData(prev => ({ ...prev, month_to: Number(e.target.value) }))}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Desde Año</label>
+                      <div className="flex-1 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Año desde</label>
                         <select
                           value={recurrentFormData.year_from}
-                          onChange={(e) => setRecurrentFormData(prev => ({ ...prev, year_from: Number(e.target.value) }))}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Hasta Año</label>
-                        <select
-                          value={recurrentFormData.year_to}
-                          onChange={(e) => setRecurrentFormData(prev => ({ ...prev, year_to: Number(e.target.value) }))}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                          onChange={e => setRecurrentFormData(prev => ({ ...prev, year_from: Number(e.target.value) }))}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
                           required
                         >
                           {availableYears.map((year, index) => (
@@ -545,115 +520,132 @@ function Home() {
                         </select>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{texts.amount} ($)</label>
-                        <input
-                          type="text"
-                          value={getCurrencyInputValue(recurrentFormData.value)}
-                          onChange={(e) => setRecurrentFormData(prev => ({ 
-                            ...prev, 
-                            value: parseCurrency(e.target.value)
-                          }))}
-                          placeholder="$1,200.00"
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    <div className="flex gap-4 mt-2">
+                      <div className="flex-1 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Mes hasta</label>
+                        <select
+                          value={recurrentFormData.month_to}
+                          onChange={e => setRecurrentFormData(prev => ({ ...prev, month_to: Number(e.target.value) }))}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
                           required
-                        />
+                        >
+                          {months.map((month, index) => (
+                            <option key={index + 1} value={index + 1}>{month}</option>
+                          ))}
+                        </select>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Día de Pago (1-31)</label>
-                        <input
-                          type="text"
-                          value={recurrentFormData.payment_day_deadline}
-                          onChange={(e) => setRecurrentFormData(prev => ({ ...prev, payment_day_deadline: e.target.value }))}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
+                      <div className="flex-1 flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700">Año hasta</label>
+                        <select
+                          value={recurrentFormData.year_to}
+                          onChange={e => setRecurrentFormData(prev => ({ ...prev, year_to: Number(e.target.value) }))}
+                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          required
+                        >
+                          {availableYears.map((year, index) => (
+                            <option key={index} value={year}>{year}</option>
+                          ))}
+                        </select>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  // Non-Recurrent Expense Form
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{texts.description}</label>
-                      <input
-                        type="text"
-                        value={nonRecurrentFormData.description}
-                        onChange={(e) => setNonRecurrentFormData(prev => ({ ...prev, description: e.target.value }))}
-                        className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                  <div className="flex gap-4">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">{texts.month}</label>
+                      <select
+                        value={nonRecurrentFormData.month}
+                        onChange={e => setNonRecurrentFormData(prev => ({ ...prev, month: Number(e.target.value) }))}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
                         required
-                      />
+                      >
+                        {months.map((month, index) => (
+                          <option key={index + 1} value={index + 1}>{month}</option>
+                        ))}
+                      </select>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{texts.month}</label>
-                        <select
-                          value={nonRecurrentFormData.month}
-                          onChange={(e) => setNonRecurrentFormData(prev => ({ ...prev, month: Number(e.target.value) }))}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{texts.date}</label>
-                        <select
-                          value={nonRecurrentFormData.year}
-                          onChange={(e) => setNonRecurrentFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">{texts.amount} ($)</label>
-                        <input
-                          type="text"
-                          value={getCurrencyInputValue(nonRecurrentFormData.value)}
-                          onChange={(e) => setNonRecurrentFormData(prev => ({ 
-                            ...prev, 
-                            value: parseCurrency(e.target.value)
-                          }))}
-                          placeholder="$500.00"
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Vencimiento</label>
-                        <input
-                          type="date"
-                          value={nonRecurrentFormData.payment_deadline}
-                          onChange={(e) => setNonRecurrentFormData(prev => ({ ...prev, payment_deadline: e.target.value }))}
-                          className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">{texts.date}</label>
+                      <select
+                        value={nonRecurrentFormData.year}
+                        onChange={e => setNonRecurrentFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                        required
+                      >
+                        {availableYears.map((year, index) => (
+                          <option key={index} value={year}>{year}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 )}
 
-                <div className="flex justify-end space-x-3 pt-4">
+                {/* Monto y Día de Vencimiento para recurrente */}
+                {expenseType === 'recurrent' ? (
+                  <div className="flex gap-4">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">{texts.amount} ($)</label>
+                      <input
+                        type="text"
+                        value={getCurrencyInputValue(recurrentFormData.value)}
+                        onChange={e => setRecurrentFormData(prev => ({ ...prev, value: parseCurrency(e.target.value) }))}
+                        placeholder="$0.00"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        required
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Día de Vencimiento (1-31)</label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="31"
+                        value={recurrentFormData.payment_day_deadline}
+                        onChange={e => setRecurrentFormData(prev => ({ ...prev, payment_day_deadline: e.target.value }))}
+                        placeholder="15"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-4">
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">{texts.amount} ($)</label>
+                      <input
+                        type="text"
+                        value={getCurrencyInputValue(nonRecurrentFormData.value)}
+                        onChange={(e) => setNonRecurrentFormData(prev => ({ ...prev, value: parseCurrency(e.target.value) }))}
+                        placeholder="$0.00"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        required
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        {texts.date}
+                      </label>
+                      <input
+                        type="date"
+                        value={nonRecurrentFormData.payment_deadline}
+                        onChange={(e) => setNonRecurrentFormData(prev => ({ ...prev, payment_deadline: e.target.value }))}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Botones */}
+                <div className="flex justify-end gap-3 mt-2">
                   <button
                     type="button"
                     onClick={resetForm}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+                    className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-all"
                   >
                     {texts.cancel}
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                    className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
                   >
                     Continuar
                   </button>

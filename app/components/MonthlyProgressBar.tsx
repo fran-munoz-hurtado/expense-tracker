@@ -279,12 +279,15 @@ export default function MonthlyProgressBar({
         progressTransform = 'translateX(-50%)'
       }
     } else {
-      // When no overdue, position normally with some edge protection
-      if (percentage >= 90) {
-        progressLeft = Math.max(percentage - 10, 80)
+      // CORRECCIÓN: Si el porcentaje es 0, el tooltip va a 0%. Si es >0 y <=10, margen mínimo 5%.
+      if (percentage === 0) {
+        progressLeft = 0
+        progressTransform = 'translateX(0%)' // Para que el tooltip salga bien pegado a la izquierda
+      } else if (percentage > 0 && percentage <= 10) {
+        progressLeft = 5
         progressTransform = 'translateX(-50%)'
-      } else if (percentage <= 10) {
-        progressLeft = Math.min(percentage + 10, 20)
+      } else if (percentage >= 90) {
+        progressLeft = Math.max(percentage - 10, 80)
         progressTransform = 'translateX(-50%)'
       }
     }
@@ -446,50 +449,50 @@ export default function MonthlyProgressBar({
       <div className="mb-3">
         <div className="relative">
           {/* Background bar */}
-          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
-            {/* Single progress bar with dynamic gradient */}
-            <div
-              className={`h-full bg-gradient-to-r ${getProgressGradient()} rounded-full transition-all duration-1000 ease-out ${
-                isAnimating ? 'animate-pulse' : ''
-              }`}
-              style={{ width: `${Math.min(totalProgressPercentage, 100)}%` }}
-            >
-              {/* Shimmer effect */}
-              <div className="h-full w-full bg-gradient-to-r from-white/30 via-white/10 to-transparent animate-pulse"></div>
-            </div>
+          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner relative">
+            {/* Progreso pagado (verde) */}
+            {paid > 0 && (
+              <div
+                className={`absolute left-0 top-0 h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-1000 ease-out ${overdue > 0 ? 'rounded-l-full' : 'rounded-full'}`}
+                style={{ width: `${total > 0 ? (paid / total) * 100 : 0}%`, zIndex: 1 }}
+              />
+            )}
+            {/* Progreso overdue (rojo) */}
+            {overdue > 0 && (
+              <div
+                className={`absolute top-0 h-full bg-gradient-to-r from-red-400 to-red-600 transition-all duration-1000 ease-out ${paid > 0 ? 'rounded-r-full' : 'rounded-full'}`}
+                style={{ left: `${total > 0 ? (paid / total) * 100 : 0}%`, width: `${total > 0 ? (overdue / total) * 100 : 0}%`, zIndex: 2 }}
+              />
+            )}
           </div>
-          
-          {/* Progress tooltip - always visible, shows only paid amount */}
+          {/* Tooltip de progreso pagado */}
           <div
             className="absolute -top-8 transition-all duration-1000 ease-out"
-            style={{ 
-              left: `${tooltipConfig.progressLeft}%`,
-              transform: tooltipConfig.progressTransform,
+            style={{
+              left: `${total > 0 ? (paid / total) * 100 : 0}%`,
+              transform: 'translateX(-50%)',
               zIndex: 20
             }}
           >
             <div className={`text-white text-xs px-2 py-1 rounded-lg shadow-lg font-medium ${
-              hasOverdue 
-                ? 'bg-red-400' // Soft red when there's overdue
-                : 'bg-green-500' // Solid green when up-to-date
+              hasOverdue && overdue > 0 ? 'bg-red-400' : 'bg-green-500'
             }`}>
               <div>{percentage}%</div>
               <div className="text-xs opacity-90">{formatCurrency(paid)}</div>
             </div>
             {/* Conditional pointer - hide when at the very right edge */}
-            {tooltipConfig.showProgressPointer && tooltipConfig.progressLeft < 98 && (
+            {((total > 0 ? (paid / total) * 100 : 0) < 98) && (
               <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-current mx-auto"></div>
             )}
           </div>
-
-          {/* Overdue tooltip - conditional and motivational */}
+          {/* Overdue tooltip - igual que antes */}
           {tooltipConfig.showOverdueTooltip && (
-            <div 
+            <div
               className="absolute -top-8 transition-all duration-1000 ease-out"
-              style={{ 
+              style={{
                 left: tooltipConfig.isNearEnd && tooltipConfig.overdueLeft
-                  ? `${tooltipConfig.overdueLeft}%` // Use calculated position when near end
-                  : `${Math.min(totalProgressPercentage, 95)}%`, // Normal positioning
+                  ? `${tooltipConfig.overdueLeft}%`
+                  : `${Math.min(totalProgressPercentage, 95)}%`,
                 transform: 'translateX(-50%)',
                 zIndex: 10
               }}
@@ -498,7 +501,6 @@ export default function MonthlyProgressBar({
                 <div>{totalProgressPercentage}%</div>
                 <div className="text-xs opacity-90">{formatCurrency(paid + overdue)}</div>
               </div>
-              {/* Pointer for overdue tooltip - hide when at the very right edge */}
               {(!tooltipConfig.isNearEnd || (tooltipConfig.overdueLeft && tooltipConfig.overdueLeft < 98)) && (
                 <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-rose-500 mx-auto"></div>
               )}
