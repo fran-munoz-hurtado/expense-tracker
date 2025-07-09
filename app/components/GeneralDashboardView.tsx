@@ -549,38 +549,60 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     <div className="flex-1 p-6 lg:p-8">
       {/* 1. Fancy header con explicación de porcentajes */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
-            <span>📊</span> {texts.allExpenses}
-          </h1>
-          
-          {/* Tooltip informativo más visible */}
-          <div className="relative group">
-            <button className="flex items-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 border border-blue-200">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4m0-4h.01" />
-              </svg>
-              <span className="text-sm font-medium">¿Qué son los porcentajes?</span>
-            </button>
-            
-            {/* Tooltip content */}
-            <div className="absolute right-0 top-full mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 text-sm font-bold">💡</span>
-                </div>
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 mb-2">¿Qué significan los porcentajes?</h3>
-                  <div>
-                    <span className="font-bold text-blue-700">🧾 <u>Gastos e ingresos</u>:</span><br />
-                    <span>Indica <span className="font-bold text-blue-700">qué parte</span> de ese gasto o ingreso <span className="font-bold">ya está pagado o recibido</span>.</span><br />
-                    <span className="text-gray-600">Ejemplo: <span className="font-bold text-blue-700">60%</span> en “Mensual” significa que ya pagaste el 60% de tus gastos mensuales.</span>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          {/* Filtro de año */}
+          <div className="flex items-center gap-4">
+            <label className="block text-sm font-medium text-gray-700 mr-2 flex items-center gap-1">
+              <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+              Año
+            </label>
+            <div className="relative">
+              <select
+                value={selectedYear}
+                onChange={e => {
+                  const newYear = Number(e.target.value)
+                  setSelectedYear(newYear)
+                }}
+                className="appearance-none px-4 py-2 border border-blue-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white text-blue-700 font-semibold transition-all duration-150 hover:border-blue-400 cursor-pointer pr-8"
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
+              </span>
+            </div>
+          </div>
+          {/* Botón de explicación de porcentajes */}
+          <div className="flex-shrink-0">
+            <div className="relative group">
+              <button className="flex items-center gap-2 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-all duration-200 border border-blue-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4m0-4h.01" />
+                </svg>
+                <span className="text-sm font-medium">¿Qué son los porcentajes?</span>
+              </button>
+              
+              {/* Tooltip content */}
+              <div className="absolute right-0 top-full mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 text-sm font-bold">💡</span>
                   </div>
-                  <div>
-                    <span className="font-bold text-blue-700">💰 <u>CuantoQueda</u>:</span><br />
-                    <span>Muestra <span className="font-bold text-blue-700">qué porcentaje</span> de tus ingresos <span className="font-bold">te queda libre</span> después de pagar todos tus gastos.</span><br />
-                    <span className="text-gray-600">Ejemplo: <span className="font-bold text-blue-700">40%</span> significa que, tras pagar todo, te queda el 40% de lo que ganaste ese mes.</span>
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-gray-900 mb-2">¿Qué significan los porcentajes?</h3>
+                    <div>
+                      <span className="font-bold text-blue-700">🧾 <u>Gastos e ingresos</u>:</span><br />
+                      <span>Indica <span className="font-bold text-blue-700">qué parte</span> de ese gasto o ingreso <span className="font-bold">ya está pagado o recibido</span>.</span><br />
+                      <span className="text-gray-600">Ejemplo: <span className="font-bold text-blue-700">60%</span> en “Mensual” significa que ya pagaste el 60% de tus gastos mensuales.</span>
+                    </div>
+                    <div>
+                      <span className="font-bold text-blue-700">💰 <u>CuantoQueda</u>:</span><br />
+                      <span>Muestra <span className="font-bold text-blue-700">qué porcentaje</span> de tus ingresos <span className="font-bold">te queda libre</span> después de pagar todos tus gastos.</span><br />
+                      <span className="text-gray-600">Ejemplo: <span className="font-bold text-blue-700">40%</span> significa que, tras pagar todo, te queda el 40% de lo que ganaste ese mes.</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -589,30 +611,6 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
         </div>
       </div>
       {/* 2. Filtro de año más sofisticado */}
-      <div className="mb-6 flex items-center gap-4">
-        <label className="block text-sm font-medium text-gray-700 mr-2 flex items-center gap-1">
-          <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-          Año
-        </label>
-        <div className="relative">
-          <select
-            value={selectedYear}
-            onChange={e => {
-              const newYear = Number(e.target.value)
-              console.log(`🔄 GeneralDashboardView: Year changed from ${selectedYear} to ${newYear}`)
-              setSelectedYear(newYear)
-            }}
-            className="appearance-none px-4 py-2 border border-blue-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 bg-white text-blue-700 font-semibold transition-all duration-150 hover:border-blue-400 cursor-pointer pr-8"
-          >
-            {availableYears.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-400">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" /></svg>
-          </span>
-        </div>
-      </div>
       {error && <div className="mb-4 text-red-600">{error}</div>}
       
       {/* 3. Fancy tabla con tooltips en porcentajes */}

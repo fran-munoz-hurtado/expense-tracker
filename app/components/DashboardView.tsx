@@ -871,8 +871,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     <div className="flex-1 p-6 lg:p-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">{texts.thisMonth}</h1>
-        <p className="text-gray-600 mt-2">{texts.dashboard}</p>
       </div>
 
       {/* Error Display */}
