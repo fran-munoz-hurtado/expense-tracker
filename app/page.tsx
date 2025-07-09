@@ -389,23 +389,23 @@ function Home() {
 
       {/* Expense Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-lg sm:text-xl font-bold">{texts.addTransaction}</h2>
-              <button
-                onClick={resetForm}
-                className="text-gray-400 hover:text-gray-600 p-1"
-              >
-                <X className="h-5 w-5 sm:h-6 sm:w-6" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={resetForm}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
 
             {/* Selección unificada de tipo de movimiento y tipo de recurrencia */}
             {!(movementType && expenseType) && (
-              <div className="mb-4">
-                <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col gap-4 items-center max-w-md mx-auto shadow-sm">
-                  <p className="text-gray-700 text-sm font-medium mb-1">Selecciona el tipo de movimiento y periodicidad</p>
+              <div className="p-5 flex flex-col gap-4 items-center">
+                <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1" id="add-movement-title">{texts.addTransaction}</h2>
+                <p className="text-gray-700 text-sm font-medium mb-1">Selecciona el tipo de movimiento y periodicidad</p>
                   {/* Toggle Gasto/Ingreso */}
                   <div className="flex w-full gap-0 rounded-lg overflow-hidden border border-gray-200 bg-white">
                     <button
@@ -460,7 +460,6 @@ function Home() {
                     )}
                   </div>
                 </div>
-              </div>
             )}
 
             {expenseType && movementType && (
@@ -661,7 +660,7 @@ function Home() {
                 </div>
               </form>
             )}
-          </div>
+          </section>
         </div>
       )}
 
