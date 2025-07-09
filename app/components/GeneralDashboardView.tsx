@@ -658,7 +658,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 <span className="ml-1 text-blue-400" title="Porcentaje de gastos únicos ya pagados en el mes">%</span>
               </th>
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
-                {texts.totalBalance}
+                Total
                 <span className="ml-1 text-blue-400" title="Porcentaje del total de gastos ya pagados en el mes">%</span>
               </th>
             </tr>
