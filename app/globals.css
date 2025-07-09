@@ -125,6 +125,50 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    
+    /* App-specific color variables - maintaining current values */
+    --income-primary: 160 84% 39%;      /* emerald-600 */
+    --income-secondary: 160 84% 39%;    /* emerald-700 */
+    --income-light: 160 84% 39%;        /* emerald-700 */
+    --income-bg: 160 84% 39%;           /* emerald-700 */
+    --income-bg-light: 160 84% 39%;     /* emerald-700 */
+    --income-border: 160 84% 39%;       /* emerald-700 */
+    --income-text: 160 84% 39%;         /* emerald-700 */
+    
+    --expense-primary: 0 84% 60%;       /* red-500 */
+    --expense-secondary: 0 84% 60%;     /* red-600 */
+    --expense-light: 0 84% 60%;         /* red-600 */
+    --expense-bg: 0 84% 60%;            /* red-600 */
+    --expense-bg-light: 0 84% 60%;      /* red-600 */
+    --expense-border: 0 84% 60%;        /* red-600 */
+    --expense-text: 0 84% 60%;          /* red-600 */
+    
+    --balance-primary: 221 83% 53%;     /* blue-600 */
+    --balance-secondary: 221 83% 53%;   /* blue-700 */
+    --balance-light: 221 83% 53%;       /* blue-700 */
+    --balance-bg: 221 83% 53%;          /* blue-700 */
+    --balance-bg-light: 221 83% 53%;    /* blue-700 */
+    --balance-border: 221 83% 53%;      /* blue-700 */
+    --balance-text: 221 83% 53%;        /* blue-700 */
+    
+    --status-paid: 160 84% 39%;         /* green-600 */
+    --status-pending: 45 93% 47%;       /* yellow-500 */
+    --status-overdue: 0 84% 60%;        /* red-500 */
+    
+    --button-primary: 221 83% 53%;      /* blue-600 */
+    --button-secondary: 221 83% 53%;    /* blue-700 */
+    --button-hover: 221 83% 53%;        /* blue-700 */
+    
+    --icon-income: 160 84% 39%;         /* emerald-600 */
+    --icon-expense: 221 83% 53%;        /* blue-600 */
+    --icon-balance: 221 83% 53%;        /* blue-600 */
+    
+    --filter-active: 221 83% 53%;       /* blue-600 */
+    --filter-inactive: 215 16% 47%;     /* gray-600 */
+    
+    --modal-success: 160 84% 39%;       /* green-600 */
+    --modal-warning: 45 93% 47%;        /* yellow-500 */
+    --modal-info: 221 83% 53%;          /* blue-600 */
   }
 
   .dark {
@@ -152,6 +196,50 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    
+    /* Dark mode app-specific colors - same as light for now */
+    --income-primary: 160 84% 39%;
+    --income-secondary: 160 84% 39%;
+    --income-light: 160 84% 39%;
+    --income-bg: 160 84% 39%;
+    --income-bg-light: 160 84% 39%;
+    --income-border: 160 84% 39%;
+    --income-text: 160 84% 39%;
+    
+    --expense-primary: 0 84% 60%;
+    --expense-secondary: 0 84% 60%;
+    --expense-light: 0 84% 60%;
+    --expense-bg: 0 84% 60%;
+    --expense-bg-light: 0 84% 60%;
+    --expense-border: 0 84% 60%;
+    --expense-text: 0 84% 60%;
+    
+    --balance-primary: 221 83% 53%;
+    --balance-secondary: 221 83% 53%;
+    --balance-light: 221 83% 53%;
+    --balance-bg: 221 83% 53%;
+    --balance-bg-light: 221 83% 53%;
+    --balance-border: 221 83% 53%;
+    --balance-text: 221 83% 53%;
+    
+    --status-paid: 160 84% 39%;
+    --status-pending: 45 93% 47%;
+    --status-overdue: 0 84% 60%;
+    
+    --button-primary: 221 83% 53%;
+    --button-secondary: 221 83% 53%;
+    --button-hover: 221 83% 53%;
+    
+    --icon-income: 160 84% 39%;
+    --icon-expense: 221 83% 53%;
+    --icon-balance: 221 83% 53%;
+    
+    --filter-active: 221 83% 53%;
+    --filter-inactive: 215 16% 47%;
+    
+    --modal-success: 160 84% 39%;
+    --modal-warning: 45 93% 47%;
+    --modal-info: 221 83% 53%;
   }
 }
 

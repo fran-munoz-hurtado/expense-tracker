@@ -11,6 +11,7 @@ import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import MonthlyProgressBar from './MonthlyProgressBar'
+import { APP_COLORS, getColor, getGradient } from '@/lib/config/colors'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -1062,30 +1063,30 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       <div className="mb-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Total Ingresos del Mes */}
-          <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-3 rounded-lg border border-emerald-200 shadow-sm">
+          <div className={`bg-gradient-to-br ${getGradient('income')} p-3 rounded-lg border border-${getColor('income', 'border')} shadow-sm`}>
             <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-emerald-200 rounded-lg">
-                <TrendingUp className="h-4 w-4 text-emerald-700" />
+              <div className={`p-1.5 bg-${getColor('income', 'secondary')} rounded-lg`}>
+                <TrendingUp className={`h-4 w-4 text-${getColor('income', 'icon')}`} />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-medium text-emerald-700">{texts.monthlyIncomeTotal}</p>
-                <p className="text-base font-bold text-emerald-900">{formatCurrency(monthlyStats.totalIncome)}</p>
+                <p className={`text-xs font-medium text-${getColor('income', 'text')}`}>{texts.monthlyIncomeTotal}</p>
+                <p className={`text-base font-bold text-${getColor('income', 'dark')}`}>{formatCurrency(monthlyStats.totalIncome)}</p>
               </div>
             </div>
           </div>
 
           {/* Total Gastos del Mes */}
-          <div className="bg-gradient-to-br from-red-50 to-red-100 p-3 rounded-lg border border-red-200 shadow-sm">
+          <div className={`bg-gradient-to-br ${getGradient('expense')} p-3 rounded-lg border border-${getColor('expense', 'border')} shadow-sm`}>
             <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-red-200 rounded-lg">
-                <DollarSign className="h-4 w-4 text-red-700" />
+              <div className={`p-1.5 bg-${getColor('expense', 'secondary')} rounded-lg`}>
+                <DollarSign className={`h-4 w-4 text-${getColor('expense', 'icon')}`} />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-medium text-red-700">{texts.monthlyExpensesTotal}</p>
+                <p className={`text-xs font-medium text-${getColor('expense', 'text')}`}>{texts.monthlyExpensesTotal}</p>
                 <div className="flex items-center space-x-2">
-                  <p className="text-base font-bold text-red-900">{formatCurrency(monthlyStats.totalExpenses)}</p>
+                  <p className={`text-base font-bold text-${getColor('expense', 'dark')}`}>{formatCurrency(monthlyStats.totalExpenses)}</p>
                   {monthlyStats.totalIncome > 0 && (
-                    <span className="text-xs font-medium text-red-600 bg-red-100 px-1.5 py-0.5 rounded-full">
+                    <span className={`text-xs font-medium text-${getColor('expense', 'primary')} bg-${getColor('expense', 'light')} px-1.5 py-0.5 rounded-full`}>
                       {Math.round((monthlyStats.totalExpenses / monthlyStats.totalIncome) * 100)}%
                     </span>
                   )}
@@ -1095,17 +1096,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
           </div>
 
           {/* CuantoQueda */}
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200 shadow-sm">
+          <div className={`bg-gradient-to-br ${getGradient('balance')} p-3 rounded-lg border border-${getColor('balance', 'border')} shadow-sm`}>
             <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-blue-200 rounded-lg">
-                <CheckCircle className="h-4 w-4 text-blue-700" />
+              <div className={`p-1.5 bg-${getColor('balance', 'secondary')} rounded-lg`}>
+                <CheckCircle className={`h-4 w-4 text-${getColor('balance', 'icon')}`} />
               </div>
               <div className="flex-1">
-                <p className="text-xs font-medium text-blue-700">{texts.cuantoQueda}</p>
+                <p className={`text-xs font-medium text-${getColor('balance', 'text')}`}>{texts.cuantoQueda}</p>
                 <div className="flex items-center space-x-2">
-                  <p className="text-base font-bold text-blue-900">{formatCurrency(monthlyStats.balance)}</p>
+                  <p className={`text-base font-bold text-${getColor('balance', 'dark')}`}>{formatCurrency(monthlyStats.balance)}</p>
                   {monthlyStats.totalIncome > 0 && (
-                    <span className="text-xs font-medium text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded-full">
+                    <span className={`text-xs font-medium text-${getColor('balance', 'primary')} bg-${getColor('balance', 'light')} px-1.5 py-0.5 rounded-full`}>
                       {Math.round((monthlyStats.balance / monthlyStats.totalIncome) * 100)}%
                     </span>
                   )}
