@@ -36,6 +36,10 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     paid: number
     pending: number
     overdue: number
+    income: number
+    incomePaid: number
+    incomePending: number
+    incomeOverdue: number
   }>>({})
 
   // Helper function to compare dates without time
@@ -181,6 +185,10 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
         paid: number
         pending: number
         overdue: number
+        income: number
+        incomePaid: number
+        incomePending: number
+        incomeOverdue: number
       }> = {}
 
       // Initialize all months
@@ -210,6 +218,23 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           return isDateOverdue(t.deadline)
         }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
 
+        // Calculate income statistics for the month
+        const monthIncomeTransactions = result.transactions.filter((t: Transaction) => 
+          t.month === month && t.type === 'income'
+        )
+        const incomeTotal = monthIncomeTransactions.reduce((sum: number, t: Transaction) => sum + t.value, 0)
+        const incomePaid = monthIncomeTransactions.filter((t: Transaction) => t.status === 'paid').reduce((sum: number, t: Transaction) => sum + t.value, 0)
+        const incomePending = monthIncomeTransactions.filter((t: Transaction) => {
+          if (t.status !== 'pending') return false
+          if (!t.deadline) return true
+          return !isDateOverdue(t.deadline)
+        }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
+        const incomeOverdue = monthIncomeTransactions.filter((t: Transaction) => {
+          if (t.status !== 'pending') return false
+          if (!t.deadline) return false
+          return isDateOverdue(t.deadline)
+        }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
+
         monthlyStats[month] = {
           transactions: monthTransactions,
           recurrent: recurrentTotal,
@@ -217,7 +242,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           total,
           paid,
           pending,
-          overdue
+          overdue,
+          income: incomeTotal,
+          incomePaid: incomePaid,
+          incomePending: incomePending,
+          incomeOverdue: incomeOverdue
         }
       }
 
@@ -252,6 +281,14 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
         }
       })
 
+      // Log income statistics for debugging
+      Object.entries(monthlyStats).forEach(([month, data]) => {
+        if (data.income > 0) {
+          const incomePercentage = calculateIncomePercentage(data)
+          console.log(`🔄 Month ${month} Income: ${formatCurrency(data.income)} (${incomePercentage}% received)`)
+        }
+      })
+
     } catch (error) {
       console.error('❌ Error in fetchMonthlyData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
@@ -280,6 +317,17 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     const typeTotal = expenseType === 'recurrent' ? data.recurrent : data.nonRecurrent
     
     return calculatePercentage(typePaid, typeTotal)
+  }
+
+  /**
+   * Calculates the percentage of income transactions that have been paid for a given month.
+   * Follows the same pattern as expense percentage calculations for consistency.
+   * 
+   * @param data - Monthly data object containing income statistics
+   * @returns Percentage of income paid (0-100)
+   */
+  function calculateIncomePercentage(data: any): number {
+    return calculatePercentage(data.incomePaid, data.income)
   }
 
   // Delete transaction functions
@@ -618,6 +666,10 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           <thead>
             <tr>
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">{texts.month}</th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-green-600 uppercase tracking-wider bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
+                Ingresos
+                <span className="ml-1 text-green-500" title="Porcentaje de ingresos ya recibidos en el mes">%</span>
+              </th>
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
                 {texts.recurrent}
                 <span className="ml-1 text-blue-400" title="Porcentaje de gastos mensuales ya pagados en el mes">%</span>
@@ -634,7 +686,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={4} className="px-6 py-4 text-center text-gray-400 animate-pulse">{texts.loading}</td></tr>
+              <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-400 animate-pulse">{texts.loading}</td></tr>
             ) :
               Object.entries(monthlyData).map(([monthStr, data], idx) => {
                 const month = parseInt(monthStr)
@@ -649,6 +701,12 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       >
                         {months[month - 1]}
                       </button>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span className="text-gray-900">{formatCurrency(data.income)}</span>
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateIncomePercentage(data))}`} title="Porcentaje de ingresos ya recibidos en el mes">
+                        {calculateIncomePercentage(data)}%
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className="text-gray-900">{formatCurrency(data.recurrent)}</span>
@@ -707,6 +765,19 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 </div>
                 
                 <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-green-600 font-medium">Ingresos:</span>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-900">{formatCurrency(data.income)}</div>
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateIncomePercentage(data))}`}>
+                          {calculateIncomePercentage(data)}%
+                        </span>
+                        <span className="text-xs text-gray-600">Recibido</span>
+                      </div>
+                    </div>
+                  </div>
+                  
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">{texts.recurrent}:</span>
                     <div className="text-right">
