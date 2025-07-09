@@ -55,7 +55,8 @@ function Home() {
     year_from: new Date().getFullYear(),
     year_to: new Date().getFullYear(),
     value: 0,
-    payment_day_deadline: ''
+    payment_day_deadline: '',
+    isgoal: false
   })
 
   // Form data for non-recurrent expenses
@@ -201,6 +202,7 @@ function Home() {
           value: Number(recurrentFormData.value),
           payment_day_deadline: recurrentFormData.payment_day_deadline ? Number(recurrentFormData.payment_day_deadline) : null,
           type: movementType,
+          isgoal: recurrentFormData.isgoal
         }
 
         const { data, error } = await supabase
@@ -267,7 +269,8 @@ function Home() {
       year_from: new Date().getFullYear(),
       year_to: new Date().getFullYear(),
       value: 0,
-      payment_day_deadline: ''
+      payment_day_deadline: '',
+      isgoal: false
     })
     setNonRecurrentFormData({
       description: '',
@@ -582,7 +585,7 @@ function Home() {
 
                 {/* Monto y Día de Vencimiento para recurrente */}
                 {expenseType === 'recurrent' ? (
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 items-end">
                     <div className="flex-1 flex flex-col gap-2">
                       <label className="text-sm font-medium text-gray-700">{texts.amount} ($)</label>
                       <input
@@ -631,6 +634,23 @@ function Home() {
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
                       />
                     </div>
+                  </div>
+                )}
+
+                {/* Checkbox de meta (isgoal) solo para GASTO/RECURRENTE */}
+                {movementType === 'expense' && expenseType === 'recurrent' && (
+                  <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mt-2 shadow-sm">
+                    <input
+                      id="isgoal-checkbox"
+                      type="checkbox"
+                      checked={recurrentFormData.isgoal || false}
+                      onChange={e => setRecurrentFormData(prev => ({ ...prev, isgoal: e.target.checked }))}
+                      className="accent-blue-600 w-5 h-5 rounded-lg border-2 border-blue-400 focus:ring-2 focus:ring-blue-300 transition-all shadow-sm"
+                    />
+                    <label htmlFor="isgoal-checkbox" className="flex-1 text-sm text-blue-900 font-medium select-none cursor-pointer">
+                      ¿Este gasto recurrente es una <span className="font-bold text-blue-700">meta</span> que quieres cumplir?<br />
+                      <span className="text-xs text-blue-700 font-normal">Ejemplo: pagar un carro, un viaje, un crédito, etc. Marca esta opción si este gasto es un objetivo personal que estás pagando mes a mes.</span>
+                    </label>
                   </div>
                 )}
 
