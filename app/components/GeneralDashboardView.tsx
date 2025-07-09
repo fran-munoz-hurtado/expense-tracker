@@ -650,16 +650,16 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
             {/* Sub-header para las columnas de gastos */}
             <tr>
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+                Total
+                <span className="ml-1 text-blue-400" title="Porcentaje del total de gastos ya pagados en el mes">%</span>
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
                 {texts.recurrent}
                 <span className="ml-1 text-blue-400" title="Porcentaje de gastos mensuales ya pagados en el mes">%</span>
               </th>
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
                 {texts.nonRecurrent}
                 <span className="ml-1 text-blue-400" title="Porcentaje de gastos únicos ya pagados en el mes">%</span>
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
-                Total
-                <span className="ml-1 text-blue-400" title="Porcentaje del total de gastos ya pagados en el mes">%</span>
               </th>
             </tr>
           </thead>
@@ -688,6 +688,12 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <span className="text-gray-900">{formatCurrency(totalAmount)}</span>
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(getPercentage(data.paid, totalAmount))}`} title="Porcentaje del total pagado">
+                        {getPercentage(data.paid, totalAmount)}%
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className="text-gray-900">{formatCurrency(data.recurrent)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`} title="Porcentaje de gastos mensuales pagados">
                         {calculateExpenseTypePercentage(data, 'recurrent')}%
@@ -697,12 +703,6 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       <span className="text-gray-900">{formatCurrency(data.nonRecurrent)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`} title="Porcentaje de gastos únicos pagados">
                         {calculateExpenseTypePercentage(data, 'non_recurrent')}%
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="text-gray-900">{formatCurrency(totalAmount)}</span>
-                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(getPercentage(data.paid, totalAmount))}`} title="Porcentaje del total pagado">
-                        {getPercentage(data.paid, totalAmount)}%
                       </span>
                     </td>
                   </tr>
@@ -766,6 +766,19 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       <span className="text-sm text-blue-700 font-medium">Gastos:</span>
                     </div>
                     <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Total:</span>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-900">{formatCurrency(data.total)}</div>
+                          <div className="flex items-center justify-end gap-2 mt-1">
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(getPercentage(data.paid, data.total))}`}>
+                              {getPercentage(data.paid, data.total)}%
+                            </span>
+                            <span className="text-xs text-gray-600">{texts.paid}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">{texts.recurrent}:</span>
                         <div className="text-right">
