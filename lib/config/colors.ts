@@ -159,6 +159,16 @@ export function getColor(category: keyof typeof APP_COLORS, variant: string): st
 }
 
 /**
+ * Helper function to get nested color classes
+ * Usage: getNestedColor('filter', 'active', 'bg') -> 'white'
+ */
+export function getNestedColor(category: keyof typeof APP_COLORS, subcategory: string, variant: string): string {
+  const categoryColors = APP_COLORS[category] as any
+  const subcategoryColors = categoryColors[subcategory] as any
+  return subcategoryColors?.[variant] || ''
+}
+
+/**
  * Helper function to get multiple color classes
  * Usage: getColors('income', ['primary', 'text']) -> ['emerald-600', 'emerald-700']
  */

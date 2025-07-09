@@ -11,7 +11,7 @@ import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import MonthlyProgressBar from './MonthlyProgressBar'
-import { APP_COLORS, getColor, getGradient } from '@/lib/config/colors'
+import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -995,8 +995,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   onClick={() => setFilterType('all')}
                   className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
                     filterType === 'all'
-                      ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
                   }`}
                 >
                   Todos
@@ -1005,8 +1005,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   onClick={() => setFilterType('recurrent')}
                   className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
                     filterType === 'recurrent'
-                      ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
                   }`}
                 >
                   Recurrentes
@@ -1015,8 +1015,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   onClick={() => setFilterType('non_recurrent')}
                   className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
                     filterType === 'non_recurrent'
-                      ? 'bg-white text-blue-600 shadow-sm border border-blue-200'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
+                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
                   }`}
                 >
                   Únicos
