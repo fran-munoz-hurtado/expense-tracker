@@ -35,6 +35,11 @@ export const translations = {
   stillPending: 'Falta pagar',
   overdueAmount: 'Se pasó la fecha',
   
+  // New financial overview totals
+  monthlyIncomeTotal: 'Total Ingresos del mes',
+  monthlyExpensesTotal: 'Total Gastos del mes',
+  cuantoQueda: 'CuantoQueda',
+  
   // Transactions
   addTransaction: 'Añadir movimiento',
   editTransaction: 'Editar Transacción',

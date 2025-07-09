@@ -155,8 +155,8 @@ const OVERDUE_MESSAGES = [
 /**
  * MonthlyProgressBar Component
  * 
- * A comprehensive financial progress component that displays monthly financial overview
- * with integrated totals, progress tracking, and overdue status detection.
+ * A comprehensive financial progress component that displays monthly progress tracking
+ * with overdue status detection and motivational messages.
  * 
  * Features:
  * - Single progress bar with rounded ends
@@ -164,7 +164,7 @@ const OVERDUE_MESSAGES = [
  * - Progress tooltip shows only paid amount
  * - Dynamic color gradients (green when up-to-date, green-to-red when overdue)
  * - Always visible progress tooltip (even at 0%)
- * - Integrated display of all financial totals
+ * - Progress overview cards (paid, pending, overdue)
  * - Sophisticated progress bar with smooth animations
  * - Overdue status detection and warning messages
  * - Motivational messages focused on personal achievement
@@ -362,106 +362,91 @@ export default function MonthlyProgressBar({
 
   return (
     <div 
-      className={`bg-white rounded-xl shadow-sm border ${rangeConfig.borderColor} p-6 ${className}`}
+      className={`bg-white rounded-xl shadow-sm border ${rangeConfig.borderColor} p-4 ${className}`}
       role="progressbar"
       aria-valuenow={percentage}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={`Progreso del mes: ${percentage}% completado`}
     >
-      {/* Header with icon and comprehensive financial overview */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className={`p-2.5 rounded-lg ${rangeConfig.bgColor} transition-colors duration-300`}>
-            <IconComponent 
-              className={`h-5 w-5 bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent`} 
-              aria-hidden="true"
-            />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Progreso del Mes</h3>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className={`text-2xl font-bold bg-gradient-to-r ${rangeConfig.color} bg-clip-text text-transparent`}>
-            {percentage}%
-          </div>
-          <div className="text-xs text-gray-500">completado</div>
-        </div>
-      </div>
+      {/* Inline Progress Statistics */}
+      <div className="mb-4">
+        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Ya Pagué */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="p-1.5 bg-green-100 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-700">{texts.alreadyPaid}</p>
+                  <p className="text-base font-bold text-green-600">{formatCurrency(paid)}</p>
+                </div>
+              </div>
+              {total > 0 && (
+                <div className="text-right">
+                  <div className="text-xs font-medium text-gray-500">
+                    {Math.round((paid / total) * 100)}%
+                  </div>
+                </div>
+              )}
+            </div>
 
-      {/* Integrated Financial Overview Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        {/* Total del Mes */}
-        <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-3 rounded-lg border border-blue-200">
-          <div className="flex items-center space-x-2">
-            <div className="p-1.5 bg-blue-200 rounded-lg">
-              <DollarSign className="h-4 w-4 text-blue-700" />
+            {/* Falta Pagar */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className="p-1.5 bg-yellow-100 rounded-lg">
+                  <Clock className="h-4 w-4 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-700">{texts.stillPending}</p>
+                  <p className="text-base font-bold text-yellow-600">{formatCurrency(pending)}</p>
+                </div>
+              </div>
+              {total > 0 && (
+                <div className="text-right">
+                  <div className="text-xs font-medium text-gray-500">
+                    {Math.round((pending / total) * 100)}%
+                  </div>
+                </div>
+              )}
             </div>
-            <div>
-              <p className="text-xs font-medium text-blue-700">{texts.monthlyTotal}</p>
-              <p className="text-sm font-bold text-blue-900">{formatCurrency(total)}</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Ya Pagué */}
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 rounded-lg border border-green-200">
-          <div className="flex items-center space-x-2">
-            <div className="p-1.5 bg-green-200 rounded-lg">
-              <CheckCircle className="h-4 w-4 text-green-700" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-green-700">{texts.alreadyPaid}</p>
-              <p className="text-sm font-bold text-green-900">{formatCurrency(paid)}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Falta Pagar */}
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200">
-          <div className="flex items-center space-x-2">
-            <div className="p-1.5 bg-yellow-200 rounded-lg">
-              <Clock className="h-4 w-4 text-yellow-700" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-yellow-700">{texts.stillPending}</p>
-              <p className="text-sm font-bold text-yellow-900">{formatCurrency(pending)}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Se pasó la fecha */}
-        <div className={`p-3 rounded-lg border ${
-          hasOverdue 
-            ? 'bg-gradient-to-br from-red-50 to-red-100 border-red-200' 
-            : 'bg-gradient-to-br from-gray-50 to-gray-100 border-gray-200'
-        }`}>
-          <div className="flex items-center space-x-2">
-            <div className={`p-1.5 rounded-lg ${
-              hasOverdue ? 'bg-red-200' : 'bg-gray-200'
-            }`}>
-              <AlertCircle className={`h-4 w-4 ${
-                hasOverdue ? 'text-red-700' : 'text-gray-500'
-              }`} />
-            </div>
-            <div>
-              <p className={`text-xs font-medium ${
-                hasOverdue ? 'text-red-700' : 'text-gray-500'
-              }`}>{texts.overdueAmount}</p>
-              <p className={`text-sm font-bold ${
-                hasOverdue ? 'text-red-900' : 'text-gray-500'
-              }`}>{formatCurrency(overdue)}</p>
+            {/* Se pasó la fecha */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <div className={`p-1.5 rounded-lg ${
+                  hasOverdue ? 'bg-red-100' : 'bg-gray-100'
+                }`}>
+                  <AlertCircle className={`h-4 w-4 ${
+                    hasOverdue ? 'text-red-600' : 'text-gray-500'
+                  }`} />
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-gray-700">{texts.overdueAmount}</p>
+                  <p className={`text-base font-bold ${
+                    hasOverdue ? 'text-red-600' : 'text-gray-500'
+                  }`}>{formatCurrency(overdue)}</p>
+                </div>
+              </div>
+              {total > 0 && (
+                <div className="text-right">
+                  <div className="text-xs font-medium text-gray-500">
+                    {Math.round((overdue / total) * 100)}%
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Enhanced Single Progress Bar with Dynamic Gradients */}
-      <div className="mb-6">
+      <div className="mb-3">
         <div className="relative">
           {/* Background bar */}
-          <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden shadow-inner">
+          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner">
             {/* Single progress bar with dynamic gradient */}
             <div
               className={`h-full bg-gradient-to-r ${getProgressGradient()} rounded-full transition-all duration-1000 ease-out ${
@@ -476,14 +461,14 @@ export default function MonthlyProgressBar({
           
           {/* Progress tooltip - always visible, shows only paid amount */}
           <div
-            className="absolute -top-10 transition-all duration-1000 ease-out"
+            className="absolute -top-8 transition-all duration-1000 ease-out"
             style={{ 
               left: `${tooltipConfig.progressLeft}%`,
               transform: tooltipConfig.progressTransform,
               zIndex: 20
             }}
           >
-            <div className={`text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-medium ${
+            <div className={`text-white text-xs px-2 py-1 rounded-lg shadow-lg font-medium ${
               hasOverdue 
                 ? 'bg-red-400' // Soft red when there's overdue
                 : 'bg-green-500' // Solid green when up-to-date
@@ -493,14 +478,14 @@ export default function MonthlyProgressBar({
             </div>
             {/* Conditional pointer - hide when at the very right edge */}
             {tooltipConfig.showProgressPointer && tooltipConfig.progressLeft < 98 && (
-              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-current mx-auto"></div>
+              <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-current mx-auto"></div>
             )}
           </div>
 
           {/* Overdue tooltip - conditional and motivational */}
           {tooltipConfig.showOverdueTooltip && (
             <div 
-              className="absolute -top-10 transition-all duration-1000 ease-out"
+              className="absolute -top-8 transition-all duration-1000 ease-out"
               style={{ 
                 left: tooltipConfig.isNearEnd && tooltipConfig.overdueLeft
                   ? `${tooltipConfig.overdueLeft}%` // Use calculated position when near end
@@ -509,26 +494,26 @@ export default function MonthlyProgressBar({
                 zIndex: 10
               }}
             >
-              <div className="bg-rose-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg font-medium">
+              <div className="bg-rose-500 text-white text-xs px-2 py-1 rounded-lg shadow-lg font-medium">
                 <div>{totalProgressPercentage}%</div>
                 <div className="text-xs opacity-90">{formatCurrency(paid + overdue)}</div>
               </div>
               {/* Pointer for overdue tooltip - hide when at the very right edge */}
               {(!tooltipConfig.isNearEnd || (tooltipConfig.overdueLeft && tooltipConfig.overdueLeft < 98)) && (
-                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-rose-500 mx-auto"></div>
+                <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-rose-500 mx-auto"></div>
               )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Enhanced Motivational Message with Overdue Warning */}
-      <div className={`text-center p-4 rounded-xl border transition-all duration-300 ${
+      {/* Compact Motivational Message */}
+      <div className={`text-center p-2 rounded-lg border transition-all duration-300 max-w-sm mx-auto ${
         hasOverdue 
           ? 'bg-red-50 border-red-200' // Red background when there's overdue
           : 'bg-green-50 border-green-200' // Green background when up-to-date
       }`}>
-        <p className={`text-sm font-medium leading-relaxed mb-2 ${
+        <p className={`text-xs font-medium leading-relaxed ${
           hasOverdue 
             ? 'text-red-600' // Red text when there's overdue
             : 'bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent' // Green gradient when up-to-date
@@ -536,8 +521,8 @@ export default function MonthlyProgressBar({
           {hasOverdue ? selectedOverdueMessage : selectedMessage}
         </p>
         {hasOverdue && (
-          <div className="flex items-center justify-center space-x-2 text-red-600 bg-red-50 rounded-lg p-2 mt-2">
-            <AlertCircle className="h-4 w-4" />
+          <div className="flex items-center justify-center space-x-2 text-red-600 bg-red-50 rounded-lg p-1.5 mt-1.5">
+            <AlertCircle className="h-3 w-3" />
             <span className="text-xs font-medium">
               Atención: {formatCurrency(overdue)} ({overduePercentage}%) {texts.overdueAmount}
             </span>
