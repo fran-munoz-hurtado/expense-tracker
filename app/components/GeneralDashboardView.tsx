@@ -565,30 +565,22 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
             </button>
             
             {/* Tooltip content */}
-            <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+            <div className="absolute right-0 top-full mt-2 w-96 bg-white border border-gray-200 rounded-lg shadow-lg p-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <span className="text-blue-600 text-sm font-bold">💡</span>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Entendiendo los porcentajes</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    Los porcentajes te muestran <strong>cuánto de cada gasto ya pagaste</strong>. 
-                    Por ejemplo, si ves <span className="text-green-600 font-medium">75%</span>, significa que ya pagaste 3 de cada 4 pesos de ese gasto.
-                  </p>
-                  <div className="mt-3 p-2 bg-gray-50 rounded text-xs text-gray-600">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600`}>0%</span>
-                      <span className="font-medium">Gris:</span> No has pagado nada
-                    </div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 text-blue-700`}>50%</span>
-                      <span className="font-medium">Azul claro:</span> Has pagado algo (1-99%)
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full bg-green-100 text-green-700`}>100%</span>
-                      <span className="font-medium">Verde claro:</span> Ya pagaste todo (100%)
-                    </div>
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-gray-900 mb-2">¿Qué significan los porcentajes?</h3>
+                  <div>
+                    <span className="font-bold text-blue-700">🧾 <u>Gastos e ingresos</u>:</span><br />
+                    <span>Indica <span className="font-bold text-blue-700">qué parte</span> de ese gasto o ingreso <span className="font-bold">ya está pagado o recibido</span>.</span><br />
+                    <span className="text-gray-600">Ejemplo: <span className="font-bold text-blue-700">60%</span> en “Mensual” significa que ya pagaste el 60% de tus gastos mensuales.</span>
+                  </div>
+                  <div>
+                    <span className="font-bold text-blue-700">💰 <u>CuantoQueda</u>:</span><br />
+                    <span>Muestra <span className="font-bold text-blue-700">qué porcentaje</span> de tus ingresos <span className="font-bold">te queda libre</span> después de pagar todos tus gastos.</span><br />
+                    <span className="text-gray-600">Ejemplo: <span className="font-bold text-blue-700">40%</span> significa que, tras pagar todo, te queda el 40% de lo que ganaste ese mes.</span>
                   </div>
                 </div>
               </div>
@@ -625,11 +617,19 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       
       {/* 3. Fancy tabla con tooltips en porcentajes */}
       <div className="hidden lg:block bg-white rounded-lg shadow-sm border overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="min-w-full divide-y divide-gray-200 table-fixed">
+          <colgroup>
+            <col style={{ width: '110px' }} /> {/* Mes */}
+            <col style={{ width: '150px' }} /> {/* Ingresos */}
+            <col style={{ width: '110px' }} /> {/* Total */}
+            <col style={{ width: '100px' }} /> {/* Mensual */}
+            <col style={{ width: '100px' }} /> {/* Único */}
+            <col style={{ width: '170px' }} /> {/* CuantoQueda */}
+          </colgroup>
           <thead>
             {/* Header principal con agrupación visual */}
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200" rowSpan={2}>
+              <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider bg-gradient-to-r from-blue-800 to-blue-600 border-b-2 border-blue-700 shadow-sm" rowSpan={2} style={{borderLeft: '3px solid #1e40af', borderTopLeftRadius: '0.5rem'}}>
                 {texts.month}
               </th>
               <th className="px-6 py-3 text-center text-xs font-bold text-green-600 uppercase tracking-wider bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200" rowSpan={2}>
@@ -644,6 +644,18 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                   <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
+                </div>
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-bold text-blue-700 uppercase tracking-wider bg-blue-50 border-b border-blue-200" style={{ minWidth: '200px', whiteSpace: 'nowrap' }} rowSpan={2}>
+                <span className="inline-flex items-center gap-1">
+                  <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M12 8v4l3 3" />
+                    <circle cx="12" cy="12" r="10" />
+                  </svg>
+                  CuantoQueda
+                </span>
+                <div className="mt-1 text-blue-500 text-xs" title="Diferencia entre ingresos y gastos totales">
+                  Balance mensual
                 </div>
               </th>
             </tr>
@@ -665,7 +677,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} className="px-6 py-4 text-center text-gray-400 animate-pulse">{texts.loading}</td></tr>
+              <tr><td colSpan={6} className="px-6 py-4 text-center text-gray-400 animate-pulse">{texts.loading}</td></tr>
             ) :
               Object.entries(monthlyData).map(([monthStr, data], idx) => {
                 const month = parseInt(monthStr)
@@ -673,37 +685,56 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'
                 return (
                   <tr key={month} className={`transition-colors duration-150 hover:bg-blue-100 ${rowBg}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-900 font-semibold">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white bg-gradient-to-r from-blue-800 to-blue-600 border-l-3 border-blue-700 shadow-sm" style={{letterSpacing: '0.02em'}}>
                       <button
                         onClick={() => onNavigateToMonth(month, selectedYear)}
-                        className="text-blue-600 hover:text-blue-800 hover:underline font-bold transition-colors duration-100"
+                        className="text-white hover:text-blue-100 hover:underline font-semibold transition-colors duration-100 text-sm"
+                        style={{textShadow: '0 1px 3px rgba(30,64,175,0.3)'}}
                       >
                         {months[month - 1]}
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="text-gray-900">{formatCurrency(data.income)}</span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center border-r-2 border-blue-200" style={{borderRightColor: '#bfdbfe'}}>
+                      <span className="text-gray-900 font-bold">{formatCurrency(data.income)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateIncomePercentage(data))}`} title="Porcentaje de ingresos ya recibidos en el mes">
                         {calculateIncomePercentage(data)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <span className="text-gray-900">{formatCurrency(totalAmount)}</span>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
+                      <span className="text-gray-900 font-bold">{formatCurrency(totalAmount)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(getPercentage(data.paid, totalAmount))}`} title="Porcentaje del total pagado">
                         {getPercentage(data.paid, totalAmount)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <span className="text-gray-900">{formatCurrency(data.recurrent)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`} title="Porcentaje de gastos mensuales pagados">
                         {calculateExpenseTypePercentage(data, 'recurrent')}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
                       <span className="text-gray-900">{formatCurrency(data.nonRecurrent)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`} title="Porcentaje de gastos únicos pagados">
                         {calculateExpenseTypePercentage(data, 'non_recurrent')}%
                       </span>
+                    </td>
+                    <td className="px-2 py-3 whitespace-nowrap text-sm text-center bg-blue-50 border-l-2 border-blue-200" style={{ minWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span className="font-bold text-blue-700">
+                        {formatCurrency(data.income - data.total)}
+                      </span>
+                      {(() => {
+                        const ratio = data.income > 0 ? Math.round(((data.income - data.total) / data.income) * 100) : 0;
+                        const isPositive = ratio >= 0;
+                        return (
+                          <span
+                            className={`ml-2 align-middle text-xs font-semibold px-3 py-1 rounded-full border ${isPositive ? 'border-blue-400 text-blue-700 bg-white' : 'border-red-400 text-red-700 bg-white'} flex items-center gap-1 inline-flex`}
+                            style={{ fontSize: '0.95em', verticalAlign: 'middle' }}
+                            title="Porcentaje de tus ingresos que te queda libre este mes"
+                          >
+                            {ratio}%
+                          </span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 )
@@ -803,6 +834,24 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                             <span className="text-xs text-gray-600">{texts.paid}</span>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Sección de CuantoQueda */}
+                <div className="bg-purple-50 rounded-lg p-3 border border-purple-200 mt-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-purple-700 font-medium">CuantoQueda:</span>
+                    <div className="text-right">
+                      <div className={`text-sm font-semibold ${data.income - data.total >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                        {formatCurrency(data.income - data.total)}
+                      </div>
+                      <div className="flex items-center justify-end gap-2 mt-1">
+                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${data.income - data.total >= 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {data.total > 0 ? Math.round(((data.income - data.total) / data.total) * 100) : 0}%
+                        </span>
+                        <span className="text-xs text-gray-600">Diferencia</span>
                       </div>
                     </div>
                   </div>
