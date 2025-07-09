@@ -72,6 +72,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     payment_deadline: string
     originalId?: number
     modifySeries?: boolean
+    isgoal?: boolean
   } | null>(null)
 
   // Modify confirmation state
@@ -603,7 +604,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
           year: 2025,
           payment_deadline: '',
           originalId: recurrentExpense.id,
-          modifySeries: true
+          modifySeries: true,
+          isgoal: recurrentExpense.isgoal || false
         })
       } else {
         // Set up form data for editing individual transaction
@@ -709,7 +711,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
           year_from: modifyFormData.year_from,
           year_to: modifyFormData.year_to,
           value: Number(modifyFormData.value),
-          payment_day_deadline: modifyFormData.payment_day_deadline ? Number(modifyFormData.payment_day_deadline) : null
+          payment_day_deadline: modifyFormData.payment_day_deadline ? Number(modifyFormData.payment_day_deadline) : null,
+          isgoal: modifyFormData.isgoal || false
         }
 
         console.log('Modifying recurrent expense:', {
@@ -1201,9 +1204,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 // Solo target para gasto recurrente meta
                                 <span title="Meta personal" className="inline-flex items-center ml-1">
                                   <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                    <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#e0e7ff" />
-                                    <circle cx="10" cy="10" r="4" stroke="#f59e42" strokeWidth="2" fill="#fde68a" />
-                                    <circle cx="10" cy="10" r="1.5" fill="#f59e42" />
+                                    <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#dbeafe" />
+                                    <circle cx="10" cy="10" r="4" stroke="#2563eb" strokeWidth="2" fill="#bfdbfe" />
+                                    <circle cx="10" cy="10" r="1.5" fill="#2563eb" />
                                   </svg>
                                 </span>
                               ) : transaction.source_type === 'recurrent' ? (
@@ -1414,9 +1417,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           // Solo target para gasto recurrente meta
                           <span title="Meta personal" className="inline-flex items-center ml-1">
                             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                              <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#e0e7ff" />
-                              <circle cx="10" cy="10" r="4" stroke="#f59e42" strokeWidth="2" fill="#fde68a" />
-                              <circle cx="10" cy="10" r="1.5" fill="#f59e42" />
+                              <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#dbeafe" />
+                              <circle cx="10" cy="10" r="4" stroke="#2563eb" strokeWidth="2" fill="#bfdbfe" />
+                              <circle cx="10" cy="10" r="1.5" fill="#2563eb" />
                             </svg>
                           </span>
                         ) : transaction.source_type === 'recurrent' ? (
@@ -1434,9 +1437,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
                               <span title="Meta personal" className="inline-flex items-center ml-1">
                                 <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                  <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#e0e7ff" />
-                                  <circle cx="10" cy="10" r="4" stroke="#f59e42" strokeWidth="2" fill="#fde68a" />
-                                  <circle cx="10" cy="10" r="1.5" fill="#f59e42" />
+                                  <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#dbeafe" />
+                                  <circle cx="10" cy="10" r="4" stroke="#2563eb" strokeWidth="2" fill="#bfdbfe" />
+                                  <circle cx="10" cy="10" r="1.5" fill="#2563eb" />
                                 </svg>
                               </span>
                             )}
@@ -1935,6 +1938,23 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       />
                     </div>
                   </div>
+
+                  {/* Checkbox de meta (isgoal) solo para GASTO/RECURRENTE */}
+                  {modifyFormData.type === 'recurrent' && modifyFormData.modifySeries && (
+                    <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mt-2 shadow-sm">
+                      <input
+                        id="isgoal-checkbox"
+                        type="checkbox"
+                        checked={modifyFormData.isgoal || false}
+                        onChange={e => setModifyFormData(prev => prev ? { ...prev, isgoal: e.target.checked } : null)}
+                        className="accent-blue-600 w-5 h-5 rounded-lg border-2 border-blue-400 focus:ring-2 focus:ring-blue-300 transition-all shadow-sm"
+                      />
+                      <label htmlFor="isgoal-checkbox" className="flex-1 text-sm text-blue-900 font-medium select-none cursor-pointer">
+                        ¿Este gasto recurrente es una <span className="font-bold text-blue-700">meta</span> que quieres cumplir?<br />
+                        <span className="text-xs text-blue-700 font-normal">Ejemplo: pagar un carro, un viaje, un crédito, etc. Marca esta opción si este gasto es un objetivo personal que estás pagando mes a mes.</span>
+                      </label>
+                    </div>
+                  )}
 
                   {/* Botones */}
                   <div className="flex justify-end gap-3 mt-2">
