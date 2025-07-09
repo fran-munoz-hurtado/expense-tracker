@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { useSearchParams } from 'next/navigation'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
+import { getMonthlyColumnStats, getPercentage, type ColumnType } from '@/lib/utils/dashboardTable'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -193,60 +194,27 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
       // Initialize all months
       for (let month = 1; month <= 12; month++) {
-        // Only consider expense transactions, not income
-        const monthTransactions = result.transactions.filter((t: Transaction) => 
-          t.month === month && t.type === 'expense'
-        )
+        // Get all transactions for the month
+        const monthTransactions = result.transactions.filter((t: Transaction) => t.month === month)
         
-        // Separate recurrent and non-recurrent expenses
-        const recurrentTransactions = monthTransactions.filter((t: Transaction) => t.source_type === 'recurrent')
-        const nonRecurrentTransactions = monthTransactions.filter((t: Transaction) => t.source_type === 'non_recurrent')
-        
-        const recurrentTotal = recurrentTransactions.reduce((sum: number, t: Transaction) => sum + t.value, 0)
-        const nonRecurrentTotal = nonRecurrentTransactions.reduce((sum: number, t: Transaction) => sum + t.value, 0)
-        const total = recurrentTotal + nonRecurrentTotal
-        
-        const paid = monthTransactions.filter((t: Transaction) => t.status === 'paid').reduce((sum: number, t: Transaction) => sum + t.value, 0)
-        const pending = monthTransactions.filter((t: Transaction) => {
-          if (t.status !== 'pending') return false
-          if (!t.deadline) return true
-          return !isDateOverdue(t.deadline)
-        }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
-        const overdue = monthTransactions.filter((t: Transaction) => {
-          if (t.status !== 'pending') return false
-          if (!t.deadline) return false
-          return isDateOverdue(t.deadline)
-        }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
-
-        // Calculate income statistics for the month
-        const monthIncomeTransactions = result.transactions.filter((t: Transaction) => 
-          t.month === month && t.type === 'income'
-        )
-        const incomeTotal = monthIncomeTransactions.reduce((sum: number, t: Transaction) => sum + t.value, 0)
-        const incomePaid = monthIncomeTransactions.filter((t: Transaction) => t.status === 'paid').reduce((sum: number, t: Transaction) => sum + t.value, 0)
-        const incomePending = monthIncomeTransactions.filter((t: Transaction) => {
-          if (t.status !== 'pending') return false
-          if (!t.deadline) return true
-          return !isDateOverdue(t.deadline)
-        }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
-        const incomeOverdue = monthIncomeTransactions.filter((t: Transaction) => {
-          if (t.status !== 'pending') return false
-          if (!t.deadline) return false
-          return isDateOverdue(t.deadline)
-        }).reduce((sum: number, t: Transaction) => sum + t.value, 0)
+        // Use helpers to get stats for each column type
+        const recurrentStats = getMonthlyColumnStats(monthTransactions, 'recurrent', isDateOverdue)
+        const nonRecurrentStats = getMonthlyColumnStats(monthTransactions, 'non_recurrent', isDateOverdue)
+        const incomeStats = getMonthlyColumnStats(monthTransactions, 'income', isDateOverdue)
+        const totalStats = getMonthlyColumnStats(monthTransactions, 'total', isDateOverdue)
 
         monthlyStats[month] = {
-          transactions: monthTransactions,
-          recurrent: recurrentTotal,
-          nonRecurrent: nonRecurrentTotal,
-          total,
-          paid,
-          pending,
-          overdue,
-          income: incomeTotal,
-          incomePaid: incomePaid,
-          incomePending: incomePending,
-          incomeOverdue: incomeOverdue
+          transactions: monthTransactions.filter((t: Transaction) => t.type === 'expense'),
+          recurrent: recurrentStats.total,
+          nonRecurrent: nonRecurrentStats.total,
+          total: totalStats.total,
+          paid: totalStats.paid,
+          pending: totalStats.pending,
+          overdue: totalStats.overdue,
+          income: incomeStats.total,
+          incomePaid: incomeStats.paid,
+          incomePending: incomeStats.pending,
+          incomeOverdue: incomeStats.overdue
         }
       }
 
@@ -271,9 +239,9 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
             .filter((t: Transaction) => t.source_type === 'non_recurrent' && t.status === 'paid')
             .reduce((sum: number, t: Transaction) => sum + t.value, 0)
           
-          const recurrentPercentage = calculatePercentage(recurrentPaid, data.recurrent)
-          const nonRecurrentPercentage = calculatePercentage(nonRecurrentPaid, data.nonRecurrent)
-          const totalPercentage = calculatePercentage(data.paid, data.total)
+          const recurrentPercentage = getPercentage(recurrentPaid, data.recurrent)
+          const nonRecurrentPercentage = getPercentage(nonRecurrentPaid, data.nonRecurrent)
+          const totalPercentage = getPercentage(data.paid, data.total)
           
           console.log(`🔄 Month ${month}: ${data.transactions.length} transactions, Total: ${formatCurrency(data.total)}, Recurrent: ${formatCurrency(data.recurrent)} (${recurrentPercentage}%), NonRecurrent: ${formatCurrency(data.nonRecurrent)} (${nonRecurrentPercentage}%), Overall: ${totalPercentage}%`)
         } else {
@@ -303,11 +271,6 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     return 'bg-blue-100 text-blue-700'
   }
 
-  function calculatePercentage(paid: number, total: number): number {
-    if (total === 0) return 0
-    return Math.round((paid / total) * 100)
-  }
-
   // Helper function to calculate the correct percentage for each expense type
   function calculateExpenseTypePercentage(data: any, expenseType: 'recurrent' | 'non_recurrent'): number {
     const typePaid = data.transactions
@@ -316,7 +279,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     
     const typeTotal = expenseType === 'recurrent' ? data.recurrent : data.nonRecurrent
     
-    return calculatePercentage(typePaid, typeTotal)
+    return getPercentage(typePaid, typeTotal)
   }
 
   /**
@@ -327,7 +290,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
    * @returns Percentage of income paid (0-100)
    */
   function calculateIncomePercentage(data: any): number {
-    return calculatePercentage(data.incomePaid, data.income)
+    return getPercentage(data.incomePaid, data.income)
   }
 
   // Delete transaction functions
@@ -722,8 +685,8 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <span className="text-gray-900">{formatCurrency(totalAmount)}</span>
-                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculatePercentage(data.paid, totalAmount))}`} title="Porcentaje del total pagado">
-                        {calculatePercentage(data.paid, totalAmount)}%
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(getPercentage(data.paid, totalAmount))}`} title="Porcentaje del total pagado">
+                        {getPercentage(data.paid, totalAmount)}%
                       </span>
                     </td>
                   </tr>
@@ -742,7 +705,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           Object.entries(monthlyData).map(([monthStr, data]) => {
             const month = parseInt(monthStr)
             const totalAmount = data.total
-            const paidPercentage = calculatePercentage(data.paid, totalAmount)
+            const paidPercentage = getPercentage(data.paid, totalAmount)
             
             return (
               <div key={month} className="bg-white rounded-lg shadow-sm border p-4 mobile-card">
