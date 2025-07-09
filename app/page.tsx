@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, LogOut } from 'lucide-react'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, LogOut, TrendingUp } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
@@ -34,6 +34,7 @@ function Home() {
   
   // Form state
   const [showForm, setShowForm] = useState(false)
+  const [movementType, setMovementType] = useState<'expense' | 'income' | null>(null)
   const [expenseType, setExpenseType] = useState<ExpenseType>(null)
   const [error, setError] = useState<string | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
@@ -198,7 +199,8 @@ function Home() {
           year_from: recurrentFormData.year_from,
           year_to: recurrentFormData.year_to,
           value: Number(recurrentFormData.value),
-          payment_day_deadline: recurrentFormData.payment_day_deadline ? Number(recurrentFormData.payment_day_deadline) : null
+          payment_day_deadline: recurrentFormData.payment_day_deadline ? Number(recurrentFormData.payment_day_deadline) : null,
+          type: movementType,
         }
 
         const { data, error } = await supabase
@@ -220,7 +222,8 @@ function Home() {
           year: nonRecurrentFormData.year,
           month: nonRecurrentFormData.month,
           value: Number(nonRecurrentFormData.value),
-          payment_deadline: nonRecurrentFormData.payment_deadline || null
+          payment_deadline: nonRecurrentFormData.payment_deadline || null,
+          type: movementType,
         }
 
         const { data, error } = await supabase
@@ -398,37 +401,64 @@ function Home() {
               </button>
             </div>
 
-            {!expenseType ? (
-              <div className="space-y-4">
-                <p className="text-gray-600 mb-4">Selecciona el tipo de gasto que quieres agregar:</p>
-                
-                <button
-                  onClick={() => setExpenseType('recurrent')}
-                  className="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
-                >
-                  <div className="flex items-center">
-                    <Repeat className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-3" />
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{texts.recurrent}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">Gastos que se repiten mensualmente (arriendo, servicios, suscripciones)</p>
-                    </div>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setExpenseType('non_recurrent')}
-                  className="w-full p-3 sm:p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
-                >
-                  <div className="flex items-center">
-                    <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mr-3" />
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{texts.nonRecurrent}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600">Gastos únicos (reparaciones, médicos, compras especiales)</p>
-                    </div>
-                  </div>
-                </button>
+            {/* Selección unificada de tipo de movimiento y tipo de recurrencia */}
+            {!(movementType && expenseType) && (
+              <div className="space-y-4 mb-4">
+                <p className="text-gray-600 mb-2">¿Qué tipo de movimiento quieres añadir?</p>
+                <div className="flex flex-col sm:flex-row gap-3 mb-2">
+                  <button
+                    onClick={() => setMovementType('expense')}
+                    className={`flex-1 p-4 border-2 rounded-lg transition-colors text-center font-semibold text-lg shadow-sm
+                      ${movementType === 'expense' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-200 bg-white text-gray-700 hover:border-red-400 hover:bg-red-50'}`}
+                  >
+                    <DollarSign className="inline-block mr-2 h-6 w-6 text-red-500 align-middle" />
+                    Gasto
+                  </button>
+                  <button
+                    onClick={() => setMovementType('income')}
+                    className={`flex-1 p-4 border-2 rounded-lg transition-colors text-center font-semibold text-lg shadow-sm
+                      ${movementType === 'income' ? 'border-green-500 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-700 hover:border-green-400 hover:bg-green-50'}`}
+                  >
+                    <TrendingUp className="inline-block mr-2 h-6 w-6 text-green-500 align-middle" />
+                    Ingreso
+                  </button>
+                </div>
+                {/* Toggle Recurrente/Único */}
+                <div className="flex items-center justify-center gap-4 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setExpenseType('recurrent')}
+                    className={`px-6 py-2 rounded-full font-semibold text-sm border transition-all duration-150
+                      ${expenseType === 'recurrent' ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-gray-100 text-blue-700 border-gray-300 hover:bg-blue-50'}`}
+                    disabled={!movementType}
+                  >
+                    Recurrente
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExpenseType('non_recurrent')}
+                    className={`px-6 py-2 rounded-full font-semibold text-sm border transition-all duration-150
+                      ${expenseType === 'non_recurrent' ? 'bg-blue-600 text-white border-blue-600 shadow' : 'bg-gray-100 text-blue-700 border-gray-300 hover:bg-blue-50'}`}
+                    disabled={!movementType}
+                  >
+                    Único
+                  </button>
+                </div>
+                <div className="flex justify-center mt-2">
+                  {(movementType || expenseType) && (
+                    <button
+                      type="button"
+                      onClick={() => { setMovementType(null); setExpenseType(null); }}
+                      className="text-blue-600 hover:text-blue-800 text-xs"
+                    >
+                      ← Cambiar selección
+                    </button>
+                  )}
+                </div>
               </div>
-            ) : (
+            )}
+
+            {expenseType && movementType && (
               <form onSubmit={handleFormSubmit} className="space-y-4">
                 <div className="mb-4">
                   <button
@@ -436,7 +466,7 @@ function Home() {
                     onClick={() => setExpenseType(null)}
                     className="text-blue-600 hover:text-blue-800 text-sm"
                   >
-                    ← Volver a selección de tipo
+                    ← Volver a selección
                   </button>
                 </div>
 
