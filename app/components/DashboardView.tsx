@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, TrendingUp } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
@@ -867,6 +867,15 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     return 'bg-yellow-100 text-yellow-800'
   }
 
+  // 1. Construyo un mapa de recurrentes con isgoal=true
+  const recurrentGoalMap = useMemo(() => {
+    const map: Record<number, boolean> = {}
+    recurrentExpenses.forEach(re => {
+      if (re.isgoal) map[re.id] = true
+    })
+    return map
+  }, [recurrentExpenses])
+
   return (
     <div className="flex-1 p-6 lg:p-8">
       {/* Header */}
@@ -1161,7 +1170,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
-                              {transaction.source_type === 'recurrent' ? (
+                              {/* Ícono de tipo de transacción: solo target si es meta, si no, flechas o file */}
+                              {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] ? (
+                                // Solo target para gasto recurrente meta
+                                <span title="Meta personal" className="inline-flex items-center ml-1">
+                                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                    <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#e0e7ff" />
+                                    <circle cx="10" cy="10" r="4" stroke="#f59e42" strokeWidth="2" fill="#fde68a" />
+                                    <circle cx="10" cy="10" r="1.5" fill="#f59e42" />
+                                  </svg>
+                                </span>
+                              ) : transaction.source_type === 'recurrent' ? (
                                 transaction.type === 'income' ?
                                   <Repeat className="h-4 w-4 text-green-600" /> :
                                   <Repeat className="h-4 w-4 text-blue-600" />
@@ -1364,7 +1383,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     {/* Header */}
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
-                        {transaction.source_type === 'recurrent' ? (
+                        {/* Ícono de tipo de transacción: solo target si es meta, si no, flechas o file */}
+                        {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] ? (
+                          // Solo target para gasto recurrente meta
+                          <span title="Meta personal" className="inline-flex items-center ml-1">
+                            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                              <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#e0e7ff" />
+                              <circle cx="10" cy="10" r="4" stroke="#f59e42" strokeWidth="2" fill="#fde68a" />
+                              <circle cx="10" cy="10" r="1.5" fill="#f59e42" />
+                            </svg>
+                          </span>
+                        ) : transaction.source_type === 'recurrent' ? (
                           transaction.type === 'income' ?
                             <Repeat className="h-5 w-5 text-green-600 flex-shrink-0" /> :
                             <Repeat className="h-5 w-5 text-blue-600 flex-shrink-0" />
@@ -1374,7 +1403,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-medium text-gray-900 truncate">{transaction.description}</h3>
+                          <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-1">
+                            {transaction.description}
+                            {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
+                              <span title="Meta personal" className="inline-flex items-center ml-1">
+                                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                  <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#e0e7ff" />
+                                  <circle cx="10" cy="10" r="4" stroke="#f59e42" strokeWidth="2" fill="#fde68a" />
+                                  <circle cx="10" cy="10" r="1.5" fill="#f59e42" />
+                                </svg>
+                              </span>
+                            )}
+                          </h3>
                           <div className="flex items-center space-x-2 mt-1">
                             {transaction.deadline && (
                               <span className="text-xs text-gray-500">
