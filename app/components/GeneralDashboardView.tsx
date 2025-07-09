@@ -627,12 +627,28 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       <div className="hidden lg:block bg-white rounded-lg shadow-sm border overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead>
+            {/* Header principal con agrupación visual */}
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">{texts.month}</th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-green-600 uppercase tracking-wider bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200">
-                Ingresos
-                <span className="ml-1 text-green-500" title="Porcentaje de ingresos ya recibidos en el mes">%</span>
+              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200" rowSpan={2}>
+                {texts.month}
               </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-green-600 uppercase tracking-wider bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200" rowSpan={2}>
+                Ingresos
+                <div className="mt-1">
+                  <span className="text-green-500" title="Porcentaje de ingresos ya recibidos en el mes">%</span>
+                </div>
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-bold text-blue-600 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200" colSpan={3}>
+                Gastos
+                <div className="mt-1 text-blue-500" title="Desglose de gastos mensuales y únicos">
+                  <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </th>
+            </tr>
+            {/* Sub-header para las columnas de gastos */}
+            <tr>
               <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
                 {texts.recurrent}
                 <span className="ml-1 text-blue-400" title="Porcentaje de gastos mensuales ya pagados en el mes">%</span>
@@ -728,41 +744,52 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 </div>
                 
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-green-600 font-medium">Ingresos:</span>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-900">{formatCurrency(data.income)}</div>
-                      <div className="flex items-center justify-end gap-2 mt-1">
-                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateIncomePercentage(data))}`}>
-                          {calculateIncomePercentage(data)}%
-                        </span>
-                        <span className="text-xs text-gray-600">Recibido</span>
+                  {/* Sección de Ingresos */}
+                  <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-green-700 font-medium">Ingresos:</span>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-900">{formatCurrency(data.income)}</div>
+                        <div className="flex items-center justify-end gap-2 mt-1">
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateIncomePercentage(data))}`}>
+                            {calculateIncomePercentage(data)}%
+                          </span>
+                          <span className="text-xs text-gray-600">Recibido</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{texts.recurrent}:</span>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-900">{formatCurrency(data.recurrent)}</div>
-                      <div className="flex items-center justify-end gap-2 mt-1">
-                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`}>
-                          {calculateExpenseTypePercentage(data, 'recurrent')}%
-                        </span>
-                        <span className="text-xs text-gray-600">{texts.paid}</span>
-                      </div>
+                  {/* Sección de Gastos */}
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <div className="mb-2">
+                      <span className="text-sm text-blue-700 font-medium">Gastos:</span>
                     </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{texts.nonRecurrent}:</span>
-                    <div className="text-right">
-                      <div className="text-sm text-gray-900">{formatCurrency(data.nonRecurrent)}</div>
-                      <div className="flex items-center justify-end gap-2 mt-1">
-                        <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`}>
-                          {calculateExpenseTypePercentage(data, 'non_recurrent')}%
-                        </span>
-                        <span className="text-xs text-gray-600">{texts.paid}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">{texts.recurrent}:</span>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-900">{formatCurrency(data.recurrent)}</div>
+                          <div className="flex items-center justify-end gap-2 mt-1">
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`}>
+                              {calculateExpenseTypePercentage(data, 'recurrent')}%
+                            </span>
+                            <span className="text-xs text-gray-600">{texts.paid}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">{texts.nonRecurrent}:</span>
+                        <div className="text-right">
+                          <div className="text-sm text-gray-900">{formatCurrency(data.nonRecurrent)}</div>
+                          <div className="flex items-center justify-end gap-2 mt-1">
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`}>
+                              {calculateExpenseTypePercentage(data, 'non_recurrent')}%
+                            </span>
+                            <span className="text-xs text-gray-600">{texts.paid}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
