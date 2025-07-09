@@ -384,16 +384,12 @@ export default function MonthlyProgressBar({
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-700">{texts.alreadyPaid}</p>
-                  <p className="text-base font-bold text-green-600">{formatCurrency(paid)}</p>
+                  <p className="text-base font-bold text-green-600 flex items-center gap-2">
+                    {formatCurrency(paid)}
+                    <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">{Math.round((paid / total) * 100)}%</span>
+                  </p>
                 </div>
               </div>
-              {total > 0 && (
-                <div className="text-right">
-                  <div className="text-xs font-medium text-gray-500">
-                    {Math.round((paid / total) * 100)}%
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Falta Pagar */}
@@ -404,16 +400,12 @@ export default function MonthlyProgressBar({
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-700">{texts.stillPending}</p>
-                  <p className="text-base font-bold text-yellow-600">{formatCurrency(pending)}</p>
+                  <p className="text-base font-bold text-yellow-600 flex items-center gap-2">
+                    {formatCurrency(pending)}
+                    <span className="text-xs font-medium text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">{Math.round((pending / total) * 100)}%</span>
+                  </p>
                 </div>
               </div>
-              {total > 0 && (
-                <div className="text-right">
-                  <div className="text-xs font-medium text-gray-500">
-                    {Math.round((pending / total) * 100)}%
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Se pasó la fecha */}
@@ -428,18 +420,12 @@ export default function MonthlyProgressBar({
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-700">{texts.overdueAmount}</p>
-                  <p className={`text-base font-bold ${
-                    hasOverdue ? 'text-red-600' : 'text-gray-500'
-                  }`}>{formatCurrency(overdue)}</p>
+                  <p className={`text-base font-bold ${hasOverdue ? 'text-red-600' : 'text-gray-500'} flex items-center gap-2`}>
+                    {formatCurrency(overdue)}
+                    <span className={`text-xs font-medium ${hasOverdue ? 'text-red-700 bg-red-100' : 'text-gray-500 bg-gray-100'} px-2 py-0.5 rounded-full`}>{Math.round((overdue / total) * 100)}%</span>
+                  </p>
                 </div>
               </div>
-              {total > 0 && (
-                <div className="text-right">
-                  <div className="text-xs font-medium text-gray-500">
-                    {Math.round((overdue / total) * 100)}%
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -480,9 +466,9 @@ export default function MonthlyProgressBar({
               <div>{percentage}%</div>
               <div className="text-xs opacity-90">{formatCurrency(paid)}</div>
             </div>
-            {/* Conditional pointer - hide when at the very right edge */}
+            {/* Conditional pointer - verde oscuro y tamaño armónico */}
             {((total > 0 ? (paid / total) * 100 : 0) < 98) && (
-              <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-current mx-auto"></div>
+              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-700 mx-auto"></div>
             )}
           </div>
           {/* Overdue tooltip - igual que antes */}
