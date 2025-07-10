@@ -9,15 +9,49 @@ import { texts } from '@/lib/translations'
 import { useSearchParams } from 'next/navigation'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
 import { getColor, getGradient } from '@/lib/config/colors'
+// import { useAttachments } from '@/lib/hooks/useAttachments'
 
 interface MisMetasViewProps {
   user: User
   navigationParams?: { year?: number } | null
 }
 
+// Type definitions for the hierarchical structure
+interface YearData {
+  year: number
+  transactions: Transaction[]
+  totalValue: number
+  paidValue: number
+  progress: number
+  status: 'paid' | 'pending' | 'overdue'
+  isCompleted: boolean
+}
+
+interface GoalData {
+  key: string
+  source: RecurrentExpense | NonRecurrentExpense
+  years: YearData[]
+  totalValue: number
+  paidValue: number
+  progress: number
+  isCompleted: boolean
+}
+
 export default function MisMetasView({ user, navigationParams }: MisMetasViewProps) {
   const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
+  
+  // Attachments functionality - COMMENTED OUT for build stability until import structure is fixed
+  // const {
+  //   attachmentCounts,
+  //   loadAttachmentCounts,
+  //   handleAttachmentUpload,
+  //   handleAttachmentList,
+  //   handleAttachmentUploadComplete,
+  //   handleAttachmentDeleted,
+  //   AttachmentClip,
+  //   AttachmentModals
+  // } = useAttachments(user)
   
   const [goalTransactions, setGoalTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
@@ -25,7 +59,10 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
   const [error, setError] = useState<string | null>(null)
-  const [expandedGoals, setExpandedGoals] = useState<Set<number>>(new Set())
+  
+  // Two-level expansion state: goals and years within goals
+  const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set())
+  const [expandedYears, setExpandedYears] = useState<Set<string>>(new Set()) // Format: "goalKey-year"
 
   // Available years for selection
   const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
@@ -72,8 +109,8 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           // Get all expenses to find goal ones
           const expenses = await fetchUserExpenses(user)
           
-          // Get all transactions for the year
-          const transactions = await fetchUserTransactions(user, undefined, selectedYear)
+          // Get ALL transactions (not filtered by year) for goals that may span multiple years
+          const transactions = await fetchUserTransactions(user, undefined, undefined)
           
           // Filter goal transactions by joining with expense data
           const goalTransactionIds = new Set<number>()
@@ -114,6 +151,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       setRecurrentExpenses(result.recurrent)
       setNonRecurrentExpenses(result.nonRecurrent)
 
+      // Load attachment counts for goal transactions
+      // await loadAttachmentCounts(result.goalTransactions)
+
     } catch (error) {
       console.error('❌ Error in fetchGoalData():', error)
       setError(`Error al cargar metas: ${error instanceof Error ? error.message : 'Error desconocido'}`)
@@ -130,6 +170,19 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(Math.round(value))
+  }
+
+  // Helper function to determine year status based on transaction statuses
+  const getYearStatus = (transactions: Transaction[]): 'paid' | 'pending' | 'overdue' => {
+    const hasOverdue = transactions.some(t => 
+      t.status === 'pending' && t.deadline && new Date(t.deadline) < new Date()
+    )
+    if (hasOverdue) return 'overdue'
+    
+    const hasPending = transactions.some(t => t.status === 'pending')
+    if (hasPending) return 'pending'
+    
+    return 'paid'
   }
 
   // Calculate goal statistics
@@ -186,15 +239,11 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     return stats
   }, [goalTransactions])
 
-  // Group transactions by goal
+  // Group transactions by goal and then by year (hierarchical structure)
   const goalGroups = useMemo(() => {
     const groups = new Map<string, {
       source: RecurrentExpense | NonRecurrentExpense
       transactions: Transaction[]
-      totalValue: number
-      paidValue: number
-      progress: number
-      isCompleted: boolean
     }>()
 
     goalTransactions.forEach(transaction => {
@@ -213,11 +262,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
         if (source) {
           groups.set(key, {
             source,
-            transactions: [],
-            totalValue: 0,
-            paidValue: 0,
-            progress: 0,
-            isCompleted: false
+            transactions: []
           })
         }
       }
@@ -228,30 +273,120 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       }
     })
 
-    // Calculate statistics for each group
-    groups.forEach(group => {
-      group.totalValue = group.transactions.reduce((sum, t) => sum + t.value, 0)
-      group.paidValue = group.transactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
-      group.progress = group.totalValue > 0 ? Math.round((group.paidValue / group.totalValue) * 100) : 0
-      group.isCompleted = group.transactions.every(t => t.status === 'paid')
+    // Transform to hierarchical structure with years
+    const hierarchicalGoals: GoalData[] = []
+    
+    groups.forEach((group, key) => {
+      // Group transactions by year
+      const yearGroups = new Map<number, Transaction[]>()
+      
+      group.transactions.forEach(transaction => {
+        if (!yearGroups.has(transaction.year)) {
+          yearGroups.set(transaction.year, [])
+        }
+        yearGroups.get(transaction.year)!.push(transaction)
+      })
+
+      // Create year data objects
+      const years: YearData[] = Array.from(yearGroups.entries())
+        .map(([year, transactions]) => {
+          const totalValue = transactions.reduce((sum, t) => sum + t.value, 0)
+          const paidValue = transactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
+          const progress = totalValue > 0 ? Math.round((paidValue / totalValue) * 100) : 0
+          const status = getYearStatus(transactions)
+          const isCompleted = transactions.every(t => t.status === 'paid')
+
+          return {
+            year,
+            transactions: transactions.sort((a, b) => a.month - b.month),
+            totalValue,
+            paidValue,
+            progress,
+            status,
+            isCompleted
+          }
+        })
+        .sort((a, b) => a.year - b.year)
+
+      // Calculate overall goal statistics
+      const totalValue = group.transactions.reduce((sum, t) => sum + t.value, 0)
+      const paidValue = group.transactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
+      const progress = totalValue > 0 ? Math.round((paidValue / totalValue) * 100) : 0
+      const isCompleted = group.transactions.every(t => t.status === 'paid')
+
+      hierarchicalGoals.push({
+        key,
+        source: group.source,
+        years,
+        totalValue,
+        paidValue,
+        progress,
+        isCompleted
+      })
     })
 
-    return Array.from(groups.entries()).map(([key, group]) => ({
-      key,
-      ...group
-    }))
+    return hierarchicalGoals
   }, [goalTransactions, recurrentExpenses, nonRecurrentExpenses])
 
+  // Toggle goal expansion
   const toggleGoalExpansion = (goalKey: string) => {
     setExpandedGoals(prev => {
       const newSet = new Set(prev)
-      if (newSet.has(goalKey as any)) {
-        newSet.delete(goalKey as any)
+      if (newSet.has(goalKey)) {
+        newSet.delete(goalKey)
+        // Also close all years for this goal
+        setExpandedYears(prevYears => {
+          const newYearSet = new Set(prevYears)
+          newYearSet.forEach(yearKey => {
+            if (yearKey.startsWith(goalKey + '-')) {
+              newYearSet.delete(yearKey)
+            }
+          })
+          return newYearSet
+        })
       } else {
-        newSet.add(goalKey as any)
+        newSet.add(goalKey)
       }
       return newSet
     })
+  }
+
+  // Toggle year expansion within a goal
+  const toggleYearExpansion = (goalKey: string, year: number) => {
+    const yearKey = `${goalKey}-${year}`
+    setExpandedYears(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(yearKey)) {
+        newSet.delete(yearKey)
+      } else {
+        newSet.add(yearKey)
+      }
+      return newSet
+    })
+  }
+
+  // Helper function to get status styling
+  const getStatusStyling = (status: 'paid' | 'pending' | 'overdue') => {
+    switch (status) {
+      case 'paid':
+        return {
+          bgColor: 'bg-green-100',
+          textColor: 'text-green-800',
+          label: 'Pagado'
+        }
+      case 'pending':
+        return {
+          bgColor: 'bg-yellow-100',
+          textColor: 'text-yellow-800',
+          label: 'Pendiente'
+        }
+      case 'overdue':
+        return {
+          bgColor: 'bg-red-100',
+          textColor: 'text-red-800',
+          label: 'Vencido'
+        }
+    }
   }
 
   return (
@@ -377,8 +512,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           ) : (
             goalGroups.map((goal) => (
               <div key={goal.key} className="p-6">
+                {/* Goal Header */}
                 <div 
-                  className="flex items-center justify-between cursor-pointer"
+                  className="flex items-center justify-between cursor-pointer hover:bg-gray-50 p-2 rounded-lg transition-colors"
                   onClick={() => toggleGoalExpansion(goal.key)}
                 >
                   <div className="flex-1">
@@ -401,6 +537,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                           }`}>
                             {goal.progress}% completado
                           </span>
+                          <span className="text-xs text-gray-500">
+                            {goal.years.length} año{goal.years.length !== 1 ? 's' : ''}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -419,7 +558,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                   </div>
                   
                   <div className="ml-4">
-                    {expandedGoals.has(goal.key as any) ? (
+                    {expandedGoals.has(goal.key) ? (
                       <ChevronUp className="h-5 w-5 text-gray-400" />
                     ) : (
                       <ChevronDown className="h-5 w-5 text-gray-400" />
@@ -427,47 +566,101 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                   </div>
                 </div>
 
-                {/* Expanded content */}
-                {expandedGoals.has(goal.key as any) && (
-                  <div className="mt-6 pl-10">
-                    <h4 className="font-medium text-gray-900 mb-3">Detalle por mes:</h4>
-                    <div className="space-y-2">
-                      {goal.transactions
-                        .sort((a, b) => a.month - b.month)
-                        .map((transaction) => (
-                          <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-medium text-gray-700">
-                                {months[transaction.month - 1]}
-                              </span>
-                              {transaction.month === currentMonth && transaction.year === currentYear && (
-                                <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                                  Actual
+                {/* Expanded Goal Content - Years */}
+                {expandedGoals.has(goal.key) && (
+                  <div className="mt-6 pl-6 border-l-2 border-gray-200">
+                    <h4 className="font-medium text-gray-900 mb-4">Progreso por año:</h4>
+                    <div className="space-y-3">
+                      {goal.years.map((yearData) => {
+                        const yearKey = `${goal.key}-${yearData.year}`
+                        const statusStyling = getStatusStyling(yearData.status)
+                        
+                        return (
+                          <div key={yearData.year} className="border border-gray-200 rounded-lg">
+                            {/* Year Header */}
+                            <div
+                              className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                              onClick={() => toggleYearExpansion(goal.key, yearData.year)}
+                            >
+                              {/* Left side: Year, Current label, and Progress */}
+                              <div className="flex items-center gap-3">
+                                <h5 className="font-medium text-gray-900">
+                                  {yearData.year === currentYear && (
+                                    <span className="mr-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                      Actual
+                                    </span>
+                                  )}
+                                  {yearData.year}
+                                </h5>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  yearData.isCompleted 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-orange-100 text-orange-800'
+                                }`}>
+                                  {yearData.progress}% completado
                                 </span>
-                              )}
+                              </div>
+                              
+                              {/* Right side: Value and Status */}
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm text-gray-600">
+                                  {formatCurrency(yearData.paidValue)} de {formatCurrency(yearData.totalValue)}
+                                </span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyling.bgColor} ${statusStyling.textColor}`}>
+                                  {statusStyling.label}
+                                </span>
+                                <div className="ml-2">
+                                  {expandedYears.has(yearKey) ? (
+                                    <ChevronUp className="h-4 w-4 text-gray-400" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 text-gray-400" />
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-medium text-gray-900">
-                                {formatCurrency(transaction.value)}
-                              </span>
-                              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                                transaction.status === 'paid'
-                                  ? 'bg-green-100 text-green-800'
-                                  : transaction.deadline && new Date(transaction.deadline) < new Date()
-                                  ? 'bg-red-100 text-red-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {transaction.status === 'paid' 
-                                  ? 'Pagado' 
-                                  : transaction.deadline && new Date(transaction.deadline) < new Date()
-                                  ? 'Vencido'
-                                  : 'Pendiente'
-                                }
-                              </span>
-                            </div>
+
+                            {/* Expanded Year Content - Months */}
+                            {expandedYears.has(yearKey) && (
+                              <div className="px-4 pb-4 bg-gray-50 border-t border-gray-200">
+                                <h6 className="font-medium text-gray-800 mb-3 mt-3">Detalle mensual:</h6>
+                                <div className="space-y-2">
+                                  {yearData.transactions.map((transaction) => (
+                                    <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200">
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-sm font-medium text-gray-700 min-w-0">
+                                          {months[transaction.month - 1]}
+                                        </span>
+                                        {transaction.month === currentMonth && transaction.year === currentYear && (
+                                          <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                            Actual
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-sm text-gray-600">
+                                          {formatCurrency(transaction.value)}
+                                        </span>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                          transaction.status === 'paid' 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : transaction.deadline && new Date(transaction.deadline) < new Date()
+                                              ? 'bg-red-100 text-red-800'
+                                              : 'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                          {transaction.status === 'paid' ? 'Pagado' : 
+                                           transaction.deadline && new Date(transaction.deadline) < new Date() ? 'Vencido' : 'Pendiente'}
+                                        </span>
+                                        {/* Attachment Clip */}
+                                        {/* <AttachmentClip transaction={transaction} className="ml-2" /> */}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        ))
-                      }
+                        )
+                      })}
                     </div>
                   </div>
                 )}
@@ -476,6 +669,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           )}
         </div>
       </div>
+      
+      {/* Attachment Modals */}
+      {/* <AttachmentModals /> */}
     </div>
   )
 } 

@@ -9,18 +9,24 @@ interface TransactionAttachmentsProps {
   transactionId: number
   userId: number
   onAttachmentDeleted?: (attachmentId: number) => void
+  onAddAttachment?: () => void
 }
 
 export default function TransactionAttachments({ 
   transactionId, 
   userId, 
-  onAttachmentDeleted 
+  onAttachmentDeleted,
+  onAddAttachment
 }: TransactionAttachmentsProps) {
   const [attachments, setAttachments] = useState<TransactionAttachment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [previewAttachment, setPreviewAttachment] = useState<TransactionAttachment | null>(null)
   const [deleting, setDeleting] = useState<number | null>(null)
+  
+  // Delete confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [attachmentToDelete, setAttachmentToDelete] = useState<TransactionAttachment | null>(null)
 
   useEffect(() => {
     loadAttachments()
@@ -51,17 +57,20 @@ export default function TransactionAttachments({
   }
 
   const handleDelete = async (attachment: TransactionAttachment) => {
-    if (!confirm(`¿Estás seguro de que quieres eliminar "${attachment.file_name}"?`)) {
-      return
-    }
-    
-    setDeleting(attachment.id)
+    setAttachmentToDelete(attachment)
+    setShowDeleteModal(true)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!attachmentToDelete) return
+
+    setDeleting(attachmentToDelete.id)
     
     try {
       // Delete from storage
       const { error: storageError } = await supabase.storage
         .from('transaction-attachments')
-        .remove([attachment.file_path])
+        .remove([attachmentToDelete.file_path])
       
       if (storageError) {
         throw new Error(`Error de almacenamiento: ${storageError.message}`)
@@ -71,21 +80,28 @@ export default function TransactionAttachments({
       const { error: dbError } = await supabase
         .from('transaction_attachments')
         .delete()
-        .eq('id', attachment.id)
+        .eq('id', attachmentToDelete.id)
       
       if (dbError) {
         throw new Error(`Error de base de datos: ${dbError.message}`)
       }
       
       // Update local state
-      setAttachments(prev => prev.filter(a => a.id !== attachment.id))
-      onAttachmentDeleted?.(attachment.id)
+      setAttachments(prev => prev.filter(a => a.id !== attachmentToDelete.id))
+      onAttachmentDeleted?.(attachmentToDelete.id)
       
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar archivo adjunto')
     } finally {
       setDeleting(null)
+      setShowDeleteModal(false)
+      setAttachmentToDelete(null)
     }
+  }
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false)
+    setAttachmentToDelete(null)
   }
 
   const handleDownload = async (attachment: TransactionAttachment) => {
@@ -164,25 +180,44 @@ export default function TransactionAttachments({
   if (loading) {
     return (
       <div className="p-4 text-center text-gray-500">
-        {texts.loading}
+        Cargando archivos...
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
-        <p className="text-sm text-red-600">{error}</p>
+      <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
+        <div className="flex items-start gap-3">
+          <div className="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+            <span className="text-red-600 text-xs font-bold">!</span>
+          </div>
+          <p className="text-sm text-red-800 font-medium">{error}</p>
+        </div>
       </div>
     )
   }
 
   if (attachments.length === 0) {
     return (
-      <div className="p-4 text-center text-gray-500">
-        <Paperclip className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-        <p>{texts.empty.noAttachments}</p>
-      </div>
+      <>
+        <div className="p-4 text-center text-gray-500">
+          <Paperclip className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+          <p>No hay archivos adjuntos para esta transacción</p>
+        </div>
+        
+        {/* Add Files Button */}
+        {onAddAttachment && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <button
+              onClick={onAddAttachment}
+              className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+            >
+              Agregar archivos
+            </button>
+          </div>
+        )}
+      </>
     )
   }
 
@@ -192,7 +227,7 @@ export default function TransactionAttachments({
         {attachments.map((attachment) => (
           <div
             key={attachment.id}
-            className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               {getFileIcon(attachment.mime_type)}
@@ -210,19 +245,19 @@ export default function TransactionAttachments({
               </div>
             </div>
             
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => handlePreview(attachment)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title={texts.files.viewFile}
+                className="p-2 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
+                title="Ver archivo"
               >
                 <Eye className="h-4 w-4" />
               </button>
               
               <button
                 onClick={() => handleDownload(attachment)}
-                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title={texts.files.downloadFile}
+                className="p-2 text-gray-400 hover:text-green-600 transition-colors rounded-lg hover:bg-green-50"
+                title="Descargar archivo"
               >
                 <Download className="h-4 w-4" />
               </button>
@@ -230,8 +265,8 @@ export default function TransactionAttachments({
               <button
                 onClick={() => handleDelete(attachment)}
                 disabled={deleting === attachment.id}
-                className="p-1 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
-                title={texts.delete}
+                className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50 disabled:opacity-50"
+                title="Eliminar archivo"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -240,31 +275,134 @@ export default function TransactionAttachments({
         ))}
       </div>
 
+      {/* Add Files Button */}
+      {onAddAttachment && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <button
+            onClick={onAddAttachment}
+            className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+          >
+            Agregar archivos
+          </button>
+        </div>
+      )}
+
       {/* Image Preview Modal */}
       {previewAttachment && previewAttachment.mime_type.startsWith('image/') && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="relative max-w-4xl max-h-[90vh] p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative max-w-4xl max-h-[90vh] p-4 bg-white rounded-xl shadow-2xl border border-gray-200">
             <button
               onClick={() => {
                 setPreviewAttachment(null)
                 URL.revokeObjectURL(previewAttachment.file_path)
               }}
-              className="absolute top-2 right-2 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-colors"
+              className="absolute top-4 right-4 p-2 bg-black/20 backdrop-blur-sm text-white rounded-full hover:bg-black/40 transition-all shadow-md"
+              aria-label="Cerrar"
             >
-              <X className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
-            <img
-              src={previewAttachment.file_path}
-              alt={previewAttachment.file_name}
-              className="max-w-full max-h-full object-contain rounded-lg"
-            />
-            <div className="mt-2 text-center text-white">
-              <p className="font-medium">{previewAttachment.file_name}</p>
-              {previewAttachment.description && (
-                <p className="text-sm opacity-75">{previewAttachment.description}</p>
-              )}
+            
+            <div className="flex flex-col items-center gap-4">
+              <img
+                src={previewAttachment.file_path}
+                alt={previewAttachment.file_name}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg border border-gray-200"
+              />
+              <div className="text-center bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <p className="font-medium text-gray-900 mb-1">{previewAttachment.file_name}</p>
+                {previewAttachment.description && (
+                  <p className="text-sm text-gray-600 italic">"{previewAttachment.description}"</p>
+                )}
+              </div>
             </div>
-          </div>
+          </section>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && attachmentToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={handleCancelDelete}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="p-5 flex flex-col gap-4 items-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-2">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Confirmar Eliminación</h2>
+              <p className="text-gray-700 text-sm font-medium mb-4 text-center">¿Estás seguro de que quieres eliminar este archivo?</p>
+              
+              {/* Información del archivo */}
+              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="flex items-center gap-3">
+                  {getFileIcon(attachmentToDelete.mime_type)}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Archivo:</span>
+                      <span className="text-sm text-gray-900 font-semibold truncate ml-2">{attachmentToDelete.file_name}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-600">Tamaño:</span>
+                      <span className="text-sm text-gray-900 font-semibold">{formatFileSize(attachmentToDelete.file_size)}</span>
+                    </div>
+                    {attachmentToDelete.description && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">Descripción:</span>
+                        <span className="text-sm text-gray-900 font-semibold truncate ml-2">"{attachmentToDelete.description}"</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="w-full bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                    <span className="text-red-600 text-xs font-bold">!</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-red-800 font-medium">Esta acción no se puede deshacer</p>
+                    <p className="text-xs text-red-700 mt-1">El archivo se eliminará permanentemente</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="w-full space-y-3">
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleting === attachmentToDelete.id}
+                  className="w-full px-4 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting === attachmentToDelete.id ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Eliminando...
+                    </div>
+                  ) : (
+                    'Eliminar Archivo'
+                  )}
+                </button>
+                
+                <button
+                  onClick={handleCancelDelete}
+                  className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
       )}
     </>

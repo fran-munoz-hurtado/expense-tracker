@@ -806,6 +806,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const handleAttachmentUpload = (transaction: Transaction) => {
     setSelectedTransactionForAttachment(transaction)
     setShowAttachmentModal(true)
+    // Close the attachments list modal if it's open
+    setShowAttachmentsList(false)
   }
 
   const handleAttachmentList = (transaction: Transaction) => {
@@ -819,6 +821,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       ...prev,
       [attachment.transaction_id]: (prev[attachment.transaction_id] || 0) + 1
     }))
+    
+    // Reopen the attachments list modal to show the updated list
+    if (selectedTransactionForAttachment) {
+      setSelectedTransactionForList(selectedTransactionForAttachment)
+      setShowAttachmentsList(true)
+    }
+    
     console.log('Attachment uploaded:', attachment)
   }
 
@@ -1373,13 +1382,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               )}
                             </button>
                             <button
-                              onClick={() => handleAttachmentUpload(transaction)}
-                              className="text-green-600 hover:text-green-800"
-                              title="Upload attachment"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </button>
-                            <button
                               onClick={() => handleModifyTransaction(transaction.id)}
                               className="text-blue-600 hover:text-blue-800"
                               title="Modify transaction"
@@ -1576,13 +1578,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
                             </span>
                           )}
-                        </button>
-                        <button
-                          onClick={() => handleAttachmentUpload(transaction)}
-                          className="text-green-600 hover:text-green-800"
-                          title="Upload attachment"
-                        >
-                          <Plus className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleModifyTransaction(transaction.id)}
@@ -2261,29 +2256,40 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
       {/* Attachments List Modal */}
       {showAttachmentsList && selectedTransactionForList && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold">
-                Attachments for: {selectedTransactionForList.description}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowAttachmentsList(false)
-                  setSelectedTransactionForList(null)
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-2xl shadow-2xl border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => {
+                setShowAttachmentsList(false)
+                setSelectedTransactionForList(null)
+              }}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
             
-            <TransactionAttachments
-              transactionId={selectedTransactionForList.id}
-              userId={user.id}
-              onAttachmentDeleted={handleAttachmentDeleted}
-            />
-          </div>
+            <div className="p-6 flex flex-col gap-6">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
+                  <Paperclip className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Archivos Adjuntos</h2>
+                  <p className="text-sm text-gray-600">Para: {selectedTransactionForList.description}</p>
+                </div>
+              </div>
+              
+              <TransactionAttachments
+                transactionId={selectedTransactionForList.id}
+                userId={user.id}
+                onAttachmentDeleted={handleAttachmentDeleted}
+                onAddAttachment={() => handleAttachmentUpload(selectedTransactionForList)}
+              />
+            </div>
+          </section>
         </div>
       )}
     </div>

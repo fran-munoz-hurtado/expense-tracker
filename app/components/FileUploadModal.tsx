@@ -187,122 +187,146 @@ export default function FileUploadModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-bold">{texts.files.uploadPaymentProof}</h2>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            <X className="h-6 w-6" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Overlay borroso y semitransparente */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+      <section className="relative bg-white rounded-xl p-0 w-full max-w-lg shadow-2xl border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
+        <button
+          onClick={handleClose}
+          className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+          aria-label="Cerrar"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-        {!selectedFile ? (
-          // File selection area
-          <div
-            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-              isDragging 
-                ? 'border-blue-500 bg-blue-50' 
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-          >
-            <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-lg font-medium text-gray-900 mb-2">
-              {texts.files.dragAndDrop}
-            </p>
-            <p className="text-sm text-gray-500 mb-4">
-              {texts.files.supportedFormats}
-            </p>
-            <p className="text-xs text-gray-400 mb-4">
-              {texts.files.maxFileSize}
-            </p>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              {texts.files.chooseFile}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept={ALLOWED_TYPES.join(',')}
-              onChange={handleFileInputChange}
-              className="hidden"
-            />
-          </div>
-        ) : (
-          // File preview and upload
-          <div className="space-y-4">
-            <div className="border rounded-lg p-4">
-              <div className="flex items-center space-x-3">
-                {getFileIcon(selectedFile.type)}
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatFileSize(selectedFile.size)} • {selectedFile.type}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setSelectedFile(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <Trash2 className="h-5 w-5" />
-                </button>
-              </div>
-              
-              {preview && (
-                <div className="mt-4">
-                  <img 
-                    src={preview} 
-                    alt="Preview" 
-                    className="max-w-full max-h-48 rounded-lg border"
-                  />
-                </div>
-              )}
+        <div className="p-6 flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
+              <Upload className="h-6 w-6 text-blue-600" />
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {texts.files.description} ({texts.optional})
-              </label>
+              <h2 className="text-xl font-bold text-gray-900">Subir Archivo</h2>
+              <p className="text-sm text-gray-600">Adjunta documentos a esta transacción</p>
+            </div>
+          </div>
+
+          {!selectedFile ? (
+            // File selection area
+            <div
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
+                isDragging 
+                  ? 'border-blue-500 bg-blue-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-lg font-medium text-gray-900 mb-2">
+                Arrastra y suelta tu archivo aquí
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Soporta JPG, PNG, PDF, Word, Excel
+              </p>
+              <p className="text-xs text-gray-400 mb-4">
+                Tamaño máximo: 10MB
+              </p>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+              >
+                Seleccionar Archivo
+              </button>
               <input
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder={texts.files.descriptionPlaceholder}
-                className="w-full px-3 py-2 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                ref={fileInputRef}
+                type="file"
+                accept={ALLOWED_TYPES.join(',')}
+                onChange={handleFileInputChange}
+                className="hidden"
               />
             </div>
-
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-sm text-red-600">{error}</p>
+          ) : (
+            // File preview and upload
+            <div className="space-y-4">
+              <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                <div className="flex items-center space-x-3">
+                  {getFileIcon(selectedFile.type)}
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{selectedFile.name}</p>
+                    <p className="text-sm text-gray-500">
+                      {formatFileSize(selectedFile.size)} • {selectedFile.type}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedFile(null)}
+                    className="text-gray-400 hover:text-red-600 transition-colors"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                {preview && (
+                  <div className="mt-4">
+                    <img 
+                      src={preview} 
+                      alt="Vista previa" 
+                      className="max-w-full max-h-48 rounded-lg border border-gray-200"
+                    />
+                  </div>
+                )}
               </div>
-            )}
 
-            <div className="flex justify-end space-x-3 pt-4">
-              <button
-                onClick={handleClose}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-              >
-                {texts.cancel}
-              </button>
-              <button
-                onClick={handleUpload}
-                disabled={uploading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
-                {uploading ? texts.uploading : texts.files.uploadFile}
-              </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Descripción (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe el contenido del archivo..."
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                />
+              </div>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
+                      <span className="text-red-600 text-xs font-bold">!</span>
+                    </div>
+                    <p className="text-sm text-red-800 font-medium">{error}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4">
+                <button
+                  onClick={handleClose}
+                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleUpload}
+                  disabled={uploading}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Subiendo...
+                    </div>
+                  ) : (
+                    'Subir Archivo'
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
     </div>
   )
 } 
