@@ -11,6 +11,7 @@ import Sidebar from './components/Sidebar'
 import DashboardView from './components/DashboardView'
 import DebugTest from './components/DebugTest'
 import GeneralDashboardView from './components/GeneralDashboardView'
+import MisMetasView from './components/MisMetasView'
 import LoginPage from './components/LoginPage'
 import Navbar from './components/Navbar'
 
@@ -281,7 +282,7 @@ function Home() {
     })
   }
 
-  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug') => {
+  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas') => {
     console.log('🔄 handleViewChange called with view:', view)
     try {
       switch (view) {
@@ -302,6 +303,11 @@ function Home() {
           console.log('📍 Navigating to debug...')
           await navigation.navigateToDebug()
           console.log('✅ Debug navigation completed')
+          break
+        case 'mis-metas':
+          console.log('📍 Navigating to mis-metas...')
+          await navigation.navigateToMisMetas()
+          console.log('✅ Mis metas navigation completed')
           break
       }
     } catch (error) {
@@ -362,6 +368,8 @@ function Home() {
         )
       case 'debug':
         return <DebugTest user={user} />
+      case 'mis-metas':
+        return <MisMetasView user={user} navigationParams={{ year: navigation.currentRoute.year }} />
       default:
         // Default to general dashboard for home route
         return (

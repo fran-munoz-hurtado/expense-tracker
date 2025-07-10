@@ -1,13 +1,13 @@
 'use client'
 
-import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X } from 'lucide-react'
+import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X, Target } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useState } from 'react'
 import { texts } from '@/lib/translations'
 
 interface SidebarProps {
-  activeView: 'dashboard' | 'general-dashboard' | 'debug'
-  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug') => void
+  activeView: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas'
+  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas') => void
   onAddExpense: () => void
   user: User
   onLogout: () => void
@@ -28,10 +28,16 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
       label: texts.allExpenses,
       icon: BarChart3,
       description: texts.yearlySummary
+    },
+    {
+      id: 'mis-metas',
+      label: texts.misMetas,
+      icon: Target,
+      description: 'Seguimiento de objetivos financieros'
     }
   ]
 
-  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug') => {
+  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas') => {
     onViewChange(view)
     setIsMobileMenuOpen(false) // Close mobile menu when navigating
   }
@@ -110,7 +116,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleViewChange(item.id as 'dashboard' | 'general-dashboard' | 'debug')}
+                  onClick={() => handleViewChange(item.id as 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas')}
                   className={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm lg:text-base
                     ${isActive 

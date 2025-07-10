@@ -18,6 +18,7 @@ export const translations = {
   // Navigation
   thisMonth: 'Control del mes',
   allExpenses: 'Panorama General',
+  misMetas: 'Mis metas',
   dashboard: 'Dashboard',
   yearlySummary: 'Resumen Anual',
   

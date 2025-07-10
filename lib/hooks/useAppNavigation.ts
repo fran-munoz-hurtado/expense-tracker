@@ -94,6 +94,21 @@ export function useAppNavigation() {
     }
   }, [navigationService])
 
+  const navigateToMisMetas = useCallback(async (year?: number) => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    
+    try {
+      await navigationService.navigateToMisMetas(year)
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Navigation failed' 
+      }))
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }))
+    }
+  }, [navigationService])
+
   const navigateToHome = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
     
@@ -140,6 +155,7 @@ export function useAppNavigation() {
     navigateToDashboard,
     navigateToGeneralDashboard,
     navigateToDebug,
+    navigateToMisMetas,
     navigateToHome,
     navigate,
     

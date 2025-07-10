@@ -6,6 +6,7 @@ export type AppRoute =
   | { type: 'dashboard'; month: number; year: number }
   | { type: 'general-dashboard'; year: number }
   | { type: 'debug' }
+  | { type: 'mis-metas'; year?: number }
 
 // Navigation configuration for each route
 export const ROUTE_CONFIG = {
@@ -24,6 +25,10 @@ export const ROUTE_CONFIG = {
   debug: {
     path: '/',
     params: ['view']
+  },
+  'mis-metas': {
+    path: '/',
+    params: ['view', 'year']
   }
 } as const
 
@@ -89,7 +94,14 @@ export class NavigationService {
       case 'debug':
         params.set('view', 'debug')
         return `/?${params.toString()}`
-        
+      
+      case 'mis-metas':
+        params.set('view', 'mis-metas')
+        if (route.year) {
+          params.set('year', route.year.toString())
+        }
+        return `/?${params.toString()}`
+      
       default:
         throw new Error(`Unknown route type: ${(route as any).type}`)
     }
@@ -122,6 +134,14 @@ export class NavigationService {
     // Parse debug route
     if (view === 'debug') {
       return { type: 'debug' }
+    }
+
+    // Parse mis-metas route
+    if (view === 'mis-metas') {
+      return {
+        type: 'mis-metas',
+        year: year ? parseInt(year) : undefined
+      }
     }
 
     // Parse general-dashboard route - only year parameter, no view or month
@@ -169,6 +189,14 @@ export class NavigationService {
    */
   async navigateToDebug(): Promise<void> {
     await this.navigate({ type: 'debug' })
+  }
+
+  /**
+   * Navigate to mis-metas view
+   * @param year - Optional year parameter
+   */
+  async navigateToMisMetas(year?: number): Promise<void> {
+    await this.navigate({ type: 'mis-metas', year })
   }
 
   /**
