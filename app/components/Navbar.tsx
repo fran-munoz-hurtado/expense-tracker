@@ -141,20 +141,24 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
 
   return (
     <>
-      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-blue-900 border-b border-gray-900 px-4 sm:px-6 py-3 sm:py-4 shadow-md shadow-black/5 relative">
+        {/* Línea de luz arriba */}
+        <div className="absolute inset-x-0 top-0 h-px bg-white/10 pointer-events-none z-20" />
+        {/* Borde inferior con gradiente (glow) */}
+        <div className="absolute left-0 right-0 -bottom-1.5 h-1.5 pointer-events-none z-20 bg-gradient-to-r from-blue-400/30 via-blue-300/10 to-transparent rounded-b-xl blur-xs" />
+          <div className="flex items-center justify-between">
           {/* Left side - Welcome message */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-white">
                 <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-base sm:text-xl font-bold text-gray-900 truncate">
+                <h1 className="text-base sm:text-xl font-bold text-white truncate">
                   {greeting}, {user.first_name} {user.last_name}
                 </h1>
-                <p className="text-xs sm:text-sm text-gray-600 flex items-center space-x-1">
-                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-500 flex-shrink-0" />
+                <p className="text-xs sm:text-sm text-blue-200 flex items-center space-x-1">
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 flex-shrink-0" />
                   <span className="truncate">{financialMessage}</span>
                 </p>
               </div>
@@ -164,18 +168,18 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
           {/* Right side - Actions and time */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
             {/* Quick stats indicator */}
-            <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-blue-50 rounded-full">
-              <DollarSign className="h-4 w-4 text-blue-600" />
-              <span className="text-sm font-medium text-blue-700">{texts.appTitle}</span>
+            <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-blue-900 rounded-full">
+              <DollarSign className="h-4 w-4 text-blue-300" />
+              <span className="text-sm font-medium text-blue-100">{texts.appTitle}</span>
             </div>
 
             {/* Notifications */}
-            <button className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+            <button className="p-1.5 sm:p-2 text-blue-200 hover:text-white hover:bg-blue-900 rounded-full transition-colors">
               <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
             {/* Settings */}
-            <button className="p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
+            <button className="p-1.5 sm:p-2 text-blue-200 hover:text-white hover:bg-blue-900 rounded-full transition-colors">
               <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
@@ -183,14 +187,14 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
             <div className="relative" ref={dropdownRef}>
               <button 
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex items-center space-x-2 p-1.5 sm:p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors"
+                className="flex items-center space-x-2 p-1.5 sm:p-2 text-white hover:text-blue-300 hover:bg-blue-900 rounded-full transition-colors"
               >
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center border-2 border-white">
                   <span className="text-xs sm:text-sm font-medium text-white">
                     {user.first_name.charAt(0)}{user.last_name.charAt(0)}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-gray-400" />
+                <ChevronDown className="h-4 w-4 text-blue-200" />
               </button>
 
               {/* Dropdown menu */}

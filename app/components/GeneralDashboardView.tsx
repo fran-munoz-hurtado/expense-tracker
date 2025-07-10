@@ -9,6 +9,7 @@ import { texts } from '@/lib/translations'
 import { useSearchParams } from 'next/navigation'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
 import { getMonthlyColumnStats, getPercentage, type ColumnType } from '@/lib/utils/dashboardTable'
+import { getColor, getGradient } from '@/lib/config/colors'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -29,6 +30,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
   const [error, setError] = useState<string | null>(null)
   const [expandedMonths, setExpandedMonths] = useState<Set<number>>(new Set())
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null)
   const [monthlyData, setMonthlyData] = useState<Record<number, {
     transactions: Transaction[]
     recurrent: number
@@ -137,6 +139,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
   // Available years for selection - easy to extend in the future
   const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
+
+  // Get current month and year for highlighting
+  const currentDate = new Date()
+  const currentMonth = currentDate.getMonth() + 1 // getMonth() returns 0-11, we need 1-12
+  const currentYear = currentDate.getFullYear()
 
   // Helper function to format currency for display (rounded, no decimals)
   const formatCurrency = (value: number): string => {
@@ -614,7 +621,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       {error && <div className="mb-4 text-red-600">{error}</div>}
       
       {/* 3. Fancy tabla con tooltips en porcentajes */}
-      <div className="hidden lg:block bg-white rounded-lg shadow-sm border overflow-x-auto">
+      <div className="hidden lg:block bg-white rounded-lg shadow-sm border overflow-x-auto" onMouseLeave={() => setHoveredRow(null)}>
         <table className="min-w-full divide-y divide-gray-200 table-fixed">
           <colgroup>
             <col style={{ width: '110px' }} /> {/* Mes */}
@@ -627,18 +634,18 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           <thead>
             {/* Header principal con agrupación visual */}
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider bg-gradient-to-r from-blue-800 to-blue-600 border-b-2 border-blue-700 shadow-sm" rowSpan={2} style={{borderLeft: '3px solid #1e40af', borderTopLeftRadius: '0.5rem'}}>
+              <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider bg-blue-900 border-b-2 border-blue-700 shadow-sm" rowSpan={2} style={{borderLeft: '3px solid #1e40af', borderTopLeftRadius: '0.5rem'}}>
                 {texts.month}
               </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-green-600 uppercase tracking-wider bg-gradient-to-r from-green-50 to-green-100 border-b border-green-200" rowSpan={2}>
+              <th className={`px-6 py-3 text-center text-xs font-bold text-${getColor('income', 'text')} uppercase tracking-wider bg-gradient-to-r ${getGradient('income')} border-b border-${getColor('income', 'border')}`} rowSpan={2}>
                 Ingresos
                 <div className="mt-1">
-                  <span className="text-green-500" title="Porcentaje de ingresos ya recibidos en el mes">%</span>
+                  <span className={`text-${getColor('income', 'primary')}`} title="Porcentaje de ingresos ya recibidos en el mes">%</span>
                 </div>
               </th>
-              <th className="px-6 py-3 text-center text-xs font-bold text-blue-600 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200" colSpan={3}>
+              <th className={`px-6 py-3 text-center text-xs font-bold text-${getColor('expense', 'text')} uppercase tracking-wider bg-gradient-to-r ${getGradient('expense')} border-b border-${getColor('expense', 'border')}`} colSpan={3}>
                 Gastos
-                <div className="mt-1 text-blue-500" title="Desglose de gastos mensuales y únicos">
+                <div className={`mt-1 text-${getColor('expense', 'primary')}`} title="Desglose de gastos mensuales y únicos">
                   <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -659,17 +666,17 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
             </tr>
             {/* Sub-header para las columnas de gastos */}
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+              <th className={`px-6 py-3 text-left text-xs font-bold text-${getColor('expense', 'text')} uppercase tracking-wider bg-gradient-to-r ${getGradient('expense')} border-b border-${getColor('expense', 'border')}`}>
                 Total
-                <span className="ml-1 text-blue-400" title="Porcentaje del total de gastos ya pagados en el mes">%</span>
+                <span className={`ml-1 text-${getColor('expense', 'primary')}`} title="Porcentaje del total de gastos ya pagados en el mes">%</span>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+              <th className={`px-6 py-3 text-left text-xs font-bold text-${getColor('expense', 'text')} uppercase tracking-wider bg-gradient-to-r ${getGradient('expense')} border-b border-${getColor('expense', 'border')}`}>
                 {texts.recurrent}
-                <span className="ml-1 text-blue-400" title="Porcentaje de gastos mensuales ya pagados en el mes">%</span>
+                <span className={`ml-1 text-${getColor('expense', 'primary')}`} title="Porcentaje de gastos mensuales ya pagados en el mes">%</span>
               </th>
-              <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200">
+              <th className={`px-6 py-3 text-left text-xs font-bold text-${getColor('expense', 'text')} uppercase tracking-wider bg-gradient-to-r ${getGradient('expense')} border-b border-${getColor('expense', 'border')}`}>
                 {texts.nonRecurrent}
-                <span className="ml-1 text-blue-400" title="Porcentaje de gastos únicos ya pagados en el mes">%</span>
+                <span className={`ml-1 text-${getColor('expense', 'primary')}`} title="Porcentaje de gastos únicos ya pagados en el mes">%</span>
               </th>
             </tr>
           </thead>
@@ -682,41 +689,69 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 const totalAmount = data.total
                 const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'
                 return (
-                  <tr key={month} className={`transition-colors duration-150 hover:bg-blue-100 ${rowBg}`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-white bg-gradient-to-r from-blue-800 to-blue-600 border-l-3 border-blue-700 shadow-sm" style={{letterSpacing: '0.02em'}}>
+                  <tr key={month} className={`transition-colors duration-150 hover:bg-blue-100 ${rowBg}`} onMouseEnter={() => setHoveredRow(month)} onMouseLeave={() => setHoveredRow(null)}>
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold text-white bg-blue-900 border-l-3 border-blue-700 shadow-sm transition-all duration-200 ${hoveredRow === month ? 'bg-blue-800 shadow-md' : ''}`} style={{letterSpacing: '0.02em'}}>
                       <button
                         onClick={() => onNavigateToMonth(month, selectedYear)}
-                        className="text-white hover:text-blue-100 hover:underline font-semibold transition-colors duration-100 text-sm"
+                        className="text-white hover:text-blue-100 font-semibold transition-all duration-200 text-sm cursor-pointer group"
                         style={{textShadow: '0 1px 3px rgba(30,64,175,0.3)'}}
                       >
-                        {months[month - 1]}
+                        <div className="flex items-center gap-2">
+                          {months[month - 1]}
+                          {selectedYear === currentYear && month === currentMonth && (
+                            <span className="bg-blue-400 text-blue-900 text-xs px-1.5 py-0.5 rounded-full font-medium" style={{fontSize: '0.65rem'}}>
+                              Actual
+                            </span>
+                          )}
+                          {/* Ícono de enlace - siempre visible */}
+                          <svg 
+                            className="w-3 h-3 opacity-60 transition-opacity duration-200" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </div>
                       </button>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center border-r-2 border-blue-200" style={{borderRightColor: '#bfdbfe'}}>
-                      <span className="text-gray-900 font-bold">{formatCurrency(data.income)}</span>
-                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateIncomePercentage(data))}`} title="Porcentaje de ingresos ya recibidos en el mes">
+                    <td 
+                      className={`px-6 py-4 whitespace-nowrap text-sm text-center border-r-2 border-blue-200 bg-slate-50 transition-all duration-200 ${hoveredRow === month ? 'bg-slate-200 shadow-sm' : ''}`}
+                    >
+                      <span className={`text-${getColor('income', 'dark')} font-bold`}>{formatCurrency(data.income)}</span>
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-${getColor('income', 'medium')} text-${getColor('income', 'primary')}`} title="Porcentaje de ingresos ya recibidos en el mes">
                         {calculateIncomePercentage(data)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <span className="text-gray-900 font-bold">{formatCurrency(totalAmount)}</span>
-                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(getPercentage(data.paid, totalAmount))}`} title="Porcentaje del total pagado">
+                    <td 
+                      className={`px-6 py-4 whitespace-nowrap text-sm text-center bg-yellow-50 transition-all duration-200 ${hoveredRow === month ? 'bg-orange-100 shadow-md' : ''}`}
+                    >
+                      <span className={`text-${getColor('expense', 'dark')} font-bold`}>{formatCurrency(totalAmount)}</span>
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`} title="Porcentaje del total pagado">
                         {getPercentage(data.paid, totalAmount)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <span className="text-gray-900">{formatCurrency(data.recurrent)}</span>
-                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`} title="Porcentaje de gastos mensuales pagados">
+                    <td 
+                      className={`px-6 py-4 whitespace-nowrap text-sm text-center bg-yellow-50 transition-all duration-200 ${hoveredRow === month ? 'bg-orange-100 shadow-md' : ''}`}
+                    >
+                      <span className={`text-${getColor('expense', 'dark')}`}>{formatCurrency(data.recurrent)}</span>
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`} title="Porcentaje de gastos mensuales pagados">
                         {calculateExpenseTypePercentage(data, 'recurrent')}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-center">
-                      <span className="text-gray-900">{formatCurrency(data.nonRecurrent)}</span>
-                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`} title="Porcentaje de gastos únicos pagados">
+                    <td 
+                      className={`px-6 py-4 whitespace-nowrap text-sm text-center bg-yellow-50 transition-all duration-200 ${hoveredRow === month ? 'bg-orange-100 shadow-md' : ''}`}
+                    >
+                      <span className={`text-${getColor('expense', 'dark')}`}>{formatCurrency(data.nonRecurrent)}</span>
+                      <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`} title="Porcentaje de gastos únicos pagados">
                         {calculateExpenseTypePercentage(data, 'non_recurrent')}%
                       </span>
                     </td>
-                    <td className="px-2 py-3 whitespace-nowrap text-sm text-center bg-blue-50 border-l-2 border-blue-200" style={{ minWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td 
+                      className={`px-2 py-3 whitespace-nowrap text-sm text-center bg-blue-50 border-l-2 border-blue-200 transition-all duration-200 ${hoveredRow === month ? 'bg-blue-200 shadow-sm' : ''}`} 
+                      style={{ minWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                    >
                       <span className="font-bold text-blue-700">
                         {formatCurrency(data.income - data.total)}
                       </span>
@@ -757,9 +792,26 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 <div className="flex justify-between items-center mb-3">
                   <button
                     onClick={() => onNavigateToMonth(month, selectedYear)}
-                    className="text-blue-600 hover:text-blue-800 font-medium text-lg"
+                    className="text-blue-600 hover:text-blue-800 font-medium text-lg cursor-pointer transition-colors duration-200 group"
                   >
-                    {months[month - 1]}
+                    <div className="flex items-center gap-2">
+                      {months[month - 1]}
+                      {selectedYear === currentYear && month === currentMonth && (
+                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                          Actual
+                        </span>
+                      )}
+                      {/* Ícono de enlace - siempre visible */}
+                      <svg 
+                        className="w-3 h-3 opacity-60" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </div>
                   </button>
                   <div className="text-right">
                     <div className="text-lg font-bold text-gray-900">{formatCurrency(totalAmount)}</div>
@@ -774,13 +826,13 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 
                 <div className="space-y-2">
                   {/* Sección de Ingresos */}
-                  <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+                  <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-green-700 font-medium">Ingresos:</span>
+                      <span className={`text-sm text-${getColor('income', 'text')} font-medium`}>Ingresos:</span>
                       <div className="text-right">
-                        <div className="text-sm text-gray-900">{formatCurrency(data.income)}</div>
+                        <div className={`text-sm text-${getColor('income', 'dark')}`}>{formatCurrency(data.income)}</div>
                         <div className="flex items-center justify-end gap-2 mt-1">
-                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateIncomePercentage(data))}`}>
+                          <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full bg-${getColor('income', 'medium')} text-${getColor('income', 'primary')}`}>
                             {calculateIncomePercentage(data)}%
                           </span>
                           <span className="text-xs text-gray-600">Recibido</span>
@@ -790,17 +842,17 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                   </div>
                   
                   {/* Sección de Gastos */}
-                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
                     <div className="mb-2">
-                      <span className="text-sm text-blue-700 font-medium">Gastos:</span>
+                      <span className={`text-sm text-${getColor('expense', 'text')} font-medium`}>Gastos:</span>
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Total:</span>
                         <div className="text-right">
-                          <div className="text-sm text-gray-900">{formatCurrency(data.total)}</div>
+                          <div className={`text-sm text-${getColor('expense', 'dark')}`}>{formatCurrency(data.total)}</div>
                           <div className="flex items-center justify-end gap-2 mt-1">
-                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(getPercentage(data.paid, data.total))}`}>
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`}>
                               {getPercentage(data.paid, data.total)}%
                             </span>
                             <span className="text-xs text-gray-600">{texts.paid}</span>
@@ -811,9 +863,9 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">{texts.recurrent}:</span>
                         <div className="text-right">
-                          <div className="text-sm text-gray-900">{formatCurrency(data.recurrent)}</div>
+                          <div className={`text-sm text-${getColor('expense', 'dark')}`}>{formatCurrency(data.recurrent)}</div>
                           <div className="flex items-center justify-end gap-2 mt-1">
-                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'recurrent'))}`}>
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`}>
                               {calculateExpenseTypePercentage(data, 'recurrent')}%
                             </span>
                             <span className="text-xs text-gray-600">{texts.paid}</span>
@@ -824,9 +876,9 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">{texts.nonRecurrent}:</span>
                         <div className="text-right">
-                          <div className="text-sm text-gray-900">{formatCurrency(data.nonRecurrent)}</div>
+                          <div className={`text-sm text-${getColor('expense', 'dark')}`}>{formatCurrency(data.nonRecurrent)}</div>
                           <div className="flex items-center justify-end gap-2 mt-1">
-                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${getPercentageColor(calculateExpenseTypePercentage(data, 'non_recurrent'))}`}>
+                            <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`}>
                               {calculateExpenseTypePercentage(data, 'non_recurrent')}%
                             </span>
                             <span className="text-xs text-gray-600">{texts.paid}</span>

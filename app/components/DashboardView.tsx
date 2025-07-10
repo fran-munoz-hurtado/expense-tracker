@@ -880,7 +880,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   }
 
   const getStatusColor = (transaction: Transaction) => {
-    if (transaction.status === 'paid') return 'bg-green-100 text-green-800'
+    if (transaction.status === 'paid') return `bg-blue-100 text-blue-800`
     if (transaction.deadline) {
       // Parse the date string to avoid timezone issues and compare only dates
       const [year, month, day] = transaction.deadline.split('-').map(Number);
@@ -907,19 +907,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   }, [recurrentExpenses])
 
   return (
-    <div className="flex-1 p-6 lg:p-8">
+    <div className="flex-1 p-6 lg:p-8 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="mb-8">
-      </div>
+      <div className="mb-4"></div>
 
       {/* Error Display */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
           <div className="flex">
             <AlertCircle className="h-5 w-5 text-red-400" />
             <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">{texts.errorOccurred}</h3>
-              <div className="mt-2 text-sm text-red-700">
+              <h3 className="text-sm font-medium text-red-800 mb-1">{texts.errorOccurred}</h3>
+              <div className="text-sm text-red-700">
                 {error}
               </div>
             </div>
@@ -928,139 +927,137 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       )}
 
       {/* Modern Compact Filters Section */}
-      <div className="mb-6">
-        <div className="bg-gradient-to-r from-white to-gray-50 p-3 rounded-lg shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <div className="p-1 bg-blue-100 rounded-lg">
-                <svg className="h-3 w-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+      <div className="mt-2 mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center space-x-2">
+            <div className="p-1 bg-blue-100 rounded-lg">
+              <svg className="h-3 w-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+              </svg>
+            </div>
+            <h3 className="text-xs font-semibold text-gray-800">Filtros Avanzados</h3>
+          </div>
+          <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+            {finalSortedTransactions.length} resultados
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Modern Year Filter */}
+          <div className="relative group">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Año</label>
+            <div className="relative">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md text-sm"
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                <svg className="h-3 w-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
-              <h3 className="text-xs font-semibold text-gray-800">Filtros Avanzados</h3>
-            </div>
-            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-              {finalSortedTransactions.length} resultados
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {/* Modern Year Filter */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Año</label>
-              <div className="relative">
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md text-sm"
-                >
-                  {availableYears.map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                  <svg className="h-3 w-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            {/* Modern Month Filter */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Mes</label>
-              <div className="relative">
-                <select
-                  value={selectedMonth}
-                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                  className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md text-sm"
-                >
-                  {months.map((month, index) => (
-                    <option key={index + 1} value={index + 1}>{month}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                  <svg className="h-3 w-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            
-            {/* Modern Type Filter - Compact Radio Buttons */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
-              <div className="flex space-x-1 bg-gray-50 p-1 rounded-md">
-                <button
-                  onClick={() => setFilterType('all')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                    filterType === 'all'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                  }`}
-                >
-                  Todos
-                </button>
-                <button
-                  onClick={() => setFilterType('recurrent')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                    filterType === 'recurrent'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                  }`}
-                >
-                  Recurrentes
-                </button>
-                <button
-                  onClick={() => setFilterType('non_recurrent')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                    filterType === 'non_recurrent'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                  }`}
-                >
-                  Únicos
-                </button>
-              </div>
-            </div>
-            
-            {/* Quick Actions */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Acciones</label>
-              <div className="flex space-x-1">
-                <button
-                  onClick={() => {
-                    setSelectedYear(new Date().getFullYear());
-                    setSelectedMonth(new Date().getMonth() + 1);
-                    setFilterType('all');
-                  }}
-                  className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
-                >
-                  Mes Actual
-                </button>
+          {/* Modern Month Filter */}
+          <div className="relative group">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Mes</label>
+            <div className="relative">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md text-sm"
+              >
+                {months.map((month, index) => (
+                  <option key={index + 1} value={index + 1}>{month}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                <svg className="h-3 w-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </div>
             </div>
           </div>
           
-          {/* Active Filters Summary */}
-          <div className="mt-2 pt-2 border-t border-gray-100">
-            <div className="flex items-center space-x-2 text-xs text-gray-500">
-              <span>Filtros activos:</span>
-              <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
-                {months[selectedMonth - 1]} {selectedYear}
+          {/* Modern Type Filter - Compact Radio Buttons */}
+          <div className="relative group">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
+            <div className="flex space-x-1 bg-gray-50 p-1 rounded-md">
+              <button
+                onClick={() => setFilterType('all')}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                  filterType === 'all'
+                    ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                    : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                onClick={() => setFilterType('recurrent')}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                  filterType === 'recurrent'
+                    ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                    : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                }`}
+              >
+                Recurrentes
+              </button>
+              <button
+                onClick={() => setFilterType('non_recurrent')}
+                className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                  filterType === 'non_recurrent'
+                    ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                    : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                }`}
+              >
+                Únicos
+              </button>
+            </div>
+          </div>
+          
+          {/* Quick Actions */}
+          <div className="relative group">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Acciones</label>
+            <div className="flex space-x-1">
+              <button
+                onClick={() => {
+                  setSelectedYear(new Date().getFullYear());
+                  setSelectedMonth(new Date().getMonth() + 1);
+                  setFilterType('all');
+                }}
+                className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+              >
+                Mes Actual
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Active Filters Summary */}
+        <div className="mt-2 pt-2 border-t border-gray-100">
+          <div className="flex items-center space-x-2 text-xs text-gray-500">
+            <span>Filtros activos:</span>
+            <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+              {months[selectedMonth - 1]} {selectedYear}
+            </span>
+            {filterType !== 'all' && (
+              <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+                {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
               </span>
-              {filterType !== 'all' && (
-                <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
-                  {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
-                </span>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Financial Overview Section - Always Visible */}
-      <div className="mb-6">
+      <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Total Ingresos del Mes */}
           <div className={`bg-gradient-to-br ${getGradient('income')} p-3 rounded-lg border border-${getColor('income', 'border')} shadow-sm`}>
@@ -1104,9 +1101,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               <div className="flex-1">
                 <p className={`text-xs font-medium text-${getColor('balance', 'text')}`}>{texts.cuantoQueda}</p>
                 <div className="flex items-center space-x-2">
-                  <p className={`text-base font-bold text-${getColor('balance', 'dark')}`}>{formatCurrency(monthlyStats.balance)}</p>
+                  <p className={`text-base font-bold text-${getColor('balance', 'primary')}`}>{formatCurrency(monthlyStats.balance)}</p>
                   {monthlyStats.totalIncome > 0 && (
-                    <span className={`text-xs font-medium text-${getColor('balance', 'primary')} bg-${getColor('balance', 'light')} px-1.5 py-0.5 rounded-full`}>
+                    <span className="text-xs font-medium bg-white/20 text-white px-1.5 py-0.5 rounded-full">
                       {Math.round((monthlyStats.balance / monthlyStats.totalIncome) * 100)}%
                     </span>
                   )}
@@ -1118,7 +1115,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       </div>
 
       {/* Monthly Progress Bar with Integrated Totals */}
-      <div className="mb-8">
+      <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
         <MonthlyProgressBar
           paid={monthlyStats.paid}
           total={monthlyStats.total}
@@ -1128,7 +1125,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       </div>
 
       {/* Transactions List */}
-      <div className="bg-white rounded-lg shadow-sm border">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-3">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">
             {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
@@ -1202,22 +1199,22 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             <div className="flex items-center space-x-2">
                               {/* Ícono de tipo de transacción: solo target si es meta, si no, flechas o file */}
                               {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] ? (
-                                // Solo target para gasto recurrente meta
-                                <span title="Meta personal" className="inline-flex items-center ml-1">
+                                // Ícono de meta recurrente: target amarillo muy oscuro sobre fondo amarillo claro
+                                <div className={`p-1.5 rounded-full bg-${getColor('expense', 'light')}`}> 
                                   <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                    <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#dbeafe" />
-                                    <circle cx="10" cy="10" r="4" stroke="#2563eb" strokeWidth="2" fill="#bfdbfe" />
-                                    <circle cx="10" cy="10" r="1.5" fill="#2563eb" />
+                                    <circle cx="10" cy="10" r="8" stroke="#713f12" strokeWidth="2" fill="#FEF9C3" />
+                                    <circle cx="10" cy="10" r="4" stroke="#713f12" strokeWidth="2" fill="white" />
+                                    <circle cx="10" cy="10" r="1.5" fill="#713f12" />
                                   </svg>
-                                </span>
+                                </div>
                               ) : transaction.source_type === 'recurrent' ? (
-                                transaction.type === 'income' ?
-                                  <Repeat className="h-4 w-4 text-green-600" /> :
-                                  <Repeat className="h-4 w-4 text-blue-600" />
+                                <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
+                                  <Repeat className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
+                                </div>
                               ) : (
-                                transaction.type === 'income' ?
-                                  <FileText className="h-4 w-4 text-green-600" /> :
-                                  <FileText className="h-4 w-4 text-blue-600" />
+                                <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
+                                  <FileText className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
+                                </div>
                               )}
                             </div>
                             <div>
@@ -1287,7 +1284,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {getStatusText(transaction)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"> 
                           {formatCurrency(transaction.value)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1307,7 +1304,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               className={`
                                 sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
                                 ${transaction.status === 'paid' 
-                                  ? 'gradient-emerald glow-emerald' 
+                                  ? 'bg-blue-100 border-blue-200' 
                                   : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-md'
                                 }
                                 rounded-lg overflow-hidden
@@ -1318,7 +1315,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               <div className={`
                                 absolute inset-0 rounded-lg
                                 ${transaction.status === 'paid' 
-                                  ? 'bg-gradient-to-br from-emerald-300/30 via-teal-400/30 to-cyan-500/30 animate-pulse-soft' 
+                                  ? 'bg-gradient-to-br from-blue-200/30 via-blue-400/30 to-blue-600/30 animate-pulse-soft' 
                                   : ''
                                 }
                               `} />
@@ -1326,7 +1323,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               {/* Checkmark with animated stroke */}
                               {transaction.status === 'paid' && (
                                 <svg
-                                  className="w-3 h-3 text-green-800 relative z-10"
+                                  className="w-3 h-3 text-blue-800 relative z-10"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1351,7 +1348,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               
                               {/* Glow effect when checked */}
                               {transaction.status === 'paid' && (
-                                <div className="absolute -inset-2 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 rounded-xl blur-md opacity-40 animate-glow" />
+                                <div className="absolute -inset-2 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 rounded-xl blur-md opacity-40 animate-glow" />
                               )}
                               
                               {/* Click ripple effect */}
@@ -1415,34 +1412,35 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
                         {/* Ícono de tipo de transacción: solo target si es meta, si no, flechas o file */}
                         {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] ? (
-                          // Solo target para gasto recurrente meta
-                          <span title="Meta personal" className="inline-flex items-center ml-1">
+                          // Ícono de meta recurrente: target amarillo muy oscuro sobre fondo amarillo claro (mobile)
+                          <div className="p-1.5 rounded-full bg-yellow-100"> 
                             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                              <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#dbeafe" />
-                              <circle cx="10" cy="10" r="4" stroke="#2563eb" strokeWidth="2" fill="#bfdbfe" />
-                              <circle cx="10" cy="10" r="1.5" fill="#2563eb" />
+                              <circle cx="10" cy="10" r="8" stroke="#713f12" strokeWidth="2" fill="#FEF9C3" />
+                              <circle cx="10" cy="10" r="4" stroke="#713f12" strokeWidth="2" fill="white" />
+                              <circle cx="10" cy="10" r="1.5" fill="#713f12" />
                             </svg>
-                          </span>
+                          </div>
                         ) : transaction.source_type === 'recurrent' ? (
-                          transaction.type === 'income' ?
-                            <Repeat className="h-5 w-5 text-green-600 flex-shrink-0" /> :
-                            <Repeat className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                          <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
+                            <Repeat className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
+                          </div>
                         ) : (
-                          transaction.type === 'income' ?
-                            <FileText className="h-5 w-5 text-green-600 flex-shrink-0" /> :
-                            <FileText className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                          <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
+                            <FileText className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
+                          </div>
                         )}
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-1">
                             {transaction.description}
                             {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
-                              <span title="Meta personal" className="inline-flex items-center ml-1">
+                              // Ícono de meta recurrente: target amarillo muy oscuro sobre fondo amarillo claro (mobile título)
+                              <div className="p-1.5 rounded-full bg-yellow-100"> 
                                 <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                  <circle cx="10" cy="10" r="8" stroke="#2563eb" strokeWidth="2" fill="#dbeafe" />
-                                  <circle cx="10" cy="10" r="4" stroke="#2563eb" strokeWidth="2" fill="#bfdbfe" />
-                                  <circle cx="10" cy="10" r="1.5" fill="#2563eb" />
+                                  <circle cx="10" cy="10" r="8" stroke="#713f12" strokeWidth="2" fill="#FEF9C3" />
+                                  <circle cx="10" cy="10" r="4" stroke="#713f12" strokeWidth="2" fill="white" />
+                                  <circle cx="10" cy="10" r="1.5" fill="#713f12" />
                                 </svg>
-                              </span>
+                              </div>
                             )}
                           </h3>
                           <div className="flex items-center space-x-2 mt-1">
@@ -1530,7 +1528,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {/* Checkmark with animated stroke */}
                             {transaction.status === 'paid' && (
                               <svg
-                                className="w-3 h-3 text-green-800 relative z-10"
+                                className="w-3 h-3 text-blue-800 relative z-10"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"

@@ -5,6 +5,15 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  safelist: [
+    'from-yellow-100', 'to-yellow-200', 'border-yellow-300', 'bg-yellow-100', 'text-yellow-800',
+    'from-blue-50', 'to-blue-100', 'border-blue-200', 'bg-blue-100', 'text-blue-800',
+    'from-blue-200', 'to-blue-400', 'from-blue-300', 'to-blue-500', 'from-blue-400', 'to-blue-600', 'from-blue-500', 'to-blue-700',
+    'bg-blue-600', 'text-blue-600', 'text-blue-700', 'text-blue-900',
+    'bg-yellow-200', 'text-yellow-700', 'text-yellow-900',
+    'bg-[#101828]', 'border-[#101828]', 'text-white',
+    // Agrega aquí cualquier otro color dinámico que uses
+  ],
   theme: {
     extend: {
       colors: {

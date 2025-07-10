@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { TrendingUp, Target, Award, Zap, Star, CheckCircle, AlertCircle, Clock, DollarSign } from 'lucide-react'
 import { texts } from '@/lib/translations'
+import { APP_COLORS } from '@/lib/config/colors'
 
 /**
  * Interface for MonthlyProgressBar component props
@@ -43,10 +44,10 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
   // 0-20%: Building momentum
   '0-20': {
     color: 'from-red-400 to-orange-400',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    milestoneColor: 'bg-red-300',
-    overdueColor: 'bg-red-500',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    milestoneColor: 'bg-blue-300',
+    overdueColor: 'bg-blue-500',
     icon: Target,
     messages: [
       "¡Estás construyendo tu futuro financiero! 🚀",
@@ -59,10 +60,10 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
   // 21-40%: Gaining momentum
   '21-40': {
     color: 'from-orange-400 to-yellow-400',
-    bgColor: 'bg-orange-50',
-    borderColor: 'border-orange-200',
-    milestoneColor: 'bg-orange-300',
-    overdueColor: 'bg-orange-500',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    milestoneColor: 'bg-blue-300',
+    overdueColor: 'bg-blue-500',
     icon: TrendingUp,
     messages: [
       "¡Tu disciplina financiera está creciendo! 📈",
@@ -75,10 +76,10 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
   // 41-60%: Strong foundation
   '41-60': {
     color: 'from-yellow-400 to-green-400',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
-    milestoneColor: 'bg-yellow-300',
-    overdueColor: 'bg-yellow-500',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    milestoneColor: 'bg-blue-300',
+    overdueColor: 'bg-blue-500',
     icon: Star,
     messages: [
       "¡Tu consistencia financiera es admirable! 🌟",
@@ -91,10 +92,10 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
   // 61-80%: Excellence in progress
   '61-80': {
     color: 'from-green-400 to-emerald-400',
-    bgColor: 'bg-green-50',
-    borderColor: 'border-green-200',
-    milestoneColor: 'bg-green-300',
-    overdueColor: 'bg-green-500',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    milestoneColor: 'bg-blue-300',
+    overdueColor: 'bg-blue-500',
     icon: Award,
     messages: [
       "¡Tu excelencia financiera es notable! 🏆",
@@ -107,10 +108,10 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
   // 81-99%: Near perfection
   '81-99': {
     color: 'from-emerald-400 to-teal-400',
-    bgColor: 'bg-emerald-50',
-    borderColor: 'border-emerald-200',
-    milestoneColor: 'bg-emerald-300',
-    overdueColor: 'bg-emerald-500',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    milestoneColor: 'bg-blue-300',
+    overdueColor: 'bg-blue-500',
     icon: Zap,
     messages: [
       "¡Tu maestría financiera es excepcional! ⚡",
@@ -123,10 +124,10 @@ const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
   // 100%: Perfect achievement
   '100': {
     color: 'from-teal-400 to-cyan-400',
-    bgColor: 'bg-teal-50',
-    borderColor: 'border-teal-200',
-    milestoneColor: 'bg-teal-300',
-    overdueColor: 'bg-teal-500',
+    bgColor: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    milestoneColor: 'bg-blue-300',
+    overdueColor: 'bg-blue-500',
     icon: Award,
     messages: [
       "¡PERFECCIÓN FINANCIERA ALCANZADA! 🎉",
@@ -305,11 +306,11 @@ export default function MonthlyProgressBar({
   const getProgressGradient = useCallback((): string => {
     if (!hasOverdue) {
       // When up-to-date: green gradient based on progress
-      if (percentage >= 80) return 'from-green-500 to-emerald-600'
-      if (percentage >= 60) return 'from-green-400 to-green-600'
-      if (percentage >= 40) return 'from-green-300 to-green-500'
-      if (percentage >= 20) return 'from-green-200 to-green-400'
-      return 'from-green-100 to-green-300'
+      if (percentage >= 80) return 'from-blue-500 to-emerald-600'
+      if (percentage >= 60) return 'from-blue-400 to-blue-600'
+      if (percentage >= 40) return 'from-blue-300 to-blue-500'
+      if (percentage >= 20) return 'from-blue-200 to-blue-400'
+      return 'from-blue-100 to-blue-300'
     } else {
       // When overdue: ALWAYS green to red gradient (no yellow/orange)
       const paidRatio = paid / (paid + overdue)
@@ -379,14 +380,14 @@ export default function MonthlyProgressBar({
             {/* Ya Pagué */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <div className="p-1.5 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                <div className="p-1.5 bg-blue-100 rounded-lg">
+                  <CheckCircle className="h-4 w-4 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-700">{texts.alreadyPaid}</p>
-                  <p className="text-base font-bold text-green-600 flex items-center gap-2">
+                  <p className="text-base font-bold text-blue-600 flex items-center gap-2">
                     {formatCurrency(paid)}
-                    <span className="text-xs font-medium text-green-700 bg-green-100 px-2 py-0.5 rounded-full">{Math.round((paid / total) * 100)}%</span>
+                    <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">{Math.round((paid / total) * 100)}%</span>
                   </p>
                 </div>
               </div>
@@ -439,7 +440,9 @@ export default function MonthlyProgressBar({
             {/* Progreso pagado (verde) */}
             {paid > 0 && (
               <div
-                className={`absolute left-0 top-0 h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-1000 ease-out ${overdue > 0 ? 'rounded-l-full' : 'rounded-full'}`}
+                className={`absolute left-0 top-0 h-full bg-gradient-to-r ${
+                  percentage >= 80 ? 'from-blue-500 to-blue-700' : percentage >= 60 ? 'from-blue-400 to-blue-600' : percentage >= 40 ? 'from-blue-300 to-blue-500' : 'from-blue-200 to-blue-400'
+                } transition-all duration-1000 ease-out ${overdue > 0 ? 'rounded-l-full' : 'rounded-full'}`}
                 style={{ width: `${total > 0 ? (paid / total) * 100 : 0}%`, zIndex: 1 }}
               />
             )}
@@ -460,15 +463,13 @@ export default function MonthlyProgressBar({
               zIndex: 20
             }}
           >
-            <div className={`text-white text-xs px-2 py-1 rounded-lg shadow-lg font-medium ${
-              hasOverdue && overdue > 0 ? 'bg-red-400' : 'bg-green-500'
-            }`}>
+            <div className="text-white text-xs px-2 py-1 rounded-lg shadow-lg font-medium bg-blue-600">
               <div>{percentage}%</div>
               <div className="text-xs opacity-90">{formatCurrency(paid)}</div>
             </div>
             {/* Conditional pointer - verde oscuro y tamaño armónico */}
             {((total > 0 ? (paid / total) * 100 : 0) < 98) && (
-              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-700 mx-auto"></div>
+              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-700 mx-auto"></div>
             )}
           </div>
           {/* Overdue tooltip - igual que antes */}
@@ -499,23 +500,16 @@ export default function MonthlyProgressBar({
       <div className={`text-center p-2 rounded-lg border transition-all duration-300 max-w-sm mx-auto ${
         hasOverdue 
           ? 'bg-red-50 border-red-200' // Red background when there's overdue
-          : 'bg-green-50 border-green-200' // Green background when up-to-date
+          : 'bg-blue-50 border-blue-200' // Green background when up-to-date
       }`}>
         <p className={`text-xs font-medium leading-relaxed ${
           hasOverdue 
             ? 'text-red-600' // Red text when there's overdue
-            : 'bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-transparent' // Green gradient when up-to-date
+            : 'bg-gradient-to-r from-blue-500 to-emerald-600 bg-clip-text text-transparent' // Green gradient when up-to-date
         }`}>
           {hasOverdue ? selectedOverdueMessage : selectedMessage}
         </p>
-        {hasOverdue && (
-          <div className="flex items-center justify-center space-x-2 text-red-600 bg-red-50 rounded-lg p-1.5 mt-1.5">
-            <AlertCircle className="h-3 w-3" />
-            <span className="text-xs font-medium">
-              Atención: {formatCurrency(overdue)} ({overduePercentage}%) {texts.overdueAmount}
-            </span>
-          </div>
-        )}
+        {/* Eliminado el aviso de mora con 'Atención:' */}
       </div>
     </div>
   )
