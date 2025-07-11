@@ -1259,8 +1259,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900 flex items-center gap-2 transaction-description">
-                                {transaction.description}
-                                {/* Navigation Link Icon for Goal Transactions - Same as GeneralDashboard */}
+                                <span>{transaction.description}</span>
+                                {/* Navigation Link Icon for Goal Transactions */}
                                 {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
                                   <button
                                     onClick={() => handleNavigateToGoal(transaction)}
@@ -1278,35 +1278,71 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                     </svg>
                                   </button>
                                 )}
+                                {/* Days until due - moved to right side of description */}
+                                {(() => {
+                                  if (!transaction.deadline || transaction.status === 'paid') return null;
+                                  const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                  const today = new Date();
+                                  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                  const deadlineDate = new Date(year, month - 1, day);
+                                  const diffTime = deadlineDate.getTime() - todayDate.getTime();
+                                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                  if (diffDays > 0) {
+                                    return (
+                                      <span className="text-xs text-yellow-600 font-medium">
+                                        {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
+                                      </span>
+                                    );
+                                  } else if (diffDays === 0) {
+                                    return (
+                                      <span className="text-xs text-yellow-600 font-medium">
+                                        Vence hoy
+                                      </span>
+                                    );
+                                  } else {
+                                    return (
+                                      <span className="text-xs text-red-600 font-medium">
+                                        {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
+                                      </span>
+                                    );
+                                  }
+                                })()}
                               </div>
-                              {(() => {
-                                if (!transaction.deadline || transaction.status === 'paid') return null;
-                                const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                const today = new Date();
-                                const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                                const deadlineDate = new Date(year, month - 1, day);
-                                const diffTime = deadlineDate.getTime() - todayDate.getTime();
-                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                if (diffDays > 0) {
-                                  return (
-                                    <span className="ml-2 text-xs text-yellow-600" style={{lineHeight: '1.2'}}>
-                                      {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
-                                    </span>
-                                  );
-                                } else if (diffDays === 0) {
-                                  return (
-                                    <span className="ml-2 text-xs text-yellow-600" style={{lineHeight: '1.2'}}>
-                                      Vence hoy
-                                    </span>
-                                  );
-                                } else {
-                                  return (
-                                    <span className="ml-2 text-xs text-red-600" style={{lineHeight: '1.2'}}>
-                                      {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
-                                    </span>
-                                  );
-                                }
-                              })()}
+                              
+                              {/* Due date and additional info below description */}
+                              <div className="flex items-center gap-4 mt-1">
+                                {/* Due date */}
+                                {transaction.deadline && (
+                                  <span className="text-xs text-gray-400">
+                                    Vence: {(() => {
+                                      const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                      return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                                    })()}
+                                  </span>
+                                )}
+                                
+                                {/* Date range for recurrent transactions */}
+                                {transaction.source_type === 'recurrent' && (
+                                  (() => {
+                                    const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+                                    if (recurrentExpense) {
+                                      return (
+                                        <span className="text-xs text-gray-400">
+                                          {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
+                                        </span>
+                                      )
+                                    }
+                                    return null
+                                  })()
+                                )}
+                                
+                                {/* Category */}
+                                {transaction.category && transaction.category !== 'sin categoría' && (
+                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                    {transaction.category}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -1454,8 +1490,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-1 transaction-description">
-                            {transaction.description}
+                          <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-2 transaction-description">
+                            <span>{transaction.description}</span>
                             {/* Navigation Link Icon for Goal Transactions - Mobile View */}
                             {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
                               <button
@@ -1470,36 +1506,73 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   strokeWidth="2" 
                                   viewBox="0 0 24 24"
                                 >
-                                  <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                  <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                               </button>
                             )}
+                            {/* Days until due - added to mobile view */}
+                            {(() => {
+                              if (!transaction.deadline || transaction.status === 'paid') return null;
+                              const [year, month, day] = transaction.deadline.split('-').map(Number);
+                              const today = new Date();
+                              const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                              const deadlineDate = new Date(year, month - 1, day);
+                              const diffTime = deadlineDate.getTime() - todayDate.getTime();
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              if (diffDays > 0) {
+                                return (
+                                  <span className="text-xs text-yellow-600 font-medium">
+                                    {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
+                                  </span>
+                                );
+                              } else if (diffDays === 0) {
+                                return (
+                                  <span className="text-xs text-yellow-600 font-medium">
+                                    Vence hoy
+                                  </span>
+                                );
+                              } else {
+                                return (
+                                  <span className="text-xs text-red-600 font-medium">
+                                    {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
+                                  </span>
+                                );
+                              }
+                            })()}
                           </h3>
-                          <div className="flex items-center space-x-2 mt-1">
+                          
+                          {/* Due date and additional info below description */}
+                          <div className="flex items-center gap-3 mt-1 flex-wrap">
+                            {/* Due date */}
                             {transaction.deadline && (
-                              <span className="text-xs text-gray-500">
-                                {texts.due}: {(() => {
-                                  // Parse the date string directly to avoid timezone issues
+                              <span className="text-xs text-gray-400">
+                                Vence: {(() => {
                                   const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                  return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
+                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
                                 })()}
                               </span>
                             )}
+                            
+                            {/* Date range for recurrent transactions */}
                             {transaction.source_type === 'recurrent' && (
                               (() => {
                                 const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
                                 if (recurrentExpense) {
                                   return (
-                                    <>
-                                      {transaction.deadline && <span className="text-xs text-gray-400">•</span>}
-                                      <span className="text-xs text-gray-500">
-                                        {texts.payingFrom} {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} {texts.to} {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
-                                      </span>
-                                    </>
+                                    <span className="text-xs text-gray-400">
+                                      {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
+                                    </span>
                                   )
                                 }
                                 return null
                               })()
+                            )}
+                            
+                            {/* Category */}
+                            {transaction.category && transaction.category !== 'sin categoría' && (
+                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                                {transaction.category}
+                              </span>
                             )}
                           </div>
                         </div>
