@@ -14,6 +14,7 @@ import GeneralDashboardView from './components/GeneralDashboardView'
 import MisMetasView from './components/MisMetasView'
 import LoginPage from './components/LoginPage'
 import Navbar from './components/Navbar'
+import { CATEGORIES } from '@/lib/config/constants'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -57,7 +58,8 @@ function Home() {
     year_to: new Date().getFullYear(),
     value: 0,
     payment_day_deadline: '',
-    isgoal: false
+    isgoal: false,
+    category: ''
   })
 
   // Form data for non-recurrent expenses
@@ -66,8 +68,33 @@ function Home() {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
     value: 0,
-    payment_deadline: ''
+    payment_deadline: '',
+    category: ''
   })
+
+  // Category management state
+  const [customCategories, setCustomCategories] = useState<string[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [customCategoryInput, setCustomCategoryInput] = useState<string>('')
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [selectedCategoriesForDelete, setSelectedCategoriesForDelete] = useState<string[]>([])
+  const [categoryToModify, setCategoryToModify] = useState<string>('')
+  const [modifyingCategory, setModifyingCategory] = useState<string>('')
+
+  // Custom confirmation modals state
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false)
+  const [confirmationModalData, setConfirmationModalData] = useState<{
+    title: string
+    message: string
+    onConfirm: () => void
+    onCancel?: () => void
+    confirmText?: string
+    cancelText?: string
+    type?: 'confirm' | 'prompt'
+    inputValue?: string
+    inputPlaceholder?: string
+    onInputChange?: (value: string) => void
+  } | null>(null)
 
   // Load user from localStorage on component mount
   useEffect(() => {
@@ -139,6 +166,112 @@ function Home() {
     return 0
   }
 
+  // Category management functions
+  const getAvailableCategories = (): string[] => {
+    // Get predefined categories (excluding 'Otro')
+    const predefinedCategories = Object.values(CATEGORIES.EXPENSE)
+      .filter(cat => cat !== 'Otro')
+      .sort()
+    
+    // Combine with custom categories and sort
+    const allCategories = [...predefinedCategories, ...customCategories].sort()
+    
+    // Always put 'Otro' first
+    return ['Otro', ...allCategories]
+  }
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category)
+    
+    // Update form data
+    if (expenseType === 'recurrent') {
+      setRecurrentFormData(prev => ({ ...prev, category: category === 'Otro' ? customCategoryInput : category }))
+    } else {
+      setNonRecurrentFormData(prev => ({ ...prev, category: category === 'Otro' ? customCategoryInput : category }))
+    }
+  }
+
+  const handleCustomCategoryInputChange = (value: string) => {
+    setCustomCategoryInput(value)
+    
+    // Update form data if "Otro" is selected
+    if (selectedCategory === 'Otro') {
+      if (expenseType === 'recurrent') {
+        setRecurrentFormData(prev => ({ ...prev, category: value }))
+      } else {
+        setNonRecurrentFormData(prev => ({ ...prev, category: value }))
+      }
+    }
+  }
+
+  const handleAddCategory = (newCategory: string) => {
+    if (newCategory.trim() && !customCategories.includes(newCategory.trim())) {
+      setCustomCategories(prev => [...prev, newCategory.trim()].sort())
+    }
+  }
+
+  const handleDeleteSelectedCategories = () => {
+    setCustomCategories(prev => prev.filter(cat => !selectedCategoriesForDelete.includes(cat)))
+    setSelectedCategoriesForDelete([])
+  }
+
+  const handleModifyCategory = (oldCategory: string, newCategory: string) => {
+    if (newCategory.trim() && oldCategory !== newCategory.trim()) {
+      setCustomCategories(prev => 
+        prev.map(cat => cat === oldCategory ? newCategory.trim() : cat).sort()
+      )
+    }
+  }
+
+  const toggleCategorySelection = (category: string) => {
+    setSelectedCategoriesForDelete(prev => 
+      prev.includes(category) 
+        ? prev.filter(cat => cat !== category)
+        : [...prev, category]
+    )
+  }
+
+  // Custom confirmation modal functions
+  const showCustomConfirm = (title: string, message: string, onConfirm: () => void, confirmText = 'Confirmar', cancelText = 'Cancelar') => {
+    setConfirmationModalData({
+      title,
+      message,
+      onConfirm,
+      onCancel: () => {
+        setShowConfirmationModal(false)
+        setConfirmationModalData(null)
+      },
+      confirmText,
+      cancelText,
+      type: 'confirm'
+    })
+    setShowConfirmationModal(true)
+  }
+
+  const showCustomPrompt = (title: string, message: string, onConfirm: (value: string) => void, placeholder = '', initialValue = '') => {
+    let inputValue = initialValue
+    
+    setConfirmationModalData({
+      title,
+      message,
+      onConfirm: () => onConfirm(inputValue),
+      onCancel: () => {
+        setShowConfirmationModal(false)
+        setConfirmationModalData(null)
+      },
+      confirmText: 'Confirmar',
+      cancelText: 'Cancelar',
+      type: 'prompt',
+      inputValue: initialValue,
+      inputPlaceholder: placeholder,
+      onInputChange: (value: string) => {
+        inputValue = value
+        setConfirmationModalData(prev => prev ? { ...prev, inputValue: value } : null)
+      }
+    })
+    setShowConfirmationModal(true)
+  }
+
   const handleLogin = (userData: User) => {
     setUser(userData)
     // Save user to localStorage
@@ -203,7 +336,8 @@ function Home() {
           value: Number(recurrentFormData.value),
           payment_day_deadline: recurrentFormData.payment_day_deadline ? Number(recurrentFormData.payment_day_deadline) : null,
           type: movementType,
-          isgoal: recurrentFormData.isgoal
+          isgoal: recurrentFormData.isgoal,
+          category: recurrentFormData.category
         }
 
         const { data, error } = await supabase
@@ -227,6 +361,7 @@ function Home() {
           value: Number(nonRecurrentFormData.value),
           payment_deadline: nonRecurrentFormData.payment_deadline || null,
           type: movementType,
+          category: nonRecurrentFormData.category
         }
 
         const { data, error } = await supabase
@@ -241,6 +376,11 @@ function Home() {
         }
 
         console.log('Non-recurrent expense saved:', data)
+      }
+
+      // Add custom category to the list if "Otro" was selected and user typed something
+      if (selectedCategory === 'Otro' && customCategoryInput.trim()) {
+        handleAddCategory(customCategoryInput.trim())
       }
 
       // Reset form and close dialogs
@@ -271,15 +411,29 @@ function Home() {
       year_to: new Date().getFullYear(),
       value: 0,
       payment_day_deadline: '',
-      isgoal: false
+      isgoal: false,
+      category: ''
     })
     setNonRecurrentFormData({
       description: '',
       year: new Date().getFullYear(),
       month: new Date().getMonth() + 1,
       value: 0,
-      payment_deadline: ''
+      payment_deadline: '',
+      category: ''
     })
+    
+    // Reset category state
+    setSelectedCategory('')
+    setCustomCategoryInput('')
+    setShowCategoryModal(false)
+    setSelectedCategoriesForDelete([])
+    setCategoryToModify('')
+    setModifyingCategory('')
+    
+    // Reset confirmation modal state
+    setShowConfirmationModal(false)
+    setConfirmationModalData(null)
   }
 
   const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas') => {
@@ -499,6 +653,45 @@ function Home() {
                     required
                   />
                 </div>
+
+                {/* Categoría - Solo para gastos */}
+                {movementType === 'expense' && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium text-gray-700">Categoría</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowCategoryModal(true)}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline"
+                      >
+                        editar categorías
+                      </button>
+                    </div>
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => handleCategoryChange(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                      required
+                    >
+                      <option value="">Seleccionar categoría</option>
+                      {getAvailableCategories().map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                      ))}
+                    </select>
+                    
+                    {/* Input personalizado para "Otro" */}
+                    {selectedCategory === 'Otro' && (
+                      <input
+                        type="text"
+                        value={customCategoryInput}
+                        onChange={(e) => handleCustomCategoryInputChange(e.target.value)}
+                        placeholder="Escriba la categoría personalizada"
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        required
+                      />
+                    )}
+                  </div>
+                )}
 
                 {/* Mes y Año */}
                 {expenseType === 'recurrent' ? (
@@ -726,6 +919,222 @@ function Home() {
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
               >
                 {loading ? 'Agregando...' : 'Confirmar y Agregar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Management Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">Gestionar Categorías</h3>
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Add Category Section */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-2">Añadir nueva categoría</h4>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={categoryToModify}
+                  onChange={(e) => setCategoryToModify(e.target.value)}
+                  placeholder="Nombre de la categoría"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      showCustomConfirm(
+                        'Confirmar agregar categoría',
+                        `¿Está seguro de que desea añadir la categoría "${categoryToModify}"?`,
+                        () => {
+                          handleAddCategory(categoryToModify)
+                          setCategoryToModify('')
+                          setShowConfirmationModal(false)
+                          setConfirmationModalData(null)
+                        }
+                      )
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    showCustomConfirm(
+                      'Confirmar agregar categoría',
+                      `¿Está seguro de que desea añadir la categoría "${categoryToModify}"?`,
+                      () => {
+                        handleAddCategory(categoryToModify)
+                        setCategoryToModify('')
+                        setShowConfirmationModal(false)
+                        setConfirmationModalData(null)
+                      }
+                    )
+                  }}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+                >
+                  Añadir
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Categories List */}
+            {customCategories.length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Categorías personalizadas</h4>
+                
+                {/* Texto explicativo full width */}
+                <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                  <p className="text-sm text-blue-700 font-medium text-center">
+                    💡 <span className="font-semibold">Instrucciones:</span> Haz clic en las categorías que quieres modificar o eliminar. Las seleccionadas aparecerán con fondo azul.
+                  </p>
+                </div>
+                
+                <div className="max-h-48 overflow-y-auto space-y-1">
+                  {customCategories.map((category) => (
+                    <div
+                      key={category}
+                      onClick={() => toggleCategorySelection(category)}
+                      className={`cursor-pointer p-2 rounded-lg transition-all ${
+                        selectedCategoriesForDelete.includes(category)
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-50 hover:bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {category}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Action Buttons */}
+                <div className="flex gap-2 mt-4">
+                  {selectedCategoriesForDelete.length > 0 && (
+                    <button
+                      onClick={() => {
+                        showCustomConfirm(
+                          'Confirmar eliminación',
+                          `¿Está seguro de que desea eliminar ${selectedCategoriesForDelete.length} categoría${selectedCategoriesForDelete.length !== 1 ? 's' : ''}?\n\nCategorías a eliminar: ${selectedCategoriesForDelete.join(', ')}`,
+                          () => {
+                            handleDeleteSelectedCategories()
+                            setShowConfirmationModal(false)
+                            setConfirmationModalData(null)
+                          },
+                          'Eliminar',
+                          'Cancelar'
+                        )
+                      }}
+                      className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all text-sm"
+                    >
+                      Eliminar ({selectedCategoriesForDelete.length})
+                    </button>
+                  )}
+                  
+                  {selectedCategoriesForDelete.length === 1 && (
+                    <button
+                      onClick={() => {
+                        const categoryToEdit = selectedCategoriesForDelete[0]
+                        showCustomPrompt(
+                          'Modificar categoría',
+                          `Ingrese el nuevo nombre para la categoría "${categoryToEdit}":`,
+                          (newName: string) => {
+                            if (newName && newName.trim() && newName.trim() !== categoryToEdit) {
+                              showCustomConfirm(
+                                'Confirmar modificación',
+                                `¿Está seguro de que desea cambiar "${categoryToEdit}" a "${newName.trim()}"?`,
+                                () => {
+                                  handleModifyCategory(categoryToEdit, newName.trim())
+                                  setSelectedCategoriesForDelete([])
+                                  setShowConfirmationModal(false)
+                                  setConfirmationModalData(null)
+                                }
+                              )
+                            } else {
+                              setShowConfirmationModal(false)
+                              setConfirmationModalData(null)
+                            }
+                          },
+                          'Nuevo nombre de la categoría',
+                          categoryToEdit
+                        )
+                      }}
+                      className="px-3 py-1 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-all text-sm"
+                    >
+                      Modificar
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Close Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowCategoryModal(false)}
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirmation Modal */}
+      {showConfirmationModal && confirmationModalData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">{confirmationModalData.title}</h3>
+              <button
+                onClick={() => {
+                  setShowConfirmationModal(false)
+                  setConfirmationModalData(null)
+                }}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="mb-6">
+              <p className="text-sm text-gray-700 whitespace-pre-line">
+                {confirmationModalData.message}
+              </p>
+              
+              {confirmationModalData.type === 'prompt' && (
+                <input
+                  type="text"
+                  value={confirmationModalData.inputValue || ''}
+                  onChange={(e) => confirmationModalData.onInputChange?.(e.target.value)}
+                  placeholder={confirmationModalData.inputPlaceholder}
+                  className="w-full mt-3 px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                  autoFocus
+                />
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  confirmationModalData.onCancel?.()
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all"
+              >
+                {confirmationModalData.cancelText || 'Cancelar'}
+              </button>
+              <button
+                onClick={() => {
+                  confirmationModalData.onConfirm()
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+              >
+                {confirmationModalData.confirmText || 'Confirmar'}
               </button>
             </div>
           </div>
