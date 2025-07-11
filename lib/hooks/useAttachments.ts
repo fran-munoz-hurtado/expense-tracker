@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { X, Paperclip } from 'lucide-react'
 import { type User, type Transaction, type TransactionAttachment } from '@/lib/supabase'
 import { fetchAttachmentCounts } from '@/lib/dataUtils'

@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Target, TrendingUp, DollarSign, Calendar, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp } from 'lucide-react'
-import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User } from '@/lib/supabase'
-import { fetchUserTransactions, fetchUserExpenses, measureQueryPerformance } from '@/lib/dataUtils'
+import { Target, TrendingUp, DollarSign, Calendar, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp, X, Paperclip } from 'lucide-react'
+import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
+import { fetchUserTransactions, fetchUserExpenses, measureQueryPerformance, fetchAttachmentCounts } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { useSearchParams } from 'next/navigation'
@@ -11,6 +11,8 @@ import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import { getColor, getGradient } from '@/lib/config/colors'
 // import { useAttachments } from '@/lib/hooks/useAttachments'
+import FileUploadModal from './FileUploadModal'
+import TransactionAttachments from './TransactionAttachments'
 
 interface MisMetasViewProps {
   user: User
@@ -43,17 +45,129 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   const { refreshData } = useDataSync()
   const navigation = useAppNavigation()
   
-  // Attachments functionality - COMMENTED OUT for build stability until import structure is fixed
-  // const {
-  //   attachmentCounts,
-  //   loadAttachmentCounts,
-  //   handleAttachmentUpload,
-  //   handleAttachmentList,
-  //   handleAttachmentUploadComplete,
-  //   handleAttachmentDeleted,
-  //   AttachmentClip,
-  //   AttachmentModals
-  // } = useAttachments(user)
+  // Direct attachment functionality implementation (without external hook)
+  const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false)
+  const [selectedTransactionForAttachment, setSelectedTransactionForAttachment] = useState<Transaction | null>(null)
+  const [showAttachmentsList, setShowAttachmentsList] = useState(false)
+  const [selectedTransactionForList, setSelectedTransactionForList] = useState<Transaction | null>(null)
+
+  // Load attachment counts for a list of transactions
+  const loadAttachmentCounts = async (transactions: Transaction[]) => {
+    if (transactions && transactions.length > 0) {
+      const transactionIds = transactions.map((t: Transaction) => t.id)
+      const attachmentCountsData = await fetchAttachmentCounts(user, transactionIds)
+      setAttachmentCounts(attachmentCountsData)
+    }
+  }
+
+  // Attachment handlers
+  const handleAttachmentUpload = (transaction: Transaction) => {
+    setSelectedTransactionForAttachment(transaction)
+    setShowAttachmentModal(true)
+    setShowAttachmentsList(false)
+  }
+
+  const handleAttachmentList = (transaction: Transaction) => {
+    setSelectedTransactionForList(transaction)
+    setShowAttachmentsList(true)
+  }
+
+  const handleAttachmentUploadComplete = (attachment: TransactionAttachment) => {
+    setAttachmentCounts(prev => ({
+      ...prev,
+      [attachment.transaction_id]: (prev[attachment.transaction_id] || 0) + 1
+    }))
+    
+    if (selectedTransactionForAttachment) {
+      setSelectedTransactionForList(selectedTransactionForAttachment)
+      setShowAttachmentsList(true)
+    }
+    
+    console.log('Attachment uploaded:', attachment)
+  }
+
+  const handleAttachmentDeleted = (attachmentId: number) => {
+    // Refresh attachment counts
+    console.log('Attachment deleted:', attachmentId)
+  }
+
+  // Attachment clip component
+  const AttachmentClip = ({ transaction, className = "" }: { transaction: Transaction, className?: string }) => {
+    return (
+      <button
+        onClick={() => handleAttachmentList(transaction)}
+        className={`text-gray-600 hover:text-gray-800 relative flex items-center justify-center ${className}`}
+        title="Ver archivos adjuntos"
+      >
+        <Paperclip className="h-4 w-4" />
+        {attachmentCounts[transaction.id] > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
+            {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
+          </span>
+        )}
+      </button>
+    )
+  }
+
+  // Attachment modals component  
+  const AttachmentModals = () => {
+    return (
+      <>
+        {/* File Upload Modal */}
+        {showAttachmentModal && selectedTransactionForAttachment && (
+          <FileUploadModal
+            isOpen={showAttachmentModal}
+            onClose={() => {
+              setShowAttachmentModal(false)
+              setSelectedTransactionForAttachment(null)
+            }}
+            transactionId={selectedTransactionForAttachment.id}
+            userId={user.id}
+            onUploadComplete={handleAttachmentUploadComplete}
+          />
+        )}
+
+        {/* Attachments List Modal */}
+        {showAttachmentsList && selectedTransactionForList && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+            <section className="relative bg-white rounded-xl p-0 w-full max-w-2xl shadow-2xl border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
+              <button
+                onClick={() => {
+                  setShowAttachmentsList(false)
+                  setSelectedTransactionForList(null)
+                }}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                aria-label="Cerrar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <div className="p-6 flex flex-col gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
+                    <Paperclip className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Archivos Adjuntos</h2>
+                    <p className="text-sm text-gray-600">Para: {selectedTransactionForList.description}</p>
+                  </div>
+                </div>
+                
+                <TransactionAttachments
+                  transactionId={selectedTransactionForList.id}
+                  userId={user.id}
+                  onAttachmentDeleted={handleAttachmentDeleted}
+                  onAddAttachment={() => handleAttachmentUpload(selectedTransactionForList)}
+                />
+              </div>
+            </section>
+          </div>
+        )}
+      </>
+    )
+  }
   
   const [goalTransactions, setGoalTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
@@ -186,7 +300,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       setNonRecurrentExpenses(result.nonRecurrent)
 
       // Load attachment counts for goal transactions
-      // await loadAttachmentCounts(result.goalTransactions)
+      await loadAttachmentCounts(result.goalTransactions)
 
     } catch (error) {
       console.error('❌ Error in fetchGoalData():', error)
@@ -664,7 +778,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                            transaction.deadline && new Date(transaction.deadline) < new Date() ? 'Vencido' : 'Pendiente'}
                                         </span>
                                         {/* Attachment Clip */}
-                                        {/* <AttachmentClip transaction={transaction} className="ml-2" /> */}
+                                        <AttachmentClip transaction={transaction} />
                                       </div>
                                     </div>
                                   ))}
@@ -684,7 +798,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       </div>
       
       {/* Attachment Modals */}
-      {/* <AttachmentModals /> */}
+      <AttachmentModals />
     </div>
   )
 } 
