@@ -41,13 +41,16 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       // Create goal key in the same format as MisMetasView
       const goalKey = `${transaction.source_type}-${transaction.source_id}`
       
-      // Navigate to Mis Metas with expansion parameter
-      await navigation.navigateToMisMetas(transaction.year)
+      // Construct the correct URL for Mis Metas with expansion parameter
+      const targetUrl = new URL(window.location.origin + window.location.pathname)
+      targetUrl.searchParams.set('view', 'mis-metas')
+      targetUrl.searchParams.set('year', transaction.year.toString())
+      targetUrl.searchParams.set('expandGoal', goalKey)
       
-      // Add goal expansion parameter to URL
-      const url = new URL(window.location.href)
-      url.searchParams.set('expandGoal', goalKey)
-      window.history.pushState({}, '', url.toString())
+      console.log(`🎯 DashboardView: Navigating to URL:`, targetUrl.toString())
+      
+      // Navigate directly using window.location to ensure proper page transition
+      window.location.href = targetUrl.toString()
       
     } catch (error) {
       console.error('❌ DashboardView: Navigation error:', error)
