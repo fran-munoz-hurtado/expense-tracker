@@ -489,7 +489,6 @@
     font-size: var(--font-size-body-medium);
     line-height: var(--line-height-body-medium);
     text-align: left;
-    border-bottom: 1px solid hsl(var(--border));
     padding: 0.5rem;
   }
 
