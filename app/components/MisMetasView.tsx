@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { useSearchParams } from 'next/navigation'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
+import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import { getColor, getGradient } from '@/lib/config/colors'
 // import { useAttachments } from '@/lib/hooks/useAttachments'
 
@@ -40,6 +41,7 @@ interface GoalData {
 export default function MisMetasView({ user, navigationParams }: MisMetasViewProps) {
   const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
+  const navigation = useAppNavigation()
   
   // Attachments functionality - COMMENTED OUT for build stability until import structure is fixed
   // const {
@@ -76,6 +78,16 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ]
+
+  // Navigation function to redirect to Control del mes
+  const handleNavigateToMonth = async (month: number, year: number) => {
+    try {
+      console.log(`🎯 MisMetasView: Navigating to Control del mes - Month: ${month}, Year: ${year}`)
+      await navigation.navigateToDashboard(month, year)
+    } catch (error) {
+      console.error('❌ MisMetasView: Navigation error:', error)
+    }
+  }
 
   // Sync with URL parameters
   useEffect(() => {
@@ -635,6 +647,22 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                             Actual
                                           </span>
                                         )}
+                                        {/* Navigation Link Icon - Same as GeneralDashboard */}
+                                        <button
+                                          onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                          className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
+                                          title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
+                                        >
+                                          <svg 
+                                            className="w-3 h-3" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            strokeWidth="2" 
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                          </svg>
+                                        </button>
                                       </div>
                                       <div className="flex items-center gap-3">
                                         <span className="text-sm text-gray-600">
