@@ -1258,7 +1258,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               )}
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                              <div className="text-sm font-medium text-gray-900 flex items-center gap-2 transaction-description">
                                 {transaction.description}
                                 {/* Navigation Link Icon for Goal Transactions - Same as GeneralDashboard */}
                                 {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
@@ -1315,7 +1315,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {getStatusText(transaction)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"> 
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 transaction-amount"> 
                           {formatCurrency(transaction.value)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1454,7 +1454,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-1">
+                          <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-1 transaction-description">
                             {transaction.description}
                             {/* Navigation Link Icon for Goal Transactions - Mobile View */}
                             {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
@@ -1505,7 +1505,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         </div>
                       </div>
                       <div className="text-right ml-2">
-                        <div className="text-lg text-gray-900">{formatCurrency(transaction.value)}</div>
+                        <div className="text-lg text-gray-900 transaction-amount">{formatCurrency(transaction.value)}</div>
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", getStatusColor(transaction))}>
                           {getStatusText(transaction)}
                         </span>

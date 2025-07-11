@@ -738,7 +738,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                   {yearData.transactions.map((transaction) => (
                                     <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200">
                                       <div className="flex items-center gap-3">
-                                        <span className="text-sm font-medium text-gray-700 min-w-0">
+                                        <span className="text-sm font-medium text-gray-700 min-w-0 month-name">
                                           {months[transaction.month - 1]}
                                         </span>
                                         {transaction.month === currentMonth && transaction.year === currentYear && (

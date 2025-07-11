@@ -87,30 +87,30 @@
     --letter-spacing-body-large: 0em;
     --font-weight-body-large: 400;
 
-    --font-size-body-medium: 0.875rem;        /* 14px */
+    --font-size-body-medium: 0.8125rem;       /* 13px - reduced from 14px */
     --line-height-body-medium: 1.43;          /* 20px */
-    --letter-spacing-body-medium: 0.025em;
+    --letter-spacing-body-medium: 0.015em;    /* reduced from 0.025em */
     --font-weight-body-medium: 400;
 
-    --font-size-body-small: 0.75rem;          /* 12px */
+    --font-size-body-small: 0.6875rem;        /* 11px - reduced from 12px */
     --line-height-body-small: 1.33;           /* 16px */
-    --letter-spacing-body-small: 0.025em;
+    --letter-spacing-body-small: 0.015em;     /* reduced from 0.025em */
     --font-weight-body-small: 400;
 
     /* LABEL STYLES (Buttons, form labels, chips) */
-    --font-size-label-large: 0.875rem;        /* 14px */
+    --font-size-label-large: 0.8125rem;       /* 13px - reduced from 14px */
     --line-height-label-large: 1.43;          /* 20px */
-    --letter-spacing-label-large: 0.025em;
+    --letter-spacing-label-large: 0.015em;    /* reduced from 0.025em */
     --font-weight-label-large: 500;
 
-    --font-size-label-medium: 0.75rem;        /* 12px */
+    --font-size-label-medium: 0.6875rem;      /* 11px - reduced from 12px */
     --line-height-label-medium: 1.33;         /* 16px */
-    --letter-spacing-label-medium: 0.05em;
+    --letter-spacing-label-medium: 0.035em;   /* reduced from 0.05em */
     --font-weight-label-medium: 500;
 
-    --font-size-label-small: 0.6875rem;       /* 11px */
+    --font-size-label-small: 0.625rem;        /* 10px - reduced from 11px */
     --line-height-label-small: 1.45;          /* 16px */
-    --letter-spacing-label-small: 0.05em;
+    --letter-spacing-label-small: 0.035em;    /* reduced from 0.05em */
     --font-weight-label-small: 500;
 
     /* ========================================
@@ -472,11 +472,78 @@
   }
 
   /* Button typography */
-  button {
+  button:not([class*="font-"], [class*="text-"], [class*="tracking-"]) {
     font-size: var(--font-size-label-large);
     font-weight: var(--font-weight-label-large);
     line-height: var(--line-height-label-large);
     letter-spacing: var(--letter-spacing-label-large);
+  }
+
+  /* Specific reset for buttons with Tailwind classes */
+  button[class*="font-medium"],
+  button[class*="text-sm"],
+  button[class*="text-base"] {
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+  }
+
+  /* Sidebar typography consistency */
+  .sidebar button,
+  .sidebar nav button,
+  .sidebar nav a {
+    letter-spacing: 0 !important;
+  }
+
+  /* Ensure consistent typography for navigation elements */
+  nav button span,
+  nav a span {
+    letter-spacing: 0 !important;
+  }
+
+  /* Tailwind text size overrides for specific small sizes */
+  .text-xs {
+    font-size: 0.75rem !important;   /* 12px - Tailwind original */
+    line-height: 1rem !important;    /* 16px - Tailwind original */
+    letter-spacing: 0 !important;
+  }
+
+  .text-sm {
+    font-size: 0.875rem !important;  /* 14px - Tailwind original */
+    line-height: 1.25rem !important; /* 20px - Tailwind original */
+    letter-spacing: 0 !important;
+  }
+
+  /* Specific overrides for form elements and filters */
+  .text-xs.font-medium,
+  .text-xs.font-semibold {
+    font-size: 0.75rem !important;
+    letter-spacing: 0 !important;
+  }
+
+  .text-sm.font-medium {
+    font-size: 0.875rem !important;
+    letter-spacing: 0 !important;
+  }
+
+  /* Fix font-weight for specific transaction table elements */
+  .transaction-description {
+    font-weight: 400 !important; /* Normal weight instead of medium */
+  }
+
+  .transaction-amount {
+    font-weight: 400 !important; /* Normal weight instead of medium */
+  }
+
+  /* Fix font-weight for month names in MisMetasView hierarchy */
+  .month-name {
+    font-weight: 400 !important; /* Normal weight instead of medium */
+  }
+
+  /* Additional fix for any table cell with transaction values */
+  table td.font-medium {
+    font-weight: 400 !important;
   }
 
   /* Tables */

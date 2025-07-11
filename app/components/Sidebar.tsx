@@ -76,7 +76,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
 
       {/* Sidebar */}
       <div className={`
-        fixed lg:static inset-y-0 left-0 z-40
+        sidebar fixed lg:static inset-y-0 left-0 z-40
         w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
