@@ -326,6 +326,17 @@ function Home() {
 
     try {
       if (expenseType === 'recurrent') {
+        // Determine final category value
+        const finalCategory = (() => {
+          if (selectedCategory === 'Otro' && customCategoryInput.trim()) {
+            return customCategoryInput.trim()
+          } else if (selectedCategory) {
+            return selectedCategory
+          } else {
+            return 'sin categoría'
+          }
+        })()
+
         const recurrentData = {
           user_id: user.id,
           description: recurrentFormData.description,
@@ -337,7 +348,7 @@ function Home() {
           payment_day_deadline: recurrentFormData.payment_day_deadline ? Number(recurrentFormData.payment_day_deadline) : null,
           type: movementType,
           isgoal: recurrentFormData.isgoal,
-          category: recurrentFormData.category
+          category: finalCategory
         }
 
         const { data, error } = await supabase
@@ -353,6 +364,17 @@ function Home() {
 
         console.log('Recurrent expense saved:', data)
       } else {
+        // Determine final category value
+        const finalCategory = (() => {
+          if (selectedCategory === 'Otro' && customCategoryInput.trim()) {
+            return customCategoryInput.trim()
+          } else if (selectedCategory) {
+            return selectedCategory
+          } else {
+            return 'sin categoría'
+          }
+        })()
+
         const nonRecurrentData = {
           user_id: user.id,
           description: nonRecurrentFormData.description,
@@ -361,7 +383,7 @@ function Home() {
           value: Number(nonRecurrentFormData.value),
           payment_deadline: nonRecurrentFormData.payment_deadline || null,
           type: movementType,
-          category: nonRecurrentFormData.category
+          category: finalCategory
         }
 
         const { data, error } = await supabase
@@ -671,7 +693,6 @@ function Home() {
                       value={selectedCategory}
                       onChange={(e) => handleCategoryChange(e.target.value)}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
-                      required
                     >
                       <option value="">Seleccionar categoría</option>
                       {getAvailableCategories().map((category) => (
@@ -687,7 +708,6 @@ function Home() {
                         onChange={(e) => handleCustomCategoryInputChange(e.target.value)}
                         placeholder="Escriba la categoría personalizada"
                         className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
-                        required
                       />
                     )}
                   </div>
