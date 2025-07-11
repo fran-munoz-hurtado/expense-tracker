@@ -663,14 +663,14 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           </div>
 
           {/* En Progreso */}
-          <div className={`bg-gradient-to-br from-orange-50 to-orange-100 p-3 rounded-lg border border-orange-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-orange-200 hover:-translate-y-1`}>
+          <div className={`bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-yellow-200 hover:-translate-y-1`}>
             <div className="flex items-center space-x-2">
-              <div className={`p-1.5 bg-orange-200 rounded-lg transition-all duration-300 hover:bg-orange-200 hover:scale-110`}>
-                <Clock className={`h-4 w-4 text-orange-600 transition-all duration-300`} />
+              <div className={`p-1.5 bg-yellow-200 rounded-lg transition-all duration-300 hover:bg-yellow-200 hover:scale-110`}>
+                <Clock className={`h-4 w-4 text-yellow-700 transition-all duration-300`} />
               </div>
               <div className="flex-1">
-                <p className={`text-xs font-medium text-orange-600 transition-all duration-200`}>En Progreso</p>
-                <p className={`text-base font-bold text-orange-800 transition-all duration-200`}>{goalStats.inProgress}</p>
+                <p className={`text-xs font-medium text-yellow-700 transition-all duration-200`}>En Progreso</p>
+                <p className={`text-base font-bold text-yellow-800 transition-all duration-200`}>{goalStats.inProgress}</p>
               </div>
             </div>
           </div>
@@ -718,11 +718,11 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${goal.isCompleted ? 'bg-green-100' : 'bg-orange-100'}`}>
+                      <div className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${goal.isCompleted ? 'bg-green-100' : 'bg-yellow-100'}`}>
                         {goal.isCompleted ? (
                           <CheckCircle className="h-5 w-5 text-green-600" />
                         ) : (
-                          <Target className="h-5 w-5 text-orange-600" />
+                          <Target className="h-5 w-5 text-yellow-700" />
                         )}
                       </div>
                       <div>
@@ -732,7 +732,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                             goal.isCompleted 
                               ? 'bg-green-100 text-green-800' 
-                              : 'bg-orange-100 text-orange-800'
+                              : 'bg-yellow-100 text-yellow-800'
                           }`}>
                             {goal.progress}% completado
                           </span>
@@ -748,7 +748,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className={`h-2 rounded-full transition-all duration-300 ${
-                            goal.isCompleted ? 'bg-green-500' : 'bg-orange-500'
+                            goal.isCompleted ? 'bg-green-500' : 'bg-yellow-500'
                           }`}
                           style={{ width: `${goal.progress}%` }}
                         ></div>
@@ -794,7 +794,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                   yearData.isCompleted 
                                     ? 'bg-green-100 text-green-800' 
-                                    : 'bg-orange-100 text-orange-800'
+                                    : 'bg-yellow-100 text-yellow-800'
                                 }`}>
                                   {yearData.progress}% completado
                                 </span>
