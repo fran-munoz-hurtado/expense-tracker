@@ -117,21 +117,14 @@ export const CATEGORIES = {
     BUSINESS: 'business',
     OTHER_INCOME: 'other_income',
   },
-  // Expense categories - 12 Spanish categories
+  // Expense categories - 6 simple and universal categories for Latin Americans
   EXPENSE: {
-    ALIMENTACION: 'Alimentación',
-    AYUDAS_FAMILIARES: 'Ayudas familiares',
-    COMPRAS_PERSONALES: 'Compras personales',
-    CREDITOS_DEUDAS: 'Créditos y deudas',
-    EDUCACION: 'Educación',
-    ENTRETENIMIENTO_OCIO: 'Entretenimiento y ocio',
-    GASTOS_VARIOS_IMPREVISTOS: 'Gastos varios o imprevistos',
-    SALUD: 'Salud',
-    SERVICIOS: 'Servicios',
-    SUSCRIPCIONES_PAGOS_DIGITALES: 'Suscripciones y pagos digitales',
+    MERCADO_COMIDA: 'Mercado y comida',
+    CASA_SERVICIOS: 'Casa y servicios',
     TRANSPORTE: 'Transporte',
-    VACACIONES_VIAJES: 'Vacaciones y viajes',
-    OTHER_EXPENSE: 'Otro',
+    SALUD: 'Salud',
+    DIVERSION: 'Diversión',
+    OTHER_EXPENSE: 'Otros',
   },
 } as const
 

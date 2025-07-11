@@ -66,6 +66,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const [error, setError] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null)
   
   // Sorting state
   const [sortField, setSortField] = useState<'description' | 'deadline' | 'status' | 'value' | null>(null)
@@ -1179,7 +1180,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         ) : (
           <>
             {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto">
+            <div className="hidden lg:block overflow-x-auto" onMouseLeave={() => setHoveredRow(null)}>
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
@@ -1233,7 +1234,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 <tbody className="bg-white divide-y divide-gray-200">
                   {finalSortedTransactions.map((transaction) => {
                     return (
-                      <tr key={transaction.id} className="hover:bg-gray-50">
+                      <tr key={transaction.id} className={`transition-all duration-300 ${hoveredRow === transaction.id ? 'transform scale-[1.02] -translate-y-0.5 shadow-lg z-10' : ''}`} onMouseEnter={() => setHoveredRow(transaction.id)}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">

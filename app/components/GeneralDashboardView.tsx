@@ -689,11 +689,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 const totalAmount = data.total
                 const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'
                 return (
-                  <tr key={month} className={`transition-colors duration-150 hover:bg-blue-100 ${rowBg}`} onMouseEnter={() => setHoveredRow(month)} onMouseLeave={() => setHoveredRow(null)}>
-                    <td className={`month-cell px-6 py-4 whitespace-nowrap text-sm font-semibold text-white bg-blue-900 border-l-3 border-blue-700 shadow-sm transition-all duration-200 ${hoveredRow === month ? 'bg-blue-800 shadow-md' : ''}`} style={{letterSpacing: '0.02em'}}>
+                  <tr key={month} className={`transition-all duration-300 ${rowBg} ${hoveredRow === month ? 'transform scale-[1.02] -translate-y-0.5 shadow-lg z-10' : ''}`} onMouseEnter={() => setHoveredRow(month)}>
+                    <td className={`month-cell px-6 py-4 whitespace-nowrap text-sm font-semibold text-white bg-blue-900 border-l-3 border-blue-700 shadow-sm transition-all duration-200`} style={{letterSpacing: '0.02em'}}>
                       <button
                         onClick={() => onNavigateToMonth(month, selectedYear)}
-                        className="text-white hover:text-blue-100 font-semibold transition-all duration-200 text-sm cursor-pointer group"
+                        className="text-white font-semibold transition-all duration-200 text-sm cursor-pointer group"
                         style={{textShadow: '0 1px 3px rgba(30,64,175,0.3)'}}
                       >
                         <div className="flex items-center gap-2">
@@ -717,7 +717,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       </button>
                     </td>
                     <td 
-                      className={`income-cell px-6 py-4 whitespace-nowrap text-sm text-center border-r-2 border-blue-200 bg-slate-50 transition-all duration-200 ${hoveredRow === month ? 'bg-slate-200 shadow-sm' : ''}`}
+                      className={`income-cell px-6 py-4 whitespace-nowrap text-sm text-center border-r-2 border-blue-200 bg-slate-50 transition-all duration-200`}
                     >
                       <span className={`text-${getColor('income', 'dark')} font-bold`}>{formatCurrency(data.income)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-${getColor('income', 'medium')} text-${getColor('income', 'primary')}`} title="Porcentaje de ingresos ya recibidos en el mes">
@@ -725,7 +725,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       </span>
                     </td>
                     <td 
-                      className={`expense-cell px-6 py-4 whitespace-nowrap text-sm text-center bg-yellow-50 transition-all duration-200 ${hoveredRow === month ? 'bg-orange-100 shadow-md' : ''}`}
+                      className={`expense-cell px-6 py-4 whitespace-nowrap text-sm text-center bg-white transition-all duration-200`}
                     >
                       <span className={`text-${getColor('expense', 'dark')} font-bold`}>{formatCurrency(totalAmount)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`} title="Porcentaje del total pagado">
@@ -733,7 +733,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       </span>
                     </td>
                     <td 
-                      className={`expense-cell px-6 py-4 whitespace-nowrap text-sm text-center bg-yellow-50 transition-all duration-200 ${hoveredRow === month ? 'bg-orange-100 shadow-md' : ''}`}
+                      className={`expense-cell px-6 py-4 whitespace-nowrap text-sm text-center bg-white transition-all duration-200`}
                     >
                       <span className={`text-${getColor('expense', 'dark')}`}>{formatCurrency(data.recurrent)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`} title="Porcentaje de gastos mensuales pagados">
@@ -741,7 +741,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       </span>
                     </td>
                     <td 
-                      className={`expense-cell px-6 py-4 whitespace-nowrap text-sm text-center bg-yellow-50 transition-all duration-200 ${hoveredRow === month ? 'bg-orange-100 shadow-md' : ''}`}
+                      className={`expense-cell px-6 py-4 whitespace-nowrap text-sm text-center bg-white transition-all duration-200`}
                     >
                       <span className={`text-${getColor('expense', 'dark')}`}>{formatCurrency(data.nonRecurrent)}</span>
                       <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-${getColor('expense', 'medium')} text-${getColor('expense', 'primary')}`} title="Porcentaje de gastos únicos pagados">
@@ -749,7 +749,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       </span>
                     </td>
                     <td 
-                      className={`balance-cell px-2 py-3 whitespace-nowrap text-sm text-center bg-blue-50 border-l-2 border-blue-200 transition-all duration-200 ${hoveredRow === month ? 'bg-blue-200 shadow-sm' : ''}`} 
+                      className={`balance-cell px-2 py-3 whitespace-nowrap text-sm text-center bg-blue-50 border-l-2 border-blue-200 transition-all duration-200`} 
                       style={{ minWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
                     >
                       <span className="font-bold text-blue-700">
@@ -792,7 +792,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 <div className="flex justify-between items-center mb-3">
                   <button
                     onClick={() => onNavigateToMonth(month, selectedYear)}
-                    className="text-blue-600 hover:text-blue-800 font-medium text-lg cursor-pointer transition-colors duration-200 group"
+                    className="text-blue-600 font-medium text-lg cursor-pointer transition-colors duration-200 group"
                   >
                     <div className="flex items-center gap-2">
                       {months[month - 1]}
@@ -842,7 +842,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                   </div>
                   
                   {/* Sección de Gastos */}
-                  <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                  <div className="bg-white rounded-lg p-3 border border-gray-200">
                     <div className="mb-2">
                       <span className={`text-sm text-${getColor('expense', 'text')} font-medium`}>Gastos:</span>
                     </div>

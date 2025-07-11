@@ -756,37 +756,4 @@
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
   }
-
-  /* Enhanced table hover effects for GeneralDashboard */
-  .general-dashboard-table tbody tr:hover {
-    background-color: rgba(59, 130, 246, 0.15) !important; /* More visible blue hover */
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-    transition: all 0.2s ease-in-out;
-  }
-
-  .general-dashboard-table tbody tr:hover td {
-    background-color: inherit !important;
-  }
-
-  /* Specific hover states for different cell types in GeneralDashboard */
-  .general-dashboard-table tbody tr:hover .income-cell {
-    background-color: rgba(71, 85, 105, 0.12) !important; /* Slate with more opacity */
-    box-shadow: inset 0 0 0 1px rgba(71, 85, 105, 0.1);
-  }
-
-  .general-dashboard-table tbody tr:hover .expense-cell {
-    background-color: rgba(251, 146, 60, 0.15) !important; /* Orange with more opacity */
-    box-shadow: inset 0 0 0 1px rgba(251, 146, 60, 0.1);
-  }
-
-  .general-dashboard-table tbody tr:hover .balance-cell {
-    background-color: rgba(59, 130, 246, 0.15) !important; /* Blue with more opacity */
-    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.1);
-  }
-
-  .general-dashboard-table tbody tr:hover .month-cell {
-    background-color: rgba(30, 64, 175, 0.9) !important; /* Darker blue for month column */
-    box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
-  }
 } 
