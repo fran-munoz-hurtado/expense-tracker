@@ -425,39 +425,26 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
 
   return (
     <div className="flex-1 p-6 lg:p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-md">
-              <Target className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{texts.misMetas}</h1>
-              <p className="text-gray-600">Seguimiento de tus objetivos financieros</p>
-            </div>
-          </div>
-          
-          {/* Year filter */}
-          <div className="flex items-center gap-4">
-            <label className="block text-sm font-medium text-gray-700 mr-2 flex items-center gap-1">
-              <Calendar className="w-4 h-4 text-green-500" />
-              Año
-            </label>
-            <div className="relative">
-              <select
-                value={selectedYear}
-                onChange={e => setSelectedYear(Number(e.target.value))}
-                className="appearance-none px-4 py-2 border border-green-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-400 focus:border-green-400 bg-white text-green-700 font-semibold transition-all duration-150 hover:border-green-400 cursor-pointer pr-8"
-              >
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-green-400">
-                <ChevronDown className="w-4 h-4" />
-              </span>
-            </div>
+      {/* Year filter only */}
+      <div className="mb-8 flex justify-end">
+        <div className="flex items-center gap-4">
+          <label className="block text-sm font-medium text-gray-700 mr-2 flex items-center gap-1">
+            <Calendar className="w-4 h-4 text-green-500" />
+            Año
+          </label>
+          <div className="relative">
+            <select
+              value={selectedYear}
+              onChange={e => setSelectedYear(Number(e.target.value))}
+              className="appearance-none px-4 py-2 border border-green-200 rounded-lg shadow-sm focus:ring-2 focus:ring-green-400 focus:border-green-400 bg-white text-green-700 font-semibold transition-all duration-150 hover:border-green-400 cursor-pointer pr-8"
+            >
+              {availableYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-green-400">
+              <ChevronDown className="w-4 h-4" />
+            </span>
           </div>
         </div>
       </div>
