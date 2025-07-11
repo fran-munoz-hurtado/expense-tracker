@@ -2,6 +2,545 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==================================
+   MODERN TYPOGRAPHY SYSTEM
+   Based on Google Material Design 3, Apple HIG, Spotify & Uber
+   100% Parametrizable - Change one variable to update entire system
+   ================================== */
+
+@layer base {
+  /* CSS VARIABLES FOR MODERN TYPOGRAPHY SYSTEM */
+  :root {
+    /* ========================================
+       FONT FAMILIES - Parametrizable System
+       ======================================== */
+    
+    /* Primary font stack - inspired by Google, Apple, Spotify, Uber */
+    --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', 'Inter', 'SF Pro Display', 'Spotify Mix', 'Uber Move', Arial, sans-serif;
+    
+    /* Display font for large headlines */
+    --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Roboto', 'Helvetica Neue', 'Inter', system-ui, sans-serif;
+    
+    /* Monospace font for code */
+    --font-mono: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Droid Sans Mono', 'Cascadia Code', 'Fira Code', 'Ubuntu Mono', monospace;
+
+    /* ========================================
+       TYPOGRAPHY SCALE - Material Design 3
+       ======================================== */
+    
+    /* Base font size - 16px (rem calculation base) */
+    --font-size-base: 1rem; /* 16px */
+    --line-height-base: 1.5;
+    --letter-spacing-base: 0em;
+
+    /* DISPLAY STYLES (Large headlines, hero text) */
+    --font-size-display-large: 3.5rem;        /* 56px */
+    --line-height-display-large: 1.15;        /* 64px */
+    --letter-spacing-display-large: -0.025em;
+    --font-weight-display-large: 400;
+
+    --font-size-display-medium: 2.8125rem;    /* 45px */
+    --line-height-display-medium: 1.16;       /* 52px */
+    --letter-spacing-display-medium: -0.025em;
+    --font-weight-display-medium: 400;
+
+    --font-size-display-small: 2.25rem;       /* 36px */
+    --line-height-display-small: 1.22;        /* 44px */
+    --letter-spacing-display-small: -0.025em;
+    --font-weight-display-small: 400;
+
+    /* HEADLINE STYLES (Section headers, page titles) */
+    --font-size-headline-large: 2rem;         /* 32px */
+    --line-height-headline-large: 1.25;       /* 40px */
+    --letter-spacing-headline-large: -0.025em;
+    --font-weight-headline-large: 600;
+
+    --font-size-headline-medium: 1.75rem;     /* 28px */
+    --line-height-headline-medium: 1.29;      /* 36px */
+    --letter-spacing-headline-medium: -0.025em;
+    --font-weight-headline-medium: 600;
+
+    --font-size-headline-small: 1.5rem;       /* 24px */
+    --line-height-headline-small: 1.33;       /* 32px */
+    --letter-spacing-headline-small: -0.025em;
+    --font-weight-headline-small: 600;
+
+    /* TITLE STYLES (Card headers, sub-sections) */
+    --font-size-title-large: 1.375rem;        /* 22px */
+    --line-height-title-large: 1.27;          /* 28px */
+    --letter-spacing-title-large: -0.025em;
+    --font-weight-title-large: 500;
+
+    --font-size-title-medium: 1.125rem;       /* 18px */
+    --line-height-title-medium: 1.33;         /* 24px */
+    --letter-spacing-title-medium: -0.025em;
+    --font-weight-title-medium: 500;
+
+    --font-size-title-small: 0.875rem;        /* 14px */
+    --line-height-title-small: 1.43;          /* 20px */
+    --letter-spacing-title-small: 0.025em;
+    --font-weight-title-small: 500;
+
+    /* BODY STYLES (Main content, paragraphs) */
+    --font-size-body-large: 1rem;             /* 16px */
+    --line-height-body-large: 1.5;            /* 24px */
+    --letter-spacing-body-large: 0em;
+    --font-weight-body-large: 400;
+
+    --font-size-body-medium: 0.875rem;        /* 14px */
+    --line-height-body-medium: 1.43;          /* 20px */
+    --letter-spacing-body-medium: 0.025em;
+    --font-weight-body-medium: 400;
+
+    --font-size-body-small: 0.75rem;          /* 12px */
+    --line-height-body-small: 1.33;           /* 16px */
+    --letter-spacing-body-small: 0.025em;
+    --font-weight-body-small: 400;
+
+    /* LABEL STYLES (Buttons, form labels, chips) */
+    --font-size-label-large: 0.875rem;        /* 14px */
+    --line-height-label-large: 1.43;          /* 20px */
+    --letter-spacing-label-large: 0.025em;
+    --font-weight-label-large: 500;
+
+    --font-size-label-medium: 0.75rem;        /* 12px */
+    --line-height-label-medium: 1.33;         /* 16px */
+    --letter-spacing-label-medium: 0.05em;
+    --font-weight-label-medium: 500;
+
+    --font-size-label-small: 0.6875rem;       /* 11px */
+    --line-height-label-small: 1.45;          /* 16px */
+    --letter-spacing-label-small: 0.05em;
+    --font-weight-label-small: 500;
+
+    /* ========================================
+       FONT WEIGHTS - Parametrizable
+       ======================================== */
+    --font-weight-thin: 100;
+    --font-weight-extralight: 200;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+    --font-weight-black: 900;
+
+    /* ========================================
+       LINE HEIGHTS - Parametrizable
+       ======================================== */
+    --line-height-tight: 1.25;
+    --line-height-snug: 1.375;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+    
+    /* Semantic line heights */
+    --line-height-display: 1.15;
+    --line-height-headline: 1.25;
+    --line-height-title: 1.33;
+    --line-height-body: 1.5;
+    --line-height-label: 1.43;
+
+    /* ========================================
+       LETTER SPACING - Parametrizable
+       ======================================== */
+    --letter-spacing-tighter: -0.05em;
+    --letter-spacing-tight: -0.025em;
+    --letter-spacing-normal: 0em;
+    --letter-spacing-wide: 0.025em;
+    --letter-spacing-wider: 0.05em;
+    --letter-spacing-widest: 0.1em;
+
+    /* ========================================
+       EXISTING COLOR SYSTEM
+       ======================================== */
+    --primary: 222 81% 56%;         /* #2563eb */
+    --primary-light: 217 91% 60%;   /* #3b82f6 */
+    --primary-dark: 226 72% 36%;    /* #1e40af */
+    --primary-contrast: 0 0% 100%;  /* #fff */
+
+    --secondary: 210 40% 98%;       /* #f1f5f9 */
+    --accent: 195 97% 61%;          /* #38bdf8 */
+    --muted: 215 19% 47%;           /* #64748b */
+
+    --success: 145 63% 47%;         /* #22c55e */
+    --warning: 48 96% 54%;          /* #facc15 */
+    --error: 0 84% 60%;             /* #ef4444 */
+    --info: 199 89% 47%;            /* #0ea5e9 */
+
+    --income: 186 72% 56%;          /* #22d3ee */
+    --expense: 0 91% 71%;           /* #f87171 */
+    --balance: 222 81% 56%;         /* igual que primary */
+
+    --background: 210 40% 98%;      /* #f8fafc */
+    --card: 0 0% 100%;              /* #fff */
+    --border: 210 20% 94%;          /* #e2e8f0 */
+    --foreground: 222.2 84% 4.9%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary-foreground: 210 40% 98%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    
+    /* App-specific colors */
+    --income-primary: 160 84% 39%;
+    --income-secondary: 160 84% 39%;
+    --income-light: 160 84% 39%;
+    --income-bg: 160 84% 39%;
+    --income-bg-light: 160 84% 39%;
+    --income-border: 160 84% 39%;
+    --income-text: 160 84% 39%;
+    
+    --expense-primary: 0 84% 60%;
+    --expense-secondary: 0 84% 60%;
+    --expense-light: 0 84% 60%;
+    --expense-bg: 0 84% 60%;
+    --expense-bg-light: 0 84% 60%;
+    --expense-border: 0 84% 60%;
+    --expense-text: 0 84% 60%;
+    
+    --balance-primary: 221 83% 53%;
+    --balance-secondary: 221 83% 53%;
+    --balance-light: 221 83% 53%;
+    --balance-bg: 221 83% 53%;
+    --balance-bg-light: 221 83% 53%;
+    --balance-border: 221 83% 53%;
+    --balance-text: 221 83% 53%;
+    
+    --status-paid: 160 84% 39%;
+    --status-pending: 45 93% 47%;
+    --status-overdue: 0 84% 60%;
+    
+    --button-primary: 221 83% 53%;
+    --button-secondary: 221 83% 53%;
+    --button-hover: 221 83% 53%;
+    
+    --icon-income: 160 84% 39%;
+    --icon-expense: 221 83% 53%;
+    --icon-balance: 221 83% 53%;
+    
+    --filter-active: 221 83% 53%;
+    --filter-inactive: 215 16% 47%;
+    
+    --modal-success: 160 84% 39%;
+    --modal-warning: 45 93% 47%;
+    --modal-info: 221 83% 53%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    
+    /* Dark mode app-specific colors - same as light for now */
+    --income-primary: 160 84% 39%;
+    --income-secondary: 160 84% 39%;
+    --income-light: 160 84% 39%;
+    --income-bg: 160 84% 39%;
+    --income-bg-light: 160 84% 39%;
+    --income-border: 160 84% 39%;
+    --income-text: 160 84% 39%;
+    
+    --expense-primary: 0 84% 60%;
+    --expense-secondary: 0 84% 60%;
+    --expense-light: 0 84% 60%;
+    --expense-bg: 0 84% 60%;
+    --expense-bg-light: 0 84% 60%;
+    --expense-border: 0 84% 60%;
+    --expense-text: 0 84% 60%;
+    
+    --balance-primary: 221 83% 53%;
+    --balance-secondary: 221 83% 53%;
+    --balance-light: 221 83% 53%;
+    --balance-bg: 221 83% 53%;
+    --balance-bg-light: 221 83% 53%;
+    --balance-border: 221 83% 53%;
+    --balance-text: 221 83% 53%;
+    
+    --status-paid: 160 84% 39%;
+    --status-pending: 45 93% 47%;
+    --status-overdue: 0 84% 60%;
+    
+    --button-primary: 221 83% 53%;
+    --button-secondary: 221 83% 53%;
+    --button-hover: 221 83% 53%;
+    
+    --icon-income: 160 84% 39%;
+    --icon-expense: 221 83% 53%;
+    --icon-balance: 221 83% 53%;
+    
+    --filter-active: 221 83% 53%;
+    --filter-inactive: 215 16% 47%;
+    
+    --modal-success: 160 84% 39%;
+    --modal-warning: 45 93% 47%;
+    --modal-info: 221 83% 53%;
+  }
+
+  /* ========================================
+     MODERN TYPOGRAPHY RESET & BASE STYLES
+     Based on Google, Apple, Spotify, Uber best practices
+     ======================================== */
+
+  /* Modern CSS Reset */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Root font size for rem calculations */
+  html {
+    font-size: var(--font-size-base);
+    scroll-behavior: smooth;
+    
+    /* Better text rendering */
+    text-rendering: optimizeLegibility;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    
+    /* Respect user preferences */
+    @media (prefers-reduced-motion: reduce) {
+      scroll-behavior: auto;
+    }
+  }
+
+  /* Modern body typography */
+  body {
+    font-family: var(--font-primary);
+    font-size: var(--font-size-body-large);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--line-height-body);
+    letter-spacing: var(--letter-spacing-body-large);
+    color: hsl(var(--foreground));
+    background-color: hsl(var(--background));
+    
+    /* Modern font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    font-variant-ligatures: common-ligatures;
+    
+    /* Better text metrics */
+    text-rendering: optimizeLegibility;
+    
+    /* Accessibility */
+    overflow-x: hidden;
+    word-wrap: break-word;
+    hyphens: auto;
+  }
+
+  /* Modern heading hierarchy */
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--font-size-headline-large);
+    font-weight: var(--font-weight-headline-large);
+    line-height: var(--line-height-headline-large);
+    letter-spacing: var(--letter-spacing-headline-large);
+    margin-bottom: 0.5em;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: var(--font-size-headline-medium);
+    font-weight: var(--font-weight-headline-medium);
+    line-height: var(--line-height-headline-medium);
+    letter-spacing: var(--letter-spacing-headline-medium);
+    margin-bottom: 0.5em;
+  }
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: var(--font-size-headline-small);
+    font-weight: var(--font-weight-headline-small);
+    line-height: var(--line-height-headline-small);
+    letter-spacing: var(--letter-spacing-headline-small);
+    margin-bottom: 0.5em;
+  }
+
+  h4 {
+    font-family: var(--font-primary);
+    font-size: var(--font-size-title-large);
+    font-weight: var(--font-weight-title-large);
+    line-height: var(--line-height-title-large);
+    letter-spacing: var(--letter-spacing-title-large);
+    margin-bottom: 0.5em;
+  }
+
+  h5 {
+    font-family: var(--font-primary);
+    font-size: var(--font-size-title-medium);
+    font-weight: var(--font-weight-title-medium);
+    line-height: var(--line-height-title-medium);
+    letter-spacing: var(--letter-spacing-title-medium);
+    margin-bottom: 0.5em;
+  }
+
+  h6 {
+    font-family: var(--font-primary);
+    font-size: var(--font-size-title-small);
+    font-weight: var(--font-weight-title-small);
+    line-height: var(--line-height-title-small);
+    letter-spacing: var(--letter-spacing-title-small);
+    margin-bottom: 0.5em;
+  }
+
+  /* Modern paragraph and text styling */
+  p {
+    font-size: var(--font-size-body-large);
+    font-weight: var(--font-weight-body-large);
+    line-height: var(--line-height-body-large);
+    letter-spacing: var(--letter-spacing-body-large);
+    margin-bottom: 1em;
+  }
+
+  /* Lists */
+  ul, ol {
+    font-size: var(--font-size-body-large);
+    line-height: var(--line-height-body-large);
+    margin-bottom: 1em;
+    padding-left: 1.5em;
+  }
+
+  li {
+    margin-bottom: 0.25em;
+  }
+
+  /* Small text */
+  small, .small {
+    font-size: var(--font-size-body-small);
+    line-height: var(--line-height-body-small);
+    letter-spacing: var(--letter-spacing-body-small);
+  }
+
+  /* Code and monospace */
+  code, kbd, samp, pre {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+
+  /* Links */
+  a {
+    color: hsl(var(--primary));
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+
+  a:hover {
+    color: hsl(var(--primary-light));
+    text-decoration: underline;
+  }
+
+  /* Form elements typography */
+  input, textarea, select, button {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  /* Button typography */
+  button {
+    font-size: var(--font-size-label-large);
+    font-weight: var(--font-weight-label-large);
+    line-height: var(--line-height-label-large);
+    letter-spacing: var(--letter-spacing-label-large);
+  }
+
+  /* Tables */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    font-size: var(--font-size-body-medium);
+    line-height: var(--line-height-body-medium);
+    text-align: left;
+    border-bottom: 1px solid hsl(var(--border));
+    padding: 0.5rem;
+  }
+
+  th {
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-label-large);
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* ========================================
+     ACCESSIBILITY IMPROVEMENTS
+     ======================================== */
+
+  /* Focus states */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+
+  /* Respect user motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    :root {
+      --background: 0 0% 100%;
+      --foreground: 0 0% 0%;
+      --border: 0 0% 50%;
+    }
+  }
+
+  /* Dark mode support for system preference */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light) {
+      color-scheme: dark;
+    }
+  }
+}
+
+/* ==================================
+   CUSTOM ANIMATIONS & COMPONENT STYLES
+   Preserved from original implementation
+   ================================== */
+
 /* Custom animations for sophisticated checkbox */
 @keyframes checkmark {
   0% {
@@ -99,113 +638,12 @@
   box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
 }
 
-@layer base {
-  :root {
-    --primary: 222 81% 56%;         /* #2563eb */
-    --primary-light: 217 91% 60%;   /* #3b82f6 */
-    --primary-dark: 226 72% 36%;    /* #1e40af */
-    --primary-contrast: 0 0% 100%;  /* #fff */
-
-    --secondary: 210 40% 98%;       /* #f1f5f9 */
-    --accent: 195 97% 61%;          /* #38bdf8 */
-    --muted: 215 19% 47%;           /* #64748b */
-
-    --success: 145 63% 47%;         /* #22c55e */
-    --warning: 48 96% 54%;          /* #facc15 */
-    --error: 0 84% 60%;             /* #ef4444 */
-    --info: 199 89% 47%;            /* #0ea5e9 */
-
-    --income: 186 72% 56%;          /* #22d3ee */
-    --expense: 0 91% 71%;           /* #f87171 */
-    --balance: 222 81% 56%;         /* igual que primary */
-
-    --background: 210 40% 98%;      /* #f8fafc */
-    --card: 0 0% 100%;              /* #fff */
-    --border: 210 20% 94%;          /* #e2e8f0 */
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 94.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    
-    /* Dark mode app-specific colors - same as light for now */
-    --income-primary: 160 84% 39%;
-    --income-secondary: 160 84% 39%;
-    --income-light: 160 84% 39%;
-    --income-bg: 160 84% 39%;
-    --income-bg-light: 160 84% 39%;
-    --income-border: 160 84% 39%;
-    --income-text: 160 84% 39%;
-    
-    --expense-primary: 0 84% 60%;
-    --expense-secondary: 0 84% 60%;
-    --expense-light: 0 84% 60%;
-    --expense-bg: 0 84% 60%;
-    --expense-bg-light: 0 84% 60%;
-    --expense-border: 0 84% 60%;
-    --expense-text: 0 84% 60%;
-    
-    --balance-primary: 221 83% 53%;
-    --balance-secondary: 221 83% 53%;
-    --balance-light: 221 83% 53%;
-    --balance-bg: 221 83% 53%;
-    --balance-bg-light: 221 83% 53%;
-    --balance-border: 221 83% 53%;
-    --balance-text: 221 83% 53%;
-    
-    --status-paid: 160 84% 39%;
-    --status-pending: 45 93% 47%;
-    --status-overdue: 0 84% 60%;
-    
-    --button-primary: 221 83% 53%;
-    --button-secondary: 221 83% 53%;
-    --button-hover: 221 83% 53%;
-    
-    --icon-income: 160 84% 39%;
-    --icon-expense: 221 83% 53%;
-    --icon-balance: 221 83% 53%;
-    
-    --filter-active: 221 83% 53%;
-    --filter-inactive: 215 16% 47%;
-    
-    --modal-success: 160 84% 39%;
-    --modal-warning: 45 93% 47%;
-    --modal-info: 221 83% 53%;
-  }
-}
-
-@layer base {
+@layer components {
+  /* Apply border styles to all elements */
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
 
-@layer components {
   /* Mobile-specific improvements */
   @media (max-width: 1024px) {
     /* Improve touch targets on mobile - but keep radio buttons standard size */
