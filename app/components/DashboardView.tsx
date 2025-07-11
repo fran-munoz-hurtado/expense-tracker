@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
+import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import MonthlyProgressBar from './MonthlyProgressBar'
@@ -25,6 +26,33 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const router = useRouter()
   const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
+  const navigation = useAppNavigation()
+  
+  // Navigation function to redirect to Mis Metas with goal expansion
+  const handleNavigateToGoal = async (transaction: Transaction) => {
+    try {
+      console.log(`🎯 DashboardView: Navigating to Mis Metas for goal transaction:`, {
+        id: transaction.id,
+        description: transaction.description,
+        source_type: transaction.source_type,
+        source_id: transaction.source_id
+      })
+      
+      // Create goal key in the same format as MisMetasView
+      const goalKey = `${transaction.source_type}-${transaction.source_id}`
+      
+      // Navigate to Mis Metas with expansion parameter
+      await navigation.navigateToMisMetas(transaction.year)
+      
+      // Add goal expansion parameter to URL
+      const url = new URL(window.location.href)
+      url.searchParams.set('expandGoal', goalKey)
+      window.history.pushState({}, '', url.toString())
+      
+    } catch (error) {
+      console.error('❌ DashboardView: Navigation error:', error)
+    }
+  }
   
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
@@ -1229,62 +1257,53 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             <div>
                               <div className="text-sm font-medium text-gray-900 flex items-center gap-2">
                                 {transaction.description}
-                                {(() => {
-                                  if (!transaction.deadline || transaction.status === 'paid') return null;
-                                  const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                  const today = new Date();
-                                  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                                  const deadlineDate = new Date(year, month - 1, day);
-                                  const diffTime = deadlineDate.getTime() - todayDate.getTime();
-                                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                  if (diffDays > 0) {
-                                    return (
-                                      <span className="ml-2 text-xs text-yellow-600" style={{lineHeight: '1.2'}}>
-                                        {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
-                                      </span>
-                                    );
-                                  } else if (diffDays === 0) {
-                                    return (
-                                      <span className="ml-2 text-xs text-yellow-600" style={{lineHeight: '1.2'}}>
-                                        Vence hoy
-                                      </span>
-                                    );
-                                  } else {
-                                    return (
-                                      <span className="ml-2 text-xs text-red-600" style={{lineHeight: '1.2'}}>
-                                        {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
-                                      </span>
-                                    );
-                                  }
-                                })()}
-                              </div>
-                              <div className="flex items-center space-x-2 mt-1">
-                                {transaction.deadline && (
-                                  <span className="text-xs text-gray-500">
-                                    {texts.due}: {(() => {
-                                      // Parse the date string directly to avoid timezone issues
-                                      const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                      return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                                    })()}
-                                  </span>
-                                )}
-                                {transaction.source_type === 'recurrent' && (
-                                  (() => {
-                                    const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
-                                    if (recurrentExpense) {
-                                      return (
-                                        <>
-                                          {transaction.deadline && <span className="text-xs text-gray-400">•</span>}
-                                          <span className="text-xs text-gray-500">
-                                            {texts.payingFrom} {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} {texts.to} {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
-                                          </span>
-                                        </>
-                                      )
-                                    }
-                                    return null
-                                  })()
+                                {/* Navigation Link Icon for Goal Transactions - Same as GeneralDashboard */}
+                                {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
+                                  <button
+                                    onClick={() => handleNavigateToGoal(transaction)}
+                                    className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
+                                    title={`Ir a Mis Metas - ${transaction.description}`}
+                                  >
+                                    <svg 
+                                      className="w-3 h-3" 
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      strokeWidth="2" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                  </button>
                                 )}
                               </div>
+                              {(() => {
+                                if (!transaction.deadline || transaction.status === 'paid') return null;
+                                const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                const today = new Date();
+                                const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                                const deadlineDate = new Date(year, month - 1, day);
+                                const diffTime = deadlineDate.getTime() - todayDate.getTime();
+                                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                if (diffDays > 0) {
+                                  return (
+                                    <span className="ml-2 text-xs text-yellow-600" style={{lineHeight: '1.2'}}>
+                                      {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
+                                    </span>
+                                  );
+                                } else if (diffDays === 0) {
+                                  return (
+                                    <span className="ml-2 text-xs text-yellow-600" style={{lineHeight: '1.2'}}>
+                                      Vence hoy
+                                    </span>
+                                  );
+                                } else {
+                                  return (
+                                    <span className="ml-2 text-xs text-red-600" style={{lineHeight: '1.2'}}>
+                                      {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
+                                    </span>
+                                  );
+                                }
+                              })()}
                             </div>
                           </div>
                         </td>
@@ -1434,15 +1453,23 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-1">
                             {transaction.description}
+                            {/* Navigation Link Icon for Goal Transactions - Mobile View */}
                             {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
-                              // Ícono de meta recurrente: target amarillo muy oscuro sobre fondo amarillo claro (mobile título)
-                              <div className="p-1.5 rounded-full bg-yellow-100"> 
-                                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                  <circle cx="10" cy="10" r="8" stroke="#713f12" strokeWidth="2" fill="#FEF9C3" />
-                                  <circle cx="10" cy="10" r="4" stroke="#713f12" strokeWidth="2" fill="white" />
-                                  <circle cx="10" cy="10" r="1.5" fill="#713f12" />
+                              <button
+                                onClick={() => handleNavigateToGoal(transaction)}
+                                className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
+                                title={`Ir a Mis Metas - ${transaction.description}`}
+                              >
+                                <svg 
+                                  className="w-3 h-3" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
-                              </div>
+                              </button>
                             )}
                           </h3>
                           <div className="flex items-center space-x-2 mt-1">

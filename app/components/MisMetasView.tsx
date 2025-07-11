@@ -97,6 +97,28 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     }
   }, [searchParams])
 
+  // Auto-expand goal from URL parameter
+  useEffect(() => {
+    const expandGoalParam = searchParams.get('expandGoal')
+    if (expandGoalParam) {
+      console.log(`🎯 MisMetasView: Auto-expanding goal from URL parameter:`, expandGoalParam)
+      
+      // Add the goal to expanded goals
+      setExpandedGoals(prev => {
+        const newSet = new Set(prev)
+        newSet.add(expandGoalParam)
+        return newSet
+      })
+      
+      // Clean up the URL parameter after processing
+      const url = new URL(window.location.href)
+      url.searchParams.delete('expandGoal')
+      window.history.replaceState({}, '', url.toString())
+      
+      console.log(`✅ MisMetasView: Goal ${expandGoalParam} auto-expanded and URL parameter cleaned`)
+    }
+  }, [searchParams])
+
   // Use the data synchronization system
   useDataSyncEffect(() => {
     console.log('🎯 MisMetasView: Data sync triggered, refetching data')
