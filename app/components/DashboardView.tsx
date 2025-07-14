@@ -1027,6 +1027,24 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         if (transactionError) throw transactionError
       }
 
+      // Update local state optimistically to preserve the status while updating category
+      setTransactions(prevTransactions => 
+        prevTransactions.map(t => {
+          if (selectedTransactionForCategory.source_type === 'recurrent') {
+            // For recurrent transactions, update all transactions in the series
+            return t.source_id === selectedTransactionForCategory.source_id && 
+                   t.source_type === 'recurrent' 
+              ? { ...t, category: finalCategory } 
+              : t
+          } else {
+            // For non-recurrent transactions, update only the specific transaction
+            return t.id === selectedTransactionForCategory.id 
+              ? { ...t, category: finalCategory } 
+              : t
+          }
+        })
+      )
+
       // Close modal and reset state
       setShowCategoryModal(false)
       setSelectedTransactionForCategory(null)
@@ -1037,13 +1055,15 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       setShowDuplicateCategoryModal(false)
       setDuplicateCategoryName('')
 
-      // Trigger global data refresh
-      console.log('🔄 Triggering global data refresh after category update')
-      refreshData(user.id, 'update_category')
-
+      console.log('✅ Category update completed - optimistic update applied, skipping global refresh to preserve status')
+      
     } catch (error) {
       console.error('Error updating category:', error)
       setError(`Error al actualizar categoría: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      
+      // On error, trigger global refresh to reset to database state
+      console.log('🔄 Triggering global data refresh after category update error')
+      refreshData(user.id, 'update_category_error')
     } finally {
       setLoading(false)
     }
