@@ -271,6 +271,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
   // Group transactions by category with recurrent and year grouping
   const categoryGroups: CategoryGroup[] = useMemo(() => {
+    console.log('🔄 CategoriesView: Recalculating categoryGroups', {
+      transactionsCount: transactions.length,
+      filterType,
+      selectedYear,
+      selectedMonth
+    })
+    
     // Filter transactions by type if needed
     const filteredTransactions = transactions.filter(transaction => {
       if (filterType === 'all') return true
@@ -279,6 +286,20 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
     // Only include expense transactions
     const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense')
+    
+    console.log('📊 CategoriesView: Transaction filtering results', {
+      totalTransactions: transactions.length,
+      filteredByType: filteredTransactions.length,
+      expenseTransactions: expenseTransactions.length,
+      sampleExpenseTransactions: expenseTransactions.slice(0, 3).map(t => ({
+        id: t.id,
+        description: t.description,
+        category: t.category,
+        type: t.type,
+        source_type: t.source_type,
+        value: t.value
+      }))
+    })
 
     // Group by category
     const groups = new Map<string, Transaction[]>()
@@ -289,6 +310,15 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         groups.set(category, [])
       }
       groups.get(category)!.push(transaction)
+    })
+    
+    console.log('🏷️ CategoriesView: Category grouping results', {
+      categoriesFound: Array.from(groups.keys()),
+      categoryDetails: Array.from(groups.entries()).map(([cat, trans]) => ({
+        category: cat,
+        transactionCount: trans.length,
+        totalValue: trans.reduce((sum, t) => sum + t.value, 0)
+      }))
     })
 
     // Convert to CategoryGroup objects with recurrent and year grouping
@@ -425,7 +455,20 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     })
 
     // Sort categories by total amount (descending)
-    return categoryGroupsArray.sort((a, b) => b.total - a.total)
+    const sortedCategories = categoryGroupsArray.sort((a, b) => b.total - a.total)
+    
+    console.log('✅ CategoriesView: Final categoryGroups result', {
+      categoriesCount: sortedCategories.length,
+      categories: sortedCategories.map(cat => ({
+        name: cat.categoryName,
+        count: cat.count,
+        total: cat.total,
+        recurrentGroups: cat.recurrentGroups.length,
+        nonRecurrentTransactions: cat.nonRecurrentTransactions.length
+      }))
+    })
+    
+    return sortedCategories
   }, [transactions, filterType])
 
   // Toggle category expansion
@@ -632,7 +675,19 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 return (
                   <button
                     key={group.categoryName}
-                    onClick={() => setSelectedCategory(group.categoryName)}
+                    onClick={() => {
+                      console.log('🖱️ CategoriesView: Category clicked', {
+                        categoryName: group.categoryName,
+                        previousSelection: selectedCategory,
+                        group: {
+                          count: group.count,
+                          total: group.total,
+                          recurrentGroups: group.recurrentGroups.length,
+                          nonRecurrentTransactions: group.nonRecurrentTransactions.length
+                        }
+                      })
+                      setSelectedCategory(group.categoryName)
+                    }}
                     className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
                       isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
                     }`}
@@ -697,10 +752,60 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="flex-1 overflow-y-auto p-6">
                 {(() => {
                   const group = categoryGroups.find(g => g.categoryName === selectedCategory)
-                  if (!group) return null
+                  
+                  // Debug logging
+                  console.log('🔍 CategoriesView Debug:', {
+                    selectedCategory,
+                    categoryGroups: categoryGroups.map(g => ({
+                      name: g.categoryName,
+                      count: g.count,
+                      recurrentGroups: g.recurrentGroups.length,
+                      nonRecurrentTransactions: g.nonRecurrentTransactions.length
+                    })),
+                    foundGroup: group ? {
+                      name: group.categoryName,
+                      count: group.count,
+                      recurrentGroups: group.recurrentGroups.length,
+                      nonRecurrentTransactions: group.nonRecurrentTransactions.length
+                    } : null
+                  })
+                  
+                  if (!group) {
+                    console.log('❌ No group found for selectedCategory:', selectedCategory)
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No se encontró la categoría seleccionada</p>
+                        <p className="text-xs text-gray-400 mt-2">Categoría: {selectedCategory}</p>
+                      </div>
+                    )
+                  }
+                  
+                  // Check if group has any transactions
+                  const hasTransactions = group.recurrentGroups.length > 0 || group.nonRecurrentTransactions.length > 0
+                  
+                  if (!hasTransactions) {
+                    console.log('⚠️ Group found but no transactions:', group)
+                    return (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No hay transacciones en esta categoría</p>
+                        <p className="text-xs text-gray-400 mt-2">Categoría: {group.categoryName}</p>
+                      </div>
+                    )
+                  }
 
                   return (
                     <div className="space-y-3">
+                      {/* Debug info at the top */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs">
+                        <p className="font-medium text-blue-900">Debug Info:</p>
+                        <p className="text-blue-700">
+                          Categoría: {group.categoryName} | 
+                          Recurrentes: {group.recurrentGroups.length} | 
+                          No recurrentes: {group.nonRecurrentTransactions.length} | 
+                          Total: {group.count}
+                        </p>
+                      </div>
+                      
                       {/* Recurrent Groups */}
                       {group.recurrentGroups.map((recurrentGroup) => {
                         const groupKey = `${group.categoryName}-${recurrentGroup.sourceId}`
