@@ -134,6 +134,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const [newCategoryInput, setNewCategoryInput] = useState<string>('')
   const [showAddCategoryInput, setShowAddCategoryInput] = useState(false)
   const [customCategories, setCustomCategories] = useState<string[]>([])
+  const [showDuplicateCategoryModal, setShowDuplicateCategoryModal] = useState(false)
+  const [duplicateCategoryName, setDuplicateCategoryName] = useState<string>('')
 
   // Sync with URL parameters
   useEffect(() => {
@@ -1030,6 +1032,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       setCustomCategoryInput('')
       setShowAddCategoryInput(false)
       setNewCategoryInput('')
+      setShowDuplicateCategoryModal(false)
+      setDuplicateCategoryName('')
 
       // Trigger global data refresh
       console.log('🔄 Triggering global data refresh after category update')
@@ -2591,6 +2595,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 setCustomCategoryInput('')
                 setShowAddCategoryInput(false)
                 setNewCategoryInput('')
+                setShowDuplicateCategoryModal(false)
+                setDuplicateCategoryName('')
               }}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
               aria-label="Cerrar"
@@ -2682,8 +2688,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             const allExistingCategories = [...existingCategories, ...predefinedCategories]
                             
                             if (allExistingCategories.includes(trimmedInput.toLowerCase())) {
-                              // Show error or just don't add - for now, let's just not add it
-                              console.log('Category already exists (case-insensitive):', trimmedInput)
+                              // Show duplicate category modal
+                              setDuplicateCategoryName(trimmedInput)
+                              setShowDuplicateCategoryModal(true)
                               return
                             }
                             
@@ -2720,6 +2727,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       setCustomCategoryInput('')
                       setShowAddCategoryInput(false)
                       setNewCategoryInput('')
+                      setShowDuplicateCategoryModal(false)
+                      setDuplicateCategoryName('')
                     }}
                     className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
                   >
@@ -2740,6 +2749,58 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     )}
                   </button>
                 </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Duplicate Category Modal */}
+      {showDuplicateCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={() => {
+                setShowDuplicateCategoryModal(false)
+                setDuplicateCategoryName('')
+              }}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="p-5 flex flex-col gap-4 items-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-2">
+                <AlertCircle className="h-6 w-6 text-yellow-600" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Categoría Duplicada</h2>
+              <p className="text-gray-700 text-sm font-medium mb-4 text-center">
+                La categoría "{duplicateCategoryName}" ya existe.
+              </p>
+              
+              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800 font-medium">
+                  Esta categoría ya existe en el sistema (sin importar mayúsculas/minúsculas).
+                </p>
+                <p className="text-sm text-yellow-700 mt-1">
+                  Intenta con un nombre diferente o selecciona la categoría existente.
+                </p>
+              </div>
+
+              {/* Action Button */}
+              <div className="w-full">
+                <button
+                  onClick={() => {
+                    setShowDuplicateCategoryModal(false)
+                    setDuplicateCategoryName('')
+                  }}
+                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  Entendido
+                </button>
               </div>
             </div>
           </section>
