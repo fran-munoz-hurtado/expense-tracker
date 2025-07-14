@@ -1,14 +1,17 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react'
-import { type Transaction, type User } from '@/lib/supabase'
-import { fetchUserTransactions } from '@/lib/dataUtils'
+import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip } from 'lucide-react'
+import { type Transaction, type User, type TransactionAttachment } from '@/lib/supabase'
+import { fetchUserTransactions, fetchAttachmentCounts } from '@/lib/dataUtils'
 import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
+import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
+import FileUploadModal from './FileUploadModal'
+import TransactionAttachments from './TransactionAttachments'
 
 interface CategoriesViewProps {
   navigationParams?: { year?: number; month?: number } | null
@@ -46,6 +49,8 @@ interface CategoryGroup {
 }
 
 export default function CategoriesView({ navigationParams, user }: CategoriesViewProps) {
+  const navigation = useAppNavigation()
+  
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -57,12 +62,146 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [selectedMonth, setSelectedMonth] = useState(navigationParams?.month || null)
   const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
 
+  // Direct attachment functionality implementation (without external hook)
+  const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false)
+  const [selectedTransactionId, setSelectedTransactionId] = useState<number | null>(null)
+  const [showTransactionAttachments, setShowTransactionAttachments] = useState(false)
+  const [selectedTransactionForAttachments, setSelectedTransactionForAttachments] = useState<Transaction | null>(null)
+
+  // Load attachment counts for a list of transactions
+  const loadAttachmentCounts = async (transactions: Transaction[]) => {
+    if (transactions && transactions.length > 0) {
+      const transactionIds = transactions.map((t: Transaction) => t.id)
+      const attachmentCountsData = await fetchAttachmentCounts(user, transactionIds)
+      setAttachmentCounts(attachmentCountsData)
+    }
+  }
+
+  // Attachment handlers
+  const handleAttachmentUpload = (transaction: Transaction) => {
+    setSelectedTransactionForAttachments(transaction)
+    setShowAttachmentModal(true)
+    setShowTransactionAttachments(false)
+  }
+
+  const handleAttachmentList = (transaction: Transaction) => {
+    setSelectedTransactionForAttachments(transaction)
+    setShowTransactionAttachments(true)
+  }
+
+  const handleAttachmentUploadComplete = (attachment: TransactionAttachment) => {
+    setAttachmentCounts(prev => ({
+      ...prev,
+      [attachment.transaction_id]: (prev[attachment.transaction_id] || 0) + 1
+    }))
+    
+    if (selectedTransactionForAttachments) {
+      setSelectedTransactionForAttachments(selectedTransactionForAttachments)
+      setShowTransactionAttachments(true)
+    }
+    
+    console.log('Attachment uploaded:', attachment)
+  }
+
+  const handleAttachmentDeleted = (attachmentId: number) => {
+    // Refresh attachment counts
+    console.log('Attachment deleted:', attachmentId)
+  }
+
+  // Attachment clip component
+  const AttachmentClip = ({ transaction, className = "" }: { transaction: Transaction, className?: string }) => {
+    return (
+      <button
+        onClick={() => handleAttachmentList(transaction)}
+        className={`text-gray-600 hover:text-gray-800 relative flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-md p-1 rounded-md hover:bg-gray-50 ${className}`}
+        title="Ver archivos adjuntos"
+      >
+        <Paperclip className="h-4 w-4 transition-all duration-200" />
+        {attachmentCounts[transaction.id] > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium transition-all duration-200 hover:scale-110">
+            {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
+          </span>
+        )}
+      </button>
+    )
+  }
+
+  // Attachment modals component  
+  const AttachmentModals = () => {
+    return (
+      <>
+        {/* File Upload Modal */}
+        {showAttachmentModal && selectedTransactionForAttachments && (
+          <FileUploadModal
+            isOpen={showAttachmentModal}
+            onClose={() => {
+              setShowAttachmentModal(false)
+              setSelectedTransactionForAttachments(null)
+            }}
+            transactionId={selectedTransactionForAttachments.id}
+            userId={user.id}
+            onUploadComplete={handleAttachmentUploadComplete}
+          />
+        )}
+
+        {/* Attachments List Modal */}
+        {showTransactionAttachments && selectedTransactionForAttachments && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+            <section className="relative bg-white rounded-xl p-0 w-full max-w-2xl shadow-2xl border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
+              <button
+                onClick={() => {
+                  setShowTransactionAttachments(false)
+                  setSelectedTransactionForAttachments(null)
+                }}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                aria-label="Cerrar"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              
+              <div className="p-6 flex flex-col gap-6">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
+                    <Paperclip className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Archivos Adjuntos</h2>
+                    <p className="text-sm text-gray-600">Para: {selectedTransactionForAttachments.description}</p>
+                  </div>
+                </div>
+                
+                <TransactionAttachments
+                  transactionId={selectedTransactionForAttachments.id}
+                  userId={user.id}
+                  onAttachmentDeleted={handleAttachmentDeleted}
+                  onAddAttachment={() => handleAttachmentUpload(selectedTransactionForAttachments)}
+                />
+              </div>
+            </section>
+          </div>
+        )}
+      </>
+    )
+  }
+
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ]
 
   const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
+
+  // Navigation function to redirect to Control del mes
+  const handleNavigateToMonth = async (month: number, year: number) => {
+    try {
+      console.log(`🗂️ CategoriesView: Navigating to Control del mes - Month: ${month}, Year: ${year}`)
+      await navigation.navigateToDashboard(month, year)
+    } catch (error) {
+      console.error('❌ CategoriesView: Navigation error:', error)
+    }
+  }
 
   // Helper function to format currency for display
   const formatCurrency = (value: number): string => {
@@ -107,6 +246,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
       console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions`)
       setTransactions(allTransactions)
+
+      // Load attachment counts
+      await loadAttachmentCounts(allTransactions)
 
     } catch (error) {
       console.error('❌ Error in fetchData():', error)
@@ -473,8 +615,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         <div className="w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
             <h2 className="text-sm font-semibold text-gray-900">
-              Categorías 
-              {selectedMonth ? ` - ${months[selectedMonth - 1]} ${selectedYear}` : ` - ${selectedYear}`}
+              Categorías
             </h2>
           </div>
 
@@ -552,55 +693,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
             </div>
           ) : (
             <div className="flex flex-col h-full">
-              {/* Selected Category Header */}
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${
-                      selectedCategory === 'sin categoría' || selectedCategory === 'Sin categoría'
-                        ? 'bg-red-100'
-                        : 'bg-blue-100'
-                    }`}>
-                      <DollarSign className={`h-5 w-5 ${
-                        selectedCategory === 'sin categoría' || selectedCategory === 'Sin categoría'
-                          ? 'text-red-600'
-                          : 'text-blue-600'
-                      }`} />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {getCategoryDisplayName(selectedCategory)}
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        {categoryGroups.find(g => g.categoryName === selectedCategory)?.count || 0} transacciones
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(categoryGroups.find(g => g.categoryName === selectedCategory)?.total || 0)}
-                    </p>
-                    <div className="flex space-x-3 text-xs">
-                      <span className="text-green-600">
-                        Pagado: {formatCurrency(categoryGroups.find(g => g.categoryName === selectedCategory)?.paid || 0)}
-                      </span>
-                      {(categoryGroups.find(g => g.categoryName === selectedCategory)?.pending || 0) > 0 && (
-                        <span className="text-yellow-600">
-                          Pendiente: {formatCurrency(categoryGroups.find(g => g.categoryName === selectedCategory)?.pending || 0)}
-                        </span>
-                      )}
-                      {(categoryGroups.find(g => g.categoryName === selectedCategory)?.overdue || 0) > 0 && (
-                        <span className="text-red-600">
-                          Vencido: {formatCurrency(categoryGroups.find(g => g.categoryName === selectedCategory)?.overdue || 0)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Selected Category Content */}
+              {/* Selected Category Content - Direct Transaction Hierarchy */}
               <div className="flex-1 overflow-y-auto p-6">
                 {(() => {
                   const group = categoryGroups.find(g => g.categoryName === selectedCategory)
@@ -710,6 +803,22 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                         {getTransactionIcon(transaction)}
                                                       </div>
                                                       <span className="text-xs font-medium text-gray-900">{months[transaction.month - 1]}</span>
+                                                      {/* Navigation Link Icon */}
+                                                      <button
+                                                        onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                                        className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-125 hover:shadow-lg hover:-translate-y-0.5"
+                                                        title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
+                                                      >
+                                                        <svg 
+                                                          className="w-3 h-3" 
+                                                          fill="none" 
+                                                          stroke="currentColor" 
+                                                          strokeWidth="2" 
+                                                          viewBox="0 0 24 24"
+                                                        >
+                                                          <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                        </svg>
+                                                      </button>
                                                       {transaction.deadline && (
                                                         <span className="text-xs font-medium text-gray-500">
                                                           Vence: {(() => {
@@ -739,6 +848,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                             : 'Pendiente'
                                                         }
                                                       </span>
+                                                      {/* Attachment Clip */}
+                                                      <AttachmentClip transaction={transaction} />
                                                     </div>
                                                   </div>
                                                 </div>
@@ -768,6 +879,22 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                 <p className="text-sm font-medium text-gray-900">{transaction.description}</p>
                                 <div className="flex items-center space-x-2 text-xs text-gray-500">
                                   <span>{months[transaction.month - 1]} {transaction.year}</span>
+                                  {/* Navigation Link Icon */}
+                                  <button
+                                    onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                    className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-125 hover:shadow-lg hover:-translate-y-0.5"
+                                    title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
+                                  >
+                                    <svg 
+                                      className="w-3 h-3" 
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      strokeWidth="2" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                  </button>
                                   {transaction.deadline && (
                                     <span>• Vence: {(() => {
                                       const [year, month, day] = transaction.deadline.split('-').map(Number);
@@ -797,6 +924,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                     : 'Pendiente'
                                 }
                               </span>
+                              {/* Attachment Clip */}
+                              <AttachmentClip transaction={transaction} />
                             </div>
                           </div>
                         </div>
@@ -809,6 +938,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
           )}
         </div>
       </div>
+      
+      {/* Attachment Modals */}
+      <AttachmentModals />
     </div>
   )
 } 
