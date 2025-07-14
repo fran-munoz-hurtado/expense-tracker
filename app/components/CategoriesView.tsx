@@ -795,17 +795,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
                   return (
                     <div className="space-y-3">
-                      {/* Debug info at the top */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs">
-                        <p className="font-medium text-blue-900">Debug Info:</p>
-                        <p className="text-blue-700">
-                          Categoría: {group.categoryName} | 
-                          Recurrentes: {group.recurrentGroups.length} | 
-                          No recurrentes: {group.nonRecurrentTransactions.length} | 
-                          Total: {group.count}
-                        </p>
-                      </div>
-                      
                       {/* Recurrent Groups */}
                       {group.recurrentGroups.map((recurrentGroup) => {
                         const groupKey = `${group.categoryName}-${recurrentGroup.sourceId}`
@@ -965,76 +954,76 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                       </div>
                                     )
                                   })}
-
-                                  {/* Non-Recurrent Transactions */}
-                                  {group.nonRecurrentTransactions.map((transaction) => (
-                                    <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-3">
-                                          <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')} transition-all duration-300 hover:scale-110`}>
-                                            {getTransactionIcon(transaction)}
-                                          </div>
-                                          <div>
-                                            <p className="text-sm font-medium text-gray-900">{transaction.description}</p>
-                                            <div className="flex items-center space-x-2 text-xs text-gray-500">
-                                              <span>{months[transaction.month - 1]} {transaction.year}</span>
-                                              {/* Navigation Link Icon */}
-                                              <button
-                                                onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
-                                                className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
-                                                title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
-                                              >
-                                                <svg 
-                                                  className="w-3 h-3" 
-                                                  fill="none" 
-                                                  stroke="currentColor" 
-                                                  strokeWidth="2" 
-                                                  viewBox="0 0 24 24"
-                                                >
-                                                  <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                </svg>
-                                              </button>
-                                              {transaction.deadline && (
-                                                <span>• Vence: {(() => {
-                                                  const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                                                })()}</span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </div>
-                                        
-                                        <div className="flex items-center space-x-3">
-                                          <span className="text-sm font-semibold text-gray-900">
-                                            {formatCurrency(transaction.value)}
-                                          </span>
-                                          <span className={cn(
-                                            "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
-                                            transaction.status === 'paid' 
-                                              ? 'bg-green-100 text-green-800'
-                                              : transaction.deadline && isDateOverdue(transaction.deadline)
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-yellow-100 text-yellow-800'
-                                          )}>
-                                            {transaction.status === 'paid' 
-                                              ? 'Pagado' 
-                                              : transaction.deadline && isDateOverdue(transaction.deadline)
-                                                ? 'Vencido'
-                                                : 'Pendiente'
-                                            }
-                                          </span>
-                                          {/* Attachment Clip */}
-                                          <AttachmentClip transaction={transaction} />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
                                 </div>
                               </div>
                             )}
                           </div>
                         )
                       })}
+                      
+                      {/* Non-Recurrent Transactions - MOVED OUTSIDE the recurrent groups map */}
+                      {group.nonRecurrentTransactions.map((transaction) => (
+                        <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')} transition-all duration-300 hover:scale-110`}>
+                                {getTransactionIcon(transaction)}
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{transaction.description}</p>
+                                <div className="flex items-center space-x-2 text-xs text-gray-500">
+                                  <span>{months[transaction.month - 1]} {transaction.year}</span>
+                                  {/* Navigation Link Icon */}
+                                  <button
+                                    onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                    className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
+                                    title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
+                                  >
+                                    <svg 
+                                      className="w-3 h-3" 
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      strokeWidth="2" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                  </button>
+                                  {transaction.deadline && (
+                                    <span>• Vence: {(() => {
+                                      const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                      return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                                    })()}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-3">
+                              <span className="text-sm font-semibold text-gray-900">
+                                {formatCurrency(transaction.value)}
+                              </span>
+                              <span className={cn(
+                                "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
+                                transaction.status === 'paid' 
+                                  ? 'bg-green-100 text-green-800'
+                                  : transaction.deadline && isDateOverdue(transaction.deadline)
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                              )}>
+                                {transaction.status === 'paid' 
+                                  ? 'Pagado' 
+                                  : transaction.deadline && isDateOverdue(transaction.deadline)
+                                    ? 'Vencido'
+                                    : 'Pendiente'
+                                }
+                              </span>
+                              {/* Attachment Clip */}
+                              <AttachmentClip transaction={transaction} />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )
                 })()}
