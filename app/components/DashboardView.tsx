@@ -1055,7 +1055,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       setShowDuplicateCategoryModal(false)
       setDuplicateCategoryName('')
 
-      console.log('✅ Category update completed - optimistic update applied, skipping global refresh to preserve status')
+      // Trigger global data refresh to synchronize with other views
+      console.log('🔄 Triggering global data refresh after successful category update')
+      refreshData(user.id, 'update_category')
+      
+      console.log('✅ Category update completed - optimistic update applied and global sync triggered')
       
     } catch (error) {
       console.error('Error updating category:', error)
