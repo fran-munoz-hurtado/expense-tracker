@@ -2633,13 +2633,27 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       className={`w-full p-3 text-left rounded-lg border transition-all ${
                         selectedCategory === 'Sin categoría'
                           ? 'border-blue-500 bg-blue-50 text-blue-900'
+                          : selectedCategory && selectedCategory !== 'Sin categoría'
+                          ? 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
                           : 'border-red-300 bg-red-50 hover:border-red-400 hover:bg-red-100'
                       }`}
                     >
-                      <span className="font-medium text-red-700">
+                      <span className={`font-medium ${
+                        selectedCategory === 'Sin categoría' 
+                          ? 'text-blue-900' 
+                          : selectedCategory && selectedCategory !== 'Sin categoría'
+                          ? 'text-gray-600'
+                          : 'text-red-700'
+                      }`}>
                         Sin categoría
                       </span>
-                      <span className="text-xs text-red-600 ml-2">(quitar categoría)</span>
+                      <span className={`text-xs ml-2 ${
+                        selectedCategory === 'Sin categoría' 
+                          ? 'text-blue-700' 
+                          : selectedCategory && selectedCategory !== 'Sin categoría'
+                          ? 'text-gray-500'
+                          : 'text-red-600'
+                      }`}>(quitar categoría)</span>
                     </button>
 
                     {/* Second option: Current category (blue background) */}
@@ -2649,11 +2663,25 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         className={`w-full p-3 text-left rounded-lg border transition-all ${
                           selectedCategory === selectedTransactionForCategory.category
                             ? 'border-blue-500 bg-blue-50 text-blue-900'
+                            : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
+                            ? 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
                             : 'border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100'
                         }`}
                       >
-                        <span className="font-medium text-blue-700">{selectedTransactionForCategory.category}</span>
-                        <span className="text-xs text-blue-600 ml-2">(actual)</span>
+                        <span className={`font-medium ${
+                          selectedCategory === selectedTransactionForCategory.category 
+                            ? 'text-blue-900' 
+                            : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
+                            ? 'text-gray-600'
+                            : 'text-blue-700'
+                        }`}>{selectedTransactionForCategory.category}</span>
+                        <span className={`text-xs ml-2 ${
+                          selectedCategory === selectedTransactionForCategory.category 
+                            ? 'text-blue-700' 
+                            : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
+                            ? 'text-gray-500'
+                            : 'text-blue-600'
+                        }`}>(actual)</span>
                       </button>
                     )}
 
@@ -2667,10 +2695,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           className={`w-full p-3 text-left rounded-lg border transition-all ${
                             selectedCategory === category
                               ? 'border-blue-500 bg-blue-50 text-blue-900'
+                              : selectedCategory && selectedCategory !== category
+                              ? 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
                               : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                           }`}
                         >
-                          <span className="font-medium">{category}</span>
+                          <span className={`font-medium ${
+                            selectedCategory === category 
+                              ? 'text-blue-900' 
+                              : selectedCategory && selectedCategory !== category
+                              ? 'text-gray-600'
+                              : ''
+                          }`}>{category}</span>
                         </button>
                       ))
                     }
