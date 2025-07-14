@@ -266,6 +266,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   // Data sync effect
   useDataSyncEffect(() => {
     console.log('🔄 CategoriesView: Data sync triggered, refetching data')
+    console.log('🔄 CategoriesView: This should sync when categories are updated in DashboardView')
     fetchData()
   }, [])
 
