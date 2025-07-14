@@ -1191,7 +1191,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md text-sm"
+                className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-sm text-sm"
               >
                 {availableYears.map(year => (
                   <option key={year} value={year}>{year}</option>
@@ -1212,7 +1212,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-md text-sm"
+                className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-sm text-sm"
               >
                 {months.map((month, index) => (
                   <option key={index + 1} value={index + 1}>{month}</option>
@@ -1273,7 +1273,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   setSelectedMonth(new Date().getMonth() + 1);
                   setFilterType('all');
                 }}
-                className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
+                className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm"
               >
                 Mes Actual
               </button>
@@ -1434,7 +1434,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 <tbody className="bg-white divide-y divide-gray-200">
                   {finalSortedTransactions.map((transaction) => {
                     return (
-                      <tr key={transaction.id} className={`transition-all duration-300 ${hoveredRow === transaction.id ? 'transform scale-[1.02] -translate-y-0.5 shadow-lg z-10' : ''}`} onMouseEnter={() => setHoveredRow(transaction.id)}>
+                      <tr key={transaction.id} className={`transition-all duration-300 ${hoveredRow === transaction.id ? 'transform scale-[1.005] shadow-sm z-10' : ''}`} onMouseEnter={() => setHoveredRow(transaction.id)}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
@@ -1578,7 +1578,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
                                 ${transaction.status === 'paid' 
                                   ? 'bg-blue-100 border-blue-200' 
-                                  : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-md'
+                                  : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-sm'
                                 }
                                 rounded-lg overflow-hidden
                                 ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
@@ -1826,7 +1826,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
                               ${transaction.status === 'paid' 
                                 ? 'gradient-emerald glow-emerald' 
-                                : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-md'
+                                : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-sm'
                               }
                               rounded-lg overflow-hidden
                               ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}

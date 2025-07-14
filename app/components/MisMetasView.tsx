@@ -621,30 +621,30 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
               <div className="flex space-x-1 bg-gray-50 p-1 rounded-md">
                 <button
                   onClick={() => setGoalFilter('all')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-lg ${
+                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
                     goalFilter === 'all'
                       ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')} scale-105`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-md`
+                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-sm`
                   }`}
                 >
                   Todas
                 </button>
                 <button
                   onClick={() => setGoalFilter('active')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-lg ${
+                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
                     goalFilter === 'active'
                       ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')} scale-105`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-md`
+                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-sm`
                   }`}
                 >
                   Activas
                 </button>
                 <button
                   onClick={() => setGoalFilter('completed')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-lg ${
+                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
                     goalFilter === 'completed'
                       ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')} scale-105`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-md`
+                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-sm`
                   }`}
                 >
                   Completas
@@ -660,7 +660,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                   onClick={() => {
                     setGoalFilter('all');
                   }}
-                  className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 hover:shadow-lg"
+                  className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm"
                 >
                   Todas las Metas
                 </button>
@@ -683,7 +683,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
         <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Total de Metas */}
-            <div className={`bg-gradient-to-br ${getGradient('income')} p-3 rounded-lg border border-${getColor('income', 'border')} shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-${getColor('income', 'border')} hover:-translate-y-1`}>
+            <div className={`bg-gradient-to-br ${getGradient('income')} p-3 rounded-lg border border-${getColor('income', 'border')} shadow-sm transition-all duration-300 hover:shadow-sm hover:scale-[1.005] hover:border-${getColor('income', 'border')}`}>
               <div className="flex items-center space-x-2">
                 <div className={`p-1.5 bg-${getColor('income', 'secondary')} rounded-lg transition-all duration-300 hover:bg-${getColor('income', 'secondary')} hover:scale-110`}>
                   <Target className={`h-4 w-4 text-${getColor('income', 'icon')} transition-all duration-300`} />
@@ -696,7 +696,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
             </div>
 
             {/* Valor Total */}
-            <div className={`bg-gradient-to-br ${getGradient('expense')} p-3 rounded-lg border border-${getColor('expense', 'border')} shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-${getColor('expense', 'border')} hover:-translate-y-1`}>
+            <div className={`bg-gradient-to-br ${getGradient('expense')} p-3 rounded-lg border border-${getColor('expense', 'border')} shadow-sm transition-all duration-300 hover:shadow-sm hover:scale-[1.005] hover:border-${getColor('expense', 'border')}`}>
               <div className="flex items-center space-x-2">
                 <div className={`p-1.5 bg-${getColor('expense', 'secondary')} rounded-lg transition-all duration-300 hover:bg-${getColor('expense', 'secondary')} hover:scale-110`}>
                   <DollarSign className={`h-4 w-4 text-${getColor('expense', 'icon')} transition-all duration-300`} />
@@ -709,7 +709,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
             </div>
 
             {/* Metas Completadas */}
-            <div className={`bg-gradient-to-br ${getGradient('balance')} p-3 rounded-lg border border-${getColor('balance', 'border')} shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-${getColor('balance', 'border')} hover:-translate-y-1`}>
+            <div className={`bg-gradient-to-br ${getGradient('balance')} p-3 rounded-lg border border-${getColor('balance', 'border')} shadow-sm transition-all duration-300 hover:shadow-sm hover:scale-[1.005] hover:border-${getColor('balance', 'border')}`}>
               <div className="flex items-center space-x-2">
                 <div className={`p-1.5 bg-${getColor('balance', 'secondary')} rounded-lg transition-all duration-300 hover:bg-${getColor('balance', 'secondary')} hover:scale-110`}>
                   <CheckCircle className={`h-4 w-4 text-${getColor('balance', 'icon')} transition-all duration-300`} />
@@ -722,7 +722,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
             </div>
 
             {/* En Progreso */}
-            <div className={`bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200 shadow-sm transition-all duration-300 hover:shadow-xl hover:scale-110 hover:border-yellow-200 hover:-translate-y-1`}>
+            <div className={`bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200 shadow-sm transition-all duration-300 hover:shadow-sm hover:scale-[1.005] hover:border-yellow-200`}>
               <div className="flex items-center space-x-2">
                 <div className={`p-1.5 bg-yellow-200 rounded-lg transition-all duration-300 hover:bg-yellow-200 hover:scale-110`}>
                   <Clock className={`h-4 w-4 text-yellow-700 transition-all duration-300`} />
@@ -772,7 +772,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                   <button
                     key={goal.key}
                     onClick={() => setSelectedGoal(goal.key)}
-                    className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-md ${
+                    className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
                       isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
                     }`}
                   >
@@ -876,11 +876,11 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                         const statusStyling = getStatusStyling(yearData.status)
                         
                         return (
-                          <div key={yearData.year} className="border border-gray-200 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.01] hover:border-blue-200">
+                          <div key={yearData.year} className="border border-gray-200 rounded-lg transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                             {/* Year Header */}
                             <button
                               onClick={() => toggleYearExpansion(selectedGoal, yearData.year)}
-                              className="w-full p-4 text-left transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-md"
+                              className="w-full p-4 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm"
                             >
                               <div className="flex items-center justify-between">
                                 {/* Left side: Year, Current label, and Progress */}
@@ -934,7 +934,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                 <h6 className="text-sm font-medium text-gray-800 mb-3 mt-3">Detalle mensual:</h6>
                                 <div className="space-y-2">
                                   {yearData.transactions.map((transaction) => (
-                                    <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-md hover:scale-[1.01] hover:border-blue-200">
+                                    <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                                       <div className="flex items-center gap-3">
                                         {/* Ícono de calendario */}
                                         <Calendar className="h-4 w-4 text-blue-500" />
@@ -949,7 +949,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                         {/* Navigation Link Icon - Same as GeneralDashboard */}
                                         <button
                                           onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
-                                          className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-125 hover:shadow-lg hover:-translate-y-0.5"
+                                          className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
                                           title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
                                         >
                                           <svg 

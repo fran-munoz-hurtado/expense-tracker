@@ -634,7 +634,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
           <thead>
             {/* Header principal con agrupación visual */}
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-bold text-white uppercase tracking-wider bg-blue-900 border-b-2 border-blue-700 shadow-sm" rowSpan={2} style={{borderLeft: '3px solid #1e40af', borderTopLeftRadius: '0.5rem'}}>
+              <th className="px-6 py-3 text-left text-xs font-bold text-blue-900 uppercase tracking-wider bg-blue-100 border-b-2 border-blue-200 shadow-sm" rowSpan={2} style={{borderLeft: '3px solid #1e40af', borderTopLeftRadius: '0.5rem'}}>
                 {texts.month}
               </th>
               <th className={`px-6 py-3 text-center text-xs font-bold text-${getColor('income', 'text')} uppercase tracking-wider bg-gradient-to-r ${getGradient('income')} border-b border-${getColor('income', 'border')}`} rowSpan={2}>
@@ -689,17 +689,17 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 const totalAmount = data.total
                 const rowBg = idx % 2 === 0 ? 'bg-white' : 'bg-blue-50'
                 return (
-                  <tr key={month} className={`transition-all duration-300 ${rowBg} ${hoveredRow === month ? 'transform scale-[1.02] -translate-y-0.5 shadow-lg z-10' : ''}`} onMouseEnter={() => setHoveredRow(month)}>
-                    <td className={`month-cell px-6 py-4 whitespace-nowrap text-sm font-semibold text-white bg-blue-900 border-l-3 border-blue-700 shadow-sm transition-all duration-200`} style={{letterSpacing: '0.02em'}}>
+                  <tr key={month} className={`transition-all duration-300 ${rowBg} ${hoveredRow === month ? 'transform scale-[1.005] shadow-sm z-10' : ''}`} onMouseEnter={() => setHoveredRow(month)}>
+                    <td className={`month-cell px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-900 bg-blue-100 border-l-3 border-blue-200 shadow-sm transition-all duration-200`} style={{letterSpacing: '0.02em'}}>
                       <button
                         onClick={() => onNavigateToMonth(month, selectedYear)}
-                        className="text-white font-semibold transition-all duration-200 text-sm cursor-pointer group"
-                        style={{textShadow: '0 1px 3px rgba(30,64,175,0.3)'}}
+                        className="text-blue-900 font-semibold transition-all duration-200 text-sm cursor-pointer group"
+                        style={{textShadow: '0 1px 3px rgba(59,130,246,0.3)'}}
                       >
                         <div className="flex items-center gap-2">
                           {months[month - 1]}
                           {selectedYear === currentYear && month === currentMonth && (
-                            <span className="bg-blue-400 text-blue-900 text-xs px-1.5 py-0.5 rounded-full font-medium" style={{fontSize: '0.65rem'}}>
+                            <span className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-full font-medium" style={{fontSize: '0.65rem'}}>
                               Actual
                             </span>
                           )}
