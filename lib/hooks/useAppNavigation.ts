@@ -109,6 +109,21 @@ export function useAppNavigation() {
     }
   }, [navigationService])
 
+  const navigateToCategories = useCallback(async (year?: number, month?: number) => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    
+    try {
+      await navigationService.navigateToCategories(year, month)
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Navigation failed' 
+      }))
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }))
+    }
+  }, [navigationService])
+
   const navigateToHome = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
     
@@ -156,6 +171,7 @@ export function useAppNavigation() {
     navigateToGeneralDashboard,
     navigateToDebug,
     navigateToMisMetas,
+    navigateToCategories,
     navigateToHome,
     navigate,
     

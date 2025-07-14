@@ -1,20 +1,21 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, LogOut, TrendingUp } from 'lucide-react'
-import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User } from '@/lib/supabase'
-import { cn } from '@/lib/utils'
-import { texts } from '@/lib/translations'
+import { Plus, X, Calendar, DollarSign, FileText, AlertCircle, Check, Edit2, Trash2 } from 'lucide-react'
+import { supabase, type User } from '@/lib/supabase'
+import { useDataSync, DataSyncProvider } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
-import { DataSyncProvider, useDataSync } from '@/lib/hooks/useDataSync'
-import Sidebar from './components/Sidebar'
 import DashboardView from './components/DashboardView'
-import DebugTest from './components/DebugTest'
 import GeneralDashboardView from './components/GeneralDashboardView'
 import MisMetasView from './components/MisMetasView'
-import LoginPage from './components/LoginPage'
+import CategoriesView from './components/CategoriesView'
+import Sidebar from './components/Sidebar'
 import Navbar from './components/Navbar'
+import LoginPage from './components/LoginPage'
+import DebugTest from './components/DebugTest'
+import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
+import { texts } from '@/lib/translations'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -168,38 +169,36 @@ function Home() {
 
   // Category management functions
   const getAvailableCategories = (): string[] => {
-    // Get predefined categories (excluding 'Otro')
+    // Get predefined categories (excluding 'Otros')
     const predefinedCategories = Object.values(CATEGORIES.EXPENSE)
-      .filter(cat => cat !== 'Otro')
+      .filter(cat => cat !== 'Otros')
       .sort()
     
     // Combine with custom categories and sort
     const allCategories = [...predefinedCategories, ...customCategories].sort()
     
-    // Always put 'Otro' first
-    return ['Otro', ...allCategories]
+    // Always put 'Otros' first
+    return ['Otros', ...allCategories]
   }
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category)
     
-    // Update form data
-    if (expenseType === 'recurrent') {
-      setRecurrentFormData(prev => ({ ...prev, category: category === 'Otro' ? customCategoryInput : category }))
-    } else {
-      setNonRecurrentFormData(prev => ({ ...prev, category: category === 'Otro' ? customCategoryInput : category }))
+    // Clear custom input when switching away from "Otros"
+    if (category !== 'Otros') {
+      setCustomCategoryInput('')
     }
   }
 
   const handleCustomCategoryInputChange = (value: string) => {
     setCustomCategoryInput(value)
     
-    // Update form data if "Otro" is selected
-    if (selectedCategory === 'Otro') {
+    // Update form data if "Otros" is selected
+    if (selectedCategory === 'Otros') {
       if (expenseType === 'recurrent') {
-        setRecurrentFormData(prev => ({ ...prev, category: value }))
+        setRecurrentFormData(prev => ({ ...prev, category: value.trim() || 'sin categoría' }))
       } else {
-        setNonRecurrentFormData(prev => ({ ...prev, category: value }))
+        setNonRecurrentFormData(prev => ({ ...prev, category: value.trim() || 'sin categoría' }))
       }
     }
   }
@@ -328,7 +327,7 @@ function Home() {
       if (expenseType === 'recurrent') {
         // Determine final category value
         const finalCategory = (() => {
-          if (selectedCategory === 'Otro' && customCategoryInput.trim()) {
+          if (selectedCategory === 'Otros' && customCategoryInput.trim()) {
             return customCategoryInput.trim()
           } else if (selectedCategory) {
             return selectedCategory
@@ -366,7 +365,7 @@ function Home() {
       } else {
         // Determine final category value
         const finalCategory = (() => {
-          if (selectedCategory === 'Otro' && customCategoryInput.trim()) {
+          if (selectedCategory === 'Otros' && customCategoryInput.trim()) {
             return customCategoryInput.trim()
           } else if (selectedCategory) {
             return selectedCategory
@@ -400,8 +399,8 @@ function Home() {
         console.log('Non-recurrent expense saved:', data)
       }
 
-      // Add custom category to the list if "Otro" was selected and user typed something
-      if (selectedCategory === 'Otro' && customCategoryInput.trim()) {
+      // Add custom category to the list if "Otros" was selected and user typed something
+      if (selectedCategory === 'Otros' && customCategoryInput.trim()) {
         handleAddCategory(customCategoryInput.trim())
       }
 
@@ -458,7 +457,7 @@ function Home() {
     setConfirmationModalData(null)
   }
 
-  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas') => {
+  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories') => {
     console.log('🔄 handleViewChange called with view:', view)
     try {
       switch (view) {
@@ -484,6 +483,11 @@ function Home() {
           console.log('📍 Navigating to mis-metas...')
           await navigation.navigateToMisMetas()
           console.log('✅ Mis metas navigation completed')
+          break
+        case 'categories':
+          console.log('📍 Navigating to categories...')
+          await navigation.navigateToCategories()
+          console.log('✅ Categories navigation completed')
           break
       }
     } catch (error) {
@@ -546,6 +550,16 @@ function Home() {
         return <DebugTest user={user} />
       case 'mis-metas':
         return <MisMetasView user={user} navigationParams={{ year: navigation.currentRoute.year }} />
+      case 'categories':
+        return (
+          <CategoriesView 
+            user={user} 
+            navigationParams={{ 
+              year: navigation.currentRoute.year, 
+              month: navigation.currentRoute.month 
+            }} 
+          />
+        )
       default:
         // Default to general dashboard for home route
         return (
@@ -700,8 +714,8 @@ function Home() {
                       ))}
                     </select>
                     
-                    {/* Input personalizado para "Otro" */}
-                    {selectedCategory === 'Otro' && (
+                    {/* Input personalizado para "Otros" */}
+                    {selectedCategory === 'Otros' && (
                       <input
                         type="text"
                         value={customCategoryInput}

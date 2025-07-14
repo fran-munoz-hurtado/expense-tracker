@@ -7,6 +7,7 @@ export type AppRoute =
   | { type: 'general-dashboard'; year: number }
   | { type: 'debug' }
   | { type: 'mis-metas'; year?: number }
+  | { type: 'categories'; year?: number; month?: number }
 
 // Navigation configuration for each route
 export const ROUTE_CONFIG = {
@@ -29,6 +30,10 @@ export const ROUTE_CONFIG = {
   'mis-metas': {
     path: '/',
     params: ['view', 'year']
+  },
+  'categories': {
+    path: '/',
+    params: ['view', 'year', 'month']
   }
 } as const
 
@@ -102,6 +107,16 @@ export class NavigationService {
         }
         return `/?${params.toString()}`
       
+      case 'categories':
+        params.set('view', 'categories')
+        if (route.year) {
+          params.set('year', route.year.toString())
+        }
+        if (route.month) {
+          params.set('month', route.month.toString())
+        }
+        return `/?${params.toString()}`
+      
       default:
         throw new Error(`Unknown route type: ${(route as any).type}`)
     }
@@ -161,6 +176,15 @@ export class NavigationService {
       }
     }
 
+    // Parse categories route
+    if (view === 'categories') {
+      return {
+        type: 'categories',
+        year: year ? parseInt(year) : undefined,
+        month: month ? parseInt(month) : undefined
+      }
+    }
+
     // Fallback to home
     return { type: 'home' }
   }
@@ -197,6 +221,15 @@ export class NavigationService {
    */
   async navigateToMisMetas(year?: number): Promise<void> {
     await this.navigate({ type: 'mis-metas', year })
+  }
+
+  /**
+   * Navigate to categories view
+   * @param year - Optional year parameter
+   * @param month - Optional month parameter
+   */
+  async navigateToCategories(year?: number, month?: number): Promise<void> {
+    await this.navigate({ type: 'categories', year, month })
   }
 
   /**

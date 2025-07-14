@@ -1,13 +1,13 @@
 'use client'
 
-import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X, Target } from 'lucide-react'
+import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X, Target, FolderOpen } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useState } from 'react'
 import { texts } from '@/lib/translations'
 
 interface SidebarProps {
-  activeView: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas'
-  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas') => void
+  activeView: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories'
+  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories') => void
   onAddExpense: () => void
   user: User
   onLogout: () => void
@@ -30,6 +30,12 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
       description: texts.yearlySummary
     },
     {
+      id: 'categories',
+      label: 'Por Categorías',
+      icon: FolderOpen,
+      description: 'Analiza tus gastos organizados por categoría'
+    },
+    {
       id: 'mis-metas',
       label: texts.misMetas,
       icon: Target,
@@ -37,7 +43,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
     }
   ]
 
-  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas') => {
+  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories') => {
     onViewChange(view)
     setIsMobileMenuOpen(false) // Close mobile menu when navigating
   }
@@ -116,7 +122,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleViewChange(item.id as 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas')}
+                  onClick={() => handleViewChange(item.id as 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories')}
                   className={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm lg:text-base
                     ${isActive 
