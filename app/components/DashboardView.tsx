@@ -2626,28 +2626,40 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     Categorías disponibles
                   </label>
                   
-                  {/* Current category (if exists) */}
-                  {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
-                    <div className="mb-3">
-                      <p className="text-xs text-blue-600 font-medium mb-1">Categoría actual:</p>
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {/* First option: Sin categoría (red background) */}
+                    <button
+                      onClick={() => handleCategorySelection('Sin categoría')}
+                      className={`w-full p-3 text-left rounded-lg border transition-all ${
+                        selectedCategory === 'Sin categoría'
+                          ? 'border-blue-500 bg-blue-50 text-blue-900'
+                          : 'border-red-300 bg-red-50 hover:border-red-400 hover:bg-red-100'
+                      }`}
+                    >
+                      <span className="font-medium text-red-700">
+                        🚫 Sin categoría
+                      </span>
+                      <span className="text-xs text-red-600 ml-2">(quitar categoría)</span>
+                    </button>
+
+                    {/* Second option: Current category (blue background) */}
+                    {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
                       <button
                         onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
                         className={`w-full p-3 text-left rounded-lg border transition-all ${
                           selectedCategory === selectedTransactionForCategory.category
                             ? 'border-blue-500 bg-blue-50 text-blue-900'
-                            : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                            : 'border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100'
                         }`}
                       >
-                        <span className="font-medium">{selectedTransactionForCategory.category}</span>
-                        <span className="text-xs text-gray-500 ml-2">(actual)</span>
+                        <span className="font-medium text-blue-700">{selectedTransactionForCategory.category}</span>
+                        <span className="text-xs text-blue-600 ml-2">(actual)</span>
                       </button>
-                    </div>
-                  )}
-                  
-                  {/* Available categories */}
-                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    )}
+
+                    {/* Rest of available categories (normal styling) */}
                     {availableCategories
-                      .filter(cat => cat !== selectedTransactionForCategory.category) // Exclude current category from list
+                      .filter(cat => cat !== 'Sin categoría' && cat !== selectedTransactionForCategory.category)
                       .map((category) => (
                         <button
                           key={category}
@@ -2655,17 +2667,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           className={`w-full p-3 text-left rounded-lg border transition-all ${
                             selectedCategory === category
                               ? 'border-blue-500 bg-blue-50 text-blue-900'
-                              : category === 'Sin categoría'
-                              ? 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
                               : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                           }`}
                         >
-                          <span className={`font-medium ${category === 'Sin categoría' ? 'text-gray-600' : ''}`}>
-                            {category === 'Sin categoría' ? '🚫 ' : ''}{category}
-                          </span>
-                          {category === 'Sin categoría' && (
-                            <span className="text-xs text-gray-500 ml-2">(quitar categoría)</span>
-                          )}
+                          <span className="font-medium">{category}</span>
                         </button>
                       ))
                     }
