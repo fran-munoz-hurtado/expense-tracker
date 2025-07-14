@@ -13,6 +13,7 @@ import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import MonthlyProgressBar from './MonthlyProgressBar'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
+import { CATEGORIES } from '@/lib/config/constants'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -123,6 +124,16 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const [selectedTransactionForAttachment, setSelectedTransactionForAttachment] = useState<Transaction | null>(null)
   const [showAttachmentsList, setShowAttachmentsList] = useState(false)
   const [selectedTransactionForList, setSelectedTransactionForList] = useState<Transaction | null>(null)
+
+  // Category editing modal state
+  const [showCategoryModal, setShowCategoryModal] = useState(false)
+  const [selectedTransactionForCategory, setSelectedTransactionForCategory] = useState<Transaction | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string>('')
+  const [customCategoryInput, setCustomCategoryInput] = useState<string>('')
+  const [availableCategories, setAvailableCategories] = useState<string[]>([])
+  const [newCategoryInput, setNewCategoryInput] = useState<string>('')
+  const [showAddCategoryInput, setShowAddCategoryInput] = useState(false)
+  const [customCategories, setCustomCategories] = useState<string[]>([])
 
   // Sync with URL parameters
   useEffect(() => {
@@ -869,6 +880,179 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     console.log('Attachment deleted:', attachmentId)
   }
 
+  // Handle category editing
+  const handleCategoryClick = (transaction: Transaction) => {
+    console.log('Category clicked for transaction:', transaction.id, transaction.description)
+    setSelectedTransactionForCategory(transaction)
+    setSelectedCategory(transaction.category || '')
+    setShowCategoryModal(true)
+    
+    // Load available categories when modal opens
+    loadAvailableCategories()
+  }
+
+  // Category management functions (replicated from app/page.tsx)
+  const getAvailableCategories = (): string[] => {
+    // Get predefined categories (excluding 'Otros')
+    const predefinedCategories = Object.values(CATEGORIES.EXPENSE)
+      .filter(cat => cat !== 'Otros')
+      .sort()
+    
+    // Combine with custom categories and sort
+    const allCategories = [...predefinedCategories, ...customCategories].sort()
+    
+    // Always put 'Otros' first
+    return ['Otros', ...allCategories]
+  }
+
+  const loadAvailableCategories = async () => {
+    try {
+      // Get unique categories from database for expenses
+      const { data: recurrentCategories, error: recurrentError } = await supabase
+        .from('recurrent_expenses')
+        .select('category')
+        .eq('user_id', user.id)
+        .eq('type', 'expense')
+        .not('category', 'is', null)
+
+      const { data: nonRecurrentCategories, error: nonRecurrentError } = await supabase
+        .from('non_recurrent_expenses')
+        .select('category')
+        .eq('user_id', user.id)
+        .eq('type', 'expense')
+        .not('category', 'is', null)
+
+      if (recurrentError || nonRecurrentError) {
+        console.error('Error loading categories:', recurrentError || nonRecurrentError)
+        return
+      }
+
+      // Extract unique categories from database
+      const dbCategories: string[] = []
+      
+      recurrentCategories?.forEach(item => {
+        if (item.category && item.category !== 'sin categoría' && item.category !== 'other' && !dbCategories.includes(item.category)) {
+          dbCategories.push(item.category)
+        }
+      })
+      
+      nonRecurrentCategories?.forEach(item => {
+        if (item.category && item.category !== 'sin categoría' && item.category !== 'other' && !dbCategories.includes(item.category)) {
+          dbCategories.push(item.category)
+        }
+      })
+
+      // Get predefined categories
+      const predefinedCategories = Object.values(CATEGORIES.EXPENSE)
+        .filter(cat => cat !== 'Otros')
+
+      // Combine all categories
+      const allCategories = [...predefinedCategories, ...dbCategories]
+      const combinedCategories = allCategories
+        .filter((cat, index) => allCategories.indexOf(cat) === index) // Remove duplicates
+        .sort()
+      
+      setAvailableCategories(['Otros', ...combinedCategories])
+      
+    } catch (error) {
+      console.error('Error loading categories:', error)
+    }
+  }
+
+  const handleCategorySelection = (category: string) => {
+    setSelectedCategory(category)
+    if (category !== 'Otros') {
+      setCustomCategoryInput('')
+    }
+  }
+
+  const handleCustomCategoryInputChange = (value: string) => {
+    setCustomCategoryInput(value)
+  }
+
+  const handleUpdateCategory = async () => {
+    if (!selectedTransactionForCategory) return
+
+    const finalCategory = (() => {
+      if (selectedCategory === 'Otros' && customCategoryInput.trim()) {
+        return customCategoryInput.trim()
+      } else if (selectedCategory) {
+        return selectedCategory
+      } else {
+        return 'sin categoría'
+      }
+    })()
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      if (selectedTransactionForCategory.source_type === 'recurrent') {
+        // Update recurrent transaction series
+        console.log('Updating recurrent transaction series with category:', finalCategory)
+        
+        // Update the recurrent expense
+        const { error: recurrentError } = await supabase
+          .from('recurrent_expenses')
+          .update({ category: finalCategory })
+          .eq('id', selectedTransactionForCategory.source_id)
+          .eq('user_id', user.id)
+
+        if (recurrentError) throw recurrentError
+
+        // Update all transactions in the series
+        const { error: transactionsError } = await supabase
+          .from('transactions')
+          .update({ category: finalCategory })
+          .eq('source_id', selectedTransactionForCategory.source_id)
+          .eq('source_type', 'recurrent')
+          .eq('user_id', user.id)
+
+        if (transactionsError) throw transactionsError
+
+      } else {
+        // Update non-recurrent transaction
+        console.log('Updating non-recurrent transaction with category:', finalCategory)
+        
+        // Update the non-recurrent expense
+        const { error: nonRecurrentError } = await supabase
+          .from('non_recurrent_expenses')
+          .update({ category: finalCategory })
+          .eq('id', selectedTransactionForCategory.source_id)
+          .eq('user_id', user.id)
+
+        if (nonRecurrentError) throw nonRecurrentError
+
+        // Update the transaction
+        const { error: transactionError } = await supabase
+          .from('transactions')
+          .update({ category: finalCategory })
+          .eq('id', selectedTransactionForCategory.id)
+          .eq('user_id', user.id)
+
+        if (transactionError) throw transactionError
+      }
+
+      // Close modal and reset state
+      setShowCategoryModal(false)
+      setSelectedTransactionForCategory(null)
+      setSelectedCategory('')
+      setCustomCategoryInput('')
+      setShowAddCategoryInput(false)
+      setNewCategoryInput('')
+
+      // Trigger global data refresh
+      console.log('🔄 Triggering global data refresh after category update')
+      refreshData(user.id, 'update_category')
+
+    } catch (error) {
+      console.error('Error updating category:', error)
+      setError(`Error al actualizar categoría: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSort = (field: 'description' | 'deadline' | 'status' | 'value') => {
     if (sortField === field) {
       // If clicking the same field, toggle direction
@@ -1338,11 +1522,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 )}
                                 
                                 {/* Category */}
-                                {transaction.category && transaction.category !== 'sin categoría' && (
-                                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                    {transaction.category}
-                                  </span>
-                                )}
+                                <button
+                                  onClick={() => handleCategoryClick(transaction)}
+                                  className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                                >
+                                  {transaction.category && transaction.category !== 'sin categoría' 
+                                    ? transaction.category 
+                                    : 'sin categoría'}
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -1570,11 +1757,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             )}
                             
                             {/* Category */}
-                            {transaction.category && transaction.category !== 'sin categoría' && (
-                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                                {transaction.category}
-                              </span>
-                            )}
+                            <button
+                              onClick={() => handleCategoryClick(transaction)}
+                              className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                            >
+                              {transaction.category && transaction.category !== 'sin categoría' 
+                                ? transaction.category 
+                                : 'sin categoría'}
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -2392,6 +2582,180 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 onAttachmentDeleted={handleAttachmentDeleted}
                 onAddAttachment={() => handleAttachmentUpload(selectedTransactionForList)}
               />
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Category Editing Modal */}
+      {showCategoryModal && selectedTransactionForCategory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={() => {
+                setShowCategoryModal(false)
+                setSelectedTransactionForCategory(null)
+                setSelectedCategory('')
+                setCustomCategoryInput('')
+                setShowAddCategoryInput(false)
+                setNewCategoryInput('')
+              }}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="p-5 flex flex-col gap-4 items-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-2">
+                <Calendar className="h-6 w-6 text-blue-600" />
+              </div>
+              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Seleccionar Categoría</h2>
+              <p className="text-gray-700 text-sm font-medium mb-4 text-center">
+                Elige la categoría para "{selectedTransactionForCategory.description}"
+              </p>
+              
+              <div className="w-full space-y-4">
+                {/* Category Selection */}
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Categorías disponibles
+                  </label>
+                  
+                  {/* Current category (if exists) */}
+                  {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
+                    <div className="mb-3">
+                      <p className="text-xs text-blue-600 font-medium mb-1">Categoría actual:</p>
+                      <button
+                        onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
+                        className={`w-full p-3 text-left rounded-lg border transition-all ${
+                          selectedCategory === selectedTransactionForCategory.category
+                            ? 'border-blue-500 bg-blue-50 text-blue-900'
+                            : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className="font-medium">{selectedTransactionForCategory.category}</span>
+                        <span className="text-xs text-gray-500 ml-2">(actual)</span>
+                      </button>
+                    </div>
+                  )}
+                  
+                  {/* Available categories */}
+                  <div className="max-h-48 overflow-y-auto space-y-1">
+                    {availableCategories
+                      .filter(cat => cat !== selectedTransactionForCategory.category) // Exclude current category from list
+                      .map((category) => (
+                        <button
+                          key={category}
+                          onClick={() => handleCategorySelection(category)}
+                          className={`w-full p-3 text-left rounded-lg border transition-all ${
+                            selectedCategory === category
+                              ? 'border-blue-500 bg-blue-50 text-blue-900'
+                              : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <span className="font-medium">{category}</span>
+                          {category === 'Otros' && (
+                            <span className="text-xs text-gray-500 ml-2">(personalizada)</span>
+                          )}
+                        </button>
+                      ))
+                    }
+                  </div>
+                  
+                  {/* Custom category input for "Otros" */}
+                  {selectedCategory === 'Otros' && (
+                    <div className="mt-3">
+                      <input
+                        type="text"
+                        value={customCategoryInput}
+                        onChange={(e) => handleCustomCategoryInputChange(e.target.value)}
+                        placeholder="Escriba la categoría personalizada"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                        autoFocus
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Add new category section */}
+                {!showAddCategoryInput ? (
+                  <button
+                    onClick={() => setShowAddCategoryInput(true)}
+                    className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                  >
+                    + Agregar nueva categoría
+                  </button>
+                ) : (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={newCategoryInput}
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      placeholder="Nombre de la nueva categoría"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (newCategoryInput.trim()) {
+                            setAvailableCategories(prev => [...prev, newCategoryInput.trim()].sort())
+                            setSelectedCategory(newCategoryInput.trim())
+                            setNewCategoryInput('')
+                            setShowAddCategoryInput(false)
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        Agregar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setNewCategoryInput('')
+                          setShowAddCategoryInput(false)
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setShowCategoryModal(false)
+                      setSelectedTransactionForCategory(null)
+                      setSelectedCategory('')
+                      setCustomCategoryInput('')
+                      setShowAddCategoryInput(false)
+                      setNewCategoryInput('')
+                    }}
+                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={() => handleUpdateCategory()}
+                    disabled={loading || (!selectedCategory || (selectedCategory === 'Otros' && !customCategoryInput.trim()))}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Guardando...
+                      </div>
+                    ) : (
+                      'Actualizar'
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           </section>
         </div>
