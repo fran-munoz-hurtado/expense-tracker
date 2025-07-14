@@ -954,7 +954,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         .filter((cat, index) => allCategories.indexOf(cat) === index) // Remove duplicates
         .sort()
       
-      setAvailableCategories(combinedCategories)
+      // Always include "Sin categoría" as the first option
+      setAvailableCategories(['Sin categoría', ...combinedCategories])
       
     } catch (error) {
       console.error('Error loading categories:', error)
@@ -973,7 +974,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const handleUpdateCategory = async () => {
     if (!selectedTransactionForCategory) return
 
-    const finalCategory = selectedCategory || 'sin categoría'
+    // Handle "Sin categoría" selection specifically
+    const finalCategory = selectedCategory === 'Sin categoría' ? 'sin categoría' : (selectedCategory || 'sin categoría')
 
     try {
       setLoading(true)
@@ -2653,10 +2655,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           className={`w-full p-3 text-left rounded-lg border transition-all ${
                             selectedCategory === category
                               ? 'border-blue-500 bg-blue-50 text-blue-900'
+                              : category === 'Sin categoría'
+                              ? 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
                               : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                           }`}
                         >
-                          <span className="font-medium">{category}</span>
+                          <span className={`font-medium ${category === 'Sin categoría' ? 'text-gray-600' : ''}`}>
+                            {category === 'Sin categoría' ? '🚫 ' : ''}{category}
+                          </span>
+                          {category === 'Sin categoría' && (
+                            <span className="text-xs text-gray-500 ml-2">(quitar categoría)</span>
+                          )}
                         </button>
                       ))
                     }
