@@ -1516,14 +1516,16 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 )}
                                 
                                 {/* Category */}
-                                <button
-                                  onClick={() => handleCategoryClick(transaction)}
-                                  className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
-                                >
-                                  {transaction.category && transaction.category !== 'sin categoría' 
-                                    ? transaction.category 
-                                    : 'sin categoría'}
-                                </button>
+                                {transaction.type === 'expense' && (
+                                  <button
+                                    onClick={() => handleCategoryClick(transaction)}
+                                    className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                                  >
+                                    {transaction.category && transaction.category !== 'sin categoría' 
+                                      ? transaction.category 
+                                      : 'sin categoría'}
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1751,14 +1753,16 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             )}
                             
                             {/* Category */}
-                            <button
-                              onClick={() => handleCategoryClick(transaction)}
-                              className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
-                            >
-                              {transaction.category && transaction.category !== 'sin categoría' 
-                                ? transaction.category 
-                                : 'sin categoría'}
-                            </button>
+                            {transaction.type === 'expense' && (
+                              <button
+                                onClick={() => handleCategoryClick(transaction)}
+                                className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                              >
+                                {transaction.category && transaction.category !== 'sin categoría' 
+                                  ? transaction.category 
+                                  : 'sin categoría'}
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
