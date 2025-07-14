@@ -2637,7 +2637,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       }`}
                     >
                       <span className="font-medium text-red-700">
-                        🚫 Sin categoría
+                        Sin categoría
                       </span>
                       <span className="text-xs text-red-600 ml-2">(quitar categoría)</span>
                     </button>
