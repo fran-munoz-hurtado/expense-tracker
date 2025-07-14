@@ -901,8 +901,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     // Combine with custom categories and sort
     const allCategories = [...predefinedCategories, ...customCategories].sort()
     
-    // Always put 'Otros' first
-    return ['Otros', ...allCategories]
+    // Return all categories without prioritizing 'Otros'
+    return allCategories
   }
 
   const loadAvailableCategories = async () => {
@@ -942,7 +942,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         }
       })
 
-      // Get predefined categories
+      // Get predefined categories (excluding 'Otros')
       const predefinedCategories = Object.values(CATEGORIES.EXPENSE)
         .filter(cat => cat !== 'Otros')
 
@@ -952,7 +952,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         .filter((cat, index) => allCategories.indexOf(cat) === index) // Remove duplicates
         .sort()
       
-      setAvailableCategories(['Otros', ...combinedCategories])
+      setAvailableCategories(combinedCategories)
       
     } catch (error) {
       console.error('Error loading categories:', error)
@@ -961,9 +961,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   const handleCategorySelection = (category: string) => {
     setSelectedCategory(category)
-    if (category !== 'Otros') {
-      setCustomCategoryInput('')
-    }
+    setCustomCategoryInput('')
   }
 
   const handleCustomCategoryInputChange = (value: string) => {
@@ -973,15 +971,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const handleUpdateCategory = async () => {
     if (!selectedTransactionForCategory) return
 
-    const finalCategory = (() => {
-      if (selectedCategory === 'Otros' && customCategoryInput.trim()) {
-        return customCategoryInput.trim()
-      } else if (selectedCategory) {
-        return selectedCategory
-      } else {
-        return 'sin categoría'
-      }
-    })()
+    const finalCategory = selectedCategory || 'sin categoría'
 
     try {
       setLoading(true)
@@ -2657,27 +2647,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           }`}
                         >
                           <span className="font-medium">{category}</span>
-                          {category === 'Otros' && (
-                            <span className="text-xs text-gray-500 ml-2">(personalizada)</span>
-                          )}
                         </button>
                       ))
                     }
                   </div>
-                  
-                  {/* Custom category input for "Otros" */}
-                  {selectedCategory === 'Otros' && (
-                    <div className="mt-3">
-                      <input
-                        type="text"
-                        value={customCategoryInput}
-                        onChange={(e) => handleCustomCategoryInputChange(e.target.value)}
-                        placeholder="Escriba la categoría personalizada"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                        autoFocus
-                      />
-                    </div>
-                  )}
                 </div>
 
                 {/* Add new category section */}
@@ -2701,9 +2674,21 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     <div className="flex gap-2">
                       <button
                         onClick={() => {
-                          if (newCategoryInput.trim()) {
-                            setAvailableCategories(prev => [...prev, newCategoryInput.trim()].sort())
-                            setSelectedCategory(newCategoryInput.trim())
+                          const trimmedInput = newCategoryInput.trim()
+                          if (trimmedInput) {
+                            // Check for case-insensitive duplicates
+                            const existingCategories = availableCategories.map(cat => cat.toLowerCase())
+                            const predefinedCategories = Object.values(CATEGORIES.EXPENSE).map(cat => cat.toLowerCase())
+                            const allExistingCategories = [...existingCategories, ...predefinedCategories]
+                            
+                            if (allExistingCategories.includes(trimmedInput.toLowerCase())) {
+                              // Show error or just don't add - for now, let's just not add it
+                              console.log('Category already exists (case-insensitive):', trimmedInput)
+                              return
+                            }
+                            
+                            setAvailableCategories(prev => [...prev, trimmedInput].sort())
+                            setSelectedCategory(trimmedInput)
                             setNewCategoryInput('')
                             setShowAddCategoryInput(false)
                           }
@@ -2742,7 +2727,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   </button>
                   <button
                     onClick={() => handleUpdateCategory()}
-                    disabled={loading || (!selectedCategory || (selectedCategory === 'Otros' && !customCategoryInput.trim()))}
+                    disabled={loading || !selectedCategory}
                     className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
