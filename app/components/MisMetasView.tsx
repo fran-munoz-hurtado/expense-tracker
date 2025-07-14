@@ -510,6 +510,48 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     })
   }
 
+  // Helper function to get goal status
+  const getGoalStatus = (goal: GoalData): { label: string; bgColor: string; textColor: string } => {
+    if (goal.progress === 0) {
+      return {
+        label: 'Sin Empezar',
+        bgColor: 'bg-gray-100',
+        textColor: 'text-gray-800'
+      }
+    }
+    
+    if (goal.progress === 100) {
+      return {
+        label: 'Pagado',
+        bgColor: 'bg-green-100',
+        textColor: 'text-green-800'
+      }
+    }
+    
+    // Check if any transaction is overdue
+    const hasOverdueTransactions = goal.years.some(year => 
+      year.transactions.some(transaction => 
+        transaction.status === 'pending' && 
+        transaction.deadline && 
+        new Date(transaction.deadline) < new Date()
+      )
+    )
+    
+    if (hasOverdueTransactions) {
+      return {
+        label: 'en Mora',
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-800'
+      }
+    }
+    
+    return {
+      label: 'En Progreso',
+      bgColor: 'bg-yellow-100',
+      textColor: 'text-yellow-800'
+    }
+  }
+
   // Helper function to get status styling
   const getStatusStyling = (status: 'paid' | 'pending' | 'overdue') => {
     switch (status) {
@@ -724,6 +766,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
             <div className="overflow-y-auto">
               {filteredGoalGroups.map((goal) => {
                 const isSelected = selectedGoal === goal.key
+                const goalStatus = getGoalStatus(goal)
                 
                 return (
                   <button
@@ -733,50 +776,71 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                       isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
-                          goal.isCompleted
-                            ? 'bg-green-100'
-                            : isSelected 
-                            ? 'bg-blue-100'
-                            : 'bg-yellow-100'
-                        }`}>
-                          {goal.isCompleted ? (
-                            <CheckCircle className={`h-4 w-4 ${
-                              goal.isCompleted
-                                ? 'text-green-600'
-                                : isSelected
-                                ? 'text-blue-600'
-                                : 'text-yellow-600'
-                            }`} />
-                          ) : (
-                            <Target className={`h-4 w-4 ${
-                              isSelected ? 'text-blue-600' : 'text-yellow-600'
-                            }`} />
-                          )}
-                        </div>
-                        <div>
-                          <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Left Column */}
+                      <div className="flex flex-col space-y-2">
+                        {/* Top Left: Description */}
+                        <div className="flex items-center space-x-2">
+                          <div className={`p-1.5 rounded-lg transition-all duration-300 hover:scale-110 ${
+                            goal.isCompleted
+                              ? 'bg-green-100'
+                              : isSelected 
+                              ? 'bg-blue-100'
+                              : 'bg-yellow-100'
+                          }`}>
+                            {goal.isCompleted ? (
+                              <CheckCircle className={`h-3 w-3 ${
+                                goal.isCompleted
+                                  ? 'text-green-600'
+                                  : isSelected
+                                  ? 'text-blue-600'
+                                  : 'text-yellow-600'
+                              }`} />
+                            ) : (
+                              <Target className={`h-3 w-3 ${
+                                isSelected ? 'text-blue-600' : 'text-yellow-600'
+                              }`} />
+                            )}
+                          </div>
+                          <h3 className={`text-sm font-medium truncate ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
                             {goal.source.description}
                           </h3>
+                        </div>
+                        
+                        {/* Bottom Left: Years */}
+                        <div className="ml-6">
                           <p className="text-xs text-gray-500">{goal.years.length} años</p>
                         </div>
                       </div>
                       
-                      <div className="text-right">
-                        <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                          {formatCurrency(goal.totalValue)}
-                        </p>
-                        <div className="w-12 h-1 bg-gray-200 rounded-full overflow-hidden mt-1">
-                          <div 
-                            className={`h-full transition-all duration-300 ${
-                              goal.isCompleted ? 'bg-green-500' : 'bg-yellow-500'
-                            }`}
-                            style={{ width: `${goal.progress}%` }}
-                          />
+                      {/* Right Column */}
+                      <div className="flex flex-col space-y-2 items-end">
+                        {/* Top Right: Total Value + Status + Percentage */}
+                        <div className="flex flex-col items-end space-y-1">
+                          <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+                            {formatCurrency(goal.totalValue)}
+                          </p>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${goalStatus.bgColor} ${goalStatus.textColor}`}>
+                              {goalStatus.label}
+                            </span>
+                            <span className="text-xs text-gray-600 font-medium">
+                              {goal.progress}%
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">{goal.progress}%</p>
+                        
+                        {/* Bottom Right: Progress Bar */}
+                        <div className="w-full">
+                          <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-300 ${
+                                goal.isCompleted ? 'bg-green-500' : 'bg-yellow-500'
+                              }`}
+                              style={{ width: `${goal.progress}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </button>
@@ -798,57 +862,135 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
             </div>
           ) : (
             <div className="flex flex-col h-full">
-              {/* Selected Goal Header */}
-              <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className={`p-2 rounded-lg ${
-                      selectedGoal && filteredGoalGroups.find(g => g.key === selectedGoal)?.isCompleted
-                        ? 'bg-green-100'
-                        : 'bg-blue-100'
-                    }`}>
-                      {selectedGoal && filteredGoalGroups.find(g => g.key === selectedGoal)?.isCompleted ? (
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      ) : (
-                        <Target className="h-5 w-5 text-blue-600" />
-                      )}
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {filteredGoalGroups.find(g => g.key === selectedGoal)?.source.description}
-                      </h2>
-                      <p className="text-sm text-gray-500">
-                        {filteredGoalGroups.find(g => g.key === selectedGoal)?.years.length || 0} años
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatCurrency(filteredGoalGroups.find(g => g.key === selectedGoal)?.totalValue || 0)}
-                    </p>
-                    <div className="flex items-center space-x-2 text-sm">
-                      <span className="text-green-600">
-                        Pagado: {formatCurrency(filteredGoalGroups.find(g => g.key === selectedGoal)?.paidValue || 0)}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        filteredGoalGroups.find(g => g.key === selectedGoal)?.isCompleted
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {filteredGoalGroups.find(g => g.key === selectedGoal)?.progress || 0}% completado
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Selected Goal Content */}
+              {/* Selected Goal Content - Direct Year Hierarchy */}
               <div className="flex-1 overflow-y-auto p-6">
-                {/* Goal details content will be implemented here */}
-                <div className="text-center text-gray-500 mt-8">
-                  <p>Contenido de la meta seleccionada próximamente...</p>
-                </div>
+                {(() => {
+                  const selectedGoalData = filteredGoalGroups.find(g => g.key === selectedGoal)
+                  if (!selectedGoalData) return null
+
+                  return (
+                    <div className="space-y-4">
+                      {selectedGoalData.years.map((yearData) => {
+                        const yearKey = `${selectedGoal}-${yearData.year}`
+                        const isYearExpanded = expandedYears.has(yearKey)
+                        const statusStyling = getStatusStyling(yearData.status)
+                        
+                        return (
+                          <div key={yearData.year} className="border border-gray-200 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-[1.01] hover:border-blue-200">
+                            {/* Year Header */}
+                            <button
+                              onClick={() => toggleYearExpansion(selectedGoal, yearData.year)}
+                              className="w-full p-4 text-left transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 hover:shadow-md"
+                            >
+                              <div className="flex items-center justify-between">
+                                {/* Left side: Year, Current label, and Progress */}
+                                <div className="flex items-center gap-3">
+                                  <div className="p-1.5 rounded-lg bg-blue-100 transition-all duration-300 hover:scale-110">
+                                    <Calendar className="h-4 w-4 text-blue-600" />
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <h5 className="text-sm font-medium text-gray-900">
+                                        {yearData.year}
+                                      </h5>
+                                      {yearData.year === currentYear && (
+                                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                          Actual
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      yearData.isCompleted 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                      {yearData.progress}% completado
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Right side: Value and Status */}
+                                <div className="flex items-center gap-3">
+                                  <span className="text-sm text-gray-600">
+                                    {formatCurrency(yearData.paidValue)} de {formatCurrency(yearData.totalValue)}
+                                  </span>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyling.bgColor} ${statusStyling.textColor}`}>
+                                    {statusStyling.label}
+                                  </span>
+                                  <div className="ml-2">
+                                    {isYearExpanded ? (
+                                      <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </button>
+
+                            {/* Expanded Year Content - Months */}
+                            {isYearExpanded && (
+                              <div className="px-4 pb-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+                                <h6 className="text-sm font-medium text-gray-800 mb-3 mt-3">Detalle mensual:</h6>
+                                <div className="space-y-2">
+                                  {yearData.transactions.map((transaction) => (
+                                    <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-md hover:scale-[1.01] hover:border-blue-200">
+                                      <div className="flex items-center gap-3">
+                                        {/* Ícono de calendario */}
+                                        <Calendar className="h-4 w-4 text-blue-500" />
+                                        <span className="text-sm font-medium text-gray-700 min-w-0 month-name">
+                                          {months[transaction.month - 1]}
+                                        </span>
+                                        {transaction.month === currentMonth && transaction.year === currentYear && (
+                                          <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                            Actual
+                                          </span>
+                                        )}
+                                        {/* Navigation Link Icon - Same as GeneralDashboard */}
+                                        <button
+                                          onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                          className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-125 hover:shadow-lg hover:-translate-y-0.5"
+                                          title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
+                                        >
+                                          <svg 
+                                            className="w-3 h-3" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            strokeWidth="2" 
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                      <div className="flex items-center gap-3">
+                                        <span className="text-sm text-gray-600">
+                                          {formatCurrency(transaction.value)}
+                                        </span>
+                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                          transaction.status === 'paid' 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : transaction.deadline && new Date(transaction.deadline) < new Date()
+                                              ? 'bg-red-100 text-red-800'
+                                              : 'bg-yellow-100 text-yellow-800'
+                                        }`}>
+                                          {transaction.status === 'paid' ? 'Pagado' : 
+                                           transaction.deadline && new Date(transaction.deadline) < new Date() ? 'Vencido' : 'Pendiente'}
+                                        </span>
+                                        {/* Attachment Clip */}
+                                        <AttachmentClip transaction={transaction} />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })()}
               </div>
             </div>
           )}
