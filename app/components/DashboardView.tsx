@@ -2634,15 +2634,16 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         selectedCategory === 'Sin categoría'
                           ? 'border-blue-500 bg-blue-50 text-blue-900'
                           : selectedCategory && selectedCategory !== 'Sin categoría'
-                          ? 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
+                          ? 'border-red-100 hover:border-red-200 hover:bg-red-50'
                           : 'border-red-300 bg-red-50 hover:border-red-400 hover:bg-red-100'
                       }`}
+                      style={selectedCategory && selectedCategory !== 'Sin categoría' ? {backgroundColor: 'rgb(254 242 242)'} : {}}
                     >
                       <span className={`font-medium ${
                         selectedCategory === 'Sin categoría' 
                           ? 'text-blue-900' 
                           : selectedCategory && selectedCategory !== 'Sin categoría'
-                          ? 'text-gray-600'
+                          ? 'text-red-400'
                           : 'text-red-700'
                       }`}>
                         Sin categoría
@@ -2651,7 +2652,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         selectedCategory === 'Sin categoría' 
                           ? 'text-blue-700' 
                           : selectedCategory && selectedCategory !== 'Sin categoría'
-                          ? 'text-gray-500'
+                          ? 'text-red-300'
                           : 'text-red-600'
                       }`}>(quitar categoría)</span>
                     </button>
@@ -2664,22 +2665,23 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           selectedCategory === selectedTransactionForCategory.category
                             ? 'border-blue-500 bg-blue-50 text-blue-900'
                             : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
-                            ? 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
+                            ? 'border-blue-100 hover:border-blue-200 hover:bg-blue-50'
                             : 'border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100'
                         }`}
+                        style={selectedCategory && selectedCategory !== selectedTransactionForCategory.category ? {backgroundColor: 'rgb(239 246 255)'} : {}}
                       >
                         <span className={`font-medium ${
                           selectedCategory === selectedTransactionForCategory.category 
                             ? 'text-blue-900' 
                             : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
-                            ? 'text-gray-600'
+                            ? 'text-blue-400'
                             : 'text-blue-700'
                         }`}>{selectedTransactionForCategory.category}</span>
                         <span className={`text-xs ml-2 ${
                           selectedCategory === selectedTransactionForCategory.category 
                             ? 'text-blue-700' 
                             : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
-                            ? 'text-gray-500'
+                            ? 'text-blue-300'
                             : 'text-blue-600'
                         }`}>(actual)</span>
                       </button>
