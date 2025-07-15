@@ -13,6 +13,7 @@ import Sidebar from './components/Sidebar'
 import Navbar from './components/Navbar'
 import LoginPage from './components/LoginPage'
 import DebugTest from './components/DebugTest'
+import BaseMovementForm from './components/forms/BaseMovementForm'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { texts } from '@/lib/translations'
@@ -22,6 +23,7 @@ import {
   getMovementConfig, 
   type MovementType 
 } from '@/lib/config/icons'
+import { createRecurrentExpense, createNonRecurrentExpense } from '@/lib/dataUtils'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -35,6 +37,7 @@ function Home() {
   // Form state - NUEVA IMPLEMENTACIÓN
   const [showForm, setShowForm] = useState(false)
   const [selectedMovementType, setSelectedMovementType] = useState<MovementType | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Load user from localStorage on component mount
   useEffect(() => {
@@ -125,12 +128,89 @@ function Home() {
   const handleMovementTypeSelect = (type: MovementType) => {
     console.log('🎯 Movement type selected:', type)
     setSelectedMovementType(type)
-    // Here we'll later implement the specific form for each type
+  }
+
+  const handleFormSubmit = async (payload: any) => {
+    console.log('🎯 Form submitted with payload:', payload)
+    setIsSubmitting(true)
+    
+    try {
+      if (payload.type === 'expense') {
+        // Handle expense creation
+        if (selectedMovementType === 'RECURRENT_EXPENSE' || selectedMovementType === 'GOAL' || selectedMovementType === 'SAVINGS') {
+          // Create recurrent expense
+          await createRecurrentExpense(user!, {
+            description: payload.description,
+            month_from: payload.month_from,
+            month_to: payload.month_to,
+            year_from: payload.year_from,
+            year_to: payload.year_to,
+            value: payload.value,
+            payment_day_deadline: payload.payment_day_deadline,
+            type: payload.type,
+            category: payload.category,
+            isgoal: payload.isgoal
+          })
+        } else {
+          // Create non-recurrent expense
+          await createNonRecurrentExpense(user!, {
+            description: payload.description,
+            year: payload.year,
+            month: payload.month,
+            value: payload.value,
+            payment_deadline: payload.payment_deadline,
+            type: payload.type,
+            category: payload.category,
+            isgoal: payload.isgoal
+          })
+        }
+      } else {
+        // Handle income creation
+        if (selectedMovementType === 'RECURRENT_INCOME') {
+          // Create recurrent income
+          await createRecurrentExpense(user!, {
+            description: payload.description,
+            month_from: payload.month_from,
+            month_to: payload.month_to,
+            year_from: payload.year_from,
+            year_to: payload.year_to,
+            value: payload.value,
+            payment_day_deadline: payload.payment_day_deadline,
+            type: payload.type,
+            category: payload.category,
+            isgoal: payload.isgoal
+          })
+        } else {
+          // Create non-recurrent income
+          await createNonRecurrentExpense(user!, {
+            description: payload.description,
+            year: payload.year,
+            month: payload.month,
+            value: payload.value,
+            payment_deadline: payload.payment_deadline,
+            type: payload.type,
+            category: payload.category,
+            isgoal: payload.isgoal
+          })
+        }
+      }
+      
+      // Refresh data and close modal
+      await refreshData(user!.id, 'create_transaction')
+      handleCloseForm()
+      
+    } catch (error) {
+      console.error('Error creating transaction:', error)
+      throw error // Re-throw to let BaseMovementForm handle the error display
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleCloseForm = () => {
     setShowForm(false)
     setSelectedMovementType(null)
+    setIsSubmitting(false)
   }
 
   // Helper function to render custom SVG icons
@@ -243,183 +323,169 @@ function Home() {
         </main>
       </div>
 
-      {/* NUEVO MODAL DE AÑADIR MOVIMIENTO - IMPLEMENTACIÓN DESDE 0 */}
+      {/* NUEVO MODAL DE AÑADIR MOVIMIENTO */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={handleCloseForm}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="text-center mb-8">
-              <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4">
-                <Plus className="h-8 w-8 text-blue-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Añadir Movimiento</h2>
-              <p className="text-gray-600">Selecciona el tipo de movimiento que deseas crear</p>
-            </div>
-
-            {/* Movement Type Selection Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-              {/* Gasto Recurrente */}
-              <button
-                onClick={() => handleMovementTypeSelect('RECURRENT_EXPENSE')}
-                className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-red-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full bg-${getColor('expense', 'light')}`}>
-                    <MOVEMENT_TYPES.RECURRENT_EXPENSE.icon className={`h-6 w-6 text-${getColor('expense', 'icon')}`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-red-700 transition-colors">
-                      {MOVEMENT_TYPES.RECURRENT_EXPENSE.label}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {MOVEMENT_TYPES.RECURRENT_EXPENSE.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              </button>
-
-              {/* Gasto Único */}
-              <button
-                onClick={() => handleMovementTypeSelect('SINGLE_EXPENSE')}
-                className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-red-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full bg-${getColor('expense', 'light')}`}>
-                    <MOVEMENT_TYPES.SINGLE_EXPENSE.icon className={`h-6 w-6 text-${getColor('expense', 'icon')}`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-red-700 transition-colors">
-                      {MOVEMENT_TYPES.SINGLE_EXPENSE.label}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {MOVEMENT_TYPES.SINGLE_EXPENSE.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              </button>
-
-              {/* Ingreso Recurrente */}
-              <button
-                onClick={() => handleMovementTypeSelect('RECURRENT_INCOME')}
-                className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-blue-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full bg-${getColor('income', 'light')}`}>
-                    <MOVEMENT_TYPES.RECURRENT_INCOME.icon className={`h-6 w-6 text-${getColor('income', 'icon')}`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                      {MOVEMENT_TYPES.RECURRENT_INCOME.label}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {MOVEMENT_TYPES.RECURRENT_INCOME.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              </button>
-
-              {/* Ingreso Único */}
-              <button
-                onClick={() => handleMovementTypeSelect('SINGLE_INCOME')}
-                className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-blue-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full bg-${getColor('income', 'light')}`}>
-                    <MOVEMENT_TYPES.SINGLE_INCOME.icon className={`h-6 w-6 text-${getColor('income', 'icon')}`} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                      {MOVEMENT_TYPES.SINGLE_INCOME.label}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {MOVEMENT_TYPES.SINGLE_INCOME.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              </button>
-
-              {/* Meta */}
-              <button
-                onClick={() => handleMovementTypeSelect('GOAL')}
-                className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-yellow-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full bg-${getColor('goal', 'light')}`}>
-                    {renderCustomIcon('GOAL_TARGET', 'h-6 w-6')}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-yellow-700 transition-colors">
-                      {MOVEMENT_TYPES.GOAL.label}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {MOVEMENT_TYPES.GOAL.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-50 to-yellow-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              </button>
-
-              {/* Ahorro */}
-              <button
-                onClick={() => handleMovementTypeSelect('SAVINGS')}
-                className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-green-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-full bg-${getColor('balance', 'light')}`}>
-                    {renderCustomIcon('SAVINGS_PIG', 'h-6 w-6 text-green-600')}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
-                      {MOVEMENT_TYPES.SAVINGS.label}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      {MOVEMENT_TYPES.SAVINGS.description}
-                    </p>
-                  </div>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-r from-green-50 to-green-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              </button>
-            </div>
-
-            {/* Selected Type Debug Info */}
-            {selectedMovementType && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-sm font-medium text-blue-900">
-                  Tipo seleccionado: {getMovementConfig(selectedMovementType).label}
-                </p>
-                <p className="text-xs text-blue-700 mt-1">
-                  🚧 Aquí se mostrará el formulario específico para este tipo de movimiento
-                </p>
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-3">
+          
+          {/* Movement Type Selection or Form */}
+          {!selectedMovementType ? (
+            <section className="relative bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
               <button
                 onClick={handleCloseForm}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="Cerrar"
               >
-                Cancelar
+                <X className="h-5 w-5" />
               </button>
-              <button
-                disabled={!selectedMovementType}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-              >
-                Continuar
-              </button>
-            </div>
-          </section>
+
+              <div className="text-center mb-8">
+                <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4">
+                  <Plus className="h-8 w-8 text-blue-600" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Añadir Movimiento</h2>
+                <p className="text-gray-600">Selecciona el tipo de movimiento que deseas crear</p>
+              </div>
+
+              {/* Movement Type Selection Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                {/* Gasto Recurrente */}
+                <button
+                  onClick={() => handleMovementTypeSelect('RECURRENT_EXPENSE')}
+                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-red-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-full bg-${getColor('expense', 'light')}`}>
+                      <MOVEMENT_TYPES.RECURRENT_EXPENSE.icon className={`h-6 w-6 text-${getColor('expense', 'icon')}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-red-700 transition-colors">
+                        {MOVEMENT_TYPES.RECURRENT_EXPENSE.label}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {MOVEMENT_TYPES.RECURRENT_EXPENSE.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </button>
+
+                {/* Gasto Único */}
+                <button
+                  onClick={() => handleMovementTypeSelect('SINGLE_EXPENSE')}
+                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-red-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-full bg-${getColor('expense', 'light')}`}>
+                      <MOVEMENT_TYPES.SINGLE_EXPENSE.icon className={`h-6 w-6 text-${getColor('expense', 'icon')}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-red-700 transition-colors">
+                        {MOVEMENT_TYPES.SINGLE_EXPENSE.label}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {MOVEMENT_TYPES.SINGLE_EXPENSE.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </button>
+
+                {/* Ingreso Recurrente */}
+                <button
+                  onClick={() => handleMovementTypeSelect('RECURRENT_INCOME')}
+                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-blue-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-full bg-${getColor('income', 'light')}`}>
+                      <MOVEMENT_TYPES.RECURRENT_INCOME.icon className={`h-6 w-6 text-${getColor('income', 'icon')}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                        {MOVEMENT_TYPES.RECURRENT_INCOME.label}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {MOVEMENT_TYPES.RECURRENT_INCOME.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </button>
+
+                {/* Ingreso Único */}
+                <button
+                  onClick={() => handleMovementTypeSelect('SINGLE_INCOME')}
+                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-blue-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-full bg-${getColor('income', 'light')}`}>
+                      <MOVEMENT_TYPES.SINGLE_INCOME.icon className={`h-6 w-6 text-${getColor('income', 'icon')}`} />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
+                        {MOVEMENT_TYPES.SINGLE_INCOME.label}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {MOVEMENT_TYPES.SINGLE_INCOME.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </button>
+
+                {/* Meta */}
+                <button
+                  onClick={() => handleMovementTypeSelect('GOAL')}
+                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-yellow-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-full bg-${getColor('goal', 'light')}`}>
+                      {renderCustomIcon('GOAL_TARGET', 'h-6 w-6')}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-yellow-700 transition-colors">
+                        {MOVEMENT_TYPES.GOAL.label}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {MOVEMENT_TYPES.GOAL.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-50 to-yellow-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </button>
+
+                {/* Ahorro */}
+                <button
+                  onClick={() => handleMovementTypeSelect('SAVINGS')}
+                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-white p-6 text-left hover:border-green-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className={`p-3 rounded-full bg-${getColor('balance', 'light')}`}>
+                      {renderCustomIcon('SAVINGS_PIG', 'h-6 w-6 text-green-600')}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
+                        {MOVEMENT_TYPES.SAVINGS.label}
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        {MOVEMENT_TYPES.SAVINGS.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-green-50 to-green-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                </button>
+              </div>
+            </section>
+          ) : (
+            <BaseMovementForm
+              movementType={selectedMovementType}
+              user={user}
+              onSubmit={handleFormSubmit}
+              onCancel={handleCloseForm}
+              isSubmitting={isSubmitting}
+              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            />
+          )}
         </div>
       )}
     </div>
