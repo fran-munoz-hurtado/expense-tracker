@@ -8,8 +8,8 @@ export const APP_COLORS = {
   income: {
     primary: 'blue-600',
     secondary: 'blue-700',
-    light: 'blue-50',
-    medium: 'blue-100',
+    light: 'blue-100', // Cambio de blue-50 a blue-100 para que sea más oscuro que el fondo bg-blue-50
+    medium: 'blue-200',
     dark: 'blue-900',
     border: 'blue-200',
     text: 'blue-700',
@@ -30,16 +30,16 @@ export const APP_COLORS = {
     icon: 'yellow-700',
   },
   balance: {
-    primary: 'blue-900',
-    secondary: 'blue-700',
-    light: 'blue-50',
-    medium: 'blue-100',
-    dark: 'blue-900',
-    border: 'blue-200',
-    text: 'blue-900',
+    primary: 'green-600',
+    secondary: 'green-700',
+    light: 'green-100', // Cambio de blue-50 a green-100 para que sea más oscuro que el fondo bg-green-50
+    medium: 'green-200',
+    dark: 'green-900',
+    border: 'green-200',
+    text: 'green-900',
     bg: 'white',
     bgGradient: 'bg-white',
-    icon: 'blue-700',
+    icon: 'green-700',
   },
   status: {
     paid: {

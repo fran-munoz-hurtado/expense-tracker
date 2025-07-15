@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip } from 'lucide-react'
-import { type Transaction, type User, type TransactionAttachment } from '@/lib/supabase'
-import { fetchUserTransactions, fetchAttachmentCounts } from '@/lib/dataUtils'
+import { type Transaction, type User, type TransactionAttachment, type RecurrentExpense } from '@/lib/supabase'
+import { fetchUserTransactions, fetchAttachmentCounts, fetchUserExpenses } from '@/lib/dataUtils'
 import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
+import { renderCustomIcon } from '@/lib/utils/iconRenderer'
+import { getTransactionIconType, getTransactionIconColor, getTransactionIconBackground } from '@/lib/utils/transactionIcons'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 
@@ -52,6 +54,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const navigation = useAppNavigation()
   
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
@@ -61,6 +64,16 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(navigationParams?.month || null)
   const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
+
+  // Create recurrentGoalMap like in DashboardView
+  const recurrentGoalMap = useMemo(() => {
+    const map: Record<number, boolean> = {}
+    recurrentExpenses.forEach(re => {
+      if (re.isgoal) map[re.id] = true
+    })
+    console.log('🎯 CategoriesView: recurrentGoalMap created', map)
+    return map
+  }, [recurrentExpenses])
 
   // Direct attachment functionality implementation (without external hook)
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
@@ -228,24 +241,26 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       setError(null)
       setLoading(true)
       
-      console.log(`🔄 CategoriesView: Fetching data for year ${selectedYear}${selectedMonth ? `, month ${selectedMonth}` : ' (all months)'}`)
+      console.log(`🔄 CategoriesView: Fetching all transactions efficiently (like MisMetasView)`)
       
       let allTransactions: Transaction[] = []
       
       if (selectedMonth) {
-        // Fetch specific month
+        // Fetch specific month (keep existing logic for month filter)
         allTransactions = await fetchUserTransactions(user, selectedMonth, selectedYear)
       } else {
-        // Fetch entire year
-        const monthPromises = Array.from({ length: 12 }, (_, i) => 
-          fetchUserTransactions(user, i + 1, selectedYear)
-        )
-        const monthResults = await Promise.all(monthPromises)
-        allTransactions = monthResults.flat()
+        // OPTIMIZED: Use the same strategy as MisMetasView - fetch ALL transactions in one query
+        console.log(`🔄 CategoriesView: Using single query to fetch all transactions (MisMetasView strategy)`)
+        allTransactions = await fetchUserTransactions(user, undefined, undefined)
+        console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions in single query`)
       }
 
-      console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions`)
+      // Fetch recurrent expenses to build recurrentGoalMap
+      const expenses = await fetchUserExpenses(user)
+      console.log(`📊 CategoriesView: Fetched ${expenses.recurrent.length} recurrent expenses`)
+
       setTransactions(allTransactions)
+      setRecurrentExpenses(expenses.recurrent)
 
       // Load attachment counts
       await loadAttachmentCounts(allTransactions)
@@ -276,7 +291,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       transactionsCount: transactions.length,
       filterType,
       selectedYear,
-      selectedMonth
+      selectedMonth,
+      recurrentGoalMapSize: Object.keys(recurrentGoalMap).length
     })
     
     // Filter transactions by type if needed
@@ -470,7 +486,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     })
     
     return sortedCategories
-  }, [transactions, filterType])
+  }, [transactions, filterType, recurrentGoalMap])
 
   // Toggle category expansion
   const toggleCategory = (categoryName: string) => {
@@ -521,19 +537,86 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     return categoryName
   }
 
-  // Get transaction icon (consistent with DashboardView)
-  const getTransactionIcon = (transaction: Transaction) => {
-    if (transaction.source_type === 'recurrent') {
-      return <Repeat className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
-    } else {
-      return <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        {/* Etiqueta principal - forma de casa invertida simétrica con todas las esquinas suavizadas */}
-        <path d="M5 4 Q5 1 7 1 L17 1 Q19 1 19 4 L19 16 Q19 17 18 17 Q15 20 12 22 Q9 20 6 17 Q5 17 5 16 Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
-        
-        {/* Agujero redondo en la parte superior */}
-        <circle cx="12" cy="5" r="1.5" fill="white" stroke="white" strokeWidth="0.5" />
-      </svg>
+  // Get recurrent group icon based on its transactions
+  const getRecurrentGroupIcon = (recurrentGroup: RecurrentGroup) => {
+    // Get the first transaction to determine the icon
+    const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
+    
+    if (!firstTransaction) {
+      return <Repeat className={`h-4 w-4 text-${getColor('expense', 'icon')}`} />
     }
+    
+    // Use the parametrized system
+    const iconType = getTransactionIconType(firstTransaction, recurrentGoalMap)
+    const iconColor = getTransactionIconColor(firstTransaction, iconType)
+    
+    console.log('🔍 getRecurrentGroupIcon:', {
+      description: recurrentGroup.description,
+      iconType,
+      iconColor,
+      firstTransaction: {
+        id: firstTransaction.id,
+        category: firstTransaction.category,
+        source_type: firstTransaction.source_type,
+        source_id: firstTransaction.source_id,
+        isGoal: recurrentGoalMap[firstTransaction.source_id]
+      }
+    })
+    
+    // Handle REPEAT case (not supported by renderCustomIcon)
+    if (iconType === 'REPEAT') {
+      return <Repeat className={`h-4 w-4 ${iconColor}`} />
+    }
+    
+    // Handle custom icons - FIXED: pass complete className
+    return renderCustomIcon(iconType, `h-4 w-4 ${iconColor}`)
+  }
+
+  // Get recurrent group background color
+  const getRecurrentGroupBackground = (recurrentGroup: RecurrentGroup) => {
+    // Get the first transaction to determine the background
+    const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
+    
+    if (!firstTransaction) {
+      return `bg-${getColor('expense', 'light')}`
+    }
+    
+    // Use the parametrized system
+    const iconType = getTransactionIconType(firstTransaction, recurrentGoalMap)
+    return getTransactionIconBackground(firstTransaction, iconType)
+  }
+
+  // Get transaction icon using parametrized system (correct implementation)
+  const getTransactionIcon = (transaction: Transaction) => {
+    // Use the parametrized system
+    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
+    const iconColor = getTransactionIconColor(transaction, iconType)
+    
+    console.log('🔍 getTransactionIcon:', {
+      id: transaction.id,
+      description: transaction.description,
+      type: transaction.type,
+      category: transaction.category,
+      source_type: transaction.source_type,
+      source_id: transaction.source_id,
+      iconType,
+      iconColor,
+      isGoal: recurrentGoalMap[transaction.source_id]
+    })
+    
+    // Handle REPEAT case (not supported by renderCustomIcon)
+    if (iconType === 'REPEAT') {
+      return <Repeat className={`h-4 w-4 ${iconColor}`} />
+    }
+    
+    // Handle custom icons - FIXED: pass complete className
+    return renderCustomIcon(iconType, `h-4 w-4 ${iconColor}`)
+  }
+
+  // Get transaction background color
+  const getTransactionBackground = (transaction: Transaction) => {
+    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
+    return getTransactionIconBackground(transaction, iconType)
   }
 
   return (
@@ -816,8 +899,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
-                                  <div className={`p-1.5 rounded-full bg-${getColor('expense', 'light')} transition-all duration-300 hover:scale-110`}>
-                                    <Repeat className={`h-4 w-4 text-${getColor('expense', 'icon')}`} />
+                                  <div className={`p-1.5 rounded-full ${getRecurrentGroupBackground(recurrentGroup)} transition-all duration-300 hover:scale-110`}>
+                                    {getRecurrentGroupIcon(recurrentGroup)}
                                   </div>
                                   <div>
                                     <p className="text-sm font-medium text-gray-900">{recurrentGroup.description}</p>
@@ -900,7 +983,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                 <div key={transaction.id} className="bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                                                   <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-2">
-                                                      <div className={`p-1 rounded-full bg-${getColor(transaction.type, 'light')} transition-all duration-300 hover:scale-110`}>
+                                                      <div className={`p-1 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
                                                         {getTransactionIcon(transaction)}
                                                       </div>
                                                       <span className="text-xs font-medium text-gray-900">{months[transaction.month - 1]}</span>
@@ -973,7 +1056,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                              <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')} transition-all duration-300 hover:scale-110`}>
+                              <div className={`p-1.5 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
                                 {getTransactionIcon(transaction)}
                               </div>
                               <div>

@@ -500,7 +500,7 @@ function Home() {
                 >
                   <div className="flex items-center space-x-4">
                     <div className={`p-3 rounded-full bg-${getColor('balance', 'light')}`}>
-                      {renderCustomIcon('SAVINGS_PIG', 'h-6 w-6 text-green-600')}
+                      {renderCustomIcon('SAVINGS_PIG', `h-6 w-6 text-${getColor('balance', 'icon')}`)}
                     </div>
                     <div className="flex-1">
                       <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-700 transition-colors">

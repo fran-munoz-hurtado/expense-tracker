@@ -12,6 +12,7 @@ import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import MonthlyProgressBar from './MonthlyProgressBar'
+import TransactionIcon from './TransactionIcon'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 
@@ -1442,31 +1443,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
-                              {/* Ícono de tipo de transacción: solo target si es meta, si no, flechas o file */}
-                              {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] ? (
-                                // Ícono de meta recurrente: target amarillo muy oscuro sobre fondo amarillo claro
-                                <div className={`p-1.5 rounded-full bg-${getColor('expense', 'light')}`}> 
-                                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                                    <circle cx="10" cy="10" r="8" stroke="#713f12" strokeWidth="2" fill="#FEF9C3" />
-                                    <circle cx="10" cy="10" r="4" stroke="#713f12" strokeWidth="2" fill="white" />
-                                    <circle cx="10" cy="10" r="1.5" fill="#713f12" />
-                                  </svg>
-                                </div>
-                              ) : transaction.source_type === 'recurrent' ? (
-                                <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
-                                  <Repeat className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
-                                </div>
-                              ) : (
-                                <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
-                                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    {/* Etiqueta principal - forma de casa invertida simétrica con todas las esquinas suavizadas */}
-                                    <path d="M5 4 Q5 1 7 1 L17 1 Q19 1 19 4 L19 16 Q19 17 18 17 Q15 20 12 22 Q9 20 6 17 Q5 17 5 16 Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
-                                    
-                                    {/* Agujero redondo en la parte superior */}
-                                    <circle cx="12" cy="5" r="1.5" fill="white" stroke="white" strokeWidth="0.5" />
-                                  </svg>
-                                </div>
-                              )}
+                              {/* Usar TransactionIcon parametrizado */}
+                              <TransactionIcon 
+                                transaction={transaction}
+                                recurrentGoalMap={recurrentGoalMap}
+                                size="w-4 h-4"
+                                showBackground={true}
+                              />
                             </div>
                             <div>
                               <div className="text-sm font-medium text-gray-900 flex items-center gap-2 transaction-description">
@@ -1686,31 +1669,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     {/* Header */}
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
-                        {/* Ícono de tipo de transacción: solo target si es meta, si no, flechas o file */}
-                        {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] ? (
-                          // Ícono de meta recurrente: target amarillo muy oscuro sobre fondo amarillo claro (mobile)
-                          <div className="p-1.5 rounded-full bg-yellow-100"> 
-                            <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                              <circle cx="10" cy="10" r="8" stroke="#713f12" strokeWidth="2" fill="#FEF9C3" />
-                              <circle cx="10" cy="10" r="4" stroke="#713f12" strokeWidth="2" fill="white" />
-                              <circle cx="10" cy="10" r="1.5" fill="#713f12" />
-                            </svg>
-                          </div>
-                        ) : transaction.source_type === 'recurrent' ? (
-                          <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
-                            <Repeat className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
-                          </div>
-                        ) : (
-                          <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
-                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              {/* Etiqueta principal - forma de casa invertida simétrica con todas las esquinas suavizadas */}
-                              <path d="M5 4 Q5 1 7 1 L17 1 Q19 1 19 4 L19 16 Q19 17 18 17 Q15 20 12 22 Q9 20 6 17 Q5 17 5 16 Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
-                              
-                              {/* Agujero redondo en la parte superior */}
-                              <circle cx="12" cy="5" r="1.5" fill="white" stroke="white" strokeWidth="0.5" />
-                            </svg>
-                          </div>
-                        )}
+                        {/* Usar TransactionIcon parametrizado - Mobile */}
+                        <TransactionIcon 
+                          transaction={transaction}
+                          recurrentGoalMap={recurrentGoalMap}
+                          size="w-4 h-4"
+                          showBackground={true}
+                        />
                         <div className="min-w-0 flex-1">
                           <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-2 transaction-description">
                             <span>{transaction.description}</span>
