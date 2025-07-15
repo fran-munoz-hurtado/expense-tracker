@@ -1458,7 +1458,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 </div>
                               ) : (
                                 <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
-                                  <FileText className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
+                                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    {/* Etiqueta principal - forma de casa invertida simétrica con todas las esquinas suavizadas */}
+                                    <path d="M5 4 Q5 1 7 1 L17 1 Q19 1 19 4 L19 16 Q19 17 18 17 Q15 20 12 22 Q9 20 6 17 Q5 17 5 16 Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
+                                    
+                                    {/* Agujero redondo en la parte superior */}
+                                    <circle cx="12" cy="5" r="1.5" fill="white" stroke="white" strokeWidth="0.5" />
+                                  </svg>
                                 </div>
                               )}
                             </div>
@@ -1696,7 +1702,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           </div>
                         ) : (
                           <div className={`p-1.5 rounded-full bg-${getColor(transaction.type, 'light')}`}> 
-                            <FileText className={`h-4 w-4 text-${getColor(transaction.type, 'icon')}`} />
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              {/* Etiqueta principal - forma de casa invertida simétrica con todas las esquinas suavizadas */}
+                              <path d="M5 4 Q5 1 7 1 L17 1 Q19 1 19 4 L19 16 Q19 17 18 17 Q15 20 12 22 Q9 20 6 17 Q5 17 5 16 Z" fill="currentColor" stroke="currentColor" strokeWidth="1.5" />
+                              
+                              {/* Agujero redondo en la parte superior */}
+                              <circle cx="12" cy="5" r="1.5" fill="white" stroke="white" strokeWidth="0.5" />
+                            </svg>
                           </div>
                         )}
                         <div className="min-w-0 flex-1">

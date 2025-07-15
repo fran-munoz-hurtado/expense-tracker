@@ -36,7 +36,7 @@ export const MOVEMENT_TYPES = {
   },
   SINGLE_EXPENSE: {
     key: 'single_expense',
-    icon: FileText,
+    icon: 'TICKET_TAG' as any, // Using custom icon
     label: 'Gasto único',
     description: 'Gastos que ocurren una sola vez',
     color: 'expense' as const,
@@ -58,7 +58,7 @@ export const MOVEMENT_TYPES = {
   },
   SINGLE_INCOME: {
     key: 'single_income',
-    icon: FileText,
+    icon: 'TICKET_TAG' as any, // Using custom icon
     label: 'Ingreso único',
     description: 'Ingresos que ocurren una sola vez',
     color: 'income' as const,
@@ -116,13 +116,12 @@ export const STATUS_ICONS = {
 
 // Custom SVG icon configurations (props for creating SVG elements)
 export const CUSTOM_ICONS = {
-  // Goal/Target icon (custom SVG)
+  // Goal/Target icon (custom SVG) - Simplified to 2 concentric circles
   GOAL_TARGET: {
     viewBox: "0 0 20 20",
     paths: [
-      { type: 'circle', cx: '10', cy: '10', r: '8', stroke: '#713f12', strokeWidth: '2', fill: '#FEF9C3' },
-      { type: 'circle', cx: '10', cy: '10', r: '4', stroke: '#713f12', strokeWidth: '2', fill: 'white' },
-      { type: 'circle', cx: '10', cy: '10', r: '1.5', fill: '#713f12' },
+      { type: 'circle', cx: '10', cy: '10', r: '8', stroke: 'currentColor', strokeWidth: '2.5', fill: '#fef3c7' },
+      { type: 'circle', cx: '10', cy: '10', r: '3', stroke: 'currentColor', strokeWidth: '2.5', fill: '#fef3c7' },
     ]
   },
   
@@ -133,13 +132,36 @@ export const CUSTOM_ICONS = {
     strokeWidth: "2",
     fill: "none",
     paths: [
-      { type: 'ellipse', cx: '12', cy: '14', rx: '7', ry: '4', fill: 'currentColor', fillOpacity: '0.1' },
-      { type: 'circle', cx: '12', cy: '8', r: '4', fill: 'currentColor', fillOpacity: '0.1' },
-      { type: 'ellipse', cx: '12', cy: '9', rx: '1.5', ry: '1', fill: 'currentColor', fillOpacity: '0.2' },
-      { type: 'path', d: 'M9 6l-1-2 M15 6l1-2' },
-      { type: 'path', d: 'M7 17v2 M17 17v2 M9 17v2 M15 17v2' },
-      { type: 'rect', x: '11', y: '4', width: '2', height: '0.5', fill: 'currentColor' },
-      { type: 'circle', cx: '16', cy: '6', r: '1.5', fill: 'currentColor', fillOpacity: '0.3' },
+      // Moneda - círculo exterior mucho más grande y centrado
+      { type: 'circle', cx: '12', cy: '12', r: '10.25', fill: 'none', stroke: 'currentColor', strokeWidth: '2.5' },
+      
+      // Trébol de 3 hojas más grande y sólido
+      // Hoja izquierda
+      { type: 'circle', cx: '8.5', cy: '11', r: '2.5', fill: 'currentColor', stroke: '#22c55e', strokeWidth: '1.2' },
+      
+      // Hoja derecha
+      { type: 'circle', cx: '15.5', cy: '11', r: '2.5', fill: 'currentColor', stroke: '#22c55e', strokeWidth: '1.2' },
+      
+      // Hoja superior
+      { type: 'circle', cx: '12', cy: '7.5', r: '2.5', fill: 'currentColor', stroke: '#22c55e', strokeWidth: '1.2' },
+      
+      // Tallo más corto
+      { type: 'line', x1: '12', y1: '12.5', x2: '12', y2: '15', stroke: '#22c55e', strokeWidth: '1.8', strokeLinecap: 'round' },
+    ]
+  },
+  
+  // Ticket/Tag icon for single movements
+  TICKET_TAG: {
+    viewBox: "0 0 24 24",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    fill: "none",
+    paths: [
+      // Etiqueta principal - forma de casa invertida simétrica con todas las esquinas suavizadas
+      { type: 'path', d: 'M5 4 Q5 1 7 1 L17 1 Q19 1 19 4 L19 16 Q19 17 18 17 Q15 20 12 22 Q9 20 6 17 Q5 17 5 16 Z', fill: 'currentColor', stroke: 'currentColor', strokeWidth: '1.5' },
+      
+      // Agujero redondo en la parte superior
+      { type: 'circle', cx: '12', cy: '5', r: '1.5', fill: 'white', stroke: 'white', strokeWidth: '0.5' },
     ]
   },
   
