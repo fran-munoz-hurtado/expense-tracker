@@ -2,7 +2,7 @@
  * Reusable form fields for non-recurrent transactions
  */
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   AVAILABLE_YEARS, 
   AVAILABLE_MONTHS, 
@@ -26,14 +26,30 @@ export default function NonRecurrentFormFields({
   className = '' 
 }: NonRecurrentFormFieldsProps) {
   
+  // Local state for input value to allow free typing
+  const [inputValue, setInputValue] = useState<string>('')
+  
+  // Initialize input value when formData.value changes from external source
+  useEffect(() => {
+    if (formData.value === 0) {
+      setInputValue('')
+    } else if (inputValue === '') {
+      // Only update if input is empty (to avoid overriding user typing)
+      setInputValue(formData.value.toString())
+    }
+  }, [formData.value])
+  
   // Get error for specific field
   const getFieldError = (field: string) => {
     return errors.find(error => error.field === field)
   }
   
-  // Handle value change with currency formatting
+  // Handle value change with better UX
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value
+    setInputValue(rawValue)
+    
+    // Parse and update the numeric value
     const numericValue = parseCurrency(rawValue)
     onChange({
       ...formData,
@@ -41,10 +57,25 @@ export default function NonRecurrentFormFields({
     })
   }
   
-  // Get display value for currency input
-  const getValueDisplayValue = () => {
-    if (formData.value === 0) return ''
-    return formatCurrencyForInput(formData.value.toString())
+  // Handle input blur to format the value
+  const handleValueBlur = () => {
+    if (inputValue.trim() === '') {
+      setInputValue('')
+      onChange({
+        ...formData,
+        value: 0
+      })
+      return
+    }
+    
+    const numericValue = parseCurrency(inputValue)
+    if (numericValue > 0) {
+      const formattedValue = numericValue.toLocaleString('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      })
+      setInputValue(formattedValue)
+    }
   }
   
   return (
@@ -83,8 +114,9 @@ export default function NonRecurrentFormFields({
         </label>
         <input
           type="text"
-          value={getValueDisplayValue()}
+          value={inputValue}
           onChange={handleValueChange}
+          onBlur={handleValueBlur}
           placeholder="$0"
           className={`w-full px-4 py-3 rounded-xl border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400 ${
             getFieldError('value') 

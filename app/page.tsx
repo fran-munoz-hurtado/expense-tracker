@@ -132,6 +132,9 @@ function Home() {
 
   const handleFormSubmit = async (payload: any) => {
     console.log('🎯 Form submitted with payload:', payload)
+    console.log('🎯 Selected movement type:', selectedMovementType)
+    console.log('🎯 Payload type:', payload.type)
+    console.log('🎯 Payload category:', payload.category)
     setIsSubmitting(true)
     
     try {
@@ -139,6 +142,7 @@ function Home() {
         // Handle expense creation
         if (selectedMovementType === 'RECURRENT_EXPENSE' || selectedMovementType === 'GOAL' || selectedMovementType === 'SAVINGS') {
           // Create recurrent expense
+          console.log('🔄 Creating recurrent expense...')
           await createRecurrentExpense(user!, {
             description: payload.description,
             month_from: payload.month_from,
@@ -153,6 +157,7 @@ function Home() {
           })
         } else {
           // Create non-recurrent expense
+          console.log('🔄 Creating non-recurrent expense...')
           await createNonRecurrentExpense(user!, {
             description: payload.description,
             year: payload.year,
@@ -161,13 +166,26 @@ function Home() {
             payment_deadline: payload.payment_deadline,
             type: payload.type,
             category: payload.category,
-            isgoal: payload.isgoal
+            // isgoal is NOT included because non_recurrent_expenses table doesn't have this column
           })
         }
       } else {
         // Handle income creation
         if (selectedMovementType === 'RECURRENT_INCOME') {
           // Create recurrent income
+          console.log('🔄 Creating recurrent income...')
+          console.log('📋 Recurrent income payload:', {
+            description: payload.description,
+            month_from: payload.month_from,
+            month_to: payload.month_to,
+            year_from: payload.year_from,
+            year_to: payload.year_to,
+            value: payload.value,
+            payment_day_deadline: payload.payment_day_deadline,
+            type: payload.type,
+            category: payload.category,
+            isgoal: payload.isgoal
+          })
           await createRecurrentExpense(user!, {
             description: payload.description,
             month_from: payload.month_from,
@@ -182,6 +200,7 @@ function Home() {
           })
         } else {
           // Create non-recurrent income
+          console.log('🔄 Creating non-recurrent income...')
           await createNonRecurrentExpense(user!, {
             description: payload.description,
             year: payload.year,
@@ -190,17 +209,18 @@ function Home() {
             payment_deadline: payload.payment_deadline,
             type: payload.type,
             category: payload.category,
-            isgoal: payload.isgoal
+            // isgoal is NOT included because non_recurrent_expenses table doesn't have this column
           })
         }
       }
       
+      console.log('✅ Transaction created successfully!')
       // Refresh data and close modal
       await refreshData(user!.id, 'create_transaction')
       handleCloseForm()
       
     } catch (error) {
-      console.error('Error creating transaction:', error)
+      console.error('❌ Error creating transaction:', error)
       throw error // Re-throw to let BaseMovementForm handle the error display
     } finally {
       setIsSubmitting(false)
@@ -477,14 +497,16 @@ function Home() {
               </div>
             </section>
           ) : (
-            <BaseMovementForm
-              movementType={selectedMovementType}
-              user={user}
-              onSubmit={handleFormSubmit}
-              onCancel={handleCloseForm}
-              isSubmitting={isSubmitting}
-              className="w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-            />
+            <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <BaseMovementForm
+                movementType={selectedMovementType}
+                user={user}
+                onSubmit={handleFormSubmit}
+                onCancel={handleCloseForm}
+                isSubmitting={isSubmitting}
+                className="w-full"
+              />
+            </div>
           )}
         </div>
       )}

@@ -433,7 +433,7 @@ export const createNonRecurrentExpense = asyncHandler(async (
     payment_deadline?: string | null
     type?: TransactionType
     category?: Category
-    isgoal?: boolean
+    // isgoal is NOT included because non_recurrent_expenses table doesn't have this column
   }
 ) => {
   if (!user || !user.id) {
@@ -457,7 +457,7 @@ export const createNonRecurrentExpense = asyncHandler(async (
       user_id: user.id,
       type: expenseData.type || DEFAULT_VALUES.EXPENSE.TYPE,
       category: expenseData.category || DEFAULT_VALUES.EXPENSE.CATEGORY,
-      isgoal: expenseData.isgoal || DEFAULT_VALUES.EXPENSE.ISGOAL,
+      // isgoal is NOT included because non_recurrent_expenses table doesn't have this column
     })
     .select()
     .single()

@@ -2,7 +2,7 @@
  * Base movement form component - orchestrates all form components
  */
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { MovementType, getMovementConfig } from '@/lib/config/icons'
 import { User } from '@/lib/supabase'
 import { 
@@ -11,6 +11,7 @@ import {
   NonRecurrentFormData,
   ValidationError,
   validateRecurrentForm,
+  validateRecurrentFormWithGoals,
   validateNonRecurrentForm,
   validateCategory,
   getFormConfig,
@@ -45,26 +46,62 @@ export default function BaseMovementForm({
   const movementConfig = getMovementConfig(movementType)
   
   // Form state
-  const [recurrentFormData, setRecurrentFormData] = useState<RecurrentFormData>(getDefaultRecurrentFormData())
-  const [nonRecurrentFormData, setNonRecurrentFormData] = useState<NonRecurrentFormData>(getDefaultNonRecurrentFormData())
-  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(config.defaultCategory || undefined)
+  const [recurrentFormData, setRecurrentFormData] = useState<RecurrentFormData>(getDefaultRecurrentFormData(movementType))
+  const [nonRecurrentFormData, setNonRecurrentFormData] = useState<NonRecurrentFormData>(getDefaultNonRecurrentFormData(movementType))
   const [errors, setErrors] = useState<ValidationError[]>([])
   const [isValidating, setIsValidating] = useState(false)
   
-  // Initialize form data with defaults
-  useEffect(() => {
-    if (config.defaultCategory) {
-      setSelectedCategory(config.defaultCategory)
+  // Goal-specific state for validation
+  const [goalValidationData, setGoalValidationData] = useState<{
+    goalInputMode: 'date_range' | 'installments'
+    installments: number
+  }>({
+    goalInputMode: 'date_range',
+    installments: 1
+  })
+  
+  // Get current category value from the appropriate form data
+  const getCurrentCategory = (): string | undefined => {
+    if (config.formType === 'recurrent') {
+      return recurrentFormData.category
+    } else {
+      return nonRecurrentFormData.category
     }
-  }, [config.defaultCategory])
+  }
+  
+  // Update category in the appropriate form data
+  const updateCategory = (category: string) => {
+    if (config.formType === 'recurrent') {
+      setRecurrentFormData({
+        ...recurrentFormData,
+        category
+      })
+    } else {
+      setNonRecurrentFormData({
+        ...nonRecurrentFormData,
+        category
+      })
+    }
+  }
   
   // Validate form data
-  const validateForm = (): ValidationError[] => {
+  const validateForm = useCallback(() => {
     let formErrors: ValidationError[] = []
     
     if (config.formType === 'recurrent') {
-      const result = validateRecurrentForm(recurrentFormData)
-      formErrors = result.errors
+      // Use extended validation for goals
+      if (config.isgoal) {
+        const result = validateRecurrentFormWithGoals(
+          recurrentFormData,
+          true,
+          goalValidationData.goalInputMode,
+          goalValidationData.installments
+        )
+        formErrors = result.errors
+      } else {
+        const result = validateRecurrentForm(recurrentFormData)
+        formErrors = result.errors
+      }
     } else {
       const result = validateNonRecurrentForm(nonRecurrentFormData)
       formErrors = result.errors
@@ -72,14 +109,27 @@ export default function BaseMovementForm({
     
     // Validate category if required
     if (config.showCategorySelector) {
-      const categoryError = validateCategory(selectedCategory, config.showCategorySelector)
+      const categoryError = validateCategory(getCurrentCategory(), config.showCategorySelector)
       if (categoryError) {
         formErrors.push(categoryError)
       }
     }
     
     return formErrors
-  }
+  }, [
+    recurrentFormData,
+    nonRecurrentFormData,
+    config.formType,
+    config.showCategorySelector,
+    config.isgoal,
+    goalValidationData
+  ])
+  
+  // Real-time validation - runs whenever form data changes
+  useEffect(() => {
+    const validationErrors = validateForm()
+    setErrors(validationErrors)
+  }, [validateForm])
   
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,22 +166,56 @@ export default function BaseMovementForm({
     const basePayload = {
       user_id: user.id,
       type: config.type,
-      category: selectedCategory || config.defaultCategory,
-      isgoal: config.isgoal
+      // isgoal is handled separately below based on form type
     }
     
     if (config.formType === 'recurrent') {
+      // Get final category - use default if not set
+      let finalCategory = recurrentFormData.category
+      if (!finalCategory) {
+        finalCategory = config.showCategorySelector ? 'sin categoría' : config.defaultCategory!
+      } else if (finalCategory === 'Sin categoría') {
+        finalCategory = 'sin categoría'  // Normalize for database
+      }
+      
+      console.log('🏷️ Category debug (recurrent):', {
+        formDataCategory: recurrentFormData.category,
+        showCategorySelector: config.showCategorySelector,
+        defaultCategory: config.defaultCategory,
+        finalCategory,
+        movementType: movementType
+      })
+      
       return {
         ...basePayload,
         ...recurrentFormData,
-        // Apply smart day logic if needed
-        payment_day_deadline: recurrentFormData.payment_day_deadline || null
+        category: finalCategory,
+        payment_day_deadline: recurrentFormData.payment_day_deadline || null,
+        isgoal: config.isgoal  // Only include isgoal for recurrent movements
       }
     } else {
+      // Get final category - use default if not set
+      let finalCategory = nonRecurrentFormData.category
+      if (!finalCategory) {
+        finalCategory = config.showCategorySelector ? 'sin categoría' : config.defaultCategory!
+      } else if (finalCategory === 'Sin categoría') {
+        finalCategory = 'sin categoría'  // Normalize for database
+      }
+      
+      console.log('🏷️ Category debug (non-recurrent):', {
+        formDataCategory: nonRecurrentFormData.category,
+        showCategorySelector: config.showCategorySelector,
+        defaultCategory: config.defaultCategory,
+        finalCategory,
+        movementType: movementType
+      })
+      
       return {
         ...basePayload,
         ...nonRecurrentFormData,
+        category: finalCategory,
         payment_deadline: nonRecurrentFormData.payment_deadline || null
+        // isgoal is NOT included because non_recurrent_expenses table doesn't have this column
       }
     }
   }
@@ -183,6 +267,8 @@ export default function BaseMovementForm({
             formData={recurrentFormData}
             onChange={setRecurrentFormData}
             errors={errors}
+            isGoal={config.isgoal}
+            onGoalValidationChange={setGoalValidationData}
           />
         ) : (
           <NonRecurrentFormFields
@@ -195,8 +281,8 @@ export default function BaseMovementForm({
         {/* Category Selector */}
         {config.showCategorySelector && (
           <CategorySelector
-            selectedCategory={selectedCategory}
-            onChange={setSelectedCategory}
+            selectedCategory={getCurrentCategory()}
+            onChange={updateCategory}
             errors={errors}
           />
         )}
@@ -252,4 +338,4 @@ export default function BaseMovementForm({
       </form>
     </div>
   )
-} 
+}

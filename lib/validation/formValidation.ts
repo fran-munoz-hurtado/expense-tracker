@@ -158,18 +158,48 @@ export const parseCurrency = (value: string): number => {
 
 export const formatCurrencyForInput = (value: string): string => {
   if (!value || value.trim() === '') return ''
+  
+  // Allow user to type freely while writing
+  // Only format when the value is "complete" (no trailing dots or incomplete numbers)
+  if (value.endsWith('.') || value.endsWith(',')) {
+    return value
+  }
+  
   // Remove all non-numeric characters except decimal point
   const cleanValue = value.replace(/[^0-9.]/g, '')
   if (!cleanValue) return ''
   
   const numValue = parseFloat(cleanValue)
-  if (isNaN(numValue)) return ''
+  if (isNaN(numValue)) return value // Return original if can't parse
   
-  // Format with thousands separators
+  // Only format with thousands separators for whole numbers
+  if (cleanValue.includes('.')) {
+    return cleanValue // Keep decimal input as-is while typing
+  }
+  
+  // Format with thousands separators only for whole numbers
   return numValue.toLocaleString('es-CO', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   })
+}
+
+// New function to handle real-time input formatting
+export const formatValueForDisplay = (inputValue: string, storedValue: number): string => {
+  // If there's an active input value, use it
+  if (inputValue !== undefined && inputValue !== null) {
+    return inputValue
+  }
+  
+  // If no input value but there's a stored value, format it
+  if (storedValue && storedValue > 0) {
+    return storedValue.toLocaleString('es-CO', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    })
+  }
+  
+  return ''
 }
 
 // Smart day logic - get last valid day of month
@@ -401,6 +431,7 @@ export const validateCategory = (value: string | undefined, showCategorySelector
     return null // Category is handled automatically
   }
   
+  // Category is mandatory
   if (!value || value.trim() === '') {
     return {
       field: 'category',
@@ -409,16 +440,12 @@ export const validateCategory = (value: string | undefined, showCategorySelector
     }
   }
   
-  const allCategories = [
-    ...Object.values(CATEGORIES.INCOME),
-    ...Object.values(CATEGORIES.EXPENSE)
-  ].map(cat => cat.toString())
-  
-  if (!allCategories.includes(value.toString())) {
+  // Simple string validation - no enum restrictions
+  if (value.length < 1 || value.length > 255) {
     return {
       field: 'category',
-      message: 'La categoría seleccionada no es válida',
-      code: 'INVALID_CATEGORY'
+      message: 'La categoría debe tener entre 1 y 255 caracteres',
+      code: 'INVALID_LENGTH'
     }
   }
   
@@ -466,6 +493,62 @@ export const validateRecurrentForm = (data: RecurrentFormData): ValidationResult
   }
 }
 
+// Extended validation function for goals with installments support
+export const validateRecurrentFormWithGoals = (
+  data: RecurrentFormData, 
+  isGoal: boolean, 
+  goalInputMode: 'date_range' | 'installments' = 'date_range',
+  installments?: number
+): ValidationResult => {
+  const errors: ValidationError[] = []
+  
+  // Validate each field
+  const descriptionError = validateDescription(data.description)
+  if (descriptionError) errors.push(descriptionError)
+  
+  const valueError = validateValue(data.value)
+  if (valueError) errors.push(valueError)
+  
+  const yearFromError = validateYear(data.year_from)
+  if (yearFromError) errors.push({ ...yearFromError, field: 'year_from' })
+  
+  const monthFromError = validateMonth(data.month_from)
+  if (monthFromError) errors.push({ ...monthFromError, field: 'month_from' })
+  
+  const paymentDayError = validatePaymentDay(data.payment_day_deadline, data.year_from, data.month_from)
+  if (paymentDayError) errors.push(paymentDayError)
+  
+  // Goal-specific validation
+  if (isGoal && goalInputMode === 'installments') {
+    // Validate installments instead of end date
+    if (installments !== undefined) {
+      const installmentsError = validateInstallments(installments)
+      if (installmentsError) errors.push(installmentsError)
+    }
+  } else {
+    // Regular validation for end date
+    const yearToError = validateYear(data.year_to)
+    if (yearToError) errors.push({ ...yearToError, field: 'year_to' })
+    
+    const monthToError = validateMonth(data.month_to)
+    if (monthToError) errors.push({ ...monthToError, field: 'month_to' })
+    
+    // Validate temporal range
+    const temporalRangeError = validateTemporalRange(
+      data.year_from,
+      data.month_from,
+      data.year_to,
+      data.month_to
+    )
+    if (temporalRangeError) errors.push(temporalRangeError)
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  }
+}
+
 export const validateNonRecurrentForm = (data: NonRecurrentFormData): ValidationResult => {
   const errors: ValidationError[] = []
   
@@ -497,9 +580,16 @@ export const getFormConfig = (movementType: MovementType) => {
 }
 
 // Helper function to get default form data
-export const getDefaultRecurrentFormData = (): RecurrentFormData => {
+export const getDefaultRecurrentFormData = (movementType?: MovementType): RecurrentFormData => {
   const currentYear = new Date().getFullYear()
   const currentMonth = new Date().getMonth() + 1
+  
+  // Get default category based on movement type
+  let defaultCategory: string | undefined
+  if (movementType) {
+    const config = getFormConfig(movementType)
+    defaultCategory = config.showCategorySelector ? 'Sin categoría' : config.defaultCategory || undefined
+  }
   
   return {
     description: '',
@@ -509,13 +599,20 @@ export const getDefaultRecurrentFormData = (): RecurrentFormData => {
     year_to: currentYear,
     value: 0,
     payment_day_deadline: undefined,
-    category: undefined,
+    category: defaultCategory,
   }
 }
 
-export const getDefaultNonRecurrentFormData = (): NonRecurrentFormData => {
+export const getDefaultNonRecurrentFormData = (movementType?: MovementType): NonRecurrentFormData => {
   const currentYear = new Date().getFullYear()
   const currentMonth = new Date().getMonth() + 1
+  
+  // Get default category based on movement type
+  let defaultCategory: string | undefined
+  if (movementType) {
+    const config = getFormConfig(movementType)
+    defaultCategory = config.showCategorySelector ? 'Sin categoría' : config.defaultCategory || undefined
+  }
   
   return {
     description: '',
@@ -523,6 +620,85 @@ export const getDefaultNonRecurrentFormData = (): NonRecurrentFormData => {
     month: currentMonth,
     value: 0,
     payment_deadline: undefined,
-    category: undefined,
+    category: defaultCategory,
   }
+}
+
+// Goal-specific utilities for installment calculation
+export const calculateEndDateFromInstallments = (
+  startMonth: number,
+  startYear: number,
+  installments: number
+): { endMonth: number; endYear: number } => {
+  if (installments <= 0) {
+    return { endMonth: startMonth, endYear: startYear }
+  }
+  
+  // Calculate total months from start
+  const totalMonths = startMonth + installments - 1
+  
+  // Calculate end year and month
+  const endYear = startYear + Math.floor((totalMonths - 1) / 12)
+  const endMonth = ((totalMonths - 1) % 12) + 1
+  
+  return { endMonth, endYear }
+}
+
+export const calculateInstallmentsFromDateRange = (
+  startMonth: number,
+  startYear: number,
+  endMonth: number,
+  endYear: number
+): number => {
+  // Convert to total months since year 0
+  const startTotalMonths = startYear * 12 + startMonth
+  const endTotalMonths = endYear * 12 + endMonth
+  
+  // Calculate difference
+  const installments = endTotalMonths - startTotalMonths + 1
+  
+  return Math.max(1, installments)
+}
+
+export const validateInstallments = (value: number): ValidationError | null => {
+  if (!value || value <= 0) {
+    return {
+      field: 'installments',
+      message: 'El número de cuotas debe ser mayor a 0',
+      code: 'REQUIRED'
+    }
+  }
+  
+  if (value > 240) {
+    return {
+      field: 'installments',
+      message: 'El número de cuotas no puede ser mayor a 240 (20 años)',
+      code: 'MAX_INSTALLMENTS'
+    }
+  }
+  
+  if (value !== Math.floor(value)) {
+    return {
+      field: 'installments',
+      message: 'El número de cuotas debe ser un número entero',
+      code: 'INTEGER_REQUIRED'
+    }
+  }
+  
+  return null
+}
+
+export const formatInstallmentPreview = (
+  startMonth: number,
+  startYear: number,
+  installments: number
+): string => {
+  const { endMonth, endYear } = calculateEndDateFromInstallments(startMonth, startYear, installments)
+  const endMonthName = AVAILABLE_MONTHS[endMonth - 1]?.label || 'Mes desconocido'
+  
+  if (installments === 1) {
+    return `Meta de 1 cuota (${AVAILABLE_MONTHS[startMonth - 1]?.label} ${startYear})`
+  }
+  
+  return `Meta de ${installments} cuotas (${AVAILABLE_MONTHS[startMonth - 1]?.label} ${startYear} - ${endMonthName} ${endYear})`
 } 

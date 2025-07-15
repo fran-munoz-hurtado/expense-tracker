@@ -34,7 +34,7 @@ export default function CategorySelector({
         Categoría *
       </label>
       <select
-        value={selectedCategory || ''}
+        value={selectedCategory || 'Sin categoría'}
         onChange={(e) => onChange(e.target.value)}
         className={`w-full px-4 py-3 rounded-xl border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all text-base ${
           getFieldError() 
@@ -42,7 +42,7 @@ export default function CategorySelector({
             : 'border-gray-200 focus:border-blue-500'
         }`}
       >
-        <option value="">Selecciona una categoría</option>
+        <option value="Sin categoría">Sin categoría</option>
         {expenseCategories.map(category => (
           <option key={category} value={category}>
             {category}
@@ -55,7 +55,7 @@ export default function CategorySelector({
         </p>
       )}
       <p className="mt-1 text-xs text-gray-500">
-        💡 Selecciona la categoría que mejor describa este movimiento
+        💡 Selecciona una categoría para este movimiento
       </p>
     </div>
   )

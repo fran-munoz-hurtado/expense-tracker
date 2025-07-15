@@ -342,11 +342,7 @@ export class TransactionValidator extends BaseValidator {
 
     // Category validation (optional)
     if (data.category !== undefined) {
-      const allCategories = [
-        ...Object.values(CATEGORIES.INCOME),
-        ...Object.values(CATEGORIES.EXPENSE)
-      ]
-      const categoryError = this.enum(data.category, 'Category', allCategories)
+      const categoryError = this.stringLength(data.category, 'Category', 1, 255)
       if (categoryError) {
         errors.category = [categoryError]
       }
@@ -406,11 +402,7 @@ export class TransactionValidator extends BaseValidator {
 
     // Category validation (optional in updates)
     if (data.category !== undefined) {
-      const allCategories = [
-        ...Object.values(CATEGORIES.INCOME),
-        ...Object.values(CATEGORIES.EXPENSE)
-      ]
-      const categoryError = this.enum(data.category, 'Category', allCategories)
+      const categoryError = this.stringLength(data.category, 'Category', 1, 255)
       if (categoryError) {
         errors.category = [categoryError]
       }
@@ -506,11 +498,7 @@ export class ExpenseValidator extends BaseValidator {
 
     // Category validation (optional)
     if (data.category !== undefined) {
-      const allCategories = [
-        ...Object.values(CATEGORIES.INCOME),
-        ...Object.values(CATEGORIES.EXPENSE)
-      ]
-      const categoryError = this.enum(data.category, 'Category', allCategories)
+      const categoryError = this.stringLength(data.category, 'Category', 1, 255)
       if (categoryError) {
         errors.category = [categoryError]
       }
@@ -581,11 +569,7 @@ export class ExpenseValidator extends BaseValidator {
 
     // Category validation (optional)
     if (data.category !== undefined) {
-      const allCategories = [
-        ...Object.values(CATEGORIES.INCOME),
-        ...Object.values(CATEGORIES.EXPENSE)
-      ]
-      const categoryError = this.enum(data.category, 'Category', allCategories)
+      const categoryError = this.stringLength(data.category, 'Category', 1, 255)
       if (categoryError) {
         errors.category = [categoryError]
       }
