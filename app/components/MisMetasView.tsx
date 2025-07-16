@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Target, TrendingUp, DollarSign, Calendar, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp, X, Paperclip } from 'lucide-react'
+import { Target, TrendingUp, DollarSign, Calendar, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp, X, Paperclip, Repeat } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, measureQueryPerformance, fetchAttachmentCounts } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
@@ -10,6 +10,8 @@ import { useSearchParams } from 'next/navigation'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import { getColor, getGradient, getNestedColor } from '@/lib/config/colors'
+import { getTransactionIconType, getTransactionIconColor, getTransactionIconBackground } from '@/lib/utils/transactionIcons'
+import { renderCustomIcon } from '@/lib/utils/iconRenderer'
 // import { useAttachments } from '@/lib/hooks/useAttachments'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
@@ -175,6 +177,16 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   const [goalTransactions, setGoalTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
+  
+  // Create recurrentGoalMap for parametrized icon system
+  const recurrentGoalMap = useMemo(() => {
+    const map: Record<number, boolean> = {}
+    recurrentExpenses.forEach(expense => {
+      map[expense.id] = expense.isgoal || false
+    })
+    return map
+  }, [recurrentExpenses])
+  
   const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
   const [error, setError] = useState<string | null>(null)
@@ -327,6 +339,26 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     
     const hasPending = transactions.some(t => t.status === 'pending')
     return hasPending ? 'pending' : 'paid'
+  }
+
+  // Get transaction icon using parametrized system
+  const getTransactionIcon = (transaction: Transaction) => {
+    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
+    const iconColor = getTransactionIconColor(transaction, iconType)
+    
+    // Handle REPEAT case (not supported by renderCustomIcon)
+    if (iconType === 'REPEAT') {
+      return <Repeat className={`h-3 w-3 ${iconColor}`} />
+    }
+    
+    // Handle custom icons
+    return renderCustomIcon(iconType, `h-3 w-3 ${iconColor}`)
+  }
+
+  // Get transaction background color
+  const getTransactionBackground = (transaction: Transaction) => {
+    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
+    return getTransactionIconBackground(transaction, iconType)
   }
 
   // Create hierarchical goal structure
@@ -924,11 +956,12 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                 <h6 className="text-sm font-medium text-gray-800 mb-3 mt-3">Detalle mensual:</h6>
                                 <div className="space-y-2">
                                   {yearData.transactions.map((transaction) => (
-                                    <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
-                                      <div className="flex items-center gap-3">
-                                        {/* Ícono de calendario */}
-                                        <Calendar className="h-4 w-4 text-blue-500" />
-                                        <span className="text-sm font-medium text-gray-700 min-w-0 month-name">
+                                    <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 min-h-[20px]">
+                                      <div className="flex items-center space-x-2">
+                                        <div className={`p-1 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
+                                          {getTransactionIcon(transaction)}
+                                        </div>
+                                        <span className="text-xs font-medium text-gray-700 min-w-0 month-name">
                                           {months[transaction.month - 1]}
                                         </span>
                                         {transaction.month === currentMonth && transaction.year === currentYear && (
@@ -953,8 +986,8 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                           </svg>
                                         </button>
                                       </div>
-                                      <div className="flex items-center gap-3">
-                                        <span className="text-sm text-gray-600">
+                                      <div className="flex items-center space-x-3">
+                                        <span className="text-xs text-gray-600">
                                           {formatCurrency(transaction.value)}
                                         </span>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
