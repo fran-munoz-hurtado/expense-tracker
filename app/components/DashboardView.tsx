@@ -2106,13 +2106,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       onClick={() => handleConfirmModify(true)}
                       className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
                     >
-                      Modificar Toda la Serie
+                      Toda la Serie
                     </button>
                     <button
                       onClick={() => handleConfirmModify(false)}
                       className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
                     >
-                      Modificar Solo Esta Transacción
+                      Solo Esta Transacción
                     </button>
                   </>
                 ) : (
