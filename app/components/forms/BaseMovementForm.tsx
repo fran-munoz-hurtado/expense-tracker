@@ -294,6 +294,7 @@ export default function BaseMovementForm({
             selectedCategory={getCurrentCategory()}
             onChange={updateCategory}
             errors={errors}
+            userId={user.id}
           />
         )}
         

@@ -2,14 +2,15 @@
  * Reusable category selector component
  */
 
-import React from 'react'
-import { CATEGORIES } from '@/lib/config/constants'
+import React, { useState, useEffect } from 'react'
 import { ValidationError } from '@/lib/validation/formValidation'
+import { getUserActiveCategories } from '@/lib/services/categoryService'
 
 interface CategorySelectorProps {
   selectedCategory: string | undefined
   onChange: (category: string) => void
   errors: ValidationError[]
+  userId: number
   className?: string
 }
 
@@ -17,16 +18,47 @@ export default function CategorySelector({
   selectedCategory, 
   onChange, 
   errors, 
+  userId,
   className = '' 
 }: CategorySelectorProps) {
+  
+  const [categories, setCategories] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  
+  // Load categories from database
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true)
+        const userCategories = await getUserActiveCategories(userId)
+        setCategories(userCategories)
+      } catch (error) {
+        console.error('Error loading categories:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadCategories()
+  }, [userId])
   
   // Get error for category field
   const getFieldError = () => {
     return errors.find(error => error.field === 'category')
   }
   
-  // Available expense categories
-  const expenseCategories = Object.values(CATEGORIES.EXPENSE)
+  if (loading) {
+    return (
+      <div className={`space-y-2 ${className}`}>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Categoría *
+        </label>
+        <div className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500">
+          Cargando categorías...
+        </div>
+      </div>
+    )
+  }
   
   return (
     <div className={`space-y-2 ${className}`}>
@@ -42,8 +74,7 @@ export default function CategorySelector({
             : 'border-gray-200 focus:border-blue-500'
         }`}
       >
-        <option value="Sin categoría">Sin categoría</option>
-        {expenseCategories.map(category => (
+        {categories.map(category => (
           <option key={category} value={category}>
             {category}
           </option>

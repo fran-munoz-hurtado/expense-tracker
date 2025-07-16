@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip } from 'lucide-react'
+import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip, Settings, Trash2, Edit2 } from 'lucide-react'
 import { type Transaction, type User, type TransactionAttachment, type RecurrentExpense } from '@/lib/supabase'
 import { fetchUserTransactions, fetchAttachmentCounts, fetchUserExpenses } from '@/lib/dataUtils'
-import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
+import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
@@ -14,6 +14,7 @@ import { renderCustomIcon } from '@/lib/utils/iconRenderer'
 import { getTransactionIconType, getTransactionIconColor, getTransactionIconBackground } from '@/lib/utils/transactionIcons'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
+import { getUserActiveCategories, addUserCategory, getUserActiveCategoriesWithInfo, CategoryInfo, countAffectedTransactions, deleteUserCategory, validateCategoryForEdit, updateUserCategory } from '@/lib/services/categoryService'
 
 interface CategoriesViewProps {
   navigationParams?: { year?: number; month?: number } | null
@@ -52,6 +53,7 @@ interface CategoryGroup {
 
 export default function CategoriesView({ navigationParams, user }: CategoriesViewProps) {
   const navigation = useAppNavigation()
+  const { refreshData } = useDataSync()
   
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
@@ -61,6 +63,24 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [expandedRecurrentGroups, setExpandedRecurrentGroups] = useState<Set<string>>(new Set())
   const [expandedYearGroups, setExpandedYearGroups] = useState<Set<string>>(new Set())
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+
+  // Category management modal state
+  const [showCategoryManagementModal, setShowCategoryManagementModal] = useState(false)
+  const [managementCategories, setManagementCategories] = useState<CategoryInfo[]>([])
+  const [loadingManagementCategories, setLoadingManagementCategories] = useState(false)
+
+  // Add new category state
+  const [showAddCategoryInput, setShowAddCategoryInput] = useState(false)
+  const [newCategoryInput, setNewCategoryInput] = useState('')
+  const [addingCategory, setAddingCategory] = useState(false)
+  const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
+
+  // Delete category state
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<CategoryInfo | null>(null)
+  const [affectedTransactionsCount, setAffectedTransactionsCount] = useState<number>(0)
+  const [deletingCategory, setDeletingCategory] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   // Create recurrentGoalMap like in DashboardView
   const recurrentGoalMap = useMemo(() => {
@@ -273,6 +293,135 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     console.log('🔄 CategoriesView: This should sync when categories are updated in DashboardView')
     fetchData()
   }, [])
+
+  // Load categories for management modal
+  const loadManagementCategories = async () => {
+    setLoadingManagementCategories(true)
+    try {
+      const categories = await getUserActiveCategoriesWithInfo(user.id)
+      // Filter out "Sin categoría" as it's not a user-available category
+      const filteredCategories = categories.filter(category => category.name !== 'Sin categoría')
+      setManagementCategories(filteredCategories)
+    } catch (error) {
+      console.error('Error loading management categories:', error)
+      setManagementCategories([])
+    } finally {
+      setLoadingManagementCategories(false)
+    }
+  }
+
+  // Handle opening category management modal
+  const handleCategoryManagementClick = () => {
+    setShowCategoryManagementModal(true)
+    setShowAddCategoryInput(false)
+    setNewCategoryInput('')
+    setAddCategoryError(null)
+    setShowDeleteConfirmModal(false)
+    setCategoryToDelete(null)
+    setDeleteError(null)
+    loadManagementCategories()
+  }
+
+  // Handle add category click
+  const handleAddCategoryClick = () => {
+    setShowAddCategoryInput(true)
+    setNewCategoryInput('')
+    setAddCategoryError(null)
+  }
+
+  // Handle adding new category
+  const handleAddCategory = async () => {
+    if (!newCategoryInput.trim()) {
+      setAddCategoryError('El nombre de la categoría no puede estar vacío')
+      return
+    }
+
+    setAddingCategory(true)
+    setAddCategoryError(null)
+
+    try {
+      const result = await addUserCategory(user.id, newCategoryInput.trim())
+      
+      if (result.success) {
+        // Reset form and reload categories
+        setNewCategoryInput('')
+        setShowAddCategoryInput(false)
+        await loadManagementCategories()
+        
+        // Notify other views that a new category has been added
+        refreshData(user.id, 'add_category')
+      } else {
+        setAddCategoryError(result.error || 'Error al agregar la categoría')
+      }
+    } catch (error) {
+      console.error('Error adding category:', error)
+      setAddCategoryError('Error interno del servidor')
+    } finally {
+      setAddingCategory(false)
+    }
+  }
+
+  // Handle cancel add category
+  const handleCancelAddCategory = () => {
+    setShowAddCategoryInput(false)
+    setNewCategoryInput('')
+    setAddCategoryError(null)
+  }
+
+  // Handle delete category click
+  const handleDeleteCategoryClick = async (category: CategoryInfo) => {
+    try {
+      // Count affected transactions (only from transactions table for user display)
+      const count = await countAffectedTransactions(user.id, category.name, true)
+      setAffectedTransactionsCount(count)
+      setCategoryToDelete(category)
+      setShowDeleteConfirmModal(true)
+      setDeleteError(null)
+    } catch (error) {
+      console.error('Error counting affected transactions:', error)
+      setDeleteError('Error al verificar las transacciones afectadas')
+    }
+  }
+
+  // Handle delete category confirmation
+  const handleConfirmDeleteCategory = async () => {
+    if (!categoryToDelete) return
+
+    setDeletingCategory(true)
+    setDeleteError(null)
+
+    try {
+      const result = await deleteUserCategory(user.id, categoryToDelete.name, categoryToDelete.isDefault)
+      
+      if (result.success) {
+        // Close modal and reload categories
+        setShowDeleteConfirmModal(false)
+        setCategoryToDelete(null)
+        await loadManagementCategories()
+        
+        // Refresh local data to reflect changes in this view
+        await fetchData()
+        
+        // Notify other views that data has changed
+        refreshData(user.id, 'delete_category')
+      } else {
+        setDeleteError(result.error || 'Error al eliminar la categoría')
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error)
+      setDeleteError('Error interno del servidor')
+    } finally {
+      setDeletingCategory(false)
+    }
+  }
+
+  // Handle cancel delete category
+  const handleCancelDeleteCategory = () => {
+    setShowDeleteConfirmModal(false)
+    setCategoryToDelete(null)
+    setDeleteError(null)
+    setAffectedTransactionsCount(0)
+  }
 
   // Group transactions by category with recurrent and year grouping
   const categoryGroups: CategoryGroup[] = useMemo(() => {
@@ -636,9 +785,18 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         {/* Left Column - Categories List */}
         <div className="w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-sm font-semibold text-gray-900">
-              Categorías
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold text-gray-900">
+                Categorías
+              </h2>
+              <button
+                onClick={handleCategoryManagementClick}
+                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Gestionar categorías"
+              >
+                <Settings className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -1012,6 +1170,208 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         </div>
       </div>
       
+      {/* Category Management Modal */}
+      {showCategoryManagementModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Gestión de Categorías</h2>
+              <button
+                onClick={() => setShowCategoryManagementModal(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              {/* Categories list */}
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Categorías disponibles:</h3>
+                {loadingManagementCategories ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="text-sm text-gray-500 mt-2">Cargando categorías...</p>
+                  </div>
+                ) : managementCategories.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-sm text-gray-500">No hay categorías disponibles</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {managementCategories.map((category, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-1.5 rounded-full ${
+                            category.isDefault ? 'bg-gray-100' : 'bg-blue-100'
+                          }`}>
+                            <DollarSign className={`h-3 w-3 ${
+                              category.isDefault ? 'text-gray-600' : 'text-blue-600'
+                            }`} />
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {category.name}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteCategoryClick(category)}
+                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Eliminar categoría"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Add new category section */}
+              {!showAddCategoryInput ? (
+                <div className="mb-4">
+                  <button
+                    onClick={handleAddCategoryClick}
+                    className="w-full p-3 text-left border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors"
+                  >
+                    <span className="text-sm font-medium">+ Agregar nueva categoría</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nueva categoría
+                      </label>
+                      <input
+                        type="text"
+                        value={newCategoryInput}
+                        onChange={(e) => setNewCategoryInput(e.target.value)}
+                        placeholder="Nombre de la categoría"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        maxLength={50}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddCategory()
+                          }
+                        }}
+                      />
+                      {addCategoryError && (
+                        <p className="text-red-500 text-xs mt-1">{addCategoryError}</p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={handleAddCategory}
+                        disabled={addingCategory || !newCategoryInput.trim()}
+                        className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                      >
+                        {addingCategory ? 'Agregando...' : 'Agregar'}
+                      </button>
+                      <button
+                        onClick={handleCancelAddCategory}
+                        disabled={addingCategory}
+                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end pt-4 border-t">
+                <button
+                  onClick={() => setShowCategoryManagementModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirmModal && categoryToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Confirmar Eliminación</h2>
+              <button
+                onClick={handleCancelDeleteCategory}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="mb-4">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className={`p-2 rounded-full ${
+                    categoryToDelete.isDefault ? 'bg-gray-100' : 'bg-blue-100'
+                  }`}>
+                    <DollarSign className={`h-4 w-4 ${
+                      categoryToDelete.isDefault ? 'text-gray-600' : 'text-blue-600'
+                    }`} />
+                  </div>
+                  <span className="text-lg font-medium text-gray-900">
+                    {categoryToDelete.name}
+                  </span>
+                </div>
+                
+                <p className="text-gray-700 mb-3">
+                  ¿Estás seguro que deseas eliminar esta categoría?
+                </p>
+                
+                {affectedTransactionsCount > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
+                    <div className="flex items-center space-x-2">
+                      <AlertCircle className="h-4 w-4 text-yellow-600" />
+                      <span className="text-sm font-medium text-yellow-800">
+                        Transacciones afectadas
+                      </span>
+                    </div>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Eliminando esta categoría va a afectar <strong>{affectedTransactionsCount}</strong> transacciones.
+                      Estas transacciones cambiarán a "Sin categoría".
+                    </p>
+                  </div>
+                )}
+                
+                {deleteError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                    <p className="text-sm text-red-700">{deleteError}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleCancelDeleteCategory}
+                  disabled={deletingCategory}
+                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmDeleteCategory}
+                  disabled={deletingCategory}
+                  className="flex-1 bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                >
+                  {deletingCategory ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Attachment Modals */}
       <AttachmentModals />
     </div>
