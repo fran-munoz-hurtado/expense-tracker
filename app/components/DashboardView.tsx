@@ -15,6 +15,7 @@ import MonthlyProgressBar from './MonthlyProgressBar'
 import TransactionIcon from './TransactionIcon'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
+import { getUserActiveCategories, addUserCategory } from '@/lib/services/categoryService'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -143,6 +144,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const [customCategories, setCustomCategories] = useState<string[]>([])
   const [showDuplicateCategoryModal, setShowDuplicateCategoryModal] = useState(false)
   const [duplicateCategoryName, setDuplicateCategoryName] = useState<string>('')
+
+  // Add category state (matching CategoriesView)
+  const [addingCategory, setAddingCategory] = useState(false)
+  const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
 
   // Sync with URL parameters
   useEffect(() => {
@@ -916,56 +921,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   const loadAvailableCategories = async () => {
     try {
-      // Get unique categories from database for expenses
-      const { data: recurrentCategories, error: recurrentError } = await supabase
-        .from('recurrent_expenses')
-        .select('category')
-        .eq('user_id', user.id)
-        .eq('type', 'expense')
-        .not('category', 'is', null)
-
-      const { data: nonRecurrentCategories, error: nonRecurrentError } = await supabase
-        .from('non_recurrent_expenses')
-        .select('category')
-        .eq('user_id', user.id)
-        .eq('type', 'expense')
-        .not('category', 'is', null)
-
-      if (recurrentError || nonRecurrentError) {
-        console.error('Error loading categories:', recurrentError || nonRecurrentError)
-        return
-      }
-
-      // Extract unique categories from database
-      const dbCategories: string[] = []
+      // Get active categories from database for this user
+      const categories = await getUserActiveCategories(user.id)
       
-      recurrentCategories?.forEach(item => {
-        if (item.category && item.category !== 'sin categoría' && item.category !== 'other' && !dbCategories.includes(item.category)) {
-          dbCategories.push(item.category)
-        }
-      })
-      
-      nonRecurrentCategories?.forEach(item => {
-        if (item.category && item.category !== 'sin categoría' && item.category !== 'other' && !dbCategories.includes(item.category)) {
-          dbCategories.push(item.category)
-        }
-      })
-
-      // Get predefined categories (excluding 'Otros')
-      const predefinedCategories = Object.values(CATEGORIES.EXPENSE)
-        .filter(cat => cat !== 'Otros')
-
-      // Combine all categories
-      const allCategories = [...predefinedCategories, ...dbCategories]
-      const combinedCategories = allCategories
-        .filter((cat, index) => allCategories.indexOf(cat) === index) // Remove duplicates
-        .sort()
-      
-      // Always include "Sin categoría" as the first option
-      setAvailableCategories(['Sin categoría', ...combinedCategories])
+      // Set available categories directly from database
+      // getUserActiveCategories already returns sorted categories including "Sin categoría"
+      setAvailableCategories(categories)
       
     } catch (error) {
       console.error('Error loading categories:', error)
+      // Fallback to basic categories if database fails
+      setAvailableCategories(['Sin categoría', 'Mercado y comida', 'Casa y servicios', 'Transporte', 'Salud', 'Diversión', 'Otros'])
     }
   }
 
@@ -1157,6 +1123,48 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     })
     return map
   }, [recurrentExpenses])
+
+  // Handle adding new category (matching CategoriesView logic)
+  const handleAddCategory = async () => {
+    if (!newCategoryInput.trim()) {
+      setAddCategoryError('El nombre de la categoría no puede estar vacío')
+      return
+    }
+
+    setAddingCategory(true)
+    setAddCategoryError(null)
+
+    try {
+      const result = await addUserCategory(user.id, newCategoryInput.trim())
+      
+      if (result.success) {
+        // Reset form and reload categories
+        setNewCategoryInput('')
+        setShowAddCategoryInput(false)
+        await loadAvailableCategories()
+        
+        // Select the newly added category
+        setSelectedCategory(newCategoryInput.trim())
+        
+        // Notify other views that a new category has been added
+        refreshData(user.id, 'add_category')
+      } else {
+        setAddCategoryError(result.error || 'Error al agregar la categoría')
+      }
+    } catch (error) {
+      console.error('Error adding category:', error)
+      setAddCategoryError('Error interno del servidor')
+    } finally {
+      setAddingCategory(false)
+    }
+  }
+
+  // Handle cancel add category (matching CategoriesView logic)
+  const handleCancelAddCategory = () => {
+    setShowAddCategoryInput(false)
+    setNewCategoryInput('')
+    setAddCategoryError(null)
+  }
 
   return (
     <div className="flex-1 p-6 lg:p-8 bg-gray-50 min-h-screen">
@@ -2636,6 +2644,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 setNewCategoryInput('')
                 setShowDuplicateCategoryModal(false)
                 setDuplicateCategoryName('')
+                // Reset add category state
+                setAddingCategory(false)
+                setAddCategoryError(null)
               }}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
               aria-label="Cerrar"
@@ -2765,40 +2776,30 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       placeholder="Nombre de la nueva categoría"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
                       autoFocus
+                      maxLength={50}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleAddCategory()
+                        } else if (e.key === 'Escape') {
+                          handleCancelAddCategory()
+                        }
+                      }}
                     />
+                    {addCategoryError && (
+                      <p className="text-red-500 text-xs mt-1">{addCategoryError}</p>
+                    )}
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          const trimmedInput = newCategoryInput.trim()
-                          if (trimmedInput) {
-                            // Check for case-insensitive duplicates
-                            const existingCategories = availableCategories.map(cat => cat.toLowerCase())
-                            const predefinedCategories = Object.values(CATEGORIES.EXPENSE).map(cat => cat.toLowerCase())
-                            const allExistingCategories = [...existingCategories, ...predefinedCategories]
-                            
-                            if (allExistingCategories.includes(trimmedInput.toLowerCase())) {
-                              // Show duplicate category modal
-                              setDuplicateCategoryName(trimmedInput)
-                              setShowDuplicateCategoryModal(true)
-                              return
-                            }
-                            
-                            setAvailableCategories(prev => [...prev, trimmedInput].sort())
-                            setSelectedCategory(trimmedInput)
-                            setNewCategoryInput('')
-                            setShowAddCategoryInput(false)
-                          }
-                        }}
-                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        onClick={handleAddCategory}
+                        disabled={addingCategory || !newCategoryInput.trim()}
+                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                       >
-                        Agregar
+                        {addingCategory ? 'Agregando...' : 'Agregar'}
                       </button>
                       <button
-                        onClick={() => {
-                          setNewCategoryInput('')
-                          setShowAddCategoryInput(false)
-                        }}
-                        className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                        onClick={handleCancelAddCategory}
+                        disabled={addingCategory}
+                        className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors"
                       >
                         Cancelar
                       </button>
