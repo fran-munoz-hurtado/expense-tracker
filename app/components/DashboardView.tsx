@@ -112,6 +112,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     originalId?: number
     modifySeries?: boolean
     isgoal?: boolean
+    category?: string
   } | null>(null)
 
   // Modify confirmation state
@@ -619,7 +620,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         year: nonRecurrentExpense.year,
         payment_deadline: nonRecurrentExpense.payment_deadline || '',
         originalId: nonRecurrentExpense.id,
-        modifySeries: false
+        modifySeries: false,
+        category: transaction.category
       })
       setShowModifyForm(true)
     } else {
@@ -663,7 +665,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
           payment_deadline: '',
           originalId: recurrentExpense.id,
           modifySeries: true,
-          isgoal: recurrentExpense.isgoal || false
+          isgoal: recurrentExpense.isgoal || false,
+          category: transaction.category
         })
       } else {
         // Set up form data for editing individual transaction
@@ -687,7 +690,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
             year: transaction.year,
             payment_deadline: transaction.deadline || '',
             originalId: transaction.id,
-            modifySeries: false
+            modifySeries: false,
+            category: transaction.category
           })
         } else {
           const nonRecurrentExpense = nonRecurrentExpenses.find(nre => nre.id === transaction.source_id)
@@ -709,7 +713,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
             year: nonRecurrentExpense.year,
             payment_deadline: nonRecurrentExpense.payment_deadline || '',
             originalId: nonRecurrentExpense.id,
-            modifySeries: false
+            modifySeries: false,
+            category: transaction.category
           })
         }
       }
@@ -2166,17 +2171,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   </div>
 
                   {/* Descripción */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Descripción</label>
-                    <input
-                      type="text"
-                      value={modifyFormData.description}
-                      onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
-                      placeholder="Descripción"
-                      required
-                    />
-                  </div>
+                  {!(modifyFormData.type === 'recurrent' && modifyFormData.category === 'Ahorro') && (
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700">Descripción</label>
+                      <input
+                        type="text"
+                        value={modifyFormData.description}
+                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
+                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        placeholder="Descripción"
+                        required
+                      />
+                    </div>
+                  )}
 
                   {/* Mes y Año */}
                   <div className="flex flex-col gap-2">
