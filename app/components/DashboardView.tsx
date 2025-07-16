@@ -2630,218 +2630,233 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
       {/* Category Editing Modal */}
       {showCategoryModal && selectedTransactionForCategory && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
-            <button
-              onClick={() => {
-                setShowCategoryModal(false)
-                setSelectedTransactionForCategory(null)
-                setSelectedCategory('')
-                setCustomCategoryInput('')
-                setShowAddCategoryInput(false)
-                setNewCategoryInput('')
-                setShowDuplicateCategoryModal(false)
-                setDuplicateCategoryName('')
-                // Reset add category state
-                setAddingCategory(false)
-                setAddCategoryError(null)
-              }}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="p-5 flex flex-col gap-4 items-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-2">
-                <Calendar className="h-6 w-6 text-blue-600" />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Seleccionar Categoría</h2>
+              <button
+                onClick={() => {
+                  setShowCategoryModal(false)
+                  setSelectedTransactionForCategory(null)
+                  setSelectedCategory('')
+                  setCustomCategoryInput('')
+                  setShowAddCategoryInput(false)
+                  setNewCategoryInput('')
+                  setShowDuplicateCategoryModal(false)
+                  setDuplicateCategoryName('')
+                  // Reset add category state
+                  setAddingCategory(false)
+                  setAddCategoryError(null)
+                }}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-3">
+                  Para "{selectedTransactionForCategory.description}"
+                </p>
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Seleccionar Categoría</h2>
-              <p className="text-gray-700 text-sm font-medium mb-4 text-center">
-                Elige la categoría para "{selectedTransactionForCategory.description}"
-              </p>
-              
-              <div className="w-full space-y-4">
-                {/* Category Selection */}
-                <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Categorías disponibles
-                  </label>
-                  
-                  <div className="max-h-48 overflow-y-auto space-y-1">
-                    {/* First option: Sin categoría (red background) */}
-                    <button
-                      onClick={() => handleCategorySelection('Sin categoría')}
-                      className={`w-full p-3 text-left rounded-lg border transition-all ${
-                        selectedCategory === 'Sin categoría'
-                          ? 'border-blue-500 bg-blue-50 text-blue-900'
-                          : selectedCategory && selectedCategory !== 'Sin categoría'
-                          ? 'border-red-100 hover:border-red-200 hover:bg-red-50'
-                          : 'border-red-300 bg-red-50 hover:border-red-400 hover:bg-red-100'
-                      }`}
-                      style={selectedCategory && selectedCategory !== 'Sin categoría' ? {backgroundColor: 'rgb(254 242 242)'} : {}}
-                    >
-                      <span className={`font-medium ${
-                        selectedCategory === 'Sin categoría' 
-                          ? 'text-blue-900' 
-                          : selectedCategory && selectedCategory !== 'Sin categoría'
-                          ? 'text-red-400'
-                          : 'text-red-700'
+
+              {/* Categories list */}
+              <div className="mb-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-2">Categorías disponibles:</h3>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {/* First option: Sin categoría (red styling) */}
+                  <div
+                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                      selectedCategory === 'Sin categoría'
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'bg-red-50 hover:bg-red-100'
+                    }`}
+                    onClick={() => handleCategorySelection('Sin categoría')}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-1.5 rounded-full ${
+                        selectedCategory === 'Sin categoría' ? 'bg-blue-100' : 'bg-red-100'
                       }`}>
+                        <DollarSign className={`h-3 w-3 ${
+                          selectedCategory === 'Sin categoría' ? 'text-blue-600' : 'text-red-600'
+                        }`} />
+                      </div>
+                      <span className="text-sm font-medium text-gray-900">
                         Sin categoría
                       </span>
-                      <span className={`text-xs ml-2 ${
-                        selectedCategory === 'Sin categoría' 
-                          ? 'text-blue-700' 
-                          : selectedCategory && selectedCategory !== 'Sin categoría'
-                          ? 'text-red-300'
-                          : 'text-red-600'
-                      }`}>(quitar categoría)</span>
-                    </button>
-
-                    {/* Second option: Current category (blue background) */}
-                    {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
-                      <button
-                        onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
-                        className={`w-full p-3 text-left rounded-lg border transition-all ${
-                          selectedCategory === selectedTransactionForCategory.category
-                            ? 'border-blue-500 bg-blue-50 text-blue-900'
-                            : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
-                            ? 'border-blue-100 hover:border-blue-200 hover:bg-blue-50'
-                            : 'border-blue-300 bg-blue-50 hover:border-blue-400 hover:bg-blue-100'
-                        }`}
-                        style={selectedCategory && selectedCategory !== selectedTransactionForCategory.category ? {backgroundColor: 'rgb(239 246 255)'} : {}}
-                      >
-                        <span className={`font-medium ${
-                          selectedCategory === selectedTransactionForCategory.category 
-                            ? 'text-blue-900' 
-                            : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
-                            ? 'text-blue-400'
-                            : 'text-blue-700'
-                        }`}>{selectedTransactionForCategory.category}</span>
-                        <span className={`text-xs ml-2 ${
-                          selectedCategory === selectedTransactionForCategory.category 
-                            ? 'text-blue-700' 
-                            : selectedCategory && selectedCategory !== selectedTransactionForCategory.category
-                            ? 'text-blue-300'
-                            : 'text-blue-600'
-                        }`}>(actual)</span>
-                      </button>
+                    </div>
+                    {selectedCategory === 'Sin categoría' && (
+                      <div className="flex items-center">
+                        <CheckCircle className="h-4 w-4 text-blue-600" />
+                      </div>
                     )}
-
-                    {/* Rest of available categories (normal styling) */}
-                    {availableCategories
-                      .filter(cat => cat !== 'Sin categoría' && cat !== selectedTransactionForCategory.category)
-                      .map((category) => (
-                        <button
-                          key={category}
-                          onClick={() => handleCategorySelection(category)}
-                          className={`w-full p-3 text-left rounded-lg border transition-all ${
-                            selectedCategory === category
-                              ? 'border-blue-500 bg-blue-50 text-blue-900'
-                              : selectedCategory && selectedCategory !== category
-                              ? 'border-gray-200 bg-gray-50 hover:border-gray-300 hover:bg-gray-100'
-                              : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          <span className={`font-medium ${
-                            selectedCategory === category 
-                              ? 'text-blue-900' 
-                              : selectedCategory && selectedCategory !== category
-                              ? 'text-gray-600'
-                              : ''
-                          }`}>{category}</span>
-                        </button>
-                      ))
-                    }
                   </div>
-                </div>
 
-                {/* Add new category section */}
-                {!showAddCategoryInput ? (
+                  {/* Current category (blue styling) */}
+                  {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
+                    <div
+                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                        selectedCategory === selectedTransactionForCategory.category
+                          ? 'bg-blue-50 border border-blue-200'
+                          : 'bg-blue-50 hover:bg-blue-100'
+                      }`}
+                      onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className={`p-1.5 rounded-full ${
+                          selectedCategory === selectedTransactionForCategory.category ? 'bg-blue-100' : 'bg-blue-100'
+                        }`}>
+                          <DollarSign className={`h-3 w-3 ${
+                            selectedCategory === selectedTransactionForCategory.category ? 'text-blue-600' : 'text-blue-600'
+                          }`} />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {selectedTransactionForCategory.category}
+                        </span>
+                      </div>
+                      {selectedCategory === selectedTransactionForCategory.category && (
+                        <div className="flex items-center">
+                          <CheckCircle className="h-4 w-4 text-blue-600" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Other available categories */}
+                  {availableCategories
+                    .filter(cat => cat !== 'Sin categoría' && cat !== selectedTransactionForCategory.category)
+                    .map((category) => {
+                      // Check if this is a default category
+                      const isDefault = Object.values(CATEGORIES.EXPENSE).includes(category as any)
+                      
+                      return (
+                        <div
+                          key={category}
+                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                            selectedCategory === category
+                              ? 'bg-blue-50 border border-blue-200'
+                              : 'bg-gray-50 hover:bg-gray-100'
+                          }`}
+                          onClick={() => handleCategorySelection(category)}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-1.5 rounded-full ${
+                              selectedCategory === category 
+                                ? 'bg-blue-100' 
+                                : isDefault 
+                                  ? 'bg-gray-100' 
+                                  : 'bg-blue-100'
+                            }`}>
+                              <DollarSign className={`h-3 w-3 ${
+                                selectedCategory === category 
+                                  ? 'text-blue-600' 
+                                  : isDefault 
+                                    ? 'text-gray-600' 
+                                    : 'text-blue-600'
+                              }`} />
+                            </div>
+                            <span className="text-sm font-medium text-gray-900">
+                              {category}
+                            </span>
+                          </div>
+                          {selectedCategory === category && (
+                            <div className="flex items-center">
+                              <CheckCircle className="h-4 w-4 text-blue-600" />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                </div>
+              </div>
+
+              {/* Add new category section */}
+              {!showAddCategoryInput ? (
+                <div className="mb-4">
                   <button
                     onClick={() => setShowAddCategoryInput(true)}
-                    className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-400 hover:text-blue-600 transition-colors"
+                    className="w-full p-3 text-left border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors"
                   >
-                    + Agregar nueva categoría
+                    <span className="text-sm font-medium">+ Agregar nueva categoría</span>
                   </button>
-                ) : (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={newCategoryInput}
-                      onChange={(e) => setNewCategoryInput(e.target.value)}
-                      placeholder="Nombre de la nueva categoría"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all"
-                      autoFocus
-                      maxLength={50}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          handleAddCategory()
-                        } else if (e.key === 'Escape') {
-                          handleCancelAddCategory()
-                        }
-                      }}
-                    />
-                    {addCategoryError && (
-                      <p className="text-red-500 text-xs mt-1">{addCategoryError}</p>
-                    )}
-                    <div className="flex gap-2">
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Nueva categoría
+                      </label>
+                      <input
+                        type="text"
+                        value={newCategoryInput}
+                        onChange={(e) => setNewCategoryInput(e.target.value)}
+                        placeholder="Nombre de la categoría"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        maxLength={50}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleAddCategory()
+                          } else if (e.key === 'Escape') {
+                            handleCancelAddCategory()
+                          }
+                        }}
+                        autoFocus
+                      />
+                      {addCategoryError && (
+                        <p className="text-red-500 text-xs mt-1">{addCategoryError}</p>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
                       <button
                         onClick={handleAddCategory}
                         disabled={addingCategory || !newCategoryInput.trim()}
-                        className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                        className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                       >
                         {addingCategory ? 'Agregando...' : 'Agregar'}
                       </button>
                       <button
                         onClick={handleCancelAddCategory}
                         disabled={addingCategory}
-                        className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                       >
                         Cancelar
                       </button>
                     </div>
                   </div>
-                )}
-
-                {/* Action Buttons */}
-                <div className="flex gap-3 mt-6">
-                  <button
-                    onClick={() => {
-                      setShowCategoryModal(false)
-                      setSelectedTransactionForCategory(null)
-                      setSelectedCategory('')
-                      setCustomCategoryInput('')
-                      setShowAddCategoryInput(false)
-                      setNewCategoryInput('')
-                      setShowDuplicateCategoryModal(false)
-                      setDuplicateCategoryName('')
-                    }}
-                    className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={() => handleUpdateCategory()}
-                    disabled={loading || !selectedCategory}
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <div className="flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        Guardando...
-                      </div>
-                    ) : (
-                      'Actualizar'
-                    )}
-                  </button>
                 </div>
+              )}
+              
+              <div className="flex space-x-2 pt-4 border-t">
+                <button
+                  onClick={() => {
+                    setShowCategoryModal(false)
+                    setSelectedTransactionForCategory(null)
+                    setSelectedCategory('')
+                    setCustomCategoryInput('')
+                    setShowAddCategoryInput(false)
+                    setNewCategoryInput('')
+                    setShowDuplicateCategoryModal(false)
+                    setDuplicateCategoryName('')
+                    // Reset add category state
+                    setAddingCategory(false)
+                    setAddCategoryError(null)
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => handleUpdateCategory()}
+                  disabled={loading || !selectedCategory}
+                  className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                >
+                  {loading ? 'Guardando...' : 'Actualizar'}
+                </button>
               </div>
             </div>
-          </section>
+          </div>
         </div>
       )}
 
