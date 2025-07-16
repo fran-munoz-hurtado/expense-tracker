@@ -1078,7 +1078,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                 {/* RIGHT: Total Value + Status + Expand Icon */}
                                 <div className="flex items-center space-x-3">
                                   <span className="text-xs text-gray-600">{formatCurrency(recurrentGroup.total)}</span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${recurrentGroup.overdue > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                  <span className={`px-2 py-1 rounded-full text-xs ${recurrentGroup.overdue > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                                     {recurrentGroup.overdue > 0 ? 'Vencido' : 'Al día'}
                                   </span>
                                   
@@ -1107,31 +1107,61 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                           className="w-full p-3 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 rounded-lg"
                                         >
                                           <div className="flex items-center justify-between">
+                                            {/* LEFT: Blue icon + Year + Actual + Months */}
                                             <div className="flex items-center space-x-2">
-                                              <div className={`p-1 rounded-full bg-${getColor('expense', 'light')} transition-all duration-300 hover:scale-110`}>
-                                                <Calendar className={`h-3 w-3 text-${getColor('expense', 'icon')}`} />
+                                              <div className="p-1 rounded-full bg-blue-100 transition-all duration-300 hover:scale-110">
+                                                <Calendar className="h-3 w-3 text-blue-600" />
                                               </div>
                                               <div className="flex items-center space-x-2">
-                                                <span className="text-sm font-medium text-gray-900">{yearGroup.year}</span>
-                                                <span className="text-xs font-medium text-gray-500">({yearGroup.transactions.length} meses)</span>
-                                                <span className="text-xs font-medium text-gray-900">{formatCurrency(yearGroup.total)}</span>
-                                                <div className="flex space-x-1 text-xs">
-                                                  <span className="text-green-600">{formatCurrency(yearGroup.paid)}</span>
-                                                  {yearGroup.pending > 0 && (
-                                                    <span className="text-yellow-600">{formatCurrency(yearGroup.pending)}</span>
-                                                  )}
-                                                  {yearGroup.overdue > 0 && (
-                                                    <span className="text-red-600">{formatCurrency(yearGroup.overdue)}</span>
-                                                  )}
-                                                </div>
+                                                <span className="text-xs text-gray-900">{yearGroup.year}</span>
+                                                {yearGroup.year === new Date().getFullYear() && (
+                                                  <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                                    Actual
+                                                  </span>
+                                                )}
+                                                <span className="text-xs text-gray-500">({yearGroup.transactions.length} meses)</span>
                                               </div>
                                             </div>
                                             
-                                            {isYearGroupExpanded ? (
-                                              <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
-                                            ) : (
-                                              <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
-                                            )}
+                                            {/* RIGHT: Total Value + Status with specific logic */}
+                                            <div className="flex items-center space-x-3">
+                                              <span className="text-xs text-gray-600">{formatCurrency(yearGroup.total)}</span>
+                                              <span className={`px-2 py-1 rounded-full text-xs ${(() => {
+                                                const currentYear = new Date().getFullYear()
+                                                const hasOverdue = yearGroup.overdue > 0
+                                                
+                                                if (hasOverdue) {
+                                                  return 'bg-red-100 text-red-800'
+                                                } else if (yearGroup.year === currentYear) {
+                                                  return 'bg-green-100 text-green-800'
+                                                } else if (yearGroup.year < currentYear) {
+                                                  return 'bg-blue-100 text-blue-800'
+                                                } else {
+                                                  return 'bg-yellow-100 text-yellow-800'
+                                                }
+                                              })()}`}>
+                                                {(() => {
+                                                  const currentYear = new Date().getFullYear()
+                                                  const hasOverdue = yearGroup.overdue > 0
+                                                  
+                                                  if (hasOverdue) {
+                                                    return 'Vencido'
+                                                  } else if (yearGroup.year === currentYear) {
+                                                    return 'Al día'
+                                                  } else if (yearGroup.year < currentYear) {
+                                                    return 'Pagado'
+                                                  } else {
+                                                    return 'Pendiente'
+                                                  }
+                                                })()}
+                                              </span>
+                                              
+                                              {isYearGroupExpanded ? (
+                                                <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                              ) : (
+                                                <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                              )}
+                                            </div>
                                           </div>
                                         </button>
 
@@ -1146,7 +1176,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                       <div className={`p-1 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
                                                         {getTransactionIcon(transaction)}
                                                       </div>
-                                                      <span className="text-xs font-medium text-gray-900">{months[transaction.month - 1]}</span>
+                                                      <span className="text-xs text-gray-900">{months[transaction.month - 1]}</span>
                                                       {/* Navigation Link Icon */}
                                                       <button
                                                         onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
@@ -1164,7 +1194,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                         </svg>
                                                       </button>
                                                       {transaction.deadline && (
-                                                        <span className="text-xs font-medium text-gray-500">
+                                                        <span className="text-xs text-gray-500">
                                                           Vence: {(() => {
                                                             const [year, month, day] = transaction.deadline.split('-').map(Number);
                                                             return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}`;
@@ -1174,11 +1204,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                     </div>
                                                     
                                                     <div className="flex items-center space-x-2">
-                                                      <span className="text-xs font-semibold text-gray-900">
+                                                      <span className="text-xs text-gray-900">
                                                         {formatCurrency(transaction.value)}
                                                       </span>
                                                       <span className={cn(
-                                                        "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium",
+                                                        "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs",
                                                         transaction.status === 'paid' 
                                                           ? 'bg-green-100 text-green-800'
                                                           : transaction.deadline && isDateOverdue(transaction.deadline)
@@ -1234,7 +1264,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               {/* RIGHT: Total Value + Status */}
                               <div className="flex items-center space-x-3">
                                 <span className="text-xs text-gray-600">{formatCurrency(transaction.value)}</span>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                <span className={`px-2 py-1 rounded-full text-xs ${isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
                                   {status}
                                 </span>
                                 {/* Attachment Clip */}
