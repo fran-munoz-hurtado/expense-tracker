@@ -696,58 +696,38 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
         </div>
 
         {/* Statistics Cards - Consistent with DashboardView */}
-        <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-1.5">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1.5">
             {/* Total de Metas */}
-            <div className={`bg-gradient-to-br ${getGradient('income')} p-3 rounded-lg border border-${getColor('income', 'border')} shadow-sm transition-all duration-300 hover:shadow-sm hover:scale-[1.005] hover:border-${getColor('income', 'border')}`}>
-              <div className="flex items-center space-x-2">
-                <div className={`p-1.5 bg-${getColor('income', 'secondary')} rounded-lg transition-all duration-300 hover:bg-${getColor('income', 'secondary')} hover:scale-110`}>
-                  <Target className={`h-4 w-4 text-${getColor('income', 'icon')} transition-all duration-300`} />
-                </div>
-                <div className="flex-1">
-                  <p className={`text-xs font-medium text-${getColor('income', 'text')} transition-all duration-200`}>Total de Metas</p>
-                  <p className={`text-base font-bold text-${getColor('income', 'dark')} transition-all duration-200`}>{goalStats.totalGoals}</p>
-                </div>
+            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex items-center space-x-1.5 mb-0.5">
+                <p className="text-xs font-medium text-black leading-none">Total de Metas</p>
               </div>
+              <p className="text-sm text-black leading-none px-2">{goalStats.totalGoals}</p>
             </div>
 
             {/* Valor Total */}
-            <div className={`bg-gradient-to-br ${getGradient('expense')} p-3 rounded-lg border border-${getColor('expense', 'border')} shadow-sm transition-all duration-300 hover:shadow-sm hover:scale-[1.005] hover:border-${getColor('expense', 'border')}`}>
-              <div className="flex items-center space-x-2">
-                <div className={`p-1.5 bg-${getColor('expense', 'secondary')} rounded-lg transition-all duration-300 hover:bg-${getColor('expense', 'secondary')} hover:scale-110`}>
-                  <DollarSign className={`h-4 w-4 text-${getColor('expense', 'icon')} transition-all duration-300`} />
-                </div>
-                <div className="flex-1">
-                  <p className={`text-xs font-medium text-${getColor('expense', 'text')} transition-all duration-200`}>Valor Total</p>
-                  <p className={`text-base font-bold text-${getColor('expense', 'dark')} transition-all duration-200`}>{formatCurrency(goalStats.totalValue)}</p>
-                </div>
+            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex items-center space-x-1.5 mb-0.5">
+                <p className="text-xs font-medium text-black leading-none">Valor Total</p>
               </div>
+              <p className="text-sm text-black leading-none px-2">{formatCurrency(goalStats.totalValue)}</p>
             </div>
 
             {/* Metas Completadas */}
-            <div className={`bg-gradient-to-br ${getGradient('balance')} p-3 rounded-lg border border-${getColor('balance', 'border')} shadow-sm transition-all duration-300 hover:shadow-sm hover:scale-[1.005] hover:border-${getColor('balance', 'border')}`}>
-              <div className="flex items-center space-x-2">
-                <div className={`p-1.5 bg-${getColor('balance', 'secondary')} rounded-lg transition-all duration-300 hover:bg-${getColor('balance', 'secondary')} hover:scale-110`}>
-                  <CheckCircle className={`h-4 w-4 text-${getColor('balance', 'icon')} transition-all duration-300`} />
-                </div>
-                <div className="flex-1">
-                  <p className={`text-xs font-medium text-${getColor('balance', 'text')} transition-all duration-200`}>Metas Completadas</p>
-                  <p className={`text-base font-bold text-${getColor('balance', 'primary')} transition-all duration-200`}>{goalStats.completed}</p>
-                </div>
+            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex items-center space-x-1.5 mb-0.5">
+                <p className="text-xs font-medium text-black leading-none">Metas Completadas</p>
               </div>
+              <p className="text-sm text-black leading-none px-2">{goalStats.completed}</p>
             </div>
 
             {/* En Progreso */}
-            <div className={`bg-gradient-to-br from-yellow-50 to-yellow-100 p-3 rounded-lg border border-yellow-200 shadow-sm transition-all duration-300 hover:shadow-sm hover:scale-[1.005] hover:border-yellow-200`}>
-              <div className="flex items-center space-x-2">
-                <div className={`p-1.5 bg-yellow-200 rounded-lg transition-all duration-300 hover:bg-yellow-200 hover:scale-110`}>
-                  <Clock className={`h-4 w-4 text-yellow-700 transition-all duration-300`} />
-                </div>
-                <div className="flex-1">
-                  <p className={`text-xs font-medium text-yellow-700 transition-all duration-200`}>En Progreso</p>
-                  <p className={`text-base font-bold text-yellow-800 transition-all duration-200`}>{goalStats.inProgress}</p>
-                </div>
+            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex items-center space-x-1.5 mb-0.5">
+                <p className="text-xs font-medium text-black leading-none">En Progreso</p>
               </div>
+              <p className="text-sm text-black leading-none px-2">{goalStats.inProgress}</p>
             </div>
           </div>
         </div>
