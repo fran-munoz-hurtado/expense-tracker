@@ -82,6 +82,16 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [deletingCategory, setDeletingCategory] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
+  // Edit category state
+  const [editingCategory, setEditingCategory] = useState<CategoryInfo | null>(null)
+  const [editCategoryInput, setEditCategoryInput] = useState('')
+  const [editCategoryError, setEditCategoryError] = useState<string | null>(null)
+  const [showEditConfirmModal, setShowEditConfirmModal] = useState(false)
+  const [categoryToEdit, setCategoryToEdit] = useState<{ old: CategoryInfo; new: string } | null>(null)
+  const [editAffectedTransactionsCount, setEditAffectedTransactionsCount] = useState<number>(0)
+  const [updatingCategory, setUpdatingCategory] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
   // Create recurrentGoalMap like in DashboardView
   const recurrentGoalMap = useMemo(() => {
     const map: Record<number, boolean> = {}
@@ -319,6 +329,12 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     setShowDeleteConfirmModal(false)
     setCategoryToDelete(null)
     setDeleteError(null)
+    setEditingCategory(null)
+    setEditCategoryInput('')
+    setEditCategoryError(null)
+    setShowEditConfirmModal(false)
+    setCategoryToEdit(null)
+    setEditError(null)
     loadManagementCategories()
   }
 
@@ -421,6 +437,101 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     setCategoryToDelete(null)
     setDeleteError(null)
     setAffectedTransactionsCount(0)
+  }
+
+  // Handle edit category click
+  const handleEditCategoryClick = (category: CategoryInfo) => {
+    setEditingCategory(category)
+    setEditCategoryInput(category.name)
+    setEditCategoryError(null)
+  }
+
+  // Handle edit category save
+  const handleEditCategorySave = async () => {
+    if (!editingCategory || !editCategoryInput.trim()) {
+      setEditCategoryError('El nombre de la categoría no puede estar vacío')
+      return
+    }
+
+    // Validate the new name
+    const validation = await validateCategoryForEdit(user.id, editCategoryInput.trim(), editingCategory.name)
+    
+    if (!validation.valid) {
+      setEditCategoryError(validation.error || 'Error en la validación')
+      return
+    }
+
+    // If name hasn't changed, just cancel editing
+    if (editCategoryInput.trim().toLowerCase() === editingCategory.name.toLowerCase()) {
+      setEditingCategory(null)
+      setEditCategoryInput('')
+      setEditCategoryError(null)
+      return
+    }
+
+    try {
+      // Count affected transactions (only from transactions table for user display)
+      const count = await countAffectedTransactions(user.id, editingCategory.name, true)
+      setEditAffectedTransactionsCount(count)
+      setCategoryToEdit({ old: editingCategory, new: editCategoryInput.trim() })
+      setShowEditConfirmModal(true)
+      setEditError(null)
+    } catch (error) {
+      console.error('Error counting affected transactions:', error)
+      setEditCategoryError('Error al verificar las transacciones afectadas')
+    }
+  }
+
+  // Handle edit category cancel
+  const handleEditCategoryCancel = () => {
+    setEditingCategory(null)
+    setEditCategoryInput('')
+    setEditCategoryError(null)
+  }
+
+  // Handle confirm edit category
+  const handleConfirmEditCategory = async () => {
+    if (!categoryToEdit) return
+
+    setUpdatingCategory(true)
+    setEditError(null)
+
+    try {
+      const result = await updateUserCategory(user.id, categoryToEdit.old.name, categoryToEdit.new)
+      
+      if (result.success) {
+        // Close modals and reset state
+        setShowEditConfirmModal(false)
+        setCategoryToEdit(null)
+        setEditingCategory(null)
+        setEditCategoryInput('')
+        setEditCategoryError(null)
+        
+        // Reload categories
+        await loadManagementCategories()
+        
+        // Refresh local data to reflect changes in this view
+        await fetchData()
+        
+        // Notify other views that data has changed
+        refreshData(user.id, 'edit_category')
+      } else {
+        setEditError(result.error || 'Error al actualizar la categoría')
+      }
+    } catch (error) {
+      console.error('Error updating category:', error)
+      setEditError('Error interno del servidor')
+    } finally {
+      setUpdatingCategory(false)
+    }
+  }
+
+  // Handle cancel edit category
+  const handleCancelEditCategory = () => {
+    setShowEditConfirmModal(false)
+    setCategoryToEdit(null)
+    setEditError(null)
+    setEditAffectedTransactionsCount(0)
   }
 
   // Group transactions by category with recurrent and year grouping
@@ -1204,25 +1315,86 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         key={index}
                         className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                       >
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-1.5 rounded-full ${
-                            category.isDefault ? 'bg-gray-100' : 'bg-blue-100'
-                          }`}>
-                            <DollarSign className={`h-3 w-3 ${
-                              category.isDefault ? 'text-gray-600' : 'text-blue-600'
-                            }`} />
+                        {editingCategory && editingCategory.name === category.name ? (
+                          // Edit mode
+                          <div className="flex-1 flex items-center space-x-2">
+                            <div className={`p-1.5 rounded-full ${
+                              category.isDefault ? 'bg-gray-100' : 'bg-blue-100'
+                            }`}>
+                              <DollarSign className={`h-3 w-3 ${
+                                category.isDefault ? 'text-gray-600' : 'text-blue-600'
+                              }`} />
+                            </div>
+                            <div className="flex-1">
+                              <input
+                                type="text"
+                                value={editCategoryInput}
+                                onChange={(e) => setEditCategoryInput(e.target.value)}
+                                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                maxLength={50}
+                                onKeyPress={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleEditCategorySave()
+                                  } else if (e.key === 'Escape') {
+                                    handleEditCategoryCancel()
+                                  }
+                                }}
+                                autoFocus
+                              />
+                              {editCategoryError && (
+                                <p className="text-red-500 text-xs mt-1">{editCategoryError}</p>
+                              )}
+                            </div>
+                            <div className="flex space-x-1">
+                              <button
+                                onClick={handleEditCategorySave}
+                                className="p-1.5 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
+                                title="Guardar cambios"
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={handleEditCategoryCancel}
+                                className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                title="Cancelar edición"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
                           </div>
-                          <span className="text-sm font-medium text-gray-900">
-                            {category.name}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteCategoryClick(category)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          title="Eliminar categoría"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                        ) : (
+                          // View mode
+                          <>
+                            <div className="flex items-center space-x-3">
+                              <div className={`p-1.5 rounded-full ${
+                                category.isDefault ? 'bg-gray-100' : 'bg-blue-100'
+                              }`}>
+                                <DollarSign className={`h-3 w-3 ${
+                                  category.isDefault ? 'text-gray-600' : 'text-blue-600'
+                                }`} />
+                              </div>
+                              <span className="text-sm font-medium text-gray-900">
+                                {category.name}
+                              </span>
+                            </div>
+                            <div className="flex space-x-1">
+                              <button
+                                onClick={() => handleEditCategoryClick(category)}
+                                className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Editar categoría"
+                              >
+                                <Edit2 className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCategoryClick(category)}
+                                className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Eliminar categoría"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -1365,6 +1537,86 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   className="flex-1 bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                 >
                   {deletingCategory ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Confirmation Modal */}
+      {showEditConfirmModal && categoryToEdit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">Confirmar Edición</h2>
+              <button
+                onClick={handleCancelEditCategory}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-4">
+              <div className="mb-4">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className={`p-2 rounded-full ${
+                    categoryToEdit.old.isDefault ? 'bg-gray-100' : 'bg-blue-100'
+                  }`}>
+                    <DollarSign className={`h-4 w-4 ${
+                      categoryToEdit.old.isDefault ? 'text-gray-600' : 'text-blue-600'
+                    }`} />
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Cambiar nombre de:</span>
+                    <div className="font-medium text-gray-900">
+                      <span className="line-through text-gray-500">{categoryToEdit.old.name}</span>
+                      <span className="mx-2">→</span>
+                      <span className="text-blue-600">{categoryToEdit.new}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <p className="text-gray-700 mb-3">
+                  ¿Estás seguro que deseas cambiar el nombre de esta categoría?
+                </p>
+                
+                {editAffectedTransactionsCount > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                    <div className="flex items-center space-x-2">
+                      <AlertCircle className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-800">
+                        Transacciones afectadas
+                      </span>
+                    </div>
+                    <p className="text-sm text-blue-700 mt-1">
+                      Cambiar el nombre de esta categoría va a actualizar <strong>{editAffectedTransactionsCount}</strong> transacciones.
+                    </p>
+                  </div>
+                )}
+                
+                {editError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                    <p className="text-sm text-red-700">{editError}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleCancelEditCategory}
+                  disabled={updatingCategory}
+                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmEditCategory}
+                  disabled={updatingCategory}
+                  className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                >
+                  {updatingCategory ? 'Actualizando...' : 'Actualizar'}
                 </button>
               </div>
             </div>
