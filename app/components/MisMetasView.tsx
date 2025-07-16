@@ -28,7 +28,7 @@ interface YearData {
   totalValue: number
   paidValue: number
   progress: number
-  status: 'paid' | 'pending' | 'overdue'
+  status: 'paid' | 'pending' | 'overdue' | 'current'
   isCompleted: boolean
 }
 
@@ -328,15 +328,38 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     }).format(Math.round(value))
   }
 
+  // Helper function to compare dates without time - Same logic as DashboardView
+  const isDateOverdue = (deadline: string): boolean => {
+    const [year, month, day] = deadline.split('-').map(Number);
+    const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+    
+    // Create today's date without time
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return deadlineDate < todayDate;
+  }
+
   // Helper function to get year status
-  const getYearStatus = (transactions: Transaction[]): 'paid' | 'pending' | 'overdue' => {
+  const getYearStatus = (transactions: Transaction[], year: number): 'paid' | 'pending' | 'overdue' | 'current' => {
     const now = new Date()
+    const currentYear = now.getFullYear()
+    
+    // Check if there are any overdue transactions
     const hasOverdue = transactions.some(t => 
-      t.status === 'pending' && t.deadline && new Date(t.deadline) < now
+      t.status === 'pending' && t.deadline && isDateOverdue(t.deadline)
     )
     
+    // If there are overdue transactions, status is "Vencido"
     if (hasOverdue) return 'overdue'
     
+    // If no overdue transactions and it's the current year, status is "Al día"
+    if (year === currentYear) return 'current'
+    
+    // If no overdue transactions but it's a future year, status is "Pendiente"
+    if (year > currentYear) return 'pending'
+    
+    // If it's a past year and all transactions are paid, status is "Pagado"
     const hasPending = transactions.some(t => t.status === 'pending')
     return hasPending ? 'pending' : 'paid'
   }
@@ -388,7 +411,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           const totalValue = transactions.reduce((sum, t) => sum + t.value, 0)
           const paidValue = transactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
           const progress = totalValue > 0 ? Math.round((paidValue / totalValue) * 100) : 0
-          const status = getYearStatus(transactions)
+          const status = getYearStatus(transactions, year)
           const isCompleted = progress === 100
           
           return {
@@ -443,7 +466,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           const totalValue = transactions.reduce((sum, t) => sum + t.value, 0)
           const paidValue = transactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
           const progress = totalValue > 0 ? Math.round((paidValue / totalValue) * 100) : 0
-          const status = getYearStatus(transactions)
+          const status = getYearStatus(transactions, year)
           const isCompleted = progress === 100
           
           return {
@@ -568,7 +591,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       year.transactions.some(transaction => 
         transaction.status === 'pending' && 
         transaction.deadline && 
-        new Date(transaction.deadline) < new Date()
+        isDateOverdue(transaction.deadline)
       )
     )
     
@@ -588,7 +611,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   }
 
   // Helper function to get status styling
-  const getStatusStyling = (status: 'paid' | 'pending' | 'overdue') => {
+  const getStatusStyling = (status: 'paid' | 'pending' | 'overdue' | 'current') => {
     switch (status) {
       case 'paid':
         return {
@@ -607,6 +630,12 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           bgColor: 'bg-red-100',
           textColor: 'text-red-800',
           label: 'Vencido'
+        }
+      case 'current':
+        return {
+          bgColor: 'bg-green-100',
+          textColor: 'text-green-800',
+          label: 'Al día'
         }
     }
   }
@@ -992,13 +1021,13 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                         </span>
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                                           transaction.status === 'paid' 
-                                            ? 'bg-green-100 text-green-800' 
-                                            : transaction.deadline && new Date(transaction.deadline) < new Date()
+                                            ? 'bg-blue-100 text-blue-800' 
+                                            : transaction.deadline && isDateOverdue(transaction.deadline)
                                               ? 'bg-red-100 text-red-800'
                                               : 'bg-yellow-100 text-yellow-800'
                                         }`}>
-                                          {transaction.status === 'paid' ? 'Pagado' : 
-                                           transaction.deadline && new Date(transaction.deadline) < new Date() ? 'Vencido' : 'Pendiente'}
+                                          {transaction.status === 'paid' ? texts.paid : 
+                                           transaction.deadline && isDateOverdue(transaction.deadline) ? texts.overdue : texts.pending}
                                         </span>
                                         {/* Attachment Clip */}
                                         <AttachmentClip transaction={transaction} />
