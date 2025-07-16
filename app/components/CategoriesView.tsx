@@ -942,19 +942,23 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
+                        <div className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${
                           group.categoryName === 'sin categoría' || group.categoryName === 'Sin categoría'
                             ? 'bg-red-100'
-                            : isSelected 
-                            ? 'bg-blue-100'
-                            : 'bg-gray-100'
+                            : (() => {
+                                // Check if it's a default category
+                                const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
+                                return isDefaultCategory ? 'bg-gray-100' : 'bg-blue-100'
+                              })()
                         }`}>
-                          <DollarSign className={`h-4 w-4 ${
+                          <DollarSign className={`h-3 w-3 ${
                             group.categoryName === 'sin categoría' || group.categoryName === 'Sin categoría'
                               ? 'text-red-600'
-                              : isSelected
-                              ? 'text-blue-600'
-                              : 'text-gray-600'
+                              : (() => {
+                                  // Check if it's a default category
+                                  const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
+                                  return isDefaultCategory ? 'text-gray-600' : 'text-blue-600'
+                                })()
                           }`} />
                         </div>
                         <div>
@@ -969,12 +973,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
                           {formatCurrency(group.total)}
                         </p>
-                        <div className="w-12 h-1 bg-gray-200 rounded-full overflow-hidden mt-1">
-                          <div 
-                            className="h-full bg-green-500 transition-all duration-300"
-                            style={{ width: `${group.total > 0 ? (group.paid / group.total) * 100 : 0}%` }}
-                          />
-                        </div>
                       </div>
                     </div>
                   </button>
