@@ -186,6 +186,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   // Filter state for goals
   const [goalFilter, setGoalFilter] = useState<'all' | 'active' | 'completed'>('all')
 
+  // Expandable filters state
+  const [filtersExpanded, setFiltersExpanded] = useState(false)
+
   // Available years for selection
   const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
 
@@ -599,84 +602,97 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
         )}
 
         {/* Filtros Avanzados */}
-        <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <div className="p-1 bg-blue-100 rounded-lg">
-                <svg className="h-3 w-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                </svg>
+        <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+          <div className="p-3 border-b border-gray-100">
+            <button
+              onClick={() => setFiltersExpanded(!filtersExpanded)}
+              className="w-full flex items-center justify-between text-left hover:bg-gray-50 rounded-lg p-2 transition-colors"
+            >
+              <div className="flex items-center space-x-2">
+                <div className="p-1 bg-blue-100 rounded-lg">
+                  <svg className="h-3 w-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-semibold text-gray-800">Filtros Avanzados</h3>
+                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                  {filteredGoalGroups.length} resultados
+                </div>
               </div>
-              <h3 className="text-xs font-semibold text-gray-800">Filtros Avanzados</h3>
-            </div>
-            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-              {filteredGoalGroups.length} resultados
-            </div>
+              <div className="flex items-center space-x-2">
+                {/* Active filters summary */}
+                <div className="flex items-center space-x-1 text-xs text-gray-500">
+                  <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                    {goalFilter === 'all' ? 'Todas' : goalFilter === 'active' ? 'Activas' : 'Completas'}
+                  </span>
+                </div>
+                <div className={`transform transition-transform duration-200 ${filtersExpanded ? 'rotate-180' : ''}`}>
+                  <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </button>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {/* Filtro Estado de Metas */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Estado de Metas</label>
-              <div className="flex space-x-1 bg-gray-50 p-1 rounded-md">
-                <button
-                  onClick={() => setGoalFilter('all')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
-                    goalFilter === 'all'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')} scale-105`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-sm`
-                  }`}
-                >
-                  Todas
-                </button>
-                <button
-                  onClick={() => setGoalFilter('active')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
-                    goalFilter === 'active'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')} scale-105`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-sm`
-                  }`}
-                >
-                  Activas
-                </button>
-                <button
-                  onClick={() => setGoalFilter('completed')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
-                    goalFilter === 'completed'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')} scale-105`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')} hover:shadow-sm`
-                  }`}
-                >
-                  Completas
-                </button>
+
+          {/* Expandable Filters Content */}
+          {filtersExpanded && (
+            <div className="p-3 border-t border-gray-100">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Filtro Estado de Metas */}
+                <div className="relative group">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Estado de Metas</label>
+                  <div className="flex space-x-1 bg-gray-50 p-1 rounded-md">
+                    <button
+                      onClick={() => setGoalFilter('all')}
+                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                        goalFilter === 'all'
+                          ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                          : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                      }`}
+                    >
+                      Todas
+                    </button>
+                    <button
+                      onClick={() => setGoalFilter('active')}
+                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                        goalFilter === 'active'
+                          ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                          : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                      }`}
+                    >
+                      Activas
+                    </button>
+                    <button
+                      onClick={() => setGoalFilter('completed')}
+                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                        goalFilter === 'completed'
+                          ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
+                          : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                      }`}
+                    >
+                      Completas
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Acciones Rápidas */}
+                <div className="relative group">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Acciones</label>
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => {
+                        setGoalFilter('all');
+                      }}
+                      className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm"
+                    >
+                      Todas las Metas
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            {/* Acciones Rápidas */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Acciones</label>
-              <div className="flex space-x-1">
-                <button
-                  onClick={() => {
-                    setGoalFilter('all');
-                  }}
-                  className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm"
-                >
-                  Todas las Metas
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Resumen de Filtros Activos */}
-          <div className="mt-2 pt-2 border-t border-gray-100">
-            <div className="flex items-center space-x-2 text-xs text-gray-500">
-              <span>Filtros activos:</span>
-              <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
-                {goalFilter === 'all' ? 'Todas' : goalFilter === 'active' ? 'Activas' : 'Completas'}
-              </span>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Statistics Cards - Consistent with DashboardView */}
