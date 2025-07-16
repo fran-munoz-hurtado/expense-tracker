@@ -1493,7 +1493,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               />
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-gray-900 flex items-center gap-2 transaction-description">
+                              <div className="text-xs font-medium text-gray-900 flex items-center gap-2 transaction-description">
                                 <span>{transaction.description}</span>
                                 {/* Navigation Link Icon for Goal Transactions */}
                                 {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
@@ -1524,19 +1524,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                   if (diffDays > 0) {
                                     return (
-                                      <span className="text-xs text-yellow-600 font-medium">
+                                      <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
                                         {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
                                       </span>
                                     );
                                   } else if (diffDays === 0) {
                                     return (
-                                      <span className="text-xs text-yellow-600 font-medium">
+                                      <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
                                         Vence hoy
                                       </span>
                                     );
                                   } else {
                                     return (
-                                      <span className="text-xs text-red-600 font-medium">
+                                      <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">
                                         {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
                                       </span>
                                     );
@@ -1548,7 +1548,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               <div className="flex items-center gap-4 mt-1">
                                 {/* Due date */}
                                 {transaction.deadline && (
-                                  <span className="text-xs text-gray-400">
+                                  <span className="text-xs font-medium text-gray-400">
                                     Vence: {(() => {
                                       const [year, month, day] = transaction.deadline.split('-').map(Number);
                                       return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
@@ -1562,7 +1562,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                     const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
                                     if (recurrentExpense) {
                                       return (
-                                        <span className="text-xs text-gray-400">
+                                        <span className="text-xs font-medium text-gray-400">
                                           {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
                                         </span>
                                       )
@@ -1577,7 +1577,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                    (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && (
                                   <button
                                     onClick={() => handleCategoryClick(transaction)}
-                                    className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                                    className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
                                   >
                                     {transaction.category && transaction.category !== 'sin categoría' 
                                       ? transaction.category 
@@ -1593,7 +1593,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {getStatusText(transaction)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 transaction-amount"> 
+                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 transaction-amount"> 
                           {formatCurrency(transaction.value)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1720,7 +1720,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           showBackground={true}
                         />
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-2 transaction-description">
+                          <h3 className="text-xs font-medium text-gray-900 truncate flex items-center gap-2 transaction-description">
                             <span>{transaction.description}</span>
                             {/* Navigation Link Icon for Goal Transactions - Mobile View */}
                             {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
@@ -1751,19 +1751,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                               if (diffDays > 0) {
                                 return (
-                                  <span className="text-xs text-yellow-600 font-medium">
+                                  <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
                                     {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
                                   </span>
                                 );
                               } else if (diffDays === 0) {
                                 return (
-                                  <span className="text-xs text-yellow-600 font-medium">
+                                  <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
                                     Vence hoy
                                   </span>
                                 );
                               } else {
                                 return (
-                                  <span className="text-xs text-red-600 font-medium">
+                                  <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">
                                     {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
                                   </span>
                                 );
@@ -1775,7 +1775,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           <div className="flex items-center gap-3 mt-1 flex-wrap">
                             {/* Due date */}
                             {transaction.deadline && (
-                              <span className="text-xs text-gray-400">
+                              <span className="text-xs font-medium text-gray-400">
                                 Vence: {(() => {
                                   const [year, month, day] = transaction.deadline.split('-').map(Number);
                                   return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
@@ -1789,7 +1789,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
                                 if (recurrentExpense) {
                                   return (
-                                    <span className="text-xs text-gray-400">
+                                    <span className="text-xs font-medium text-gray-400">
                                       {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
                                     </span>
                                   )
@@ -1804,7 +1804,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && (
                               <button
                                 onClick={() => handleCategoryClick(transaction)}
-                                className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                                className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
                               >
                                 {transaction.category && transaction.category !== 'sin categoría' 
                                   ? transaction.category 
@@ -1815,7 +1815,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         </div>
                       </div>
                       <div className="text-right ml-2">
-                        <div className="text-lg text-gray-900 transaction-amount">{formatCurrency(transaction.value)}</div>
+                        <div className="text-xs text-gray-900 transaction-amount">{formatCurrency(transaction.value)}</div>
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", getStatusColor(transaction))}>
                           {getStatusText(transaction)}
                         </span>
