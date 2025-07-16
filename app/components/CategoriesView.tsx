@@ -648,8 +648,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
           }
         })
 
-        // Sort year groups by year (descending - newest first)
-        const sortedYearGroups = yearGroupsArray.sort((a, b) => b.year - a.year)
+        // Sort year groups by year (ascending - earliest first)
+        const sortedYearGroups = yearGroupsArray.sort((a, b) => a.year - b.year)
 
         // Calculate recurrent group totals
         const allRecurrentTransactions = groupTransactions
@@ -669,6 +669,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         const pending = pendingTransactions.reduce((sum, t) => sum + t.value, 0)
         const overdue = overdueTransactions.reduce((sum, t) => sum + t.value, 0)
 
+        // Determine the year range for the description
+        const firstYear = sortedYearGroups[0]?.year;
+        const lastYear = sortedYearGroups[sortedYearGroups.length - 1]?.year;
+        const yearRange = firstYear === lastYear ? `${firstYear}` : `${firstYear}-${lastYear}`;
+
         return {
           sourceId,
           description: groupTransactions[0].description, // Use first transaction's description
@@ -676,7 +681,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
           total,
           paid,
           pending,
-          overdue
+          overdue,
+          yearRange: yearRange // Add yearRange to the group
         }
       })
 
@@ -1046,6 +1052,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         const groupKey = `${group.categoryName}-${recurrentGroup.sourceId}`
                         const isRecurrentExpanded = expandedRecurrentGroups.has(groupKey)
                         
+                        // Determine the year range for the description
+                        const firstYear = recurrentGroup.yearGroups[0]?.year;
+                        const lastYear = recurrentGroup.yearGroups[recurrentGroup.yearGroups.length - 1]?.year;
+                        const yearRange = firstYear === lastYear ? `${firstYear}` : `${firstYear}-${lastYear}`;
+
                         return (
                           <div key={recurrentGroup.sourceId} className="bg-gray-50 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                             {/* Recurrent Group Header */}
@@ -1058,25 +1069,18 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                   <div className={`p-1.5 rounded-full ${getRecurrentGroupBackground(recurrentGroup)} transition-all duration-300 hover:scale-110`}>
                                     {getRecurrentGroupIcon(recurrentGroup)}
                                   </div>
-                                  <div>
-                                    <p className="text-sm font-medium text-gray-900">{recurrentGroup.description}</p>
-                                    <p className="text-xs text-gray-500">({recurrentGroup.yearGroups.length} años)</p>
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-xs font-medium text-gray-900">{recurrentGroup.description}</span>
+                                    <span className="text-xs text-gray-500">({recurrentGroup.yearGroups.length} {recurrentGroup.yearGroups.length === 1 ? 'año' : 'años'}: {yearRange})</span>
                                   </div>
                                 </div>
                                 
+                                {/* RIGHT: Total Value + Status + Expand Icon */}
                                 <div className="flex items-center space-x-3">
-                                  <div className="text-right">
-                                    <p className="text-sm font-semibold text-gray-900">{formatCurrency(recurrentGroup.total)}</p>
-                                    <div className="flex space-x-2 text-xs">
-                                      <span className="text-green-600">{formatCurrency(recurrentGroup.paid)}</span>
-                                      {recurrentGroup.pending > 0 && (
-                                        <span className="text-yellow-600">{formatCurrency(recurrentGroup.pending)}</span>
-                                      )}
-                                      {recurrentGroup.overdue > 0 && (
-                                        <span className="text-red-600">{formatCurrency(recurrentGroup.overdue)}</span>
-                                      )}
-                                    </div>
-                                  </div>
+                                  <span className="text-xs text-gray-600">{formatCurrency(recurrentGroup.total)}</span>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${recurrentGroup.overdue > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                    {recurrentGroup.overdue > 0 ? 'Vencido' : 'Al día'}
+                                  </span>
                                   
                                   {isRecurrentExpanded ? (
                                     <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
@@ -1207,69 +1211,39 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         )
                       })}
                       
-                      {/* Non-Recurrent Transactions - MOVED OUTSIDE the recurrent groups map */}
-                      {group.nonRecurrentTransactions.map((transaction) => (
-                        <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className={`p-1.5 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
-                                {getTransactionIcon(transaction)}
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">{transaction.description}</p>
-                                <div className="flex items-center space-x-2 text-xs text-gray-500">
-                                  <span>{months[transaction.month - 1]} {transaction.year}</span>
-                                  {/* Navigation Link Icon */}
-                                  <button
-                                    onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
-                                    className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
-                                    title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
-                                  >
-                                    <svg 
-                                      className="w-3 h-3" 
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      strokeWidth="2" 
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                  </button>
-                                  {transaction.deadline && (
-                                    <span>• Vence: {(() => {
-                                      const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                      return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                                    })()}</span>
-                                  )}
+                      {/* Non-Recurrent Transactions - Level 1 Flat Layout */}
+                      {group.nonRecurrentTransactions.map((transaction) => {
+                        // Calculate status: "Al día" if not overdue, "Vencido" if overdue
+                        const isOverdue = transaction.status === 'pending' && transaction.deadline && isDateOverdue(transaction.deadline)
+                        const status = isOverdue ? 'Vencido' : 'Al día'
+                        
+                        return (
+                          <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                            <div className="flex items-center justify-between">
+                              {/* LEFT: Icon + Description + Year */}
+                              <div className="flex items-center space-x-3">
+                                <div className={`p-1.5 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
+                                  {getTransactionIcon(transaction)}
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-xs text-gray-900">{transaction.description}</span>
+                                  <span className="text-xs text-gray-500">{months[transaction.month - 1]} {transaction.year}</span>
                                 </div>
                               </div>
-                            </div>
-                            
-                            <div className="flex items-center space-x-3">
-                              <span className="text-sm font-semibold text-gray-900">
-                                {formatCurrency(transaction.value)}
-                              </span>
-                              <span className={cn(
-                                "inline-flex items-center px-2 py-1 rounded-full text-xs font-medium",
-                                transaction.status === 'paid' 
-                                  ? 'bg-green-100 text-green-800'
-                                  : transaction.deadline && isDateOverdue(transaction.deadline)
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-yellow-100 text-yellow-800'
-                              )}>
-                                {transaction.status === 'paid' 
-                                  ? 'Pagado' 
-                                  : transaction.deadline && isDateOverdue(transaction.deadline)
-                                    ? 'Vencido'
-                                    : 'Pendiente'
-                                }
-                              </span>
-                              {/* Attachment Clip */}
-                              <AttachmentClip transaction={transaction} />
+                              
+                              {/* RIGHT: Total Value + Status */}
+                              <div className="flex items-center space-x-3">
+                                <span className="text-xs text-gray-600">{formatCurrency(transaction.value)}</span>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                  {status}
+                                </span>
+                                {/* Attachment Clip */}
+                                <AttachmentClip transaction={transaction} />
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   )
                 })()}
