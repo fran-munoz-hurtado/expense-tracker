@@ -384,6 +384,66 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     return getTransactionIconBackground(transaction, iconType)
   }
 
+  // Get goal icon using parametrized system
+  const getGoalIcon = (goal: GoalData) => {
+    // Create a mock transaction to use with the parametrized system
+    const mockTransaction = {
+      type: 'expense' as const,
+      source_type: goal.key.startsWith('recurrent') ? 'recurrent' as const : 'non_recurrent' as const,
+      source_id: goal.source.id || 0,
+      category: goal.source.category || 'general',
+      status: 'pending' as const,
+      // Add other required transaction properties with default values
+      id: 0,
+      user_id: user.id,
+      description: goal.source.description,
+      value: 0,
+      month: 1,
+      year: 2025,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deadline: null,
+      notes: null
+    }
+    
+    const iconType = getTransactionIconType(mockTransaction, recurrentGoalMap)
+    const iconColor = getTransactionIconColor(mockTransaction, iconType)
+    
+    // Handle REPEAT case (not supported by renderCustomIcon)
+    if (iconType === 'REPEAT') {
+      return <Repeat className={`h-3 w-3 ${iconColor}`} />
+    }
+    
+    // Handle custom icons
+    return renderCustomIcon(iconType, `h-3 w-3 ${iconColor}`)
+  }
+
+  // Get goal icon background color using parametrized system
+  const getGoalIconBackground = (goal: GoalData) => {
+    // Create a mock transaction to use with the parametrized system
+    const mockTransaction = {
+      type: 'expense' as const,
+      source_type: goal.key.startsWith('recurrent') ? 'recurrent' as const : 'non_recurrent' as const,
+      source_id: goal.source.id || 0,
+      category: goal.source.category || 'general',
+      status: 'pending' as const,
+      // Add other required transaction properties with default values
+      id: 0,
+      user_id: user.id,
+      description: goal.source.description,
+      value: 0,
+      month: 1,
+      year: 2025,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deadline: null,
+      notes: null
+    }
+    
+    const iconType = getTransactionIconType(mockTransaction, recurrentGoalMap)
+    return getTransactionIconBackground(mockTransaction, iconType)
+  }
+
   // Create hierarchical goal structure
   const goalGroups = useMemo(() => {
     const groups: GoalData[] = []
@@ -610,6 +670,32 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     }
   }
 
+  // Helper function to get simple goal status for list view
+  const getSimpleGoalStatus = (goal: GoalData): { label: string; bgColor: string; textColor: string } => {
+    // Check if any transaction is overdue
+    const hasOverdueTransactions = goal.years.some(year => 
+      year.transactions.some(transaction => 
+        transaction.status === 'pending' && 
+        transaction.deadline && 
+        isDateOverdue(transaction.deadline)
+      )
+    )
+    
+    if (hasOverdueTransactions) {
+      return {
+        label: 'Vencido',
+        bgColor: 'bg-red-100',
+        textColor: 'text-red-800'
+      }
+    }
+    
+    return {
+      label: 'Al día',
+      bgColor: 'bg-green-100',
+      textColor: 'text-green-800'
+    }
+  }
+
   // Helper function to get status styling
   const getStatusStyling = (status: 'paid' | 'pending' | 'overdue' | 'current') => {
     switch (status) {
@@ -824,79 +910,52 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
               {filteredGoalGroups.map((goal) => {
                 const isSelected = selectedGoal === goal.key
                 const goalStatus = getGoalStatus(goal)
+                const simpleStatus = getSimpleGoalStatus(goal)
                 
                 return (
                   <button
                     key={goal.key}
                     onClick={() => setSelectedGoal(goal.key)}
-                    className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
+                    className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 ${
                       isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
                     }`}
                   >
-                    <div className="grid grid-cols-2 gap-3">
-                      {/* Left Column */}
-                      <div className="flex flex-col space-y-2">
-                        {/* Top Left: Description */}
-                        <div className="flex items-center space-x-2">
-                          <div className={`p-1.5 rounded-lg transition-all duration-300 hover:scale-110 ${
-                            goal.isCompleted
-                              ? 'bg-green-100'
-                              : isSelected 
-                              ? 'bg-blue-100'
-                              : 'bg-yellow-100'
-                          }`}>
-                            {goal.isCompleted ? (
-                              <CheckCircle className={`h-3 w-3 ${
-                                goal.isCompleted
-                                  ? 'text-green-600'
-                                  : isSelected
-                                  ? 'text-blue-600'
-                                  : 'text-yellow-600'
-                              }`} />
-                            ) : (
-                              <Target className={`h-3 w-3 ${
-                                isSelected ? 'text-blue-600' : 'text-yellow-600'
-                              }`} />
-                            )}
+                    <div className="space-y-3">
+                      {/* Top Section: Icon + Description + Years | Total Value + Status */}
+                      <div className="flex items-center justify-between">
+                        {/* Left Section: Icon + Description + Years */}
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${getGoalIconBackground(goal)}`}>
+                            {getGoalIcon(goal)}
                           </div>
-                          <h3 className={`text-sm font-medium truncate ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                            {goal.source.description}
-                          </h3>
+                          <div>
+                            <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+                              {goal.source.description}
+                            </h3>
+                            <p className="text-xs text-gray-500">{goal.years.length} {goal.years.length === 1 ? 'año' : 'años'}</p>
+                          </div>
                         </div>
                         
-                        {/* Bottom Left: Years */}
-                        <div className="ml-6">
-                          <p className="text-xs text-gray-500">{goal.years.length} años</p>
+                        {/* Right Section: Total Value + Status */}
+                        <div className="text-right">
+                          <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'} mb-1`}>
+                            {formatCurrency(goal.totalValue)}
+                          </p>
+                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${simpleStatus.bgColor} ${simpleStatus.textColor}`}>
+                            {simpleStatus.label}
+                          </span>
                         </div>
                       </div>
                       
-                      {/* Right Column */}
-                      <div className="flex flex-col space-y-2 items-end">
-                        {/* Top Right: Total Value + Status + Percentage */}
-                        <div className="flex flex-col items-end space-y-1">
-                          <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                            {formatCurrency(goal.totalValue)}
-                          </p>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${goalStatus.bgColor} ${goalStatus.textColor}`}>
-                              {goalStatus.label}
-                            </span>
-                            <span className="text-xs text-gray-600 font-medium">
-                              {goal.progress}%
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Bottom Right: Progress Bar */}
-                        <div className="w-full">
-                          <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                            <div 
-                              className={`h-full transition-all duration-300 ${
-                                goal.isCompleted ? 'bg-green-500' : 'bg-yellow-500'
-                              }`}
-                              style={{ width: `${goal.progress}%` }}
-                            />
-                          </div>
+                      {/* Bottom Section: Progress Bar */}
+                      <div className="w-full">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                          <div 
+                            className={`h-full transition-all duration-300 ${
+                              goal.isCompleted ? 'bg-green-500' : 'bg-yellow-500'
+                            }`}
+                            style={{ width: `${goal.progress}%` }}
+                          />
                         </div>
                       </div>
                     </div>
