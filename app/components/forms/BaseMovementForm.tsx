@@ -95,11 +95,12 @@ export default function BaseMovementForm({
           recurrentFormData,
           true,
           goalValidationData.goalInputMode,
-          goalValidationData.installments
+          goalValidationData.installments,
+          movementType
         )
         formErrors = result.errors
       } else {
-        const result = validateRecurrentForm(recurrentFormData)
+        const result = validateRecurrentForm(recurrentFormData, movementType)
         formErrors = result.errors
       }
     } else {
@@ -122,7 +123,8 @@ export default function BaseMovementForm({
     config.formType,
     config.showCategorySelector,
     config.isgoal,
-    goalValidationData
+    goalValidationData,
+    movementType
   ])
   
   // Real-time validation - runs whenever form data changes
@@ -178,6 +180,12 @@ export default function BaseMovementForm({
         finalCategory = 'sin categoría'  // Normalize for database
       }
       
+      // For SAVINGS type, force description to "Ahorro"
+      let finalDescription = recurrentFormData.description
+      if (movementType === 'SAVINGS') {
+        finalDescription = 'Ahorro'
+      }
+      
       console.log('🏷️ Category debug (recurrent):', {
         formDataCategory: recurrentFormData.category,
         showCategorySelector: config.showCategorySelector,
@@ -189,6 +197,7 @@ export default function BaseMovementForm({
       return {
         ...basePayload,
         ...recurrentFormData,
+        description: finalDescription,
         category: finalCategory,
         payment_day_deadline: recurrentFormData.payment_day_deadline || null,
         isgoal: config.isgoal  // Only include isgoal for recurrent movements
@@ -268,6 +277,7 @@ export default function BaseMovementForm({
             onChange={setRecurrentFormData}
             errors={errors}
             isGoal={config.isgoal}
+            hideDescription={movementType === 'SAVINGS'}
             onGoalValidationChange={setGoalValidationData}
           />
         ) : (

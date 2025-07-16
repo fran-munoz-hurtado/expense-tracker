@@ -253,6 +253,17 @@ export const validateDescription = (value: string): ValidationError | null => {
   return null
 }
 
+// Special validation for SAVINGS type - description not required
+export const validateDescriptionForSavings = (value: string, isSavings: boolean): ValidationError | null => {
+  // If it's SAVINGS type, description is not required
+  if (isSavings) {
+    return null
+  }
+  
+  // For non-SAVINGS types, use normal validation
+  return validateDescription(value)
+}
+
 export const validateValue = (value: number): ValidationError | null => {
   const rules = VALIDATION_RULES.value
   
@@ -453,11 +464,11 @@ export const validateCategory = (value: string | undefined, showCategorySelector
 }
 
 // Main validation functions
-export const validateRecurrentForm = (data: RecurrentFormData): ValidationResult => {
+export const validateRecurrentForm = (data: RecurrentFormData, movementType?: MovementType): ValidationResult => {
   const errors: ValidationError[] = []
   
   // Validate each field
-  const descriptionError = validateDescription(data.description)
+  const descriptionError = validateDescriptionForSavings(data.description, movementType === 'SAVINGS')
   if (descriptionError) errors.push(descriptionError)
   
   const valueError = validateValue(data.value)
@@ -498,12 +509,13 @@ export const validateRecurrentFormWithGoals = (
   data: RecurrentFormData, 
   isGoal: boolean, 
   goalInputMode: 'date_range' | 'installments' = 'date_range',
-  installments?: number
+  installments?: number,
+  movementType?: MovementType
 ): ValidationResult => {
   const errors: ValidationError[] = []
   
   // Validate each field
-  const descriptionError = validateDescription(data.description)
+  const descriptionError = validateDescriptionForSavings(data.description, movementType === 'SAVINGS')
   if (descriptionError) errors.push(descriptionError)
   
   const valueError = validateValue(data.value)

@@ -24,6 +24,7 @@ interface RecurrentFormFieldsProps {
   errors: ValidationError[]
   className?: string
   isGoal?: boolean
+  hideDescription?: boolean
   onGoalValidationChange?: (data: {
     goalInputMode: 'date_range' | 'installments'
     installments: number
@@ -36,6 +37,7 @@ export default function RecurrentFormFields({
   errors, 
   className = '',
   isGoal = false,
+  hideDescription = false,
   onGoalValidationChange
 }: RecurrentFormFieldsProps) {
   
@@ -216,31 +218,33 @@ export default function RecurrentFormFields({
   return (
     <div className={`space-y-4 ${className}`}>
       {/* Description */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Descripción *
-        </label>
-        <input
-          type="text"
-          value={formData.description}
-          onChange={(e) => onChange({
-            ...formData,
-            description: e.target.value
-          })}
-          placeholder="Ej: Arriendo del apartamento"
-          className={`w-full px-4 py-3 rounded-xl border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400 ${
-            getFieldError('description') 
-              ? 'border-red-300 focus:border-red-500' 
-              : 'border-gray-200 focus:border-blue-500'
-          }`}
-          maxLength={200}
-        />
-        {getFieldError('description') && (
-          <p className="mt-1 text-sm text-red-600">
-            {getFieldError('description')?.message}
-          </p>
-        )}
-      </div>
+      {!hideDescription && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Descripción *
+          </label>
+          <input
+            type="text"
+            value={formData.description}
+            onChange={(e) => onChange({
+              ...formData,
+              description: e.target.value
+            })}
+            placeholder="Ej: Arriendo del apartamento"
+            className={`w-full px-4 py-3 rounded-xl border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400 ${
+              getFieldError('description') 
+                ? 'border-red-300 focus:border-red-500' 
+                : 'border-gray-200 focus:border-blue-500'
+            }`}
+            maxLength={200}
+          />
+          {getFieldError('description') && (
+            <p className="mt-1 text-sm text-red-600">
+              {getFieldError('description')?.message}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Value */}
       <div>

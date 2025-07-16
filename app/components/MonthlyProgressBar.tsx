@@ -23,123 +23,6 @@ interface MonthlyProgressBarProps {
 }
 
 /**
- * Interface for progress range configuration
- * @interface ProgressRangeConfig
- */
-interface ProgressRangeConfig {
-  color: string
-  bgColor: string
-  borderColor: string
-  icon: React.ComponentType<{ className?: string }>
-  messages: string[]
-  milestoneColor: string
-  overdueColor: string
-}
-
-/**
- * Progress ranges configuration with motivational messages focused on personal achievement
- * Each range has specific colors, icons, and messages that encourage without comparison
- */
-const PROGRESS_RANGES: Record<string, ProgressRangeConfig> = {
-  // 0-20%: Building momentum
-  '0-20': {
-    color: 'from-red-400 to-orange-400',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    milestoneColor: 'bg-blue-300',
-    overdueColor: 'bg-blue-500',
-    icon: Target,
-    messages: [
-      "¡Estás construyendo tu futuro financiero! 🚀",
-      "¡Cada decisión cuenta para tu bienestar! 💪",
-      "¡El control financiero empieza aquí! 🌱",
-      "¡Estás tomando las riendas de tu economía! 🎯",
-      "¡Cada peso invertido en ti mismo! 💎"
-    ]
-  },
-  // 21-40%: Gaining momentum
-  '21-40': {
-    color: 'from-orange-400 to-yellow-400',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    milestoneColor: 'bg-blue-300',
-    overdueColor: 'bg-blue-500',
-    icon: TrendingUp,
-    messages: [
-      "¡Tu disciplina financiera está creciendo! 📈",
-      "¡El progreso se siente increíble! ✨",
-      "¡Estás desarrollando excelentes hábitos! 🌟",
-      "¡Tu futuro financiero se ve prometedor! 🎯",
-      "¡Sigues fortaleciendo tu economía! 💪"
-    ]
-  },
-  // 41-60%: Strong foundation
-  '41-60': {
-    color: 'from-yellow-400 to-green-400',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    milestoneColor: 'bg-blue-300',
-    overdueColor: 'bg-blue-500',
-    icon: Star,
-    messages: [
-      "¡Tu consistencia financiera es admirable! 🌟",
-      "¡Estás creando una base sólida! 🏗️",
-      "¡Tu dedicación está dando frutos! 🎯",
-      "¡Sigues fortaleciendo tu independencia! 💎",
-      "¡Tu futuro financiero se ve brillante! ⭐"
-    ]
-  },
-  // 61-80%: Excellence in progress
-  '61-80': {
-    color: 'from-green-400 to-emerald-400',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    milestoneColor: 'bg-blue-300',
-    overdueColor: 'bg-blue-500',
-    icon: Award,
-    messages: [
-      "¡Tu excelencia financiera es notable! 🏆",
-      "¡Estás alcanzando tus metas con maestría! 🎯",
-      "¡Tu disciplina es verdaderamente inspiradora! ⚡",
-      "¡Sigues demostrando tu compromiso! 💎",
-      "¡Tu futuro financiero es extraordinario! 🌟"
-    ]
-  },
-  // 81-99%: Near perfection
-  '81-99': {
-    color: 'from-emerald-400 to-teal-400',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    milestoneColor: 'bg-blue-300',
-    overdueColor: 'bg-blue-500',
-    icon: Zap,
-    messages: [
-      "¡Tu maestría financiera es excepcional! ⚡",
-      "¡Estás en el camino de la excelencia total! 🌟",
-      "¡Tu dedicación es verdaderamente admirable! 💎",
-      "¡Sigues superando tus propias expectativas! 🎯",
-      "¡Tu futuro financiero es extraordinario! 👑"
-    ]
-  },
-  // 100%: Perfect achievement
-  '100': {
-    color: 'from-teal-400 to-cyan-400',
-    bgColor: 'bg-blue-50',
-    borderColor: 'border-blue-200',
-    milestoneColor: 'bg-blue-300',
-    overdueColor: 'bg-blue-500',
-    icon: Award,
-    messages: [
-      "¡PERFECCIÓN FINANCIERA ALCANZADA! 🎉",
-      "¡MAESTRÍA TOTAL EN CONTROL FINANCIERO! 🏆",
-      "¡EXCELENCIA ABSOLUTA LOGRADA! ⭐",
-      "¡OBJETIVO PERFECTO CUMPLIDO! 💎",
-      "¡INSPIRACIÓN FINANCIERA TOTAL! 👑"
-    ]
-  }
-}
-
-/**
  * Motivational messages for overdue amounts - focused on getting back on track
  */
 const OVERDUE_MESSAGES = [
@@ -152,6 +35,54 @@ const OVERDUE_MESSAGES = [
   "¡Tú puedes superar este desafío! 💎",
   "¡Cada peso pagado es un paso hacia la libertad! 🎯"
 ]
+
+/**
+ * Progress-based motivational messages
+ */
+const PROGRESS_MESSAGES = {
+  perfect: [
+    "¡PERFECCIÓN FINANCIERA ALCANZADA! 🎉",
+    "¡MAESTRÍA TOTAL EN CONTROL FINANCIERO! 🏆",
+    "¡EXCELENCIA ABSOLUTA LOGRADA! ⭐",
+    "¡OBJETIVO PERFECTO CUMPLIDO! 💎",
+    "¡INSPIRACIÓN FINANCIERA TOTAL! 👑"
+  ],
+  excellent: [
+    "¡Tu maestría financiera es excepcional! ⚡",
+    "¡Estás en el camino de la excelencia total! 🌟",
+    "¡Tu dedicación es verdaderamente admirable! 💎",
+    "¡Sigues superando tus propias expectativas! 🎯",
+    "¡Tu futuro financiero es extraordinario! 👑"
+  ],
+  great: [
+    "¡Tu excelencia financiera es notable! 🏆",
+    "¡Estás alcanzando tus metas con maestría! 🎯",
+    "¡Tu disciplina es verdaderamente inspiradora! ⚡",
+    "¡Sigues demostrando tu compromiso! 💎",
+    "¡Tu futuro financiero es extraordinario! 🌟"
+  ],
+  good: [
+    "¡Tu consistencia financiera es admirable! 🌟",
+    "¡Estás creando una base sólida! 🏗️",
+    "¡Tu dedicación está dando frutos! 🎯",
+    "¡Sigues fortaleciendo tu independencia! 💎",
+    "¡Tu futuro financiero se ve brillante! ⭐"
+  ],
+  building: [
+    "¡Tu disciplina financiera está creciendo! 📈",
+    "¡El progreso se siente increíble! ✨",
+    "¡Estás desarrollando excelentes hábitos! 🌟",
+    "¡Tu futuro financiero se ve prometedor! 🎯",
+    "¡Sigues fortaleciendo tu economía! 💪"
+  ],
+  starting: [
+    "¡Estás construyendo tu futuro financiero! 🚀",
+    "¡Cada decisión cuenta para tu bienestar! 💪",
+    "¡El control financiero empieza aquí! 🌱",
+    "¡Estás tomando las riendas de tu economía! 🎯",
+    "¡Cada peso invertido en ti mismo! 💎"
+  ]
+}
 
 /**
  * MonthlyProgressBar Component
@@ -201,25 +132,41 @@ export default function MonthlyProgressBar({
     return Math.round(raw)
   }, [paid, total, overdue])
 
-  const range = useMemo(() => {
-    if (percentage === 100) return '100'
-    if (percentage >= 81) return '81-99'
-    if (percentage >= 61) return '61-80'
-    if (percentage >= 41) return '41-60'
-    if (percentage >= 21) return '21-40'
-    return '0-20'
-  }, [percentage])
-
-  const rangeConfig = useMemo(() => {
-    return PROGRESS_RANGES[range]
-  }, [range])
-
-  const IconComponent = rangeConfig.icon
-
   // Memoized overdue status detection
   const hasOverdue = useMemo(() => {
     return overdue > 0
   }, [overdue])
+
+  // Memoized message selection to prevent unnecessary re-renders
+  const selectRandomMessage = useCallback((messages: string[]): string => {
+    const randomIndex = Math.floor(Math.random() * messages.length)
+    return messages[randomIndex]
+  }, [])
+
+  // Get appropriate message array based on progress percentage
+  const getMessageArray = useCallback((percentage: number): string[] => {
+    if (percentage === 100) return PROGRESS_MESSAGES.perfect
+    if (percentage >= 81) return PROGRESS_MESSAGES.excellent
+    if (percentage >= 61) return PROGRESS_MESSAGES.great
+    if (percentage >= 41) return PROGRESS_MESSAGES.good
+    if (percentage >= 21) return PROGRESS_MESSAGES.building
+    return PROGRESS_MESSAGES.starting
+  }, [])
+
+  // Effect for message selection with proper cleanup
+  useEffect(() => {
+    const messages = getMessageArray(percentage)
+    const message = selectRandomMessage(messages)
+    setSelectedMessage(message)
+  }, [percentage, getMessageArray, selectRandomMessage])
+
+  // Effect for overdue message selection
+  useEffect(() => {
+    if (hasOverdue) {
+      const overdueMessage = selectRandomMessage(OVERDUE_MESSAGES)
+      setSelectedOverdueMessage(overdueMessage)
+    }
+  }, [hasOverdue, selectRandomMessage])
 
   const overduePercentage = useMemo(() => {
     return total > 0 ? Math.round((overdue / total) * 100) : 0
@@ -322,26 +269,6 @@ export default function MonthlyProgressBar({
     }
   }, [hasOverdue, percentage, paid, overdue])
 
-  // Memoized message selection to prevent unnecessary re-renders
-  const selectRandomMessage = useCallback((messages: string[]): string => {
-    const randomIndex = Math.floor(Math.random() * messages.length)
-    return messages[randomIndex]
-  }, [])
-
-  // Effect for message selection with proper cleanup
-  useEffect(() => {
-    const message = selectRandomMessage(rangeConfig.messages)
-    setSelectedMessage(message)
-  }, [percentage, rangeConfig.messages, selectRandomMessage])
-
-  // Effect for overdue message selection
-  useEffect(() => {
-    if (hasOverdue) {
-      const overdueMessage = selectRandomMessage(OVERDUE_MESSAGES)
-      setSelectedOverdueMessage(overdueMessage)
-    }
-  }, [hasOverdue, selectRandomMessage])
-
   // Effect for progress animation with proper cleanup
   useEffect(() => {
     setIsAnimating(true)
@@ -366,72 +293,13 @@ export default function MonthlyProgressBar({
 
   return (
     <div 
-      className={`bg-white rounded-xl shadow-sm border ${rangeConfig.borderColor} p-4 ${className}`}
+      className={`bg-white rounded-xl shadow-sm border border-gray-200 p-4 ${className}`}
       role="progressbar"
       aria-valuenow={percentage}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-label={`Progreso del mes: ${percentage}% completado`}
     >
-      {/* Inline Progress Statistics */}
-      <div className="mb-4">
-        <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Ya Pagué */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="p-1.5 bg-blue-100 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-700">{texts.alreadyPaid}</p>
-                  <p className="text-base font-bold text-blue-600 flex items-center gap-2">
-                    {formatCurrency(paid)}
-                    <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">{Math.round((paid / total) * 100)}%</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Falta Pagar */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="p-1.5 bg-yellow-100 rounded-lg">
-                  <Clock className="h-4 w-4 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-700">{texts.stillPending}</p>
-                  <p className="text-base font-bold text-yellow-600 flex items-center gap-2">
-                    {formatCurrency(pending)}
-                    <span className="text-xs font-medium text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">{Math.round((pending / total) * 100)}%</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Se pasó la fecha */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className={`p-1.5 rounded-lg ${
-                  hasOverdue ? 'bg-red-100' : 'bg-gray-100'
-                }`}>
-                  <AlertCircle className={`h-4 w-4 ${
-                    hasOverdue ? 'text-red-600' : 'text-gray-500'
-                  }`} />
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-700">{texts.overdueAmount}</p>
-                  <p className={`text-base font-bold ${hasOverdue ? 'text-red-600' : 'text-gray-500'} flex items-center gap-2`}>
-                    {formatCurrency(overdue)}
-                    <span className={`text-xs font-medium ${hasOverdue ? 'text-red-700 bg-red-100' : 'text-gray-500 bg-gray-100'} px-2 py-0.5 rounded-full`}>{Math.round((overdue / total) * 100)}%</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Enhanced Single Progress Bar with Dynamic Gradients */}
       <div className="mb-3">
         <div className="relative">
@@ -496,20 +364,19 @@ export default function MonthlyProgressBar({
         </div>
       </div>
 
-      {/* Compact Motivational Message */}
-      <div className={`text-center p-2 rounded-lg border transition-all duration-300 max-w-sm mx-auto ${
+      {/* Frase Motivadora */}
+      <div className={`text-center p-1.5 rounded-lg border transition-all duration-300 max-w-xs mx-auto ${
         hasOverdue 
           ? 'bg-red-50 border-red-200' // Red background when there's overdue
-          : 'bg-blue-50 border-blue-200' // Green background when up-to-date
+          : 'bg-blue-50 border-blue-200' // Blue background when up-to-date
       }`}>
-        <p className={`text-xs font-medium leading-relaxed ${
+        <p className={`text-xs font-medium leading-tight ${
           hasOverdue 
             ? 'text-red-600' // Red text when there's overdue
-            : 'bg-gradient-to-r from-blue-500 to-emerald-600 bg-clip-text text-transparent' // Green gradient when up-to-date
+            : 'bg-gradient-to-r from-blue-500 to-emerald-600 bg-clip-text text-transparent' // Blue gradient when up-to-date
         }`}>
           {hasOverdue ? selectedOverdueMessage : selectedMessage}
         </p>
-        {/* Eliminado el aviso de mora con 'Atención:' */}
       </div>
     </div>
   )

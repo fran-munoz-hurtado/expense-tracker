@@ -61,9 +61,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [expandedRecurrentGroups, setExpandedRecurrentGroups] = useState<Set<string>>(new Set())
   const [expandedYearGroups, setExpandedYearGroups] = useState<Set<string>>(new Set())
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(navigationParams?.month || null)
-  const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
 
   // Create recurrentGoalMap like in DashboardView
   const recurrentGoalMap = useMemo(() => {
@@ -238,22 +235,14 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   // Fetch transactions data
   const fetchData = async () => {
     try {
-      setError(null)
       setLoading(true)
+      setError(null)
       
-      console.log(`🔄 CategoriesView: Fetching all transactions efficiently (like MisMetasView)`)
+      console.log(`🔄 CategoriesView: Fetching all transactions`)
       
-      let allTransactions: Transaction[] = []
-      
-      if (selectedMonth) {
-        // Fetch specific month (keep existing logic for month filter)
-        allTransactions = await fetchUserTransactions(user, selectedMonth, selectedYear)
-      } else {
-        // OPTIMIZED: Use the same strategy as MisMetasView - fetch ALL transactions in one query
-        console.log(`🔄 CategoriesView: Using single query to fetch all transactions (MisMetasView strategy)`)
-        allTransactions = await fetchUserTransactions(user, undefined, undefined)
-        console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions in single query`)
-      }
+      // Fetch all transactions (simplified, no filtering)
+      const allTransactions = await fetchUserTransactions(user, undefined, undefined)
+      console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions`)
 
       // Fetch recurrent expenses to build recurrentGoalMap
       const expenses = await fetchUserExpenses(user)
@@ -276,7 +265,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   // Initial data fetch
   useEffect(() => {
     fetchData()
-  }, [user, selectedYear, selectedMonth])
+  }, [user])
 
   // Data sync effect
   useDataSyncEffect(() => {
@@ -289,32 +278,32 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const categoryGroups: CategoryGroup[] = useMemo(() => {
     console.log('🔄 CategoriesView: Recalculating categoryGroups', {
       transactionsCount: transactions.length,
-      filterType,
-      selectedYear,
-      selectedMonth,
       recurrentGoalMapSize: Object.keys(recurrentGoalMap).length
     })
     
-    // Filter transactions by type if needed
-    const filteredTransactions = transactions.filter(transaction => {
-      if (filterType === 'all') return true
-      return transaction.source_type === filterType
-    })
-
-    // Only include expense transactions
-    const expenseTransactions = filteredTransactions.filter(t => t.type === 'expense')
+    // Only include expense transactions (simplified, no filtering)
+    const expenseTransactions = transactions.filter(t => 
+      t.type === 'expense' && 
+      t.category !== 'Ahorro' && 
+      !recurrentGoalMap[t.source_id]
+    )
     
     console.log('📊 CategoriesView: Transaction filtering results', {
       totalTransactions: transactions.length,
-      filteredByType: filteredTransactions.length,
       expenseTransactions: expenseTransactions.length,
+      filtersApplied: {
+        onlyExpenses: 'type === expense',
+        excludeAhorro: 'category !== Ahorro',
+        excludeGoals: 'isgoal !== true'
+      },
       sampleExpenseTransactions: expenseTransactions.slice(0, 3).map(t => ({
         id: t.id,
         description: t.description,
         category: t.category,
         type: t.type,
         source_type: t.source_type,
-        value: t.value
+        value: t.value,
+        isGoal: recurrentGoalMap[t.source_id] || false
       }))
     })
 
@@ -486,7 +475,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     })
     
     return sortedCategories
-  }, [transactions, filterType, recurrentGoalMap])
+  }, [transactions, recurrentGoalMap])
 
   // Toggle category expansion
   const toggleCategory = (categoryName: string) => {
@@ -640,106 +629,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
             </div>
           </div>
         )}
-
-        {/* Filters Section */}
-        <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <div className="p-1 bg-blue-100 rounded-lg">
-                <Calendar className="h-3 w-3 text-blue-600" />
-              </div>
-              <h3 className="text-xs font-semibold text-gray-800">Filtros</h3>
-            </div>
-            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-              {categoryGroups.length} categorías
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            {/* Year Filter */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Año</label>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              >
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Month Filter */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Mes</label>
-              <select
-                value={selectedMonth || 'all'}
-                onChange={(e) => setSelectedMonth(e.target.value === 'all' ? null : Number(e.target.value))}
-                className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
-              >
-                <option value="all">Todos los meses</option>
-                {months.map((month, index) => (
-                  <option key={index + 1} value={index + 1}>{month}</option>
-                ))}
-              </select>
-            </div>
-            
-            {/* Type Filter */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
-              <div className="flex space-x-1 bg-gray-50 p-1 rounded-md">
-                <button
-                  onClick={() => setFilterType('all')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                    filterType === 'all'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                  }`}
-                >
-                  Todos
-                </button>
-                <button
-                  onClick={() => setFilterType('recurrent')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                    filterType === 'recurrent'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                  }`}
-                >
-                  Recurrentes
-                </button>
-                <button
-                  onClick={() => setFilterType('non_recurrent')}
-                  className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                    filterType === 'non_recurrent'
-                      ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm`
-                      : `text-${getNestedColor('filter', 'inactive', 'text')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                  }`}
-                >
-                  Únicos
-                </button>
-              </div>
-            </div>
-            
-            {/* Quick Actions */}
-            <div className="relative group">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Acciones</label>
-              <div className="flex space-x-1">
-                <button
-                  onClick={() => {
-                    setSelectedYear(new Date().getFullYear())
-                    setSelectedMonth(new Date().getMonth() + 1)
-                    setFilterType('all')
-                  }}
-                  className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-105"
-                >
-                  Mes Actual
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Main Content - Two Column Layout */}
