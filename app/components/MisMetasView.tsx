@@ -878,36 +878,30 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                               onClick={() => toggleYearExpansion(selectedGoal, yearData.year)}
                               className="w-full p-4 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm"
                             >
-                              <div className="flex items-center justify-between">
-                                {/* Left side: Year, Current label, and Progress */}
-                                <div className="flex items-center gap-3">
-                                  <div className="p-1.5 rounded-lg bg-blue-100 transition-all duration-300 hover:scale-110">
-                                    <Calendar className="h-4 w-4 text-blue-600" />
-                                  </div>
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <h5 className="text-sm font-medium text-gray-900">
-                                        {yearData.year}
-                                      </h5>
-                                      {yearData.year === currentYear && (
-                                        <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                                          Actual
-                                        </span>
-                                      )}
-                                    </div>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                      yearData.isCompleted 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-yellow-100 text-yellow-800'
-                                    }`}>
-                                      {yearData.progress}% completado
+                              <div className="flex items-center justify-between min-h-[20px]">
+                                {/* Left side: Calendar icon + Year + Actual + Progress */}
+                                <div className="flex items-center space-x-2">
+                                  <Calendar className="h-3 w-3 text-blue-600" />
+                                  <span className="text-xs font-medium text-gray-900">
+                                    {yearData.year}
+                                  </span>
+                                  {yearData.year === currentYear && (
+                                    <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                      Actual
                                     </span>
-                                  </div>
+                                  )}
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    yearData.isCompleted 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {yearData.progress}% completado
+                                  </span>
                                 </div>
 
                                 {/* Right side: Value and Status */}
-                                <div className="flex items-center gap-3">
-                                  <span className="text-sm text-gray-600">
+                                <div className="flex items-center space-x-3">
+                                  <span className="text-xs text-gray-600">
                                     {formatCurrency(yearData.paidValue)} de {formatCurrency(yearData.totalValue)}
                                   </span>
                                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyling.bgColor} ${statusStyling.textColor}`}>
