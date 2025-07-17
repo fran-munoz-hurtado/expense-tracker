@@ -1259,8 +1259,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       {/* Category Management Modal */}
       {showCategoryManagementModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
               <h2 className="text-lg font-semibold text-gray-dark">Gestión de Categorías</h2>
               <button
                 onClick={() => setShowCategoryManagementModal(false)}
@@ -1294,7 +1294,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           // Edit mode
                           <div className="flex-1 flex items-center space-x-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                              category.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#d7eaff] text-[#3f70ad]'
+                              category.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#e4effa] text-[#3f70ad]'
                             }`}>
                               <DollarSign className="h-4 w-4" />
                             </div>
@@ -1340,7 +1340,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           <>
                             <div className="flex items-center space-x-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                                category.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#d7eaff] text-[#3f70ad]'
+                                category.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#e4effa] text-[#3f70ad]'
                               }`}>
                                 <DollarSign className="h-4 w-4" />
                               </div>
