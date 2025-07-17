@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { CheckCircle, AlertTriangle, PiggyBank, CreditCard } from 'lucide-react'
 import { type Transaction, type User } from '@/lib/supabase'
 import { fetchUserTransactions } from '@/lib/dataUtils'
 import { texts } from '@/lib/translations'
@@ -142,37 +142,50 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
       </div>
 
       {/* Fila superior: Resumen de montos */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-3 gap-4 mb-6">
         {/* Ingresos */}
-        <div className="text-center">
-          <p className="text-xs text-gray-dark font-sans mb-1">Ingresos</p>
-          <p className="text-base font-medium text-[#5b87ba] font-sans">
+        <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
+          <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
+            <PiggyBank className="w-4 h-4 text-gray-400" />
+            <span>Ingresos</span>
+          </div>
+          <p className="text-lg font-medium text-gray-800 font-sans">
             {formatCurrency(totalIngresos)}
           </p>
         </div>
 
         {/* Gastos Totales */}
-        <div className="text-center">
-          <p className="text-xs text-gray-dark font-sans mb-1">Gastos Totales</p>
-          <p className="text-base font-medium text-error-red font-sans">
+        <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
+          <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
+            <CreditCard className="w-4 h-4 text-gray-400" />
+            <span>Gastos Totales</span>
+          </div>
+          <p className="text-lg font-medium text-gray-800 font-sans">
             {formatCurrency(totalGastos)}
           </p>
         </div>
 
-        {/* Ya pagado */}
-        <div className="text-center">
-          <p className="text-xs text-gray-dark font-sans mb-1">Ya pagado</p>
-          <p className="text-base font-medium text-green-primary font-sans">
-            {formatCurrency(totalPagado)}
-          </p>
-        </div>
-
-        {/* Falta pagar */}
-        <div className="text-center">
-          <p className="text-xs text-gray-dark font-sans mb-1">Falta pagar</p>
-          <p className="text-base font-medium text-warning-yellow font-sans">
-            {formatCurrency(faltaPagar)}
-          </p>
+        {/* Estado de pagos */}
+        <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
+          <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
+            {faltaPagar > 0 ? (
+              <AlertTriangle className="w-4 h-4 text-gray-400" />
+            ) : (
+              <CheckCircle className="w-4 h-4 text-gray-400" />
+            )}
+            <span>Estado de pagos</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {faltaPagar > 0 ? (
+              <span className="bg-warning-yellow text-white px-2 py-1 rounded-md text-sm font-sans">
+                Falta pagar {formatCurrency(faltaPagar)}
+              </span>
+            ) : (
+              <span className="bg-green-primary text-white px-2 py-1 rounded-md text-sm font-sans">
+                Pagado {formatCurrency(totalPagado)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -183,21 +196,21 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-dark font-sans">Progreso de pagos</span>
             <span className="text-xs text-gray-500 font-sans">
-              Pagado: {porcentajePagado}%
+              Pagado: {porcentajePagado}% ({formatCurrency(totalPagado)})
             </span>
           </div>
           
-          <div className="relative w-full h-3 bg-[#f0f0ec] rounded-full">
+          <div className="relative w-full h-3 bg-[#f0f0ec] rounded-full overflow-hidden">
             {/* Pagado (verde) */}
             <div 
-              className="absolute left-0 h-3 bg-green-primary rounded-full transition-all duration-300"
+              className="absolute left-0 top-0 h-3 bg-green-primary transition-all duration-300"
               style={{ width: `${porcentajePagado}%` }}
             ></div>
             
             {/* Deuda vencida (rojo), si aplica */}
             {tieneVencimientos && porcentajeVencido > 0 && (
               <div 
-                className="absolute h-3 bg-error-bg rounded-full transition-all duration-300"
+                className="absolute top-0 h-3 bg-error-bg transition-all duration-300"
                 style={{ 
                   left: `${porcentajePagado}%`, 
                   width: `${porcentajeVencido}%` 
@@ -226,9 +239,7 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
         </div>
 
         {/* Estado de balance */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-dark font-sans">Balance del mes</span>
-          
+        <div className="flex items-center justify-end">
           <div className="flex items-center space-x-2">
             {cuantoQueda >= 0 ? (
               <>

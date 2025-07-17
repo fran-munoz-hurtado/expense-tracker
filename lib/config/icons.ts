@@ -89,7 +89,7 @@ export const MOVEMENT_TYPES = {
     color: 'balance' as const,
     category: 'savings' as const,
     source_type: 'non_recurrent' as const,
-    type: 'income' as const,
+    type: 'expense' as const,
   },
 } as const
 
