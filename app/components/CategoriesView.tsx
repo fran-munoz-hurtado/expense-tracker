@@ -1529,9 +1529,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       {/* Edit Confirmation Modal */}
       {showEditConfirmModal && categoryToEdit && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">Confirmar Edición</h2>
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
+              <h2 className="text-lg font-semibold text-gray-dark">Confirmar Edición</h2>
               <button
                 onClick={handleCancelEditCategory}
                 className="text-gray-400 hover:text-gray-500"
@@ -1540,41 +1540,32 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               </button>
             </div>
             
-            <div className="p-4">
+            <div className="px-5 py-4">
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
-                  <div className={`p-2 rounded-full ${
-                    categoryToEdit.old.isDefault ? 'bg-gray-100' : 'bg-blue-100'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    categoryToEdit.old.isDefault ? 'bg-beige text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
                   }`}>
-                    <DollarSign className={`h-4 w-4 ${
-                      categoryToEdit.old.isDefault ? 'text-gray-600' : 'text-blue-600'
-                    }`} />
+                    <Tag className="h-4 w-4" fill="currentColor" />
                   </div>
                   <div>
                     <span className="text-sm text-gray-500">Cambiar nombre de:</span>
                     <div className="font-medium text-gray-900">
-                      <span className="line-through text-gray-500">{categoryToEdit.old.name}</span>
+                      <span className="text-sm text-gray-400 line-through">{categoryToEdit.old.name}</span>
                       <span className="mx-2">→</span>
-                      <span className="text-blue-600">{categoryToEdit.new}</span>
+                      <span className="text-sm text-green-dark font-medium">{categoryToEdit.new}</span>
                     </div>
                   </div>
                 </div>
                 
-                <p className="text-gray-700 mb-3">
+                <p className="text-sm text-gray-dark mb-3">
                   ¿Estás seguro que deseas cambiar el nombre de esta categoría?
                 </p>
                 
                 {editAffectedTransactionsCount > 0 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                    <div className="flex items-center space-x-2">
-                      <AlertCircle className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-800">
-                        Transacciones afectadas
-                      </span>
-                    </div>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Cambiar el nombre de esta categoría va a actualizar <strong>{editAffectedTransactionsCount}</strong> transacciones.
-                    </p>
+                  <div className="bg-[#eaf3fb] text-[#3f70ad] border border-[#d7eaff] rounded-md px-4 py-2 text-sm mb-3">
+                    <strong className="font-medium">ℹ️ Transacciones afectadas</strong><br />
+                    Cambiar el nombre de esta categoría va a actualizar <strong>{editAffectedTransactionsCount}</strong> transacciones.
                   </div>
                 )}
                 
@@ -1585,18 +1576,18 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 )}
               </div>
               
-              <div className="flex space-x-2">
+              <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={handleCancelEditCategory}
                   disabled={updatingCategory}
-                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="bg-border-light text-gray-dark hover:bg-[#e3e4db] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleConfirmEditCategory}
                   disabled={updatingCategory}
-                  className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="bg-green-primary text-white hover:bg-[#77b16e] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {updatingCategory ? 'Actualizando...' : 'Actualizar'}
                 </button>
