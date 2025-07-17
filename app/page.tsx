@@ -369,7 +369,7 @@ function Home() {
           
           {/* Movement Type Selection or Form */}
           {!selectedMovementType ? (
-            <section className="relative bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+            <section className="relative bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
               <button
                 onClick={handleCloseForm}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -378,140 +378,119 @@ function Home() {
                 <X className="h-5 w-5" />
               </button>
 
-              <div className="text-center mb-8">
-                <div className="flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mx-auto mb-4">
-                  <Plus className="h-8 w-8 text-blue-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Añadir Movimiento</h2>
-                <p className="text-gray-600">Selecciona el tipo de movimiento que deseas crear</p>
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-dark mb-2">Añadir Movimiento</h2>
+                <p className="text-green-dark text-sm">Selecciona el tipo de movimiento que deseas crear</p>
               </div>
 
-              {/* Movement Type Selection Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              {/* Movement Type Selection - Vertical List */}
+              <div className="flex flex-col gap-3 mt-6">
                 {/* Gasto Recurrente */}
                 <button
                   onClick={() => handleMovementTypeSelect('RECURRENT_EXPENSE')}
-                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-yellow-50 p-6 text-left hover:border-red-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full bg-${getColor('expense', 'light')}`}>
-                      <MOVEMENT_TYPES.RECURRENT_EXPENSE.icon className={`h-6 w-6 text-${getColor('expense', 'icon')}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-red-700 transition-colors">
-                        {MOVEMENT_TYPES.RECURRENT_EXPENSE.label}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {MOVEMENT_TYPES.RECURRENT_EXPENSE.description}
-                      </p>
-                    </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#fdf5d3]">
+                    <MOVEMENT_TYPES.RECURRENT_EXPENSE.icon className="h-6 w-6 text-orange-600" />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-gray-dark font-medium text-base">
+                      {MOVEMENT_TYPES.RECURRENT_EXPENSE.label}
+                    </span>
+                    <span className="text-green-dark text-sm">
+                      {MOVEMENT_TYPES.RECURRENT_EXPENSE.description}
+                    </span>
+                  </div>
                 </button>
 
                 {/* Gasto Único */}
                 <button
                   onClick={() => handleMovementTypeSelect('SINGLE_EXPENSE')}
-                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-yellow-50 p-6 text-left hover:border-red-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full bg-${getColor('expense', 'light')}`}>
-                      {renderCustomIcon('TICKET_TAG', `h-6 w-6 text-${getColor('expense', 'icon')}`)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-red-700 transition-colors">
-                        {MOVEMENT_TYPES.SINGLE_EXPENSE.label}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {MOVEMENT_TYPES.SINGLE_EXPENSE.description}
-                      </p>
-                    </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#fef7da]">
+                    {renderCustomIcon('TICKET_TAG', 'h-6 w-6 text-orange-600')}
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-50 to-red-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-gray-dark font-medium text-base">
+                      {MOVEMENT_TYPES.SINGLE_EXPENSE.label}
+                    </span>
+                    <span className="text-green-dark text-sm">
+                      {MOVEMENT_TYPES.SINGLE_EXPENSE.description}
+                    </span>
+                  </div>
                 </button>
 
                 {/* Ingreso Recurrente */}
                 <button
                   onClick={() => handleMovementTypeSelect('RECURRENT_INCOME')}
-                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-blue-50 p-6 text-left hover:border-blue-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full bg-${getColor('income', 'light')}`}>
-                      <MOVEMENT_TYPES.RECURRENT_INCOME.icon className={`h-6 w-6 text-${getColor('income', 'icon')}`} />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                        {MOVEMENT_TYPES.RECURRENT_INCOME.label}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {MOVEMENT_TYPES.RECURRENT_INCOME.description}
-                      </p>
-                    </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#e4effa]">
+                    <MOVEMENT_TYPES.RECURRENT_INCOME.icon className="h-6 w-6 text-blue-600" />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-gray-dark font-medium text-base">
+                      {MOVEMENT_TYPES.RECURRENT_INCOME.label}
+                    </span>
+                    <span className="text-green-dark text-sm">
+                      {MOVEMENT_TYPES.RECURRENT_INCOME.description}
+                    </span>
+                  </div>
                 </button>
 
                 {/* Ingreso Único */}
                 <button
                   onClick={() => handleMovementTypeSelect('SINGLE_INCOME')}
-                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-blue-50 p-6 text-left hover:border-blue-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full bg-${getColor('income', 'light')}`}>
-                      {renderCustomIcon('TICKET_TAG', `h-6 w-6 text-${getColor('income', 'icon')}`)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors">
-                        {MOVEMENT_TYPES.SINGLE_INCOME.label}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {MOVEMENT_TYPES.SINGLE_INCOME.description}
-                      </p>
-                    </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#edf3fc]">
+                    {renderCustomIcon('TICKET_TAG', 'h-6 w-6 text-blue-600')}
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-blue-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-gray-dark font-medium text-base">
+                      {MOVEMENT_TYPES.SINGLE_INCOME.label}
+                    </span>
+                    <span className="text-green-dark text-sm">
+                      {MOVEMENT_TYPES.SINGLE_INCOME.description}
+                    </span>
+                  </div>
                 </button>
 
                 {/* Meta */}
                 <button
                   onClick={() => handleMovementTypeSelect('GOAL')}
-                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-yellow-50 p-6 text-left hover:border-yellow-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full bg-${getColor('expense', 'light')}`}>
-                      {renderCustomIcon('GOAL_TARGET', `h-6 w-6 text-${getColor('expense', 'icon')}`)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-yellow-700 transition-colors">
-                        {MOVEMENT_TYPES.GOAL.label}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {MOVEMENT_TYPES.GOAL.description}
-                      </p>
-                    </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#faf3d2]">
+                    {renderCustomIcon('GOAL_TARGET', 'h-6 w-6 text-yellow-600')}
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-yellow-50 to-yellow-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-gray-dark font-medium text-base">
+                      {MOVEMENT_TYPES.GOAL.label}
+                    </span>
+                    <span className="text-green-dark text-sm">
+                      {MOVEMENT_TYPES.GOAL.description}
+                    </span>
+                  </div>
                 </button>
 
                 {/* Ahorro */}
                 <button
                   onClick={() => handleMovementTypeSelect('SAVINGS')}
-                  className="group relative overflow-hidden rounded-lg border-2 border-gray-200 bg-green-50 p-6 text-left hover:border-green-300 hover:shadow-lg transition-all duration-200 hover:scale-[1.02]"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-full bg-${getColor('balance', 'light')}`}>
-                      {renderCustomIcon('SAVINGS_PIG', `h-6 w-6 text-${getColor('balance', 'icon')}`)}
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-700 transition-colors">
-                        {MOVEMENT_TYPES.SAVINGS.label}
-                      </h3>
-                      <p className="text-sm text-gray-600">
-                        {MOVEMENT_TYPES.SAVINGS.description}
-                      </p>
-                    </div>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#e0f6e8]">
+                    {renderCustomIcon('SAVINGS_PIG', 'h-6 w-6 text-green-600')}
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-r from-green-50 to-green-100 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-gray-dark font-medium text-base">
+                      {MOVEMENT_TYPES.SAVINGS.label}
+                    </span>
+                    <span className="text-green-dark text-sm">
+                      {MOVEMENT_TYPES.SAVINGS.description}
+                    </span>
+                  </div>
                 </button>
               </div>
             </section>
