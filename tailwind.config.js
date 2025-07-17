@@ -18,9 +18,143 @@ module.exports = {
     'text-title-large', 'text-title-medium', 'text-title-small',
     'text-body-large', 'text-body-medium', 'text-body-small',
     'text-label-large', 'text-label-medium', 'text-label-small',
+    // New color tokens for safelist
+    'bg-green-primary', 'text-green-primary', 'text-green-dark', 'bg-green-light',
+    'bg-beige', 'bg-neutral-bg', 'bg-neutral-light', 'border-border-light',
+    'text-gray-text', 'text-gray-dark', 'bg-warning-bg', 'text-warning-yellow',
+    'bg-error-bg', 'text-error-red', 'bg-info-bg', 'text-info-blue',
+    'hover:bg-[#77b16e]', 'active:bg-[#5d9f67]', 'shadow-soft', 'rounded-mdplus',
   ],
   theme: {
     extend: {
+      // 🎨 CuandoQueda Color Palette - Calm Green & Sand
+      colors: {
+        // Base Palette - Calm Green & Sand
+        green: {
+          primary: '#88c57f',     // Main actions, "paid" status, CTA
+          dark: '#5d7760',        // Icons, muted headings
+          light: '#dff0d8',       // Paid badge background
+        },
+        beige: '#e3e4db',         // Sidebar background, neutral elements
+        neutral: {
+          bg: '#f9f9f7',          // App background (non-white, soft)
+          light: '#f4f4f0',       // Very soft containers (if needed)
+        },
+        border: {
+          DEFAULT: "hsl(var(--border))",
+          light: '#d4d4cd',       // Card and input borders
+        },
+        gray: {
+          text: '#666666',        // Secondary text
+          dark: '#1a1a1a',        // Primary readable text (not pure black)
+        },
+        warning: {
+          yellow: '#f7c17b',      // "Falta pagar" text
+          bg: '#fff3cd',          // Yellow tag background
+        },
+        error: {
+          red: '#d9534f',         // "Se pasó la fecha" text
+          bg: '#f2dede',          // Red tag background
+        },
+        info: {
+          blue: '#4682b4',        // Optional info text
+          bg: '#e3f6f5',          // Optional info background
+        },
+        
+        // Existing colors preserved...
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
+        // App-specific colors
+        income: {
+          primary: "hsl(var(--income-primary))",
+          secondary: "hsl(var(--income-secondary))",
+          light: "hsl(var(--income-light))",
+          bg: "hsl(var(--income-bg))",
+          "bg-light": "hsl(var(--income-bg-light))",
+          border: "hsl(var(--income-border))",
+          text: "hsl(var(--income-text))",
+        },
+        expense: {
+          primary: "hsl(var(--expense-primary))",
+          secondary: "hsl(var(--expense-secondary))",
+          light: "hsl(var(--expense-light))",
+          bg: "hsl(var(--expense-bg))",
+          "bg-light": "hsl(var(--expense-bg-light))",
+          border: "hsl(var(--expense-border))",
+          text: "hsl(var(--expense-text))",
+        },
+        balance: {
+          primary: "hsl(var(--balance-primary))",
+          secondary: "hsl(var(--balance-secondary))",
+          light: "hsl(var(--balance-light))",
+          bg: "hsl(var(--balance-bg))",
+          "bg-light": "hsl(var(--balance-bg-light))",
+          border: "hsl(var(--balance-border))",
+          text: "hsl(var(--balance-text))",
+        },
+        status: {
+          paid: "hsl(var(--status-paid))",
+          pending: "hsl(var(--status-pending))",
+          overdue: "hsl(var(--status-overdue))",
+        },
+        button: {
+          primary: "hsl(var(--button-primary))",
+          secondary: "hsl(var(--button-secondary))",
+          hover: "hsl(var(--button-hover))",
+        },
+        icon: {
+          income: "hsl(var(--icon-income))",
+          expense: "hsl(var(--icon-expense))",
+          balance: "hsl(var(--icon-balance))",
+        },
+        filter: {
+          active: "hsl(var(--filter-active))",
+          inactive: "hsl(var(--filter-inactive))",
+        },
+        modal: {
+          success: "hsl(var(--modal-success))",
+          warning: "hsl(var(--modal-warning))",
+          info: "hsl(var(--modal-info))",
+        },
+      },
+
       // MODERN TYPOGRAPHY SYSTEM
       // Based on Google Material Design 3, Apple HIG, Spotify & Uber best practices
       fontFamily: {
@@ -44,6 +178,8 @@ module.exports = {
         'inter': ['Inter', 'var(--font-primary)'],
         'sf-pro': ['SF Pro Display', 'SF Pro Text', '-apple-system', 'var(--font-primary)'],
         'roboto': ['Roboto', 'var(--font-primary)'],
+        // Adding Inter as primary sans font as requested
+        sans: ['Inter', 'sans-serif'],
       },
 
       // Modern font sizes using rem for scalability (Material Design 3 scale)
@@ -188,99 +324,13 @@ module.exports = {
         'widest': 'var(--letter-spacing-widest, 0.1em)',
       },
 
-      colors: {
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        chart: {
-          "1": "hsl(var(--chart-1))",
-          "2": "hsl(var(--chart-2))",
-          "3": "hsl(var(--chart-3))",
-          "4": "hsl(var(--chart-4))",
-          "5": "hsl(var(--chart-5))",
-        },
-        // App-specific colors
-        income: {
-          primary: "hsl(var(--income-primary))",
-          secondary: "hsl(var(--income-secondary))",
-          light: "hsl(var(--income-light))",
-          bg: "hsl(var(--income-bg))",
-          "bg-light": "hsl(var(--income-bg-light))",
-          border: "hsl(var(--income-border))",
-          text: "hsl(var(--income-text))",
-        },
-        expense: {
-          primary: "hsl(var(--expense-primary))",
-          secondary: "hsl(var(--expense-secondary))",
-          light: "hsl(var(--expense-light))",
-          bg: "hsl(var(--expense-bg))",
-          "bg-light": "hsl(var(--expense-bg-light))",
-          border: "hsl(var(--expense-border))",
-          text: "hsl(var(--expense-text))",
-        },
-        balance: {
-          primary: "hsl(var(--balance-primary))",
-          secondary: "hsl(var(--balance-secondary))",
-          light: "hsl(var(--balance-light))",
-          bg: "hsl(var(--balance-bg))",
-          "bg-light": "hsl(var(--balance-bg-light))",
-          border: "hsl(var(--balance-border))",
-          text: "hsl(var(--balance-text))",
-        },
-        status: {
-          paid: "hsl(var(--status-paid))",
-          pending: "hsl(var(--status-pending))",
-          overdue: "hsl(var(--status-overdue))",
-        },
-        button: {
-          primary: "hsl(var(--button-primary))",
-          secondary: "hsl(var(--button-secondary))",
-          hover: "hsl(var(--button-hover))",
-        },
-        icon: {
-          income: "hsl(var(--icon-income))",
-          expense: "hsl(var(--icon-expense))",
-          balance: "hsl(var(--icon-balance))",
-        },
-        filter: {
-          active: "hsl(var(--filter-active))",
-          inactive: "hsl(var(--filter-inactive))",
-        },
-        modal: {
-          success: "hsl(var(--modal-success))",
-          warning: "hsl(var(--modal-warning))",
-          info: "hsl(var(--modal-info))",
-        },
+      // Adding new design tokens as requested
+      boxShadow: {
+        soft: '0 1px 3px rgba(0, 0, 0, 0.05)', // Soft hover or card shadow
+      },
+
+      borderRadius: {
+        mdplus: '10px', // Rounded tags or soft corners
       },
     },
   },

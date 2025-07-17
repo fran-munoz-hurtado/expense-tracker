@@ -141,24 +141,20 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
 
   return (
     <>
-      <div className="bg-blue-900 border-b border-gray-900 px-4 sm:px-6 py-3 sm:py-4 shadow-md shadow-black/5 relative">
-        {/* Línea de luz arriba */}
-        <div className="absolute inset-x-0 top-0 h-px bg-white/10 pointer-events-none z-20" />
-        {/* Borde inferior con gradiente (glow) */}
-        <div className="absolute left-0 right-0 -bottom-1.5 h-1.5 pointer-events-none z-20 bg-gradient-to-r from-blue-400/30 via-blue-300/10 to-transparent rounded-b-xl blur-xs" />
+      <div className="bg-neutral-bg border-b border-green-primary px-4 sm:px-6 py-3 sm:py-4 shadow-soft relative">
           <div className="flex items-center justify-between">
           {/* Left side - Welcome message */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-white">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-primary rounded-full flex items-center justify-center flex-shrink-0 border-2 border-white">
                 <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-base sm:text-xl font-bold text-white truncate">
+                <h1 className="text-base sm:text-xl font-semibold text-gray-dark font-sans truncate">
                   {greeting}, {user.first_name} {user.last_name}
                 </h1>
-                <p className="text-xs sm:text-sm text-blue-200 flex items-center space-x-1">
-                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400 flex-shrink-0" />
+                <p className="text-xs sm:text-sm text-green-dark flex items-center space-x-1 font-sans">
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-dark flex-shrink-0" />
                   <span className="truncate">{financialMessage}</span>
                 </p>
               </div>
@@ -168,18 +164,18 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
           {/* Right side - Actions and time */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
             {/* Quick stats indicator */}
-            <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-blue-900 rounded-full">
-              <DollarSign className="h-4 w-4 text-blue-300" />
-              <span className="text-sm font-medium text-blue-100">{texts.appTitle}</span>
+            <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-beige rounded-full">
+              <DollarSign className="h-4 w-4 text-green-dark" />
+              <span className="text-sm font-medium text-green-dark font-sans">{texts.appTitle}</span>
             </div>
 
             {/* Notifications */}
-            <button className="p-1.5 sm:p-2 text-blue-200 hover:text-white hover:bg-blue-900 rounded-full transition-colors">
+            <button className="p-1.5 sm:p-2 text-green-dark hover:text-gray-dark hover:bg-border-light rounded-full transition-colors">
               <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
             {/* Settings */}
-            <button className="p-1.5 sm:p-2 text-blue-200 hover:text-white hover:bg-blue-900 rounded-full transition-colors">
+            <button className="p-1.5 sm:p-2 text-green-dark hover:text-gray-dark hover:bg-border-light rounded-full transition-colors">
               <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
 
@@ -187,27 +183,27 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
             <div className="relative" ref={dropdownRef}>
               <button 
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex items-center space-x-2 p-1.5 sm:p-2 text-white hover:text-blue-300 hover:bg-blue-900 rounded-full transition-colors"
+                className="flex items-center space-x-2 p-1.5 sm:p-2 text-green-dark hover:text-gray-dark hover:bg-border-light rounded-full transition-colors"
               >
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center border-2 border-white">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-primary rounded-full flex items-center justify-center border-2 border-white">
                   <span className="text-xs sm:text-sm font-medium text-white">
                     {user.first_name.charAt(0)}{user.last_name.charAt(0)}
                   </span>
                 </div>
-                <ChevronDown className="h-4 w-4 text-blue-200" />
+                <ChevronDown className="h-4 w-4 text-green-dark" />
               </button>
 
               {/* Dropdown menu */}
               {showUserDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                  <div className="px-4 py-2 border-b border-gray-100">
-                    <p className="text-sm font-medium text-gray-900">{user.first_name} {user.last_name}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-mdplus shadow-soft py-1 z-50 border border-border-light">
+                  <div className="px-4 py-2 border-b border-border-light">
+                    <p className="text-sm font-medium text-gray-dark font-sans">{user.first_name} {user.last_name}</p>
+                    <p className="text-xs text-green-dark font-sans">{user.email}</p>
                   </div>
                   
                   <button
                     onClick={handleEditProfile}
-                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-dark hover:bg-border-light font-sans"
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     {texts.profile.updateProfile}
@@ -215,16 +211,16 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                   
                   <button
                     onClick={handleDebugSection}
-                    className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-dark hover:bg-border-light font-sans"
                   >
                     <Bug className="h-4 w-4 mr-2" />
                     {texts.profile.debugSection}
                   </button>
                   
-                  <div className="border-t border-gray-100">
+                  <div className="border-t border-border-light">
                     <button
                       onClick={onLogout}
-                      className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      className="w-full flex items-center px-4 py-2 text-sm text-error-red hover:bg-error-bg font-sans"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
                       {texts.logout}
@@ -240,27 +236,27 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
       {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
+          <div className="bg-white rounded-mdplus max-w-md w-full p-6 shadow-soft">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">{texts.profile.updateProfile}</h2>
+              <h2 className="text-lg font-semibold text-gray-dark font-sans">{texts.profile.updateProfile}</h2>
               <button
                 onClick={() => setShowEditModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-green-dark hover:text-gray-dark"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             {editError && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-md p-3">
-                <p className="text-sm text-red-700">{editError}</p>
+              <div className="mb-4 bg-error-bg border border-error-red rounded-mdplus p-3">
+                <p className="text-sm text-error-red font-sans">{editError}</p>
               </div>
             )}
 
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="edit_first_name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="edit_first_name" className="block text-sm font-medium text-gray-dark font-sans">
                     {texts.profile.name}
                   </label>
                   <input
@@ -268,12 +264,12 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                     type="text"
                     value={editFormData.first_name}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-2 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
                     required
                   />
                 </div>
                 <div>
-                  <label htmlFor="edit_last_name" className="block text-sm font-medium text-gray-700">
+                  <label htmlFor="edit_last_name" className="block text-sm font-medium text-gray-dark font-sans">
                     {texts.profile.lastName}
                   </label>
                   <input
@@ -281,14 +277,14 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                     type="text"
                     value={editFormData.last_name}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    className="mt-1 block w-full px-3 py-2 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="edit_username" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="edit_username" className="block text-sm font-medium text-gray-dark font-sans">
                   {texts.profile.username}
                 </label>
                 <input
@@ -296,13 +292,13 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                   type="text"
                   value={editFormData.username}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, username: e.target.value }))}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="edit_email" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="edit_email" className="block text-sm font-medium text-gray-dark font-sans">
                   {texts.email}
                 </label>
                 <input
@@ -310,7 +306,7 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                   type="email"
                   value={editFormData.email}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  className="mt-1 block w-full px-3 py-2 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
                   required
                 />
               </div>
@@ -319,14 +315,14 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+                  className="px-4 py-2 text-sm font-medium text-green-dark bg-beige hover:bg-border-light rounded-mdplus font-sans"
                 >
                   {texts.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={editLoading}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:opacity-50"
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-primary hover:bg-[#77b16e] rounded-mdplus disabled:opacity-50 font-sans"
                 >
                   {editLoading ? texts.saving : texts.save}
                 </button>

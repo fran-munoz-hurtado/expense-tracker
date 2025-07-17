@@ -83,13 +83,13 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
       {/* Sidebar */}
       <div className={`
         sidebar fixed lg:static inset-y-0 left-0 z-40
-        w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col
+        w-64 bg-beige shadow-sm border-r border-border-light flex flex-col
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-4 lg:p-6 border-b border-gray-200">
-          <h1 className="text-lg lg:text-xl font-bold text-gray-900">{texts.appTitle}</h1>
-          <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+        <div className="p-4 lg:p-6 border-b border-border-light">
+          <h1 className="text-lg lg:text-xl font-bold text-gray-dark font-sans">{texts.appTitle}</h1>
+          <div className="mt-2 flex items-center gap-2 text-sm text-green-dark">
             <UserIcon className="h-4 w-4" />
             <span className="truncate">{user.first_name} {user.last_name}</span>
           </div>
@@ -99,17 +99,16 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
           <button
             onClick={handleAddExpense}
             className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2
-              bg-gradient-to-r from-blue-500 to-blue-600
-              text-white font-medium text-sm
-              rounded-full shadow-md
-              hover:from-blue-600 hover:to-blue-700
-              active:scale-95 active:shadow-lg
-              focus:outline-none focus:ring-2 focus:ring-blue-400
+              bg-green-primary text-white font-medium text-sm
+              rounded-mdplus shadow-soft
+              hover:bg-[#77b16e]
+              active:bg-[#5d9f67] active:scale-95
+              focus:outline-none focus:ring-2 focus:ring-green-primary/40
               transition-all duration-150"
             aria-label={texts.addTransaction}
           >
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20">
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4 text-white" />
             </span>
             {texts.addTransaction}
           </button>
@@ -124,15 +123,15 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
                   key={item.id}
                   onClick={() => handleViewChange(item.id as 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories')}
                   className={`
-                    w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm lg:text-base
+                    w-full flex items-center gap-3 px-3 py-2 rounded-mdplus text-left transition-colors text-sm lg:text-base font-sans
                     ${isActive 
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-green-primary text-white' 
+                      : 'text-green-dark hover:bg-border-light'
                     }
                   `}
                   title={item.description}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-white' : 'text-green-dark'}`} />
                   <span className="font-medium">{item.label}</span>
                 </button>
               )
@@ -140,10 +139,10 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
           </nav>
         </div>
         
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-border-light">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors text-sm lg:text-base"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-green-dark hover:underline rounded-lg transition-colors text-sm lg:text-base font-sans"
           >
             <LogOut className="h-4 w-4" />
             {texts.logout}

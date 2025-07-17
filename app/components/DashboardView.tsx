@@ -1192,38 +1192,38 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       )}
 
       {/* Modern Compact Filters Section */}
-      <div className="mt-2 mb-4 bg-white border border-gray-200 rounded-xl shadow-sm">
+      <div className="mt-2 mb-4 bg-white border border-border-light rounded-mdplus shadow-soft">
         {/* Filter Toggle Button */}
-        <div className="p-3 border-b border-gray-100">
+        <div className="p-3 border-b border-border-light">
           <button
             onClick={() => setFiltersExpanded(!filtersExpanded)}
-            className="w-full flex items-center justify-between text-left hover:bg-gray-50 rounded-lg p-2 transition-colors"
+            className="w-full flex items-center justify-between text-left hover:bg-border-light rounded-lg p-2 transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <div className="p-1 bg-blue-100 rounded-lg">
-                <svg className="h-3 w-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 bg-beige rounded-lg">
+                <svg className="h-3 w-3 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
                 </svg>
               </div>
-              <h3 className="text-sm font-semibold text-gray-800">Filtros Avanzados</h3>
-              <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+              <h3 className="text-sm font-medium text-green-dark font-sans">Filtros Avanzados</h3>
+              <div className="text-xs text-green-dark bg-beige px-2 py-0.5 rounded-full">
                 {finalSortedTransactions.length} resultados
               </div>
             </div>
             <div className="flex items-center space-x-2">
               {/* Active filters summary */}
-              <div className="flex items-center space-x-1 text-xs text-gray-500">
-                <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+              <div className="flex items-center space-x-1 text-xs">
+                <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
                   {months[selectedMonth - 1]} {selectedYear}
                 </span>
                 {filterType !== 'all' && (
-                  <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-medium">
+                  <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
                     {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
                   </span>
                 )}
               </div>
               <div className={`transform transition-transform duration-200 ${filtersExpanded ? 'rotate-180' : ''}`}>
-                <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="h-4 w-4 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
               </div>
@@ -1233,23 +1233,23 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
         {/* Expandable Filters Content */}
         {filtersExpanded && (
-          <div className="p-3 border-t border-gray-100">
+          <div className="p-3 border-t border-border-light">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Modern Year Filter */}
               <div className="relative group">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Año</label>
+                <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Año</label>
                 <div className="relative">
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-sm text-sm"
+                    className="w-full px-2 py-2 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
                   >
                     {availableYears.map(year => (
                       <option key={year} value={year}>{year}</option>
                     ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <svg className="h-3 w-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-3 w-3 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
@@ -1258,55 +1258,55 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               
               {/* Modern Month Filter */}
               <div className="relative group">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Mes</label>
+                <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Mes</label>
                 <div className="relative">
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                    className="w-full px-2 py-2 bg-white border border-gray-200 rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 appearance-none cursor-pointer hover:border-gray-300 group-hover:shadow-sm text-sm"
+                    className="w-full px-2 py-2 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
                   >
                     {months.map((month, index) => (
                       <option key={index + 1} value={index + 1}>{month}</option>
                     ))}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <svg className="h-3 w-3 text-gray-400 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-3 w-3 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </div>
               </div>
               
-              {/* Modern Type Filter - Compact Radio Buttons */}
+              {/* Modern Type Filter - Toggle Buttons */}
               <div className="relative group">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Tipo</label>
-                <div className="flex space-x-1 bg-gray-50 p-1 rounded-md">
+                <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Tipo</label>
+                <div className="flex space-x-1 bg-neutral-bg p-1 rounded-mdplus border border-border-light">
                   <button
                     onClick={() => setFilterType('all')}
-                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
                       filterType === 'all'
-                        ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                        : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                        ? 'bg-green-primary text-white shadow-soft'
+                        : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
                     }`}
                   >
                     Todos
                   </button>
                   <button
                     onClick={() => setFilterType('recurrent')}
-                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
                       filterType === 'recurrent'
-                        ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                        : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                        ? 'bg-green-primary text-white shadow-soft'
+                        : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
                     }`}
                   >
                     Recurrentes
                   </button>
                   <button
                     onClick={() => setFilterType('non_recurrent')}
-                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
                       filterType === 'non_recurrent'
-                        ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                        : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
+                        ? 'bg-green-primary text-white shadow-soft'
+                        : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
                     }`}
                   >
                     Únicos
@@ -1316,7 +1316,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               
               {/* Quick Actions */}
               <div className="relative group">
-                <label className="block text-xs font-medium text-gray-600 mb-1">Acciones</label>
+                <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Acciones</label>
                 <div className="flex space-x-1">
                   <button
                     onClick={() => {
@@ -1324,7 +1324,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       setSelectedMonth(new Date().getMonth() + 1);
                       setFilterType('all');
                     }}
-                    className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm"
+                    className="w-full px-2 py-1.5 bg-green-primary text-white text-xs font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
                   >
                     Mes Actual
                   </button>
@@ -1410,28 +1410,28 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       </div>
 
       {/* Transactions List */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-3">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="bg-white border border-border-light rounded-xl shadow-soft p-3">
+        <div className="px-6 py-4 border-b border-border-light">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
-            <h2 className="text-lg font-semibold text-gray-900">
+            <h2 className="text-lg font-semibold text-gray-dark font-sans">
               {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
             </h2>
           </div>
         </div>
 
         {loading ? (
-          <div className="p-6 text-center text-gray-500">{texts.loading}</div>
+          <div className="p-6 text-center text-green-dark font-sans">{texts.loading}</div>
         ) : finalSortedTransactions.length === 0 ? (
-          <div className="p-6 text-center text-gray-500">{texts.empty.noTransactions}</div>
+          <div className="p-6 text-center text-green-dark font-sans">{texts.empty.noTransactions}</div>
         ) : (
           <>
             {/* Desktop Table View */}
             <div className="hidden lg:block overflow-x-auto" onMouseLeave={() => setHoveredRow(null)}>
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-border-light">
+                <thead className="bg-neutral-bg">
                   <tr>
                     <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
                       onClick={() => handleSort('description')}
                     >
                       <div className="flex items-center space-x-1">
@@ -1444,7 +1444,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       </div>
                     </th>
                     <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
                       onClick={() => handleSort('status')}
                     >
                       <div className="flex items-center space-x-1">
@@ -1457,7 +1457,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       </div>
                     </th>
                     <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 select-none"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
                       onClick={() => handleSort('value')}
                     >
                       <div className="flex items-center space-x-1">
@@ -1469,18 +1469,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         )}
                       </div>
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider font-sans">
                       {texts.paid}
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider font-sans">
                       {texts.actions}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divide-y divide-border-light">
                   {finalSortedTransactions.map((transaction) => {
                     return (
-                      <tr key={transaction.id} className={`transition-all duration-300 ${hoveredRow === transaction.id ? 'transform scale-[1.005] shadow-sm z-10' : ''}`} onMouseEnter={() => setHoveredRow(transaction.id)}>
+                      <tr key={transaction.id} className={`bg-white transition-all duration-300 ${hoveredRow === transaction.id ? 'transform scale-[1.005] shadow-sm z-10' : ''}`} onMouseEnter={() => setHoveredRow(transaction.id)}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
@@ -1493,7 +1493,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               />
                             </div>
                             <div>
-                              <div className="text-xs font-medium text-gray-900 flex items-center gap-2 transaction-description">
+                              <div className="text-xs font-medium text-gray-dark flex items-center gap-2 transaction-description font-sans">
                                 <span>{transaction.description}</span>
                                 {/* Navigation Link Icon for Goal Transactions */}
                                 {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
@@ -1524,19 +1524,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                                   if (diffDays > 0) {
                                     return (
-                                      <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
+                                      <span className="text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full">
                                         {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
                                       </span>
                                     );
                                   } else if (diffDays === 0) {
                                     return (
-                                      <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
+                                      <span className="text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full">
                                         Vence hoy
                                       </span>
                                     );
                                   } else {
                                     return (
-                                      <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                                      <span className="text-xs font-medium text-error-red bg-error-bg px-2 py-1 rounded-full">
                                         {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
                                       </span>
                                     );
@@ -1548,7 +1548,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               <div className="flex items-center gap-4 mt-1">
                                 {/* Due date */}
                                 {transaction.deadline && (
-                                  <span className="text-xs font-medium text-gray-400">
+                                  <span className="text-xs font-medium text-green-dark font-sans">
                                     Vence: {(() => {
                                       const [year, month, day] = transaction.deadline.split('-').map(Number);
                                       return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
@@ -1562,7 +1562,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                     const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
                                     if (recurrentExpense) {
                                       return (
-                                        <span className="text-xs font-medium text-gray-400">
+                                        <span className="text-xs font-medium text-green-dark font-sans">
                                           {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
                                         </span>
                                       )
@@ -1577,7 +1577,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                    (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && (
                                   <button
                                     onClick={() => handleCategoryClick(transaction)}
-                                    className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                                    className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
                                   >
                                     {transaction.category && transaction.category !== 'sin categoría' 
                                       ? transaction.category 
@@ -1589,11 +1589,15 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium", getStatusColor(transaction))}>
+                          <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-sans", 
+                            transaction.status === 'paid' ? 'bg-green-light text-green-primary' :
+                            transaction.deadline && isDateOverdue(transaction.deadline) ? 'bg-error-bg text-error-red' : 
+                            'bg-warning-bg text-warning-yellow'
+                          )}>
                             {getStatusText(transaction)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-900 transaction-amount"> 
+                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-dark transaction-amount font-sans"> 
                           {formatCurrency(transaction.value)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1613,26 +1617,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               className={`
                                 sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
                                 ${transaction.status === 'paid' 
-                                  ? 'bg-blue-100 border-blue-200' 
-                                  : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-sm'
+                                  ? 'bg-green-primary border-green-primary' 
+                                  : 'bg-beige border-2 border-border-light hover:border-green-primary hover:shadow-soft'
                                 }
-                                rounded-lg overflow-hidden
+                                rounded-full overflow-hidden cursor-pointer
+                                transition-all duration-200
                                 ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
                               `}
                             >
-                              {/* Ripple effect background */}
-                              <div className={`
-                                absolute inset-0 rounded-lg
-                                ${transaction.status === 'paid' 
-                                  ? 'bg-gradient-to-br from-blue-200/30 via-blue-400/30 to-blue-600/30 animate-pulse-soft' 
-                                  : ''
-                                }
-                              `} />
-                              
-                              {/* Checkmark with animated stroke */}
+                              {/* Checkmark with white color */}
                               {transaction.status === 'paid' && (
                                 <svg
-                                  className="w-3 h-3 text-blue-800 relative z-10"
+                                  className="w-3 h-3 text-white relative z-10"
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -1652,18 +1648,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 </svg>
                               )}
                               
-                              {/* Hover effect with gradient overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-lg" />
-                              
-                              {/* Glow effect when checked */}
-                              {transaction.status === 'paid' && (
-                                <div className="absolute -inset-2 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 rounded-xl blur-md opacity-40 animate-glow" />
-                              )}
-                              
-                              {/* Click ripple effect */}
-                              <div className="absolute inset-0 rounded-lg pointer-events-none">
-                                <div className="absolute inset-0 bg-white/30 rounded-lg scale-0 opacity-0 transition-all duration-300 ease-out" />
-                              </div>
+                              {/* Hover effect */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
                             </label>
                           </div>
                         </td>
@@ -1671,7 +1657,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => handleAttachmentList(transaction)}
-                              className="text-gray-600 hover:text-gray-800 relative flex items-center justify-center"
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
                               title="View attachments"
                             >
                               <Paperclip className="h-4 w-4" />
@@ -1683,14 +1669,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             </button>
                             <button
                               onClick={() => handleModifyTransaction(transaction.id)}
-                              className="text-blue-600 hover:text-blue-800"
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
                               title="Modify transaction"
                             >
                               <Edit className="h-4 w-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteTransaction(transaction.id)}
-                              className="text-red-600 hover:text-red-800"
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
                               title="Delete transaction"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -1708,7 +1694,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
             <div className="lg:hidden space-y-4">
               {finalSortedTransactions.map((transaction) => {
                 return (
-                  <div key={transaction.id} className="bg-white rounded-lg shadow-sm border p-4 mobile-card">
+                  <div key={transaction.id} className="bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card">
                     {/* Header */}
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-2 flex-1 min-w-0">
@@ -1720,7 +1706,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           showBackground={true}
                         />
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-xs font-medium text-gray-900 truncate flex items-center gap-2 transaction-description">
+                          <h3 className="text-xs font-medium text-gray-dark truncate flex items-center gap-2 transaction-description font-sans">
                             <span>{transaction.description}</span>
                             {/* Navigation Link Icon for Goal Transactions - Mobile View */}
                             {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
@@ -1736,7 +1722,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   strokeWidth="2" 
                                   viewBox="0 0 24 24"
                                 >
-                                  <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                  <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                               </button>
                             )}
@@ -1751,19 +1737,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                               if (diffDays > 0) {
                                 return (
-                                  <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
+                                  <span className="text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full">
                                     {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
                                   </span>
                                 );
                               } else if (diffDays === 0) {
                                 return (
-                                  <span className="text-xs font-medium text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full">
+                                  <span className="text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full">
                                     Vence hoy
                                   </span>
                                 );
                               } else {
                                 return (
-                                  <span className="text-xs font-medium text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                                  <span className="text-xs font-medium text-error-red bg-error-bg px-2 py-1 rounded-full">
                                     {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
                                   </span>
                                 );
@@ -1775,7 +1761,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           <div className="flex items-center gap-3 mt-1 flex-wrap">
                             {/* Due date */}
                             {transaction.deadline && (
-                              <span className="text-xs font-medium text-gray-400">
+                              <span className="text-xs font-medium text-green-dark font-sans">
                                 Vence: {(() => {
                                   const [year, month, day] = transaction.deadline.split('-').map(Number);
                                   return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
@@ -1789,7 +1775,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
                                 if (recurrentExpense) {
                                   return (
-                                    <span className="text-xs font-medium text-gray-400">
+                                    <span className="text-xs font-medium text-green-dark font-sans">
                                       {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
                                     </span>
                                   )
@@ -1804,7 +1790,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && (
                               <button
                                 onClick={() => handleCategoryClick(transaction)}
-                                className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded-full hover:bg-gray-200 hover:text-gray-700 transition-colors cursor-pointer"
+                                className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
                               >
                                 {transaction.category && transaction.category !== 'sin categoría' 
                                   ? transaction.category 
@@ -1815,8 +1801,12 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         </div>
                       </div>
                       <div className="text-right ml-2">
-                        <div className="text-xs text-gray-900 transaction-amount">{formatCurrency(transaction.value)}</div>
-                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium", getStatusColor(transaction))}>
+                        <div className="text-xs text-gray-dark transaction-amount font-sans">{formatCurrency(transaction.value)}</div>
+                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
+                          transaction.status === 'paid' ? 'bg-green-light text-green-primary' :
+                          transaction.deadline && isDateOverdue(transaction.deadline) ? 'bg-error-bg text-error-red' : 
+                          'bg-warning-bg text-warning-yellow'
+                        )}>
                           {getStatusText(transaction)}
                         </span>
                       </div>
@@ -1825,15 +1815,15 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     {/* Details */}
                     <div className="grid grid-cols-2 gap-4 mb-3">
                       <div>
-                        <span className="text-xs text-gray-500">Tipo:</span>
-                        <div className="text-sm font-medium text-gray-900 capitalize">
+                        <span className="text-xs text-green-dark font-sans">Tipo:</span>
+                        <div className="text-sm font-medium text-gray-dark capitalize font-sans">
                           {transaction.source_type === 'recurrent' ? texts.recurrent : texts.nonRecurrent}
                         </div>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between pt-3 border-t border-border-light">
                       <div className="flex items-center space-x-1">
                         <div className="relative">
                           <input
@@ -1851,26 +1841,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             className={`
                               sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
                               ${transaction.status === 'paid' 
-                                ? 'gradient-emerald glow-emerald' 
-                                : 'bg-white border-2 border-gray-300 hover:border-gray-400 hover:shadow-sm'
+                                ? 'bg-green-primary border-green-primary' 
+                                : 'bg-beige border-2 border-border-light hover:border-green-primary hover:shadow-soft'
                               }
-                              rounded-lg overflow-hidden
+                              rounded-full overflow-hidden cursor-pointer
+                              transition-all duration-200
                               ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
                             `}
                           >
-                            {/* Ripple effect background */}
-                            <div className={`
-                              absolute inset-0 rounded-lg
-                              ${transaction.status === 'paid' 
-                                ? 'bg-gradient-to-br from-emerald-300/30 via-teal-400/30 to-cyan-500/30 animate-pulse-soft' 
-                                : ''
-                              }
-                            `} />
-                            
-                            {/* Checkmark with animated stroke */}
+                            {/* Checkmark with white color */}
                             {transaction.status === 'paid' && (
                               <svg
-                                className="w-3 h-3 text-blue-800 relative z-10"
+                                className="w-3 h-3 text-white relative z-10"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -1890,26 +1872,16 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               </svg>
                             )}
                             
-                            {/* Hover effect with gradient overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-lg" />
-                            
-                            {/* Glow effect when checked */}
-                            {transaction.status === 'paid' && (
-                              <div className="absolute -inset-2 bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600 rounded-xl blur-md opacity-40 animate-glow" />
-                            )}
-                            
-                            {/* Click ripple effect */}
-                            <div className="absolute inset-0 rounded-lg pointer-events-none">
-                              <div className="absolute inset-0 bg-white/30 rounded-lg scale-0 opacity-0 transition-all duration-300 ease-out" />
-                            </div>
+                            {/* Hover effect */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
                           </label>
                         </div>
-                        <span className="text-sm text-gray-600 ml-1">Mark as paid</span>
+                        <span className="text-sm text-gray-dark ml-1 font-sans">Mark as paid</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => handleAttachmentList(transaction)}
-                          className="text-gray-600 hover:text-gray-800 relative flex items-center justify-center"
+                          className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
                           title="View attachments"
                         >
                           <Paperclip className="h-4 w-4" />
@@ -1921,14 +1893,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         </button>
                         <button
                           onClick={() => handleModifyTransaction(transaction.id)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
                           title="Modify transaction"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteTransaction(transaction.id)}
-                          className="text-red-600 hover:text-red-800"
+                          className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
                           title="Delete transaction"
                         >
                           <Trash2 className="h-4 w-4" />
