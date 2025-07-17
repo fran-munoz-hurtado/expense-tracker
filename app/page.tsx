@@ -369,7 +369,7 @@ function Home() {
           
           {/* Movement Type Selection or Form */}
           {!selectedMovementType ? (
-            <section className="relative bg-white rounded-xl p-6 w-full max-w-lg shadow-2xl border border-gray-200 max-h-[90vh] overflow-y-auto">
+            <section className="relative bg-neutral-bg rounded-xl p-6 w-full max-w-lg shadow-soft border border-border-light max-h-[90vh] overflow-y-auto">
               <button
                 onClick={handleCloseForm}
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
@@ -378,26 +378,26 @@ function Home() {
                 <X className="h-5 w-5" />
               </button>
 
-              <div className="text-center mb-6">
-                <h2 className="text-xl font-semibold text-gray-dark mb-2">Añadir Movimiento</h2>
+              <div className="text-center mb-4">
+                <h2 className="text-lg font-semibold text-gray-dark mb-2">Añadir Movimiento</h2>
                 <p className="text-green-dark text-sm">Selecciona el tipo de movimiento que deseas crear</p>
               </div>
 
               {/* Movement Type Selection - Vertical List */}
-              <div className="flex flex-col gap-3 mt-6">
+              <div className="flex flex-col gap-2 mt-6">
                 {/* Gasto Recurrente */}
                 <button
                   onClick={() => handleMovementTypeSelect('RECURRENT_EXPENSE')}
-                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-2 flex items-center gap-3 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#fdf5d3]">
-                    <MOVEMENT_TYPES.RECURRENT_EXPENSE.icon className="h-6 w-6 text-orange-600" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fdf5d3]">
+                    <MOVEMENT_TYPES.RECURRENT_EXPENSE.icon className="h-5 w-5 text-orange-600" />
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-gray-dark font-medium text-base">
+                    <span className="text-gray-dark font-medium text-sm">
                       {MOVEMENT_TYPES.RECURRENT_EXPENSE.label}
                     </span>
-                    <span className="text-green-dark text-sm">
+                    <span className="text-green-dark text-xs leading-tight">
                       {MOVEMENT_TYPES.RECURRENT_EXPENSE.description}
                     </span>
                   </div>
@@ -406,16 +406,16 @@ function Home() {
                 {/* Gasto Único */}
                 <button
                   onClick={() => handleMovementTypeSelect('SINGLE_EXPENSE')}
-                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-2 flex items-center gap-3 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#fef7da]">
-                    {renderCustomIcon('TICKET_TAG', 'h-6 w-6 text-orange-600')}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fef7da]">
+                    {renderCustomIcon('TICKET_TAG', 'h-5 w-5 text-orange-600')}
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-gray-dark font-medium text-base">
+                    <span className="text-gray-dark font-medium text-sm">
                       {MOVEMENT_TYPES.SINGLE_EXPENSE.label}
                     </span>
-                    <span className="text-green-dark text-sm">
+                    <span className="text-green-dark text-xs leading-tight">
                       {MOVEMENT_TYPES.SINGLE_EXPENSE.description}
                     </span>
                   </div>
@@ -424,16 +424,16 @@ function Home() {
                 {/* Ingreso Recurrente */}
                 <button
                   onClick={() => handleMovementTypeSelect('RECURRENT_INCOME')}
-                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-2 flex items-center gap-3 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#e4effa]">
-                    <MOVEMENT_TYPES.RECURRENT_INCOME.icon className="h-6 w-6 text-blue-600" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#e4effa]">
+                    <MOVEMENT_TYPES.RECURRENT_INCOME.icon className="h-5 w-5 text-blue-600" />
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-gray-dark font-medium text-base">
+                    <span className="text-gray-dark font-medium text-sm">
                       {MOVEMENT_TYPES.RECURRENT_INCOME.label}
                     </span>
-                    <span className="text-green-dark text-sm">
+                    <span className="text-green-dark text-xs leading-tight">
                       {MOVEMENT_TYPES.RECURRENT_INCOME.description}
                     </span>
                   </div>
@@ -442,16 +442,16 @@ function Home() {
                 {/* Ingreso Único */}
                 <button
                   onClick={() => handleMovementTypeSelect('SINGLE_INCOME')}
-                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-2 flex items-center gap-3 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#edf3fc]">
-                    {renderCustomIcon('TICKET_TAG', 'h-6 w-6 text-blue-600')}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#edf3fc]">
+                    {renderCustomIcon('TICKET_TAG', 'h-5 w-5 text-blue-600')}
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-gray-dark font-medium text-base">
+                    <span className="text-gray-dark font-medium text-sm">
                       {MOVEMENT_TYPES.SINGLE_INCOME.label}
                     </span>
-                    <span className="text-green-dark text-sm">
+                    <span className="text-green-dark text-xs leading-tight">
                       {MOVEMENT_TYPES.SINGLE_INCOME.description}
                     </span>
                   </div>
@@ -460,16 +460,16 @@ function Home() {
                 {/* Meta */}
                 <button
                   onClick={() => handleMovementTypeSelect('GOAL')}
-                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-2 flex items-center gap-3 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#faf3d2]">
-                    {renderCustomIcon('GOAL_TARGET', 'h-6 w-6 text-yellow-600')}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#faf3d2]">
+                    {renderCustomIcon('GOAL_TARGET', 'h-5 w-5 text-yellow-600')}
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-gray-dark font-medium text-base">
+                    <span className="text-gray-dark font-medium text-sm">
                       {MOVEMENT_TYPES.GOAL.label}
                     </span>
-                    <span className="text-green-dark text-sm">
+                    <span className="text-green-dark text-xs leading-tight">
                       {MOVEMENT_TYPES.GOAL.description}
                     </span>
                   </div>
@@ -478,16 +478,16 @@ function Home() {
                 {/* Ahorro */}
                 <button
                   onClick={() => handleMovementTypeSelect('SAVINGS')}
-                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-3 flex items-center gap-4 transition-all duration-150 cursor-pointer hover:shadow-soft"
+                  className="bg-white hover:bg-neutral-bg border border-border-light rounded-mdplus px-4 py-2 flex items-center gap-3 transition-all duration-150 cursor-pointer hover:shadow-soft"
                 >
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center bg-[#e0f6e8]">
-                    {renderCustomIcon('SAVINGS_PIG', 'h-6 w-6 text-green-600')}
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#e0f6e8]">
+                    {renderCustomIcon('SAVINGS_PIG', 'h-5 w-5 text-green-600')}
                   </div>
                   <div className="flex flex-col text-left">
-                    <span className="text-gray-dark font-medium text-base">
+                    <span className="text-gray-dark font-medium text-sm">
                       {MOVEMENT_TYPES.SAVINGS.label}
                     </span>
-                    <span className="text-green-dark text-sm">
+                    <span className="text-green-dark text-xs leading-tight">
                       {MOVEMENT_TYPES.SAVINGS.description}
                     </span>
                   </div>
