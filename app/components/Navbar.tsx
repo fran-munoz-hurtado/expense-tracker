@@ -8,7 +8,7 @@ import { texts } from '@/lib/translations'
 interface NavbarProps {
   user: User
   onLogout: () => void
-  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas') => void
+  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos') => void
   onUserUpdate?: (updatedUser: User) => void
 }
 

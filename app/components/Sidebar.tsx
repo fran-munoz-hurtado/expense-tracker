@@ -1,13 +1,13 @@
 'use client'
 
-import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X, Target, FolderOpen } from 'lucide-react'
+import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X, Target, FolderOpen, TrendingUp } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useState } from 'react'
 import { texts } from '@/lib/translations'
 
 interface SidebarProps {
-  activeView: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories'
-  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories') => void
+  activeView: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos'
+  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos') => void
   onAddExpense: () => void
   user: User
   onLogout: () => void
@@ -17,6 +17,12 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const menuItems = [
+    {
+      id: 'como-vamos',
+      label: '¿Cómo vamos?',
+      icon: TrendingUp,
+      description: 'Tu estado financiero general'
+    },
     {
       id: 'dashboard',
       label: texts.thisMonth,
@@ -43,7 +49,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
     }
   ]
 
-  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories') => {
+  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos') => {
     onViewChange(view)
     setIsMobileMenuOpen(false) // Close mobile menu when navigating
   }

@@ -9,6 +9,7 @@ import DashboardView from './components/DashboardView'
 import GeneralDashboardView from './components/GeneralDashboardView'
 import MisMetasView from './components/MisMetasView'
 import CategoriesView from './components/CategoriesView'
+import ComoVamosView from './components/ComoVamosView'
 import Sidebar from './components/Sidebar'
 import Navbar from './components/Navbar'
 import LoginPage from './components/LoginPage'
@@ -75,7 +76,7 @@ function Home() {
     localStorage.setItem('expenseTrackerUser', JSON.stringify(updatedUser))
   }
 
-  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories') => {
+  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos') => {
     console.log('🔄 handleViewChange called with view:', view)
     try {
       switch (view) {
@@ -106,6 +107,11 @@ function Home() {
           console.log('📍 Navigating to categories...')
           await navigation.navigateToCategories()
           console.log('✅ Categories navigation completed')
+          break
+        case 'como-vamos':
+          console.log('📍 Navigating to como-vamos...')
+          await navigation.navigateToComoVamos()
+          console.log('✅ Como vamos navigation completed')
           break
       }
     } catch (error) {
@@ -412,22 +418,18 @@ function Home() {
             }} 
           />
         )
+      case 'como-vamos':
+        return <ComoVamosView user={user} />
       default:
-        // Default to general dashboard for home route
-        return (
-          <GeneralDashboardView 
-            onNavigateToMonth={handleNavigateToMonth} 
-            user={user}
-            navigationParams={null}
-          />
-        )
+        // Default to como-vamos for home route
+        return <ComoVamosView user={user} />
     }
   }
 
   return (
     <div className="flex flex-col lg:flex-row h-screen bg-gray-50">
       <Sidebar 
-        activeView={navigation.currentRoute.type === 'home' ? 'general-dashboard' : navigation.currentRoute.type} 
+        activeView={navigation.currentRoute.type === 'home' ? 'como-vamos' : navigation.currentRoute.type} 
         onViewChange={handleViewChange} 
         onAddExpense={handleAddExpense}
         user={user}

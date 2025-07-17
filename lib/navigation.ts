@@ -3,6 +3,7 @@ import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.share
 // Define all possible routes in the application
 export type AppRoute = 
   | { type: 'home' }
+  | { type: 'como-vamos' }
   | { type: 'dashboard'; month: number; year: number }
   | { type: 'general-dashboard'; year: number }
   | { type: 'debug' }
@@ -14,6 +15,10 @@ export const ROUTE_CONFIG = {
   home: {
     path: '/',
     params: {}
+  },
+  'como-vamos': {
+    path: '/',
+    params: ['view']
   },
   dashboard: {
     path: '/',
@@ -86,6 +91,10 @@ export class NavigationService {
       case 'home':
         return '/'
         
+      case 'como-vamos':
+        params.set('view', 'como-vamos')
+        return `/?${params.toString()}`
+        
       case 'dashboard':
         params.set('view', 'dashboard')
         params.set('month', route.month.toString())
@@ -149,6 +158,11 @@ export class NavigationService {
     // Parse debug route
     if (view === 'debug') {
       return { type: 'debug' }
+    }
+
+    // Parse como-vamos route
+    if (view === 'como-vamos') {
+      return { type: 'como-vamos' }
     }
 
     // Parse mis-metas route
@@ -237,6 +251,13 @@ export class NavigationService {
    */
   async navigateToHome(): Promise<void> {
     await this.navigate({ type: 'home' })
+  }
+
+  /**
+   * Navigate to como-vamos view
+   */
+  async navigateToComoVamos(): Promise<void> {
+    await this.navigate({ type: 'como-vamos' })
   }
 }
 
