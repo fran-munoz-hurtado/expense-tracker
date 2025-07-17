@@ -83,13 +83,13 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
       {/* Sidebar */}
       <div className={`
         sidebar fixed lg:static inset-y-0 left-0 z-40
-        w-64 bg-white shadow-sm border-r border-gray-200 flex flex-col
+        w-64 bg-[#009929] shadow-sm border-r border-[#166534] flex flex-col
         transform transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        <div className="p-4 lg:p-6 border-b border-gray-200">
-          <h1 className="text-lg lg:text-xl font-bold text-gray-900">{texts.appTitle}</h1>
-          <div className="mt-2 flex items-center gap-2 text-sm text-gray-600">
+        <div className="p-4 lg:p-6 border-b border-[#166534]">
+          <h1 className="text-lg lg:text-xl font-bold text-white">{texts.appTitle}</h1>
+          <div className="mt-2 flex items-center gap-2 text-sm text-[#dcfce7]">
             <UserIcon className="h-4 w-4" />
             <span className="truncate">{user.first_name} {user.last_name}</span>
           </div>
@@ -99,12 +99,12 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
           <button
             onClick={handleAddExpense}
             className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2
-              bg-gradient-to-r from-blue-500 to-blue-600
+              bg-gradient-to-r from-green-500 to-green-600
               text-white font-medium text-sm
               rounded-full shadow-md
-              hover:from-blue-600 hover:to-blue-700
+              hover:from-green-600 hover:to-green-700
               active:scale-95 active:shadow-lg
-              focus:outline-none focus:ring-2 focus:ring-blue-400
+              focus:outline-none focus:ring-2 focus:ring-green-400
               transition-all duration-150"
             aria-label={texts.addTransaction}
           >
@@ -126,13 +126,13 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
                   className={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors text-sm lg:text-base
                     ${isActive 
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-[#dcfce7] text-[#15803d] border border-[#22c55e]' 
+                      : 'text-white hover:bg-[#007a1f]'
                     }
                   `}
                   title={item.description}
                 >
-                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-[#15803d]' : 'text-[#dcfce7]'}`} />
                   <span className="font-medium">{item.label}</span>
                 </button>
               )
@@ -140,10 +140,10 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
           </nav>
         </div>
         
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-[#166534]">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors text-sm lg:text-base"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-[#dcfce7] hover:text-white hover:bg-[#007a1f] rounded-lg transition-colors text-sm lg:text-base"
           >
             <LogOut className="h-4 w-4" />
             {texts.logout}

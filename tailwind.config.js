@@ -12,6 +12,13 @@ module.exports = {
     'bg-blue-600', 'text-blue-600', 'text-blue-700', 'text-blue-900',
     'bg-yellow-200', 'text-yellow-700', 'text-yellow-900',
     'bg-[#101828]', 'border-[#101828]', 'text-white',
+    // Navbar custom colors
+    'bg-[#006414]', 'bg-[#005011]', 'text-[#dcfce7]', 'text-[#bbf7d0]', 'from-[#006414]', 'to-[#005011]',
+    'border-[#166534]', 'text-[#4ade80]', 'hover:bg-[#005011]', 'hover:text-[#dcfce7]',
+    // Sidebar custom colors
+    'bg-[#009929]', 'bg-[#007a1f]', 'text-[#ffffff]', 'text-[#dcfce7]', 'from-[#009929]', 'to-[#007a1f]',
+    'border-[#22c55e]', 'text-[#15803d]', 'hover:bg-[#007a1f]', 'bg-[#dcfce7]', 'from-green-500', 'to-green-600',
+    'hover:from-green-600', 'hover:to-green-700', 'focus:ring-green-400',
     // Typography classes for safelist
     'text-display-large', 'text-display-medium', 'text-display-small',
     'text-headline-large', 'text-headline-medium', 'text-headline-small',
@@ -21,6 +28,127 @@ module.exports = {
   ],
   theme: {
     extend: {
+      // Colores personalizados
+      colors: {
+        // Colores personalizados para navbar
+        'navbar-primary': '#006414',
+        'navbar-secondary': '#005011',
+        'navbar-light': '#4ade80',
+        'navbar-medium': '#22c55e',
+        'navbar-dark': '#15803d',
+        'navbar-border': '#166534',
+        'navbar-text': '#dcfce7',
+        'navbar-text-secondary': '#bbf7d0',
+        'navbar-hover': '#005011',
+        'navbar-accent': '#22c55e',
+        // Colores personalizados para sidebar
+        'sidebar-primary': '#009929',
+        'sidebar-secondary': '#007a1f',
+        'sidebar-light': '#4ade80',
+        'sidebar-medium': '#22c55e',
+        'sidebar-dark': '#15803d',
+        'sidebar-border': '#166534',
+        'sidebar-text': '#ffffff',
+        'sidebar-text-secondary': '#dcfce7',
+        'sidebar-hover': '#007a1f',
+        'sidebar-accent': '#22c55e',
+        'sidebar-active-bg': '#dcfce7',
+        'sidebar-active-text': '#15803d',
+        'sidebar-active-border': '#22c55e',
+        // Existing colors...
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        chart: {
+          "1": "hsl(var(--chart-1))",
+          "2": "hsl(var(--chart-2))",
+          "3": "hsl(var(--chart-3))",
+          "4": "hsl(var(--chart-4))",
+          "5": "hsl(var(--chart-5))",
+        },
+        // App-specific colors
+        income: {
+          primary: "hsl(var(--income-primary))",
+          secondary: "hsl(var(--income-secondary))",
+          light: "hsl(var(--income-light))",
+          bg: "hsl(var(--income-bg))",
+          "bg-light": "hsl(var(--income-bg-light))",
+          border: "hsl(var(--income-border))",
+          text: "hsl(var(--income-text))",
+        },
+        expense: {
+          primary: "hsl(var(--expense-primary))",
+          secondary: "hsl(var(--expense-secondary))",
+          light: "hsl(var(--expense-light))",
+          bg: "hsl(var(--expense-bg))",
+          "bg-light": "hsl(var(--expense-bg-light))",
+          border: "hsl(var(--expense-border))",
+          text: "hsl(var(--expense-text))",
+        },
+        balance: {
+          primary: "hsl(var(--balance-primary))",
+          secondary: "hsl(var(--balance-secondary))",
+          light: "hsl(var(--balance-light))",
+          bg: "hsl(var(--balance-bg))",
+          "bg-light": "hsl(var(--balance-bg-light))",
+          border: "hsl(var(--balance-border))",
+          text: "hsl(var(--balance-text))",
+        },
+        status: {
+          paid: "hsl(var(--status-paid))",
+          pending: "hsl(var(--status-pending))",
+          overdue: "hsl(var(--status-overdue))",
+        },
+        button: {
+          primary: "hsl(var(--button-primary))",
+          secondary: "hsl(var(--button-secondary))",
+          hover: "hsl(var(--button-hover))",
+        },
+        icon: {
+          income: "hsl(var(--icon-income))",
+          expense: "hsl(var(--icon-expense))",
+          balance: "hsl(var(--icon-balance))",
+        },
+        filter: {
+          active: "hsl(var(--filter-active))",
+          inactive: "hsl(var(--filter-inactive))",
+        },
+        modal: {
+          success: "hsl(var(--modal-success))",
+          warning: "hsl(var(--modal-warning))",
+          info: "hsl(var(--modal-info))",
+        },
+      },
       // MODERN TYPOGRAPHY SYSTEM
       // Based on Google Material Design 3, Apple HIG, Spotify & Uber best practices
       fontFamily: {
@@ -186,101 +314,6 @@ module.exports = {
         'wide': 'var(--letter-spacing-wide, 0.025em)',
         'wider': 'var(--letter-spacing-wider, 0.05em)',
         'widest': 'var(--letter-spacing-widest, 0.1em)',
-      },
-
-      colors: {
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        chart: {
-          "1": "hsl(var(--chart-1))",
-          "2": "hsl(var(--chart-2))",
-          "3": "hsl(var(--chart-3))",
-          "4": "hsl(var(--chart-4))",
-          "5": "hsl(var(--chart-5))",
-        },
-        // App-specific colors
-        income: {
-          primary: "hsl(var(--income-primary))",
-          secondary: "hsl(var(--income-secondary))",
-          light: "hsl(var(--income-light))",
-          bg: "hsl(var(--income-bg))",
-          "bg-light": "hsl(var(--income-bg-light))",
-          border: "hsl(var(--income-border))",
-          text: "hsl(var(--income-text))",
-        },
-        expense: {
-          primary: "hsl(var(--expense-primary))",
-          secondary: "hsl(var(--expense-secondary))",
-          light: "hsl(var(--expense-light))",
-          bg: "hsl(var(--expense-bg))",
-          "bg-light": "hsl(var(--expense-bg-light))",
-          border: "hsl(var(--expense-border))",
-          text: "hsl(var(--expense-text))",
-        },
-        balance: {
-          primary: "hsl(var(--balance-primary))",
-          secondary: "hsl(var(--balance-secondary))",
-          light: "hsl(var(--balance-light))",
-          bg: "hsl(var(--balance-bg))",
-          "bg-light": "hsl(var(--balance-bg-light))",
-          border: "hsl(var(--balance-border))",
-          text: "hsl(var(--balance-text))",
-        },
-        status: {
-          paid: "hsl(var(--status-paid))",
-          pending: "hsl(var(--status-pending))",
-          overdue: "hsl(var(--status-overdue))",
-        },
-        button: {
-          primary: "hsl(var(--button-primary))",
-          secondary: "hsl(var(--button-secondary))",
-          hover: "hsl(var(--button-hover))",
-        },
-        icon: {
-          income: "hsl(var(--icon-income))",
-          expense: "hsl(var(--icon-expense))",
-          balance: "hsl(var(--icon-balance))",
-        },
-        filter: {
-          active: "hsl(var(--filter-active))",
-          inactive: "hsl(var(--filter-inactive))",
-        },
-        modal: {
-          success: "hsl(var(--modal-success))",
-          warning: "hsl(var(--modal-warning))",
-          info: "hsl(var(--modal-info))",
-        },
       },
     },
   },

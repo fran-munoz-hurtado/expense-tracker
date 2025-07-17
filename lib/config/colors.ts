@@ -5,6 +5,41 @@
  */
 
 export const APP_COLORS = {
+  // Nuevo esquema de colores para el navbar
+  navbar: {
+    primary: '#006414',      // Verde oscuro principal
+    secondary: '#005011',    // Verde más oscuro para hover
+    light: '#4ade80',        // Verde claro para acentos
+    medium: '#22c55e',       // Verde medio
+    dark: '#15803d',         // Verde oscuro alternativo
+    border: '#166534',       // Verde para bordes
+    text: '#dcfce7',         // Verde muy claro para texto
+    textSecondary: '#bbf7d0', // Verde claro para texto secundario
+    bg: '#006414',           // Fondo principal
+    bgGradient: 'from-green-600 to-green-800',
+    icon: '#4ade80',         // Verde claro para iconos
+    hover: '#005011',        // Verde más oscuro para hover
+    accent: '#22c55e',       // Verde de acento
+  },
+  // Nuevo esquema de colores para el sidebar
+  sidebar: {
+    primary: '#009929',      // Verde principal para sidebar
+    secondary: '#007a1f',    // Verde más oscuro para hover
+    light: '#4ade80',        // Verde claro para acentos
+    medium: '#22c55e',       // Verde medio
+    dark: '#15803d',         // Verde oscuro alternativo
+    border: '#166534',       // Verde para bordes
+    text: '#ffffff',         // Texto blanco
+    textSecondary: '#dcfce7', // Verde claro para texto secundario
+    bg: '#009929',           // Fondo principal
+    bgGradient: 'from-green-500 to-green-600',
+    icon: '#ffffff',         // Blanco para iconos
+    hover: '#007a1f',        // Verde más oscuro para hover
+    accent: '#22c55e',       // Verde de acento
+    activeBg: '#dcfce7',     // Fondo para elemento activo
+    activeText: '#15803d',   // Texto para elemento activo
+    activeBorder: '#22c55e', // Borde para elemento activo
+  },
   income: {
     primary: 'blue-600',
     secondary: 'blue-700',
