@@ -28,10 +28,15 @@ export default function TransactionIcon({
   const iconColor = getTransactionIconColor(transaction, iconType)
   const iconBackground = getTransactionIconBackground(transaction, iconType)
   
+  // Special styling for savings transactions
+  const isSavingsTransaction = transaction.category === 'Ahorro'
+  const specialSavingsStyle = isSavingsTransaction ? 'bg-[#e0f6e8] shadow-[0_0_6px_rgba(61,159,101,0.2)]' : ''
+  const specialSavingsIconColor = isSavingsTransaction ? 'text-[#3d9f65]' : iconColor
+  
   const iconElement = () => {
     switch (iconType) {
       case 'SAVINGS_PIG':
-        return renderCustomIcon('SAVINGS_PIG', `${size} ${iconColor}`)
+        return renderCustomIcon('SAVINGS_PIG', `${size} ${specialSavingsIconColor}`)
       
       case 'GOAL_TARGET':
         return renderCustomIcon('GOAL_TARGET', `${size} ${iconColor}`)
@@ -49,7 +54,7 @@ export default function TransactionIcon({
   
   if (showBackground) {
     return (
-      <div className={`p-1.5 rounded-full ${iconBackground}`}>
+      <div className={`p-1.5 rounded-full ${isSavingsTransaction ? specialSavingsStyle : iconBackground}`}>
         {iconElement()}
       </div>
     )

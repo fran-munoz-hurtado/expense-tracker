@@ -1479,8 +1479,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 </thead>
                 <tbody className="bg-white divide-y divide-border-light">
                   {finalSortedTransactions.map((transaction) => {
+                    const isSavingsTransaction = transaction.category === 'Ahorro'
                     return (
-                      <tr key={transaction.id} className={`bg-white transition-all duration-300 ${hoveredRow === transaction.id ? 'transform scale-[1.005] shadow-sm z-10' : ''}`} onMouseEnter={() => setHoveredRow(transaction.id)}>
+                      <tr key={transaction.id} className={`bg-white hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md ${isSavingsTransaction ? 'border-l-4 border-[#88c57f]' : ''}`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
@@ -1693,8 +1694,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
             {/* Mobile Card View */}
             <div className="lg:hidden space-y-4">
               {finalSortedTransactions.map((transaction) => {
+                const isSavingsTransaction = transaction.category === 'Ahorro'
                 return (
-                  <div key={transaction.id} className="bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card">
+                  <div key={transaction.id} className={`bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 ${isSavingsTransaction ? 'border-l-4 border-[#88c57f]' : ''}`}>
                     {/* Header */}
                     <div className="flex justify-between items-start mb-3">
                       <div className="flex items-center space-x-2 flex-1 min-w-0">

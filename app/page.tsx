@@ -485,10 +485,10 @@ function Home() {
                   {/* Ahorro */}
                   <div
                     onClick={() => handleMovementTypeSelect('SAVINGS')}
-                    className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-neutral-bg transition-all cursor-pointer"
+                    className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-[#dbf3e7] hover:shadow-md transition-all duration-150 cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fdf5d3]">
-                      {renderCustomIcon('SAVINGS_PIG', 'h-5 w-5 text-green-dark')}
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#e0f6e8] shadow-[0_0_8px_rgba(61,159,101,0.25)]">
+                      {renderCustomIcon('SAVINGS_PIG', 'h-5 w-5 text-[#3d9f65]')}
                     </div>
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-dark">
