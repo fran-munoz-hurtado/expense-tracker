@@ -13,6 +13,7 @@ interface TransactionIconProps {
   recurrentGoalMap: Record<number, boolean>
   size?: string
   showBackground?: boolean
+  containerSize?: string // New optional prop for container size
 }
 
 /**
@@ -24,12 +25,26 @@ export default function TransactionIcon({
   transaction,
   recurrentGoalMap,
   size = "w-5 h-5",
-  showBackground = true
+  showBackground = true,
+  containerSize
 }: TransactionIconProps) {
   const iconType = getTransactionIconType(transaction, recurrentGoalMap)
   const iconColor = getTransactionIconColor(transaction, iconType)
   const iconBackground = getTransactionIconBackground(transaction, iconType)
   const iconShadow = getTransactionIconShadow(transaction, iconType)
+  
+  // Calculate container size based on icon size if not explicitly provided
+  const getContainerSize = () => {
+    if (containerSize) return containerSize
+    
+    // Map icon sizes to appropriate container sizes
+    if (size.includes('w-4 h-4')) return 'w-6 h-6'
+    if (size.includes('w-5 h-5')) return 'w-9 h-9'
+    if (size.includes('w-6 h-6')) return 'w-11 h-11'
+    
+    // Default fallback
+    return 'w-9 h-9'
+  }
   
   const iconElement = () => {
     switch (iconType) {
@@ -52,7 +67,7 @@ export default function TransactionIcon({
   
   if (showBackground) {
     return (
-      <div className={`w-9 h-9 rounded-full flex items-center justify-center ${iconBackground} ${iconShadow}`}>
+      <div className={`${getContainerSize()} rounded-full flex items-center justify-center ${iconBackground} ${iconShadow}`}>
         {iconElement()}
       </div>
     )

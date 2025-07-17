@@ -374,6 +374,36 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     )
   }
 
+  // Get transaction icon without background - for use in custom containers (same pattern as CategoriesView)
+  const getTransactionIconOnly = (transaction: Transaction) => {
+    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
+    const iconColor = getTransactionIconColor(transaction, iconType)
+    
+    // Render only the icon element without background container
+    switch (iconType) {
+      case 'SAVINGS_TROPHY':
+        return renderCustomIcon('SAVINGS_TROPHY', `w-4 h-4 ${iconColor}`)
+      
+      case 'GOAL_TARGET':
+        return renderCustomIcon('GOAL_TARGET', `w-4 h-4 ${iconColor}`)
+      
+      case 'TICKET_TAG':
+        return renderCustomIcon('TICKET_TAG', `w-4 h-4 ${iconColor}`)
+      
+      case 'REPEAT':
+        return <Repeat className={`w-4 h-4 ${iconColor}`} />
+      
+      default:
+        return <Repeat className={`w-4 h-4 ${iconColor}`} />
+    }
+  }
+
+  // Get transaction background color (same pattern as CategoriesView)
+  const getTransactionBackground = (transaction: Transaction) => {
+    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
+    return getTransactionIconBackground(transaction, iconType)
+  }
+
   // Get goal icon using TransactionIcon component
   const getGoalIcon = (goal: GoalData) => {
     // Create a mock transaction to use with TransactionIcon
@@ -400,8 +430,8 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       <TransactionIcon 
         transaction={mockTransaction}
         recurrentGoalMap={recurrentGoalMap}
-        size="w-5 h-5"
-        showBackground={true}
+        size="w-4 h-4"
+        showBackground={false}
       />
     )
   }
@@ -672,15 +702,15 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     if (hasOverdueTransactions) {
       return {
         label: 'Vencido',
-        bgColor: 'bg-red-100',
-        textColor: 'text-red-800'
+        bgColor: 'bg-error-bg',
+        textColor: 'text-error-red'
       }
     }
     
     return {
       label: 'Al día',
-      bgColor: 'bg-green-100',
-      textColor: 'text-green-800'
+      bgColor: 'bg-green-light',
+      textColor: 'text-green-primary'
     }
   }
 
@@ -689,26 +719,26 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     switch (status) {
       case 'paid':
         return {
-          bgColor: 'bg-green-100',
-          textColor: 'text-green-800',
+          bgColor: 'bg-green-light',
+          textColor: 'text-green-primary',
           label: 'Pagado'
         }
       case 'pending':
         return {
-          bgColor: 'bg-yellow-100',
-          textColor: 'text-yellow-800',
+          bgColor: 'bg-warning-bg',
+          textColor: 'text-warning-yellow',
           label: 'Pendiente'
         }
       case 'overdue':
         return {
-          bgColor: 'bg-red-100',
-          textColor: 'text-red-800',
+          bgColor: 'bg-error-bg',
+          textColor: 'text-error-red',
           label: 'Vencido'
         }
       case 'current':
         return {
-          bgColor: 'bg-green-100',
-          textColor: 'text-green-800',
+          bgColor: 'bg-green-light',
+          textColor: 'text-green-primary',
           label: 'Al día'
         }
     }
@@ -869,7 +899,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                         <div className="flex items-center justify-between">
                           {/* Left Section: Icon + Description + Years */}
                           <div className="flex items-center space-x-3">
-                            <div className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${getGoalIconBackground(goal)}`}>
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getGoalIconBackground(goal)} transition-all duration-300 hover:scale-110`}>
                               {getGoalIcon(goal)}
                             </div>
                             <div>
@@ -885,7 +915,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                             <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'} mb-1`}>
                               {formatCurrency(goal.totalValue)}
                             </p>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${simpleStatus.bgColor} ${simpleStatus.textColor}`}>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${simpleStatus.bgColor} ${simpleStatus.textColor}`}>
                               {simpleStatus.label}
                             </span>
                           </div>
@@ -915,8 +945,8 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
             {!selectedGoal ? (
               <div className="flex flex-col items-center justify-center gap-2 text-center h-full px-4 py-8">
                 {/* Icono */}
-                <div className="w-8 h-8 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
-                  {renderCustomIcon('GOAL_TARGET', 'w-6 h-6')}
+                <div className="w-7 h-7 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
+                  {renderCustomIcon('GOAL_TARGET', 'w-4 h-4')}
                 </div>
 
                 {/* Texto */}
@@ -953,14 +983,14 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                       {yearData.year}
                                     </span>
                                     {yearData.year === currentYear && (
-                                      <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
                                         Actual
                                       </span>
                                     )}
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${
                                       yearData.isCompleted 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-yellow-100 text-yellow-800'
+                                        ? 'bg-green-light text-green-primary' 
+                                        : 'bg-warning-bg text-warning-yellow'
                                     }`}>
                                       {yearData.progress}% completado
                                     </span>
@@ -971,7 +1001,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                     <span className="text-xs text-gray-600">
                                       {formatCurrency(yearData.paidValue)} de {formatCurrency(yearData.totalValue)}
                                     </span>
-                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyling.bgColor} ${statusStyling.textColor}`}>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${statusStyling.bgColor} ${statusStyling.textColor}`}>
                                       {statusStyling.label}
                                     </span>
                                     <div className="ml-2">
@@ -993,12 +1023,14 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                     {yearData.transactions.map((transaction) => (
                                       <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 min-h-[20px]">
                                         <div className="flex items-center space-x-2">
-                                          {getTransactionIcon(transaction)}
+                                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTransactionBackground(transaction)}`}>
+                                            {getTransactionIconOnly(transaction)}
+                                          </div>
                                           <span className="text-xs font-medium text-gray-700 min-w-0 month-name">
                                             {months[transaction.month - 1]}
                                           </span>
                                           {transaction.month === currentMonth && transaction.year === currentYear && (
-                                            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
                                               Actual
                                             </span>
                                           )}
@@ -1023,12 +1055,12 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                           <span className="text-xs text-gray-600">
                                             {formatCurrency(transaction.value)}
                                           </span>
-                                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${
                                             transaction.status === 'paid' 
-                                              ? 'bg-blue-100 text-blue-800' 
+                                              ? 'bg-green-light text-green-primary' 
                                               : transaction.deadline && isDateOverdue(transaction.deadline)
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-yellow-100 text-yellow-800'
+                                                ? 'bg-error-bg text-error-red'
+                                                : 'bg-warning-bg text-warning-yellow'
                                           }`}>
                                             {transaction.status === 'paid' ? texts.paid : 
                                              transaction.deadline && isDateOverdue(transaction.deadline) ? texts.overdue : texts.pending}

@@ -1126,7 +1126,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                 {/* RIGHT: Total Value + Status + Expand Icon */}
                                 <div className="flex items-center space-x-3">
                                   <span className="text-xs text-gray-600">{formatCurrency(recurrentGroup.total)}</span>
-                                  <span className={`px-2 py-1 rounded-full text-xs ${recurrentGroup.overdue > 0 ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${recurrentGroup.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'}`}>
                                     {recurrentGroup.overdue > 0 ? 'Vencido' : 'Al día'}
                                   </span>
                                   
@@ -1163,7 +1163,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                               <div className="flex items-center space-x-2">
                                                 <span className="text-xs text-gray-900">{yearGroup.year}</span>
                                                 {yearGroup.year === new Date().getFullYear() && (
-                                                  <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
                                                     Actual
                                                   </span>
                                                 )}
@@ -1174,18 +1174,18 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                             {/* RIGHT: Total Value + Status with specific logic */}
                                             <div className="flex items-center space-x-3">
                                               <span className="text-xs text-gray-600">{formatCurrency(yearGroup.total)}</span>
-                                              <span className={`px-2 py-1 rounded-full text-xs ${(() => {
+                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${(() => {
                                                 const currentYear = new Date().getFullYear()
                                                 const hasOverdue = yearGroup.overdue > 0
                                                 
                                                 if (hasOverdue) {
-                                                  return 'bg-red-100 text-red-800'
+                                                  return 'bg-error-bg text-error-red'
                                                 } else if (yearGroup.year === currentYear) {
-                                                  return 'bg-green-100 text-green-800'
+                                                  return 'bg-green-light text-green-primary'
                                                 } else if (yearGroup.year < currentYear) {
-                                                  return 'bg-blue-100 text-blue-800'
+                                                  return 'bg-green-light text-green-primary'
                                                 } else {
-                                                  return 'bg-yellow-100 text-yellow-800'
+                                                  return 'bg-warning-bg text-warning-yellow'
                                                 }
                                               })()}`}>
                                                 {(() => {
@@ -1256,12 +1256,12 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                         {formatCurrency(transaction.value)}
                                                       </span>
                                                       <span className={cn(
-                                                        "inline-flex items-center px-1.5 py-0.5 rounded-full text-xs",
+                                                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans",
                                                         transaction.status === 'paid' 
-                                                          ? 'bg-green-100 text-green-800'
+                                                          ? 'bg-green-light text-green-primary'
                                                           : transaction.deadline && isDateOverdue(transaction.deadline)
-                                                            ? 'bg-red-100 text-red-800'
-                                                            : 'bg-yellow-100 text-yellow-800'
+                                                            ? 'bg-error-bg text-error-red'
+                                                            : 'bg-warning-bg text-warning-yellow'
                                                       )}>
                                                         {transaction.status === 'paid' 
                                                           ? 'Pagado' 
@@ -1312,7 +1312,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               {/* RIGHT: Total Value + Status */}
                               <div className="flex items-center space-x-3">
                                 <span className="text-xs text-gray-600">{formatCurrency(transaction.value)}</span>
-                                <span className={`px-2 py-1 rounded-full text-xs ${isOverdue ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${isOverdue ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'}`}>
                                   {status}
                                 </span>
                                 {/* Attachment Clip */}
