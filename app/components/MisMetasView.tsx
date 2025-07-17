@@ -199,9 +199,6 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   // Filter state for goals
   const [goalFilter, setGoalFilter] = useState<'all' | 'active' | 'completed'>('all')
 
-  // Expandable filters state
-  const [filtersExpanded, setFiltersExpanded] = useState(false)
-
   // Available years for selection
   const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
 
@@ -722,8 +719,8 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       {/* Header */}
       <div className="p-6 lg:p-8 pb-4">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Mis Metas</h1>
-          <p className="text-gray-600">Gestiona y monitorea el progreso de tus metas financieras</p>
+          <h2 className="text-xl font-semibold text-gray-dark">Mis Metas</h2>
+          <p className="text-sm text-green-dark">Gestiona y monitorea el progreso de tus metas financieras</p>
         </div>
 
         {/* Error Display */}
@@ -739,366 +736,322 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           </div>
         )}
 
-        {/* Filtros Avanzados */}
-        <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm">
-          <div className="p-3 border-b border-gray-100">
+        {/* Filtros Modernos */}
+        <div className="flex flex-col gap-3 md:flex-row md:items-center justify-between bg-white rounded-md p-4 border border-border-light mb-4">
+          {/* Bloque 1: Filtros */}
+          <div className="flex gap-2 flex-wrap items-center">
+            {/* Etiqueta "Filtros" */}
+            <span className="text-xs font-medium text-green-dark bg-[#f0f0ec] px-2 py-0.5 rounded-full">
+              Filtros
+            </span>
+            
+            {/* Separador visual */}
+            <div className="w-px h-6 bg-border-light"></div>
+            
+            {/* Botones de Estado de Metas */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setGoalFilter('all')}
+                className={`text-sm rounded-full px-3 py-1 transition-all duration-200 ${
+                  goalFilter === 'all'
+                    ? 'bg-green-primary text-white font-medium'
+                    : 'bg-white text-green-dark border border-border-light hover:bg-[#f5f6f4]'
+                }`}
+              >
+                Todas
+              </button>
+              <button
+                onClick={() => setGoalFilter('active')}
+                className={`text-sm rounded-full px-3 py-1 transition-all duration-200 ${
+                  goalFilter === 'active'
+                    ? 'bg-green-primary text-white font-medium'
+                    : 'bg-white text-green-dark border border-border-light hover:bg-[#f5f6f4]'
+                }`}
+              >
+                Activas
+              </button>
+              <button
+                onClick={() => setGoalFilter('completed')}
+                className={`text-sm rounded-full px-3 py-1 transition-all duration-200 ${
+                  goalFilter === 'completed'
+                    ? 'bg-green-primary text-white font-medium'
+                    : 'bg-white text-green-dark border border-border-light hover:bg-[#f5f6f4]'
+                }`}
+              >
+                Completas
+              </button>
+            </div>
+            
+            {/* Separador visual */}
+            <div className="w-px h-6 bg-border-light"></div>
+            
+            {/* Etiqueta de resultados */}
+            <span className="text-xs font-medium text-green-dark bg-[#f0f0ec] px-2 py-0.5 rounded-full">
+              {filteredGoalGroups.length} resultados
+            </span>
+          </div>
+          
+          {/* Bloque 2: Botón Acción */}
+          <div className="flex gap-2">
             <button
-              onClick={() => setFiltersExpanded(!filtersExpanded)}
-              className="w-full flex items-center justify-between text-left hover:bg-gray-50 rounded-lg p-2 transition-colors"
+              onClick={() => {
+                setGoalFilter('all');
+              }}
+              className="bg-green-primary text-white rounded-md px-4 py-1.5 text-sm font-medium hover:bg-[#77b16e] transition-all duration-200"
             >
-              <div className="flex items-center space-x-2">
-                <div className="p-1 bg-blue-100 rounded-lg">
-                  <svg className="h-3 w-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-semibold text-gray-800">Filtros Avanzados</h3>
-                <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
-                  {filteredGoalGroups.length} resultados
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {/* Active filters summary */}
-                <div className="flex items-center space-x-1 text-xs text-gray-500">
-                  <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
-                    {goalFilter === 'all' ? 'Todas' : goalFilter === 'active' ? 'Activas' : 'Completas'}
-                  </span>
-                </div>
-                <div className={`transform transition-transform duration-200 ${filtersExpanded ? 'rotate-180' : ''}`}>
-                  <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
+              Todas las Metas
             </button>
           </div>
-
-          {/* Expandable Filters Content */}
-          {filtersExpanded && (
-            <div className="p-3 border-t border-gray-100">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {/* Filtro Estado de Metas */}
-                <div className="relative group">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Estado de Metas</label>
-                  <div className="flex space-x-1 bg-gray-50 p-1 rounded-md">
-                    <button
-                      onClick={() => setGoalFilter('all')}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                        goalFilter === 'all'
-                          ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                          : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                      }`}
-                    >
-                      Todas
-                    </button>
-                    <button
-                      onClick={() => setGoalFilter('active')}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                        goalFilter === 'active'
-                          ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                          : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                      }`}
-                    >
-                      Activas
-                    </button>
-                    <button
-                      onClick={() => setGoalFilter('completed')}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
-                        goalFilter === 'completed'
-                          ? `bg-${getNestedColor('filter', 'active', 'bg')} text-${getNestedColor('filter', 'active', 'text')} shadow-sm border border-${getNestedColor('filter', 'active', 'border')}`
-                          : `text-${getNestedColor('filter', 'inactive', 'text')} hover:text-${getNestedColor('filter', 'inactive', 'hover')} hover:bg-${getNestedColor('filter', 'inactive', 'hoverBg')}`
-                      }`}
-                    >
-                      Completas
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Acciones Rápidas */}
-                <div className="relative group">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Acciones</label>
-                  <div className="flex space-x-1">
-                    <button
-                      onClick={() => {
-                        setGoalFilter('all');
-                      }}
-                      className="w-full px-2 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-medium rounded-md shadow-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm"
-                    >
-                      Todas las Metas
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* Statistics Cards - Consistent with DashboardView */}
-        <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-1.5">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1.5">
-            {/* Total de Metas */}
-            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex items-center space-x-1.5 mb-0.5">
-                <p className="text-xs font-medium text-black leading-none">Total de Metas</p>
-              </div>
-              <p className="text-sm text-black leading-none px-2">{goalStats.totalGoals}</p>
-            </div>
+        {/* Cards de Resumen Compactas */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mt-2 mb-4">
+          {/* Cantidad de metas */}
+          <div className="bg-white border border-border-light rounded-md px-4 py-3">
+            <p className="text-xs uppercase text-green-dark font-medium tracking-wide">Cantidad de metas</p>
+            <p className="text-lg font-semibold text-gray-dark mt-1">{goalStats.totalGoals}</p>
+          </div>
 
-            {/* Valor Total */}
-            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex items-center space-x-1.5 mb-0.5">
-                <p className="text-xs font-medium text-black leading-none">Valor Total</p>
-              </div>
-              <p className="text-sm text-black leading-none px-2">{formatCurrency(goalStats.totalValue)}</p>
-            </div>
+          {/* Valor acumulado */}
+          <div className="bg-white border border-border-light rounded-md px-4 py-3">
+            <p className="text-xs uppercase text-green-dark font-medium tracking-wide">Valor acumulado</p>
+            <p className="text-lg font-semibold text-gray-dark mt-1">{formatCurrency(goalStats.totalValue)}</p>
+          </div>
 
-            {/* Metas Completadas */}
-            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex items-center space-x-1.5 mb-0.5">
-                <p className="text-xs font-medium text-black leading-none">Metas Completadas</p>
-              </div>
-              <p className="text-sm text-black leading-none px-2">{goalStats.completed}</p>
-            </div>
-
-            {/* En Progreso */}
-            <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-              <div className="flex items-center space-x-1.5 mb-0.5">
-                <p className="text-xs font-medium text-black leading-none">En Progreso</p>
-              </div>
-              <p className="text-sm text-black leading-none px-2">{goalStats.inProgress}</p>
-            </div>
+          {/* Completadas */}
+          <div className="bg-white border border-border-light rounded-md px-4 py-3">
+            <p className="text-xs uppercase text-green-dark font-medium tracking-wide">Completadas</p>
+            <p className="text-lg font-semibold text-gray-dark mt-1">{goalStats.completed}</p>
           </div>
         </div>
       </div>
 
       {/* Main Content - Two Column Layout */}
       <div className="flex-1 flex px-6 lg:px-8 pb-6 lg:pb-8 gap-4 min-h-0">
-        {/* Left Column - Goals List */}
-        <div className="w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-sm font-semibold text-gray-900">
-              Mis Metas
-            </h2>
+          {/* Left Column - Goals List */}
+          <div className="w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-neutral-bg border-b border-border-light py-2 px-4 rounded-t-md">
+              <span className="text-sm font-medium text-green-dark">Mis Metas</span>
+            </div>
+
+            {loading ? (
+              <div className="p-6 text-center text-gray-500">{texts.loading}</div>
+            ) : filteredGoalGroups.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">
+                <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-sm font-medium">No hay metas para mostrar</p>
+                <p className="text-xs mt-2">
+                  {goalFilter === 'all' 
+                    ? 'Agrega metas marcando la opción "Es Meta" al crear gastos.' 
+                    : goalFilter === 'active' 
+                      ? 'No hay metas activas en este momento.'
+                      : 'No hay metas completadas en este momento.'
+                  }
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-y-auto">
+                {filteredGoalGroups.map((goal) => {
+                  const isSelected = selectedGoal === goal.key
+                  const goalStatus = getGoalStatus(goal)
+                  const simpleStatus = getSimpleGoalStatus(goal)
+                  
+                  return (
+                    <button
+                      key={goal.key}
+                      onClick={() => setSelectedGoal(goal.key)}
+                      className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 ${
+                        isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="space-y-3">
+                        {/* Top Section: Icon + Description + Years | Total Value + Status */}
+                        <div className="flex items-center justify-between">
+                          {/* Left Section: Icon + Description + Years */}
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${getGoalIconBackground(goal)}`}>
+                              {getGoalIcon(goal)}
+                            </div>
+                            <div>
+                              <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+                                {goal.source.description}
+                              </h3>
+                              <p className="text-xs text-gray-500">{goal.years.length} {goal.years.length === 1 ? 'año' : 'años'}</p>
+                            </div>
+                          </div>
+                          
+                          {/* Right Section: Total Value + Status */}
+                          <div className="text-right">
+                            <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'} mb-1`}>
+                              {formatCurrency(goal.totalValue)}
+                            </p>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${simpleStatus.bgColor} ${simpleStatus.textColor}`}>
+                              {simpleStatus.label}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Bottom Section: Progress Bar */}
+                        <div className="w-full">
+                          <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                            <div 
+                              className={`h-full transition-all duration-300 ${
+                                goal.isCompleted ? 'bg-green-500' : 'bg-yellow-500'
+                              }`}
+                              style={{ width: `${goal.progress}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
-          {loading ? (
-            <div className="p-6 text-center text-gray-500">{texts.loading}</div>
-          ) : filteredGoalGroups.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">
-              <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-sm font-medium">No hay metas para mostrar</p>
-              <p className="text-xs mt-2">
-                {goalFilter === 'all' 
-                  ? 'Agrega metas marcando la opción "Es Meta" al crear gastos.' 
-                  : goalFilter === 'active' 
-                    ? 'No hay metas activas en este momento.'
-                    : 'No hay metas completadas en este momento.'
-                }
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-y-auto">
-              {filteredGoalGroups.map((goal) => {
-                const isSelected = selectedGoal === goal.key
-                const goalStatus = getGoalStatus(goal)
-                const simpleStatus = getSimpleGoalStatus(goal)
-                
-                return (
-                  <button
-                    key={goal.key}
-                    onClick={() => setSelectedGoal(goal.key)}
-                    className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 ${
-                      isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="space-y-3">
-                      {/* Top Section: Icon + Description + Years | Total Value + Status */}
-                      <div className="flex items-center justify-between">
-                        {/* Left Section: Icon + Description + Years */}
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${getGoalIconBackground(goal)}`}>
-                            {getGoalIcon(goal)}
-                          </div>
-                          <div>
-                            <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                              {goal.source.description}
-                            </h3>
-                            <p className="text-xs text-gray-500">{goal.years.length} {goal.years.length === 1 ? 'año' : 'años'}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Right Section: Total Value + Status */}
-                        <div className="text-right">
-                          <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'} mb-1`}>
-                            {formatCurrency(goal.totalValue)}
-                          </p>
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${simpleStatus.bgColor} ${simpleStatus.textColor}`}>
-                            {simpleStatus.label}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Bottom Section: Progress Bar */}
-                      <div className="w-full">
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                          <div 
-                            className={`h-full transition-all duration-300 ${
-                              goal.isCompleted ? 'bg-green-500' : 'bg-yellow-500'
-                            }`}
-                            style={{ width: `${goal.progress}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Right Column - Canvas/Detail Area */}
-        <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          {!selectedGoal ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona una meta</h3>
-                <p className="text-gray-500">Haz clic en una meta de la izquierda para ver su progreso detallado</p>
+          {/* Right Column - Canvas/Detail Area */}
+          <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            {!selectedGoal ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <Target className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona una meta</h3>
+                  <p className="text-gray-500">Haz clic en una meta de la izquierda para ver su progreso detallado</p>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col h-full">
-              {/* Selected Goal Content - Direct Year Hierarchy */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {(() => {
-                  const selectedGoalData = filteredGoalGroups.find(g => g.key === selectedGoal)
-                  if (!selectedGoalData) return null
+            ) : (
+              <div className="flex flex-col h-full">
+                {/* Selected Goal Content - Direct Year Hierarchy */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  {(() => {
+                    const selectedGoalData = filteredGoalGroups.find(g => g.key === selectedGoal)
+                    if (!selectedGoalData) return null
 
-                  return (
-                    <div className="space-y-4">
-                      {selectedGoalData.years.map((yearData) => {
-                        const yearKey = `${selectedGoal}-${yearData.year}`
-                        const isYearExpanded = expandedYears.has(yearKey)
-                        const statusStyling = getStatusStyling(yearData.status)
-                        
-                        return (
-                          <div key={yearData.year} className="border border-gray-200 rounded-lg transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
-                            {/* Year Header */}
-                            <button
-                              onClick={() => toggleYearExpansion(selectedGoal, yearData.year)}
-                              className="w-full p-4 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm"
-                            >
-                              <div className="flex items-center justify-between min-h-[20px]">
-                                {/* Left side: Calendar icon + Year + Actual + Progress */}
-                                <div className="flex items-center space-x-2">
-                                  <Calendar className="h-3 w-3 text-blue-600" />
-                                  <span className="text-xs font-medium text-gray-900">
-                                    {yearData.year}
-                                  </span>
-                                  {yearData.year === currentYear && (
-                                    <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                                      Actual
+                    return (
+                      <div className="space-y-4">
+                        {selectedGoalData.years.map((yearData) => {
+                          const yearKey = `${selectedGoal}-${yearData.year}`
+                          const isYearExpanded = expandedYears.has(yearKey)
+                          const statusStyling = getStatusStyling(yearData.status)
+                          
+                          return (
+                            <div key={yearData.year} className="border border-gray-200 rounded-lg transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                              {/* Year Header */}
+                              <button
+                                onClick={() => toggleYearExpansion(selectedGoal, yearData.year)}
+                                className="w-full p-4 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm"
+                              >
+                                <div className="flex items-center justify-between min-h-[20px]">
+                                  {/* Left side: Calendar icon + Year + Actual + Progress */}
+                                  <div className="flex items-center space-x-2">
+                                    <Calendar className="h-3 w-3 text-blue-600" />
+                                    <span className="text-xs font-medium text-gray-900">
+                                      {yearData.year}
                                     </span>
-                                  )}
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                    yearData.isCompleted 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}>
-                                    {yearData.progress}% completado
-                                  </span>
-                                </div>
-
-                                {/* Right side: Value and Status */}
-                                <div className="flex items-center space-x-3">
-                                  <span className="text-xs text-gray-600">
-                                    {formatCurrency(yearData.paidValue)} de {formatCurrency(yearData.totalValue)}
-                                  </span>
-                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyling.bgColor} ${statusStyling.textColor}`}>
-                                    {statusStyling.label}
-                                  </span>
-                                  <div className="ml-2">
-                                    {isYearExpanded ? (
-                                      <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
-                                    ) : (
-                                      <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                    {yearData.year === currentYear && (
+                                      <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                        Actual
+                                      </span>
                                     )}
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      yearData.isCompleted 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : 'bg-yellow-100 text-yellow-800'
+                                    }`}>
+                                      {yearData.progress}% completado
+                                    </span>
+                                  </div>
+
+                                  {/* Right side: Value and Status */}
+                                  <div className="flex items-center space-x-3">
+                                    <span className="text-xs text-gray-600">
+                                      {formatCurrency(yearData.paidValue)} de {formatCurrency(yearData.totalValue)}
+                                    </span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusStyling.bgColor} ${statusStyling.textColor}`}>
+                                      {statusStyling.label}
+                                    </span>
+                                    <div className="ml-2">
+                                      {isYearExpanded ? (
+                                        <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                      ) : (
+                                        <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                      )}
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            </button>
+                              </button>
 
-                            {/* Expanded Year Content - Months */}
-                            {isYearExpanded && (
-                              <div className="px-4 pb-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
-                                <h6 className="text-sm font-medium text-gray-800 mb-3 mt-3">Detalle mensual:</h6>
-                                <div className="space-y-2">
-                                  {yearData.transactions.map((transaction) => (
-                                    <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 min-h-[20px]">
-                                      <div className="flex items-center space-x-2">
-                                        {getTransactionIcon(transaction)}
-                                        <span className="text-xs font-medium text-gray-700 min-w-0 month-name">
-                                          {months[transaction.month - 1]}
-                                        </span>
-                                        {transaction.month === currentMonth && transaction.year === currentYear && (
-                                          <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                                            Actual
+                              {/* Expanded Year Content - Months */}
+                              {isYearExpanded && (
+                                <div className="px-4 pb-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+                                  <h6 className="text-sm font-medium text-gray-800 mb-3 mt-3">Detalle mensual:</h6>
+                                  <div className="space-y-2">
+                                    {yearData.transactions.map((transaction) => (
+                                      <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 min-h-[20px]">
+                                        <div className="flex items-center space-x-2">
+                                          {getTransactionIcon(transaction)}
+                                          <span className="text-xs font-medium text-gray-700 min-w-0 month-name">
+                                            {months[transaction.month - 1]}
                                           </span>
-                                        )}
-                                        {/* Navigation Link Icon - Same as GeneralDashboard */}
-                                        <button
-                                          onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
-                                          className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
-                                          title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
-                                        >
-                                          <svg 
-                                            className="w-3 h-3" 
-                                            fill="none" 
-                                            stroke="currentColor" 
-                                            strokeWidth="2" 
-                                            viewBox="0 0 24 24"
+                                          {transaction.month === currentMonth && transaction.year === currentYear && (
+                                            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                              Actual
+                                            </span>
+                                          )}
+                                          {/* Navigation Link Icon - Same as GeneralDashboard */}
+                                          <button
+                                            onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                            className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
+                                            title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
                                           >
-                                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                          </svg>
-                                        </button>
+                                            <svg 
+                                              className="w-3 h-3" 
+                                              fill="none" 
+                                              stroke="currentColor" 
+                                              strokeWidth="2" 
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                            </svg>
+                                          </button>
+                                        </div>
+                                        <div className="flex items-center space-x-3">
+                                          <span className="text-xs text-gray-600">
+                                            {formatCurrency(transaction.value)}
+                                          </span>
+                                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                            transaction.status === 'paid' 
+                                              ? 'bg-blue-100 text-blue-800' 
+                                              : transaction.deadline && isDateOverdue(transaction.deadline)
+                                                ? 'bg-red-100 text-red-800'
+                                                : 'bg-yellow-100 text-yellow-800'
+                                          }`}>
+                                            {transaction.status === 'paid' ? texts.paid : 
+                                             transaction.deadline && isDateOverdue(transaction.deadline) ? texts.overdue : texts.pending}
+                                          </span>
+                                          {/* Attachment Clip */}
+                                          <AttachmentClip transaction={transaction} />
+                                        </div>
                                       </div>
-                                      <div className="flex items-center space-x-3">
-                                        <span className="text-xs text-gray-600">
-                                          {formatCurrency(transaction.value)}
-                                        </span>
-                                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                          transaction.status === 'paid' 
-                                            ? 'bg-blue-100 text-blue-800' 
-                                            : transaction.deadline && isDateOverdue(transaction.deadline)
-                                              ? 'bg-red-100 text-red-800'
-                                              : 'bg-yellow-100 text-yellow-800'
-                                        }`}>
-                                          {transaction.status === 'paid' ? texts.paid : 
-                                           transaction.deadline && isDateOverdue(transaction.deadline) ? texts.overdue : texts.pending}
-                                        </span>
-                                        {/* Attachment Clip */}
-                                        <AttachmentClip transaction={transaction} />
-                                      </div>
-                                    </div>
-                                  ))}
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )
-                })()}
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+        
+        {/* Attachment Modals */}
+        <AttachmentModals />
       </div>
-      
-      {/* Attachment Modals */}
-      <AttachmentModals />
-    </div>
-  )
-} 
+    )
+  } 
