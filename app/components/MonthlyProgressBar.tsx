@@ -253,19 +253,19 @@ export default function MonthlyProgressBar({
   const getProgressGradient = useCallback((): string => {
     if (!hasOverdue) {
       // When up-to-date: green gradient based on progress
-      if (percentage >= 80) return 'from-blue-500 to-emerald-600'
-      if (percentage >= 60) return 'from-blue-400 to-blue-600'
-      if (percentage >= 40) return 'from-blue-300 to-blue-500'
-      if (percentage >= 20) return 'from-blue-200 to-blue-400'
-      return 'from-blue-100 to-blue-300'
+      if (percentage >= 80) return 'from-green-primary to-green-dark'
+      if (percentage >= 60) return 'from-green-primary to-green-primary'
+      if (percentage >= 40) return 'from-green-light to-green-primary'
+      if (percentage >= 20) return 'from-green-light to-green-primary'
+      return 'from-green-light to-green-primary'
     } else {
-      // When overdue: ALWAYS green to red gradient (no yellow/orange)
+      // When overdue: ALWAYS green to red gradient
       const paidRatio = paid / (paid + overdue)
-      if (paidRatio >= 0.8) return 'from-green-500 to-red-500'
-      if (paidRatio >= 0.6) return 'from-green-400 to-red-500'
-      if (paidRatio >= 0.4) return 'from-green-300 to-red-500'
-      if (paidRatio >= 0.2) return 'from-green-200 to-red-500'
-      return 'from-green-100 to-red-500'
+      if (paidRatio >= 0.8) return 'from-green-primary to-error-red'
+      if (paidRatio >= 0.6) return 'from-green-primary to-error-red'
+      if (paidRatio >= 0.4) return 'from-green-light to-error-red'
+      if (paidRatio >= 0.2) return 'from-green-light to-error-red'
+      return 'from-green-light to-error-red'
     }
   }, [hasOverdue, percentage, paid, overdue])
 
@@ -304,20 +304,18 @@ export default function MonthlyProgressBar({
       <div className="mb-3">
         <div className="relative">
           {/* Background bar */}
-          <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden shadow-inner relative">
+          <div className="w-full h-3 bg-beige rounded-mdplus overflow-hidden shadow-inner relative">
             {/* Progreso pagado (verde) */}
             {paid > 0 && (
               <div
-                className={`absolute left-0 top-0 h-full bg-gradient-to-r ${
-                  percentage >= 80 ? 'from-blue-500 to-blue-700' : percentage >= 60 ? 'from-blue-400 to-blue-600' : percentage >= 40 ? 'from-blue-300 to-blue-500' : 'from-blue-200 to-blue-400'
-                } transition-all duration-1000 ease-out ${overdue > 0 ? 'rounded-l-full' : 'rounded-full'}`}
+                className={`absolute left-0 top-0 h-full bg-green-primary transition-all duration-1000 ease-out ${overdue > 0 ? 'rounded-l-mdplus' : 'rounded-mdplus'}`}
                 style={{ width: `${total > 0 ? (paid / total) * 100 : 0}%`, zIndex: 1 }}
               />
             )}
             {/* Progreso overdue (rojo) */}
             {overdue > 0 && (
               <div
-                className={`absolute top-0 h-full bg-gradient-to-r from-red-400 to-red-600 transition-all duration-1000 ease-out ${paid > 0 ? 'rounded-r-full' : 'rounded-full'}`}
+                className={`absolute top-0 h-full bg-error-red transition-all duration-1000 ease-out ${paid > 0 ? 'rounded-r-mdplus' : 'rounded-mdplus'}`}
                 style={{ left: `${total > 0 ? (paid / total) * 100 : 0}%`, width: `${total > 0 ? (overdue / total) * 100 : 0}%`, zIndex: 2 }}
               />
             )}
@@ -331,13 +329,13 @@ export default function MonthlyProgressBar({
               zIndex: 20
             }}
           >
-            <div className="text-white text-xs px-2 py-1 rounded-lg shadow-lg font-medium bg-blue-600">
+            <div className="text-white text-xs px-2 py-1 rounded-mdplus shadow-soft font-medium bg-green-primary">
               <div>{percentage}%</div>
               <div className="text-xs opacity-90">{formatCurrency(paid)}</div>
             </div>
             {/* Conditional pointer - verde oscuro y tamaño armónico */}
             {((total > 0 ? (paid / total) * 100 : 0) < 98) && (
-              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-blue-700 mx-auto"></div>
+              <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-dark mx-auto"></div>
             )}
           </div>
           {/* Overdue tooltip - igual que antes */}
@@ -352,12 +350,12 @@ export default function MonthlyProgressBar({
                 zIndex: 10
               }}
             >
-              <div className="bg-rose-500 text-white text-xs px-2 py-1 rounded-lg shadow-lg font-medium">
+              <div className="bg-error-red text-white text-xs px-2 py-1 rounded-mdplus shadow-soft font-medium">
                 <div>{totalProgressPercentage}%</div>
                 <div className="text-xs opacity-90">{formatCurrency(paid + overdue)}</div>
               </div>
               {(!tooltipConfig.isNearEnd || (tooltipConfig.overdueLeft && tooltipConfig.overdueLeft < 98)) && (
-                <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-rose-500 mx-auto"></div>
+                <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-error-red mx-auto"></div>
               )}
             </div>
           )}
@@ -365,15 +363,15 @@ export default function MonthlyProgressBar({
       </div>
 
       {/* Frase Motivadora */}
-      <div className={`text-center p-1.5 rounded-lg border transition-all duration-300 max-w-xs mx-auto ${
+      <div className={`text-center p-1.5 rounded-mdplus border transition-all duration-300 max-w-xs mx-auto ${
         hasOverdue 
-          ? 'bg-red-50 border-red-200' // Red background when there's overdue
-          : 'bg-blue-50 border-blue-200' // Blue background when up-to-date
+          ? 'bg-error-bg border-error-red' // Red background when there's overdue
+          : 'bg-green-light border-green-primary' // Green background when up-to-date
       }`}>
-        <p className={`text-xs font-medium leading-tight ${
+        <p className={`text-sm font-medium leading-tight ${
           hasOverdue 
-            ? 'text-red-600' // Red text when there's overdue
-            : 'bg-gradient-to-r from-blue-500 to-emerald-600 bg-clip-text text-transparent' // Blue gradient when up-to-date
+            ? 'text-error-red' // Red text when there's overdue
+            : 'text-green-primary' // Green text when up-to-date
         }`}>
           {hasOverdue ? selectedOverdueMessage : selectedMessage}
         </p>
