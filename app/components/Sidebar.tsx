@@ -98,18 +98,16 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
         <div className="flex-1 p-4">
           <button
             onClick={handleAddExpense}
-            className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2
-              bg-green-primary text-white font-medium text-sm
+            className="w-full mb-6 flex items-center justify-center gap-2 px-4 py-2.5
+              bg-[#77b16e] text-white font-medium text-sm
               rounded-mdplus shadow-soft
-              hover:bg-[#77b16e]
+              hover:bg-[#6bab61] hover:scale-[1.02]
               active:bg-[#5d9f67] active:scale-95
-              focus:outline-none focus:ring-2 focus:ring-green-primary/40
+              focus:outline-none focus:ring-2 focus:ring-green-primary
               transition-all duration-150"
             aria-label={texts.addTransaction}
           >
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-white/20">
-              <Plus className="w-4 h-4 text-white" />
-            </span>
+            <Plus className="w-5 h-5 text-white" />
             {texts.addTransaction}
           </button>
           
