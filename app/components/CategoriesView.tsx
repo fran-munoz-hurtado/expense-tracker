@@ -825,6 +825,40 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     )
   }
 
+  // Get recurrent group icon with smaller size - for visual consistency with calendar icon
+  const getRecurrentGroupIconSmall = (recurrentGroup: RecurrentGroup) => {
+    // Get the first transaction to determine the icon
+    const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
+    
+    if (!firstTransaction) {
+      return (
+        <Repeat className="h-4 w-4 text-[#5d7760]" />
+      )
+    }
+    
+    // Get the icon type and colors from the parametrized system
+    const iconType = getTransactionIconType(firstTransaction, recurrentGoalMap)
+    const iconColor = getTransactionIconColor(firstTransaction, iconType)
+    
+    // Render the appropriate icon based on type
+    switch (iconType) {
+      case 'SAVINGS_TROPHY':
+        return renderCustomIcon('SAVINGS_TROPHY', `w-4 h-4 ${iconColor}`)
+      
+      case 'GOAL_TARGET':
+        return renderCustomIcon('GOAL_TARGET', `w-4 h-4 ${iconColor}`)
+      
+      case 'TICKET_TAG':
+        return renderCustomIcon('TICKET_TAG', `w-4 h-4 ${iconColor}`)
+      
+      case 'REPEAT':
+        return <Repeat className={`w-4 h-4 ${iconColor}`} />
+      
+      default:
+        return <Repeat className={`w-4 h-4 ${iconColor}`} />
+    }
+  }
+
   // Get recurrent group background color
   const getRecurrentGroupBackground = (recurrentGroup: RecurrentGroup) => {
     // Get the first transaction to determine the background
@@ -849,6 +883,42 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         showBackground={true}
       />
     )
+  }
+
+  // Get transaction icon with smaller size - specifically for monthly detail view
+  const getTransactionIconSmall = (transaction: Transaction) => {
+    return (
+      <TransactionIcon 
+        transaction={transaction}
+        recurrentGoalMap={recurrentGoalMap}
+        size="w-4 h-4"
+        showBackground={true}
+      />
+    )
+  }
+
+  // Get transaction icon without background - for use in custom containers
+  const getTransactionIconOnly = (transaction: Transaction) => {
+    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
+    const iconColor = getTransactionIconColor(transaction, iconType)
+    
+    // Render only the icon element without background container
+    switch (iconType) {
+      case 'SAVINGS_TROPHY':
+        return renderCustomIcon('SAVINGS_TROPHY', `w-4 h-4 ${iconColor}`)
+      
+      case 'GOAL_TARGET':
+        return renderCustomIcon('GOAL_TARGET', `w-4 h-4 ${iconColor}`)
+      
+      case 'TICKET_TAG':
+        return renderCustomIcon('TICKET_TAG', `w-4 h-4 ${iconColor}`)
+      
+      case 'REPEAT':
+        return <Repeat className={`w-4 h-4 ${iconColor}`} />
+      
+      default:
+        return <Repeat className={`w-4 h-4 ${iconColor}`} />
+    }
   }
 
   // Get transaction background color
@@ -931,24 +1001,16 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className={`p-1.5 rounded-full transition-all duration-300 hover:scale-110 ${
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 ${
                           group.categoryName === 'sin categoría' || group.categoryName === 'Sin categoría'
-                            ? 'bg-red-100'
+                            ? 'bg-red-100 text-red-600'
                             : (() => {
                                 // Check if it's a default category
                                 const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
-                                return isDefaultCategory ? 'bg-gray-100' : 'bg-blue-100'
+                                return isDefaultCategory ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-[#3d9f65]'
                               })()
                         }`}>
-                          <DollarSign className={`h-3 w-3 ${
-                            group.categoryName === 'sin categoría' || group.categoryName === 'Sin categoría'
-                              ? 'text-red-600'
-                              : (() => {
-                                  // Check if it's a default category
-                                  const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
-                                  return isDefaultCategory ? 'text-gray-600' : 'text-blue-600'
-                                })()
-                          }`} />
+                          <Tag className="h-4 w-4 fill-current" />
                         </div>
                         <div>
                           <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
@@ -1049,8 +1111,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
-                                  <div className={`p-1.5 rounded-full ${getRecurrentGroupBackground(recurrentGroup)} transition-all duration-300 hover:scale-110`}>
-                                    {getRecurrentGroupIcon(recurrentGroup)}
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getRecurrentGroupBackground(recurrentGroup)} transition-all duration-300 hover:scale-110`}>
+                                    {getRecurrentGroupIconSmall(recurrentGroup)}
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <span className="text-xs font-medium text-gray-900">{recurrentGroup.description}</span>
@@ -1156,7 +1218,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                 <div key={transaction.id} className="bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                                                   <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-2">
-                                                      {getTransactionIcon(transaction)}
+                                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTransactionBackground(transaction)}`}>
+                                                        {getTransactionIconOnly(transaction)}
+                                                      </div>
                                                       <span className="text-xs text-gray-900">{months[transaction.month - 1]}</span>
                                                       {/* Navigation Link Icon */}
                                                       <button
@@ -1233,8 +1297,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             <div className="flex items-center justify-between">
                               {/* LEFT: Icon + Description + Year */}
                               <div className="flex items-center space-x-3">
-                                <div className={`p-1.5 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
-                                  {getTransactionIcon(transaction)}
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTransactionBackground(transaction)}`}>
+                                  {getTransactionIconOnly(transaction)}
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <span className="text-xs text-gray-900">{transaction.description}</span>
