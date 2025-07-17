@@ -57,6 +57,31 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
   const porcentajePagado = totalGastos > 0 ? Math.round((totalPagado / totalGastos) * 100) : 0
   const cuantoQueda = totalIngresos - totalGastos
 
+  // Helper function to compare dates without time - Same logic as DashboardView
+  const isDateOverdue = (deadline: string): boolean => {
+    const [year, month, day] = deadline.split('-').map(Number);
+    const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+    
+    // Create today's date without time
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return deadlineDate < todayDate;
+  }
+
+  // Calculate overdue payments (new logic)
+  const pagosVencidos = transactions.filter(t => 
+    t.type === 'expense' && 
+    t.status === 'pending' && 
+    t.deadline && 
+    isDateOverdue(t.deadline)
+  )
+
+  const montoVencido = pagosVencidos.reduce((sum, t) => sum + t.value, 0)
+  const progresoEsperado = totalGastos > 0 ? Math.round(((totalPagado + montoVencido) / totalGastos) * 100) : 0
+  const porcentajeVencido = totalGastos > 0 ? Math.round((montoVencido / totalGastos) * 100) : 0
+  const tieneVencimientos = pagosVencidos.length > 0
+
   // Format currency
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('es-CO', {
@@ -163,10 +188,22 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
           </div>
           
           <div className="relative w-full h-3 bg-[#f0f0ec] rounded-full">
+            {/* Pagado (verde) */}
             <div 
               className="absolute left-0 h-3 bg-green-primary rounded-full transition-all duration-300"
               style={{ width: `${porcentajePagado}%` }}
             ></div>
+            
+            {/* Deuda vencida (rojo), si aplica */}
+            {tieneVencimientos && porcentajeVencido > 0 && (
+              <div 
+                className="absolute h-3 bg-error-bg rounded-full transition-all duration-300"
+                style={{ 
+                  left: `${porcentajePagado}%`, 
+                  width: `${porcentajeVencido}%` 
+                }}
+              ></div>
+            )}
             
             {/* Badge flotante con porcentaje */}
             {porcentajePagado > 0 && (
@@ -178,6 +215,14 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
               </div>
             )}
           </div>
+
+          {/* Indicador de mora */}
+          {tieneVencimientos && (
+            <p className="text-xs text-error-red mt-1 flex items-center gap-1 font-sans">
+              <AlertTriangle className="w-3 h-3" /> 
+              Tienes pagos en mora ({formatCurrency(montoVencido)})
+            </p>
+          )}
         </div>
 
         {/* Estado de balance */}
