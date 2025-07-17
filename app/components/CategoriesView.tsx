@@ -1455,7 +1455,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">Confirmar Eliminación</h2>
+              <h2 className="text-lg font-semibold text-gray-dark">Confirmar eliminación</h2>
               <button
                 onClick={handleCancelDeleteCategory}
                 className="text-gray-400 hover:text-gray-500"
@@ -1467,12 +1467,10 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
             <div className="p-4">
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
-                  <div className={`p-2 rounded-full ${
-                    categoryToDelete.isDefault ? 'bg-gray-100' : 'bg-blue-100'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    categoryToDelete.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
                   }`}>
-                    <DollarSign className={`h-4 w-4 ${
-                      categoryToDelete.isDefault ? 'text-gray-600' : 'text-blue-600'
-                    }`} />
+                    <Tag className="h-4 w-4" fill="currentColor" />
                   </div>
                   <span className="text-lg font-medium text-gray-900">
                     {categoryToDelete.name}
@@ -1480,7 +1478,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 </div>
                 
                 <p className="text-gray-700 mb-3">
-                  ¿Estás seguro que deseas eliminar esta categoría?
+                  ¿Estás seguro?
                 </p>
                 
                 {affectedTransactionsCount > 0 && (
@@ -1509,14 +1507,14 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 <button
                   onClick={handleCancelDeleteCategory}
                   disabled={deletingCategory}
-                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="flex-1 bg-border-light text-gray-dark hover:bg-[#e3e4db] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleConfirmDeleteCategory}
                   disabled={deletingCategory}
-                  className="flex-1 bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="flex-1 bg-[#f2dede] text-[#d9534f] hover:bg-[#eebebe] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {deletingCategory ? 'Eliminando...' : 'Eliminar'}
                 </button>
