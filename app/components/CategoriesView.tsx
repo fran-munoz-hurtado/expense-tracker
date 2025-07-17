@@ -312,6 +312,14 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       const categories = await getUserActiveCategoriesWithInfo(user.id)
       // Filter out "Sin categoría" as it's not a user-available category
       const filteredCategories = categories.filter(category => category.name !== 'Sin categoría')
+      
+      // Debug log to check category.isDefault values
+      console.log('🔍 Management Categories Debug:', filteredCategories.map(cat => ({
+        name: cat.name,
+        isDefault: cat.isDefault,
+        type: typeof cat.isDefault
+      })))
+      
       setManagementCategories(filteredCategories)
     } catch (error) {
       console.error('Error loading management categories:', error)
@@ -1294,7 +1302,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           // Edit mode
                           <div className="flex-1 flex items-center space-x-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                              category.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
+                              category.isDefault ? 'bg-beige text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
                             }`}>
                               <Tag className="h-4 w-4" fill="currentColor" />
                             </div>
@@ -1340,7 +1348,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           <>
                             <div className="flex items-center space-x-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                                category.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
+                                category.isDefault ? 'bg-beige text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
                               }`}>
                                 <Tag className="h-4 w-4" fill="currentColor" />
                               </div>
