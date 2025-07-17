@@ -915,13 +915,13 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
             {!selectedGoal ? (
               <div className="flex flex-col items-center justify-center text-center gap-2 h-full px-4 py-8">
                 {/* Icono */}
-                <div className="w-8 h-8 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
-                  <Target className="w-5 h-5 fill-current" />
+                <div className="w-10 h-10 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
+                  <Target className="w-8 h-8 fill-current" />
                 </div>
 
                 {/* Texto */}
-                <p className="text-sm font-medium text-gray-dark">Selecciona una meta</p>
-                <p className="text-sm text-green-dark">Haz clic en una meta para ver su progreso</p>
+                <p className="text-sm font-medium text-gray-dark opacity-80">Selecciona una meta</p>
+                <p className="text-sm text-green-dark opacity-60">Haz clic en una meta para ver su progreso</p>
               </div>
             ) : (
               <div className="flex flex-col h-full">
