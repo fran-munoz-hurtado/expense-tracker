@@ -9,10 +9,10 @@ import { Transaction } from '@/lib/supabase'
 export function getTransactionIconType(
   transaction: Transaction, 
   recurrentGoalMap: Record<number, boolean>
-): 'SAVINGS_PIG' | 'GOAL_TARGET' | 'TICKET_TAG' | 'REPEAT' {
+): 'SAVINGS_TROPHY' | 'GOAL_TARGET' | 'TICKET_TAG' | 'REPEAT' {
   // SAVINGS: Expenses with category "Ahorro"
   if (transaction.type === 'expense' && transaction.category === 'Ahorro') {
-    return 'SAVINGS_PIG'
+    return 'SAVINGS_TROPHY'
   }
   
   // GOALS: Recurrent expenses that are marked as goals
@@ -42,7 +42,7 @@ export function getTransactionIconColor(
   iconType: string
 ): string {
   switch (iconType) {
-    case 'SAVINGS_PIG':
+    case 'SAVINGS_TROPHY':
       return 'text-green-600'
     case 'GOAL_TARGET':
       return 'text-yellow-700' // Same as expense icons
@@ -68,7 +68,7 @@ export function getTransactionIconBackground(
   iconType: string
 ): string {
   switch (iconType) {
-    case 'SAVINGS_PIG':
+    case 'SAVINGS_TROPHY':
       return 'bg-green-100'
     case 'GOAL_TARGET':
       return 'bg-yellow-100' // Same as expense background

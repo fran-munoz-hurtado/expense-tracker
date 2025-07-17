@@ -1,4 +1,5 @@
 import { CUSTOM_ICONS } from '@/lib/config/icons'
+import { Trophy } from 'lucide-react'
 
 /**
  * Renders a custom SVG icon based on the configuration in CUSTOM_ICONS
@@ -14,6 +15,11 @@ export function renderCustomIcon(iconType: keyof typeof CUSTOM_ICONS, className:
         <circle cx="10" cy="10" r="3" stroke="currentColor" strokeWidth="2.5" fill="#fef3c7" />
       </svg>
     )
+  }
+  
+  if (iconType === 'SAVINGS_TROPHY') {
+    // Use the minimalist Trophy icon from Lucide React
+    return <Trophy className={className} />
   }
   
   if (iconType === 'SAVINGS_PIG') {

@@ -35,8 +35,8 @@ export default function TransactionIcon({
   
   const iconElement = () => {
     switch (iconType) {
-      case 'SAVINGS_PIG':
-        return renderCustomIcon('SAVINGS_PIG', `${size} ${specialSavingsIconColor}`)
+      case 'SAVINGS_TROPHY':
+        return renderCustomIcon('SAVINGS_TROPHY', `${size} ${specialSavingsIconColor}`)
       
       case 'GOAL_TARGET':
         return renderCustomIcon('GOAL_TARGET', `${size} ${iconColor}`)

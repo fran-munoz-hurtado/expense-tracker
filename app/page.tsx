@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, X, Calendar, DollarSign, FileText, AlertCircle, Check, Edit2, Trash2 } from 'lucide-react'
+import { Plus, X, Calendar, DollarSign, FileText, AlertCircle, Check, Edit2, Trash2, Trophy } from 'lucide-react'
 import { supabase, type User } from '@/lib/supabase'
 import { useDataSync, DataSyncProvider } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
@@ -244,6 +244,11 @@ function Home() {
       )
     }
     
+    if (iconType === 'SAVINGS_TROPHY') {
+      // Use the minimalist Trophy icon from Lucide React
+      return <Trophy className={className} />
+    }
+    
     if (iconType === 'SAVINGS_PIG') {
       return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -391,7 +396,7 @@ function Home() {
                   {/* Ingreso Recurrente */}
                   <div
                     onClick={() => handleMovementTypeSelect('RECURRENT_INCOME')}
-                    className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-neutral-bg transition-all cursor-pointer"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#eaf3fb]">
                       <MOVEMENT_TYPES.RECURRENT_INCOME.icon className="h-5 w-5 text-green-dark" />
@@ -409,7 +414,7 @@ function Home() {
                   {/* Ingreso Único */}
                   <div
                     onClick={() => handleMovementTypeSelect('SINGLE_INCOME')}
-                    className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-neutral-bg transition-all cursor-pointer"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#eaf3fb]">
                       {renderCustomIcon('TICKET_TAG', 'h-5 w-5 text-green-dark')}
@@ -431,7 +436,7 @@ function Home() {
                   {/* Gasto Recurrente */}
                   <div
                     onClick={() => handleMovementTypeSelect('RECURRENT_EXPENSE')}
-                    className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-neutral-bg transition-all cursor-pointer"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fdf5d3]">
                       <MOVEMENT_TYPES.RECURRENT_EXPENSE.icon className="h-5 w-5 text-green-dark" />
@@ -449,7 +454,7 @@ function Home() {
                   {/* Gasto Único */}
                   <div
                     onClick={() => handleMovementTypeSelect('SINGLE_EXPENSE')}
-                    className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-neutral-bg transition-all cursor-pointer"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fdf5d3]">
                       {renderCustomIcon('TICKET_TAG', 'h-5 w-5 text-green-dark')}
@@ -467,7 +472,7 @@ function Home() {
                   {/* Meta */}
                   <div
                     onClick={() => handleMovementTypeSelect('GOAL')}
-                    className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-neutral-bg transition-all cursor-pointer"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fdf5d3]">
                       {renderCustomIcon('GOAL_TARGET', 'h-5 w-5 text-green-dark')}
@@ -485,10 +490,10 @@ function Home() {
                   {/* Ahorro */}
                   <div
                     onClick={() => handleMovementTypeSelect('SAVINGS')}
-                    className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-[#dbf3e7] hover:shadow-md transition-all duration-150 cursor-pointer"
+                    className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
                     <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#e0f6e8] shadow-[0_0_8px_rgba(61,159,101,0.25)]">
-                      {renderCustomIcon('SAVINGS_PIG', 'h-5 w-5 text-[#3d9f65]')}
+                      {renderCustomIcon('SAVINGS_TROPHY', 'h-5 w-5 text-[#3d9f65]')}
                     </div>
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-dark">
