@@ -913,10 +913,10 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           {/* Right Column - Canvas/Detail Area */}
           <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             {!selectedGoal ? (
-              <div className="flex flex-col items-center justify-center text-center gap-2 h-full px-4 py-8">
+              <div className="flex flex-col items-center justify-center gap-2 text-center h-full px-4 py-8">
                 {/* Icono */}
-                <div className="w-10 h-10 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
-                  <Target className="w-8 h-8 fill-current" />
+                <div className="w-8 h-8 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
+                  {renderCustomIcon('GOAL_TARGET', 'w-6 h-6')}
                 </div>
 
                 {/* Texto */}
