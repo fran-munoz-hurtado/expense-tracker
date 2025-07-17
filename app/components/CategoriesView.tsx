@@ -1302,7 +1302,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           // Edit mode
                           <div className="flex-1 flex items-center space-x-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                              category.isDefault ? 'bg-beige text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
+                              category.isDefault ? 'bg-[#e5e5e5] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
                             }`}>
                               <Tag className="h-4 w-4" fill="currentColor" />
                             </div>
@@ -1348,7 +1348,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           <>
                             <div className="flex items-center space-x-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                                category.isDefault ? 'bg-beige text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
+                                category.isDefault ? 'bg-[#e5e5e5] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
                               }`}>
                                 <Tag className="h-4 w-4" fill="currentColor" />
                               </div>
@@ -1468,7 +1468,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    categoryToDelete.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
+                    categoryToDelete.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
                   }`}>
                     <Tag className="h-4 w-4" fill="currentColor" />
                   </div>
@@ -1542,7 +1542,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    categoryToEdit.old.isDefault ? 'bg-beige text-green-dark' : 'bg-[#eaf3fb] text-[#3f70ad]'
+                    categoryToEdit.old.isDefault ? 'bg-[#e5e5e5] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
                   }`}>
                     <Tag className="h-4 w-4" fill="currentColor" />
                   </div>
@@ -1561,7 +1561,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 </p>
                 
                 {editAffectedTransactionsCount > 0 && (
-                  <div className="bg-[#eaf3fb] text-[#3f70ad] border border-[#d7eaff] rounded-md px-4 py-2 text-sm mb-3">
+                  <div className="bg-[#e0f6e8] text-green-primary border border-[#d7eaff] rounded-md px-4 py-2 text-sm mb-3">
                     <strong className="font-medium">ℹ️ Transacciones afectadas</strong><br />
                     Cambiar el nombre de esta categoría va a actualizar <strong>{editAffectedTransactionsCount}</strong> transacciones.
                   </div>
