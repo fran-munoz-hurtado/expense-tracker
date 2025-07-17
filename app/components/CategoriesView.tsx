@@ -1394,10 +1394,10 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   </button>
                 </div>
               ) : (
-                <div className="mb-4">
+                <div className="mb-4 mt-4 border-t border-border-light pt-4">
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm text-green-dark font-medium mb-1">
                         Nueva categoría
                       </label>
                       <input
@@ -1405,7 +1405,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         value={newCategoryInput}
                         onChange={(e) => setNewCategoryInput(e.target.value)}
                         placeholder="Nombre de la categoría"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-1.5 rounded-md border border-border-light text-sm text-gray-dark focus:outline-none focus:ring-2 focus:ring-green-primary"
                         maxLength={50}
                         onKeyPress={(e) => {
                           if (e.key === 'Enter') {
@@ -1417,18 +1417,18 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         <p className="text-red-500 text-xs mt-1">{addCategoryError}</p>
                       )}
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
                       <button
                         onClick={handleAddCategory}
                         disabled={addingCategory || !newCategoryInput.trim()}
-                        className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                        className="bg-green-primary text-white hover:bg-[#77b16e] rounded-md px-4 py-2 text-sm font-medium transition-all w-full sm:w-auto disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
                         {addingCategory ? 'Agregando...' : 'Agregar'}
                       </button>
                       <button
                         onClick={handleCancelAddCategory}
                         disabled={addingCategory}
-                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                        className="bg-border-light text-gray-dark hover:bg-[#e3e4db] rounded-md px-4 py-2 text-sm font-medium transition-all w-full sm:w-auto disabled:bg-gray-50 disabled:cursor-not-allowed"
                       >
                         Cancelar
                       </button>
