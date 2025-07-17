@@ -24,6 +24,7 @@ import {
   type MovementType 
 } from '@/lib/config/icons'
 import { createRecurrentExpense, createNonRecurrentExpense } from '@/lib/dataUtils'
+import TransactionIcon from './components/TransactionIcon'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -286,6 +287,78 @@ function Home() {
     return null
   }
 
+  // Helper function to render movement type icon using TransactionIcon component
+  const renderMovementTypeIcon = (movementType: MovementType) => {
+    // Create a mock transaction to use with TransactionIcon
+    const mockTransaction = {
+      id: 0,
+      user_id: typeof user?.id === 'string' ? parseInt(user.id) : (user?.id || 0),
+      description: '',
+      value: 0,
+      month: 1,
+      year: 2025,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deadline: null,
+      notes: null,
+      status: 'pending' as const,
+      // Movement type specific properties
+      type: MOVEMENT_TYPES[movementType].type,
+      source_type: MOVEMENT_TYPES[movementType].source_type,
+      source_id: 1,
+      category: movementType === 'SAVINGS' ? 'Ahorro' : 'general',
+    }
+    
+    // Mock recurrentGoalMap - only GOAL should be true
+    const mockRecurrentGoalMap = {
+      1: movementType === 'GOAL'
+    }
+    
+    return (
+      <TransactionIcon 
+        transaction={mockTransaction}
+        recurrentGoalMap={mockRecurrentGoalMap}
+        size="w-5 h-5"
+        showBackground={false}
+      />
+    )
+  }
+
+  // Helper function to get movement type container styling
+  const getMovementTypeContainer = (movementType: MovementType) => {
+    const mockTransaction = {
+      id: 0,
+      user_id: typeof user?.id === 'string' ? parseInt(user.id) : (user?.id || 0),
+      description: '',
+      value: 0,
+      month: 1,
+      year: 2025,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deadline: null,
+      notes: null,
+      status: 'pending' as const,
+      // Movement type specific properties
+      type: MOVEMENT_TYPES[movementType].type,
+      source_type: MOVEMENT_TYPES[movementType].source_type,
+      source_id: 1,
+      category: movementType === 'SAVINGS' ? 'Ahorro' : 'general',
+    }
+    
+    const mockRecurrentGoalMap = {
+      1: movementType === 'GOAL'
+    }
+    
+    return (
+      <TransactionIcon 
+        transaction={mockTransaction}
+        recurrentGoalMap={mockRecurrentGoalMap}
+        size="w-5 h-5"
+        showBackground={true}
+      />
+    )
+  }
+
   // Show loading state while checking localStorage
   if (isLoading) {
     return (
@@ -398,9 +471,7 @@ function Home() {
                     onClick={() => handleMovementTypeSelect('RECURRENT_INCOME')}
                     className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#eaf3fb]">
-                      <MOVEMENT_TYPES.RECURRENT_INCOME.icon className="h-5 w-5 text-green-dark" />
-                    </div>
+                    {getMovementTypeContainer('RECURRENT_INCOME')}
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-dark">
                         {MOVEMENT_TYPES.RECURRENT_INCOME.label}
@@ -416,9 +487,7 @@ function Home() {
                     onClick={() => handleMovementTypeSelect('SINGLE_INCOME')}
                     className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#eaf3fb]">
-                      {renderCustomIcon('TICKET_TAG', 'h-5 w-5 text-green-dark')}
-                    </div>
+                    {getMovementTypeContainer('SINGLE_INCOME')}
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-dark">
                         {MOVEMENT_TYPES.SINGLE_INCOME.label}
@@ -438,9 +507,7 @@ function Home() {
                     onClick={() => handleMovementTypeSelect('RECURRENT_EXPENSE')}
                     className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fdf5d3]">
-                      <MOVEMENT_TYPES.RECURRENT_EXPENSE.icon className="h-5 w-5 text-green-dark" />
-                    </div>
+                    {getMovementTypeContainer('RECURRENT_EXPENSE')}
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-dark">
                         {MOVEMENT_TYPES.RECURRENT_EXPENSE.label}
@@ -456,9 +523,7 @@ function Home() {
                     onClick={() => handleMovementTypeSelect('SINGLE_EXPENSE')}
                     className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fdf5d3]">
-                      {renderCustomIcon('TICKET_TAG', 'h-5 w-5 text-green-dark')}
-                    </div>
+                    {getMovementTypeContainer('SINGLE_EXPENSE')}
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-dark">
                         {MOVEMENT_TYPES.SINGLE_EXPENSE.label}
@@ -474,9 +539,7 @@ function Home() {
                     onClick={() => handleMovementTypeSelect('GOAL')}
                     className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#fdf5d3]">
-                      {renderCustomIcon('GOAL_TARGET', 'h-5 w-5 text-green-dark')}
-                    </div>
+                    {getMovementTypeContainer('GOAL')}
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-dark">
                         {MOVEMENT_TYPES.GOAL.label}
@@ -492,9 +555,7 @@ function Home() {
                     onClick={() => handleMovementTypeSelect('SAVINGS')}
                     className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#e0f6e8] shadow-[0_0_8px_rgba(61,159,101,0.25)]">
-                      {renderCustomIcon('SAVINGS_TROPHY', 'h-5 w-5 text-[#3d9f65]')}
-                    </div>
+                    {getMovementTypeContainer('SAVINGS')}
                     <div className="flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-dark">
                         {MOVEMENT_TYPES.SAVINGS.label}

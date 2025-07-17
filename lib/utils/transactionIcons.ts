@@ -33,6 +33,7 @@ export function getTransactionIconType(
 
 /**
  * Gets the appropriate CSS color class for a transaction icon
+ * Using the exact colors from the modal as the source of truth
  * @param transaction - The transaction object
  * @param iconType - The icon type returned by getTransactionIconType
  * @returns CSS class string for the icon color
@@ -43,22 +44,23 @@ export function getTransactionIconColor(
 ): string {
   switch (iconType) {
     case 'SAVINGS_TROPHY':
-      return 'text-green-600'
+      return 'text-[#3d9f65]'
     case 'GOAL_TARGET':
-      return 'text-yellow-700' // Same as expense icons
+      return 'text-[#5d7760]'
     case 'TICKET_TAG':
-      // Use transaction type color for single movements
-      return transaction.type === 'expense' ? 'text-yellow-700' : 'text-blue-600'
+      // Both income and expense use the same color in the modal
+      return 'text-[#5d7760]'
     case 'REPEAT':
-      // Use transaction type color for recurrent movements
-      return transaction.type === 'expense' ? 'text-yellow-700' : 'text-blue-600'
+      // Both income and expense use the same color in the modal
+      return 'text-[#5d7760]'
     default:
-      return 'text-gray-600'
+      return 'text-[#5d7760]'
   }
 }
 
 /**
  * Gets the appropriate background color class for a transaction icon container
+ * Using the exact colors from the modal as the source of truth
  * @param transaction - The transaction object
  * @param iconType - The icon type returned by getTransactionIconType
  * @returns CSS class string for the background color
@@ -69,16 +71,32 @@ export function getTransactionIconBackground(
 ): string {
   switch (iconType) {
     case 'SAVINGS_TROPHY':
-      return 'bg-green-100'
+      return 'bg-[#e0f6e8]'
     case 'GOAL_TARGET':
-      return 'bg-yellow-100' // Same as expense background
+      return 'bg-[#fdf5d3]'
     case 'TICKET_TAG':
-      // Use transaction type background for single movements
-      return transaction.type === 'expense' ? 'bg-yellow-100' : 'bg-blue-100'
+      // Income types use blue background, expense types use yellow background
+      return transaction.type === 'income' ? 'bg-[#eaf3fb]' : 'bg-[#fdf5d3]'
     case 'REPEAT':
-      // Use transaction type background for recurrent movements
-      return transaction.type === 'expense' ? 'bg-yellow-100' : 'bg-blue-100'
+      // Income types use blue background, expense types use yellow background
+      return transaction.type === 'income' ? 'bg-[#eaf3fb]' : 'bg-[#fdf5d3]'
     default:
-      return 'bg-gray-100'
+      return transaction.type === 'income' ? 'bg-[#eaf3fb]' : 'bg-[#fdf5d3]'
   }
+}
+
+/**
+ * Gets the special shadow class for savings transactions
+ * @param transaction - The transaction object
+ * @param iconType - The icon type returned by getTransactionIconType
+ * @returns CSS class string for the shadow effect
+ */
+export function getTransactionIconShadow(
+  transaction: Transaction, 
+  iconType: string
+): string {
+  if (iconType === 'SAVINGS_TROPHY') {
+    return 'shadow-[0_0_8px_rgba(61,159,101,0.25)]'
+  }
+  return ''
 } 

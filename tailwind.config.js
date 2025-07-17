@@ -24,6 +24,12 @@ module.exports = {
     'text-gray-text', 'text-gray-dark', 'bg-warning-bg', 'text-warning-yellow',
     'bg-error-bg', 'text-error-red', 'bg-info-bg', 'text-info-blue',
     'hover:bg-[#77b16e]', 'active:bg-[#5d9f67]', 'shadow-soft', 'rounded-mdplus',
+    // Unified modal colors - exact colors from the modal
+    'bg-[#eaf3fb]', 'text-[#5d7760]', // Income types
+    'bg-[#fdf5d3]', // Expense types and goals
+    'bg-[#e0f6e8]', 'text-[#3d9f65]', // Savings with special color
+    'shadow-[0_0_8px_rgba(61,159,101,0.25)]', // Savings special shadow
+    'w-9', 'h-9', // Icon container size
   ],
   theme: {
     extend: {

@@ -4,7 +4,8 @@ import { renderCustomIcon } from '@/lib/utils/iconRenderer'
 import { 
   getTransactionIconType, 
   getTransactionIconColor, 
-  getTransactionIconBackground 
+  getTransactionIconBackground,
+  getTransactionIconShadow
 } from '@/lib/utils/transactionIcons'
 
 interface TransactionIconProps {
@@ -17,26 +18,23 @@ interface TransactionIconProps {
 /**
  * Renders the appropriate icon for a transaction based on its type and properties
  * Centralizes all icon logic and ensures consistency across all views
+ * Uses exact colors from the modal as the source of truth
  */
 export default function TransactionIcon({
   transaction,
   recurrentGoalMap,
-  size = "w-4 h-4",
+  size = "w-5 h-5",
   showBackground = true
 }: TransactionIconProps) {
   const iconType = getTransactionIconType(transaction, recurrentGoalMap)
   const iconColor = getTransactionIconColor(transaction, iconType)
   const iconBackground = getTransactionIconBackground(transaction, iconType)
-  
-  // Special styling for savings transactions
-  const isSavingsTransaction = transaction.category === 'Ahorro'
-  const specialSavingsStyle = isSavingsTransaction ? 'bg-[#e0f6e8] shadow-[0_0_6px_rgba(61,159,101,0.2)]' : ''
-  const specialSavingsIconColor = isSavingsTransaction ? 'text-[#3d9f65]' : iconColor
+  const iconShadow = getTransactionIconShadow(transaction, iconType)
   
   const iconElement = () => {
     switch (iconType) {
       case 'SAVINGS_TROPHY':
-        return renderCustomIcon('SAVINGS_TROPHY', `${size} ${specialSavingsIconColor}`)
+        return renderCustomIcon('SAVINGS_TROPHY', `${size} ${iconColor}`)
       
       case 'GOAL_TARGET':
         return renderCustomIcon('GOAL_TARGET', `${size} ${iconColor}`)
@@ -48,13 +46,13 @@ export default function TransactionIcon({
         return <Repeat className={`${size} ${iconColor}`} />
       
       default:
-        return <Repeat className={`${size} text-gray-600`} />
+        return <Repeat className={`${size} ${iconColor}`} />
     }
   }
   
   if (showBackground) {
     return (
-      <div className={`p-1.5 rounded-full ${isSavingsTransaction ? specialSavingsStyle : iconBackground}`}>
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center ${iconBackground} ${iconShadow}`}>
         {iconElement()}
       </div>
     )

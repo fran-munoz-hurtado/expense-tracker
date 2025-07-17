@@ -15,6 +15,7 @@ import { getTransactionIconType, getTransactionIconColor, getTransactionIconBack
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import { getUserActiveCategories, addUserCategory, getUserActiveCategoriesWithInfo, CategoryInfo, countAffectedTransactions, deleteUserCategory, validateCategoryForEdit, updateUserCategory } from '@/lib/services/categoryService'
+import TransactionIcon from './TransactionIcon'
 
 interface CategoriesViewProps {
   navigationParams?: { year?: number; month?: number } | null
@@ -798,33 +799,22 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
     
     if (!firstTransaction) {
-      return <Repeat className={`h-4 w-4 text-${getColor('expense', 'icon')}`} />
+      return (
+        <div className="w-9 h-9 rounded-full flex items-center justify-center bg-[#fdf5d3]">
+          <Repeat className="h-5 w-5 text-[#5d7760]" />
+        </div>
+      )
     }
     
-    // Use the parametrized system
-    const iconType = getTransactionIconType(firstTransaction, recurrentGoalMap)
-    const iconColor = getTransactionIconColor(firstTransaction, iconType)
-    
-    console.log('🔍 getRecurrentGroupIcon:', {
-      description: recurrentGroup.description,
-      iconType,
-      iconColor,
-      firstTransaction: {
-        id: firstTransaction.id,
-        category: firstTransaction.category,
-        source_type: firstTransaction.source_type,
-        source_id: firstTransaction.source_id,
-        isGoal: recurrentGoalMap[firstTransaction.source_id]
-      }
-    })
-    
-    // Handle REPEAT case (not supported by renderCustomIcon)
-    if (iconType === 'REPEAT') {
-      return <Repeat className={`h-4 w-4 ${iconColor}`} />
-    }
-    
-    // Handle custom icons - FIXED: pass complete className
-    return renderCustomIcon(iconType, `h-4 w-4 ${iconColor}`)
+    // Use TransactionIcon component for consistency
+    return (
+      <TransactionIcon 
+        transaction={firstTransaction}
+        recurrentGoalMap={recurrentGoalMap}
+        size="w-5 h-5"
+        showBackground={true}
+      />
+    )
   }
 
   // Get recurrent group background color
@@ -841,31 +831,16 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     return getTransactionIconBackground(firstTransaction, iconType)
   }
 
-  // Get transaction icon using parametrized system (correct implementation)
+  // Get transaction icon using TransactionIcon component
   const getTransactionIcon = (transaction: Transaction) => {
-    // Use the parametrized system
-    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
-    const iconColor = getTransactionIconColor(transaction, iconType)
-    
-    console.log('🔍 getTransactionIcon:', {
-      id: transaction.id,
-      description: transaction.description,
-      type: transaction.type,
-      category: transaction.category,
-      source_type: transaction.source_type,
-      source_id: transaction.source_id,
-      iconType,
-      iconColor,
-      isGoal: recurrentGoalMap[transaction.source_id]
-    })
-    
-    // Handle REPEAT case (not supported by renderCustomIcon)
-    if (iconType === 'REPEAT') {
-      return <Repeat className={`h-4 w-4 ${iconColor}`} />
-    }
-    
-    // Handle custom icons - FIXED: pass complete className
-    return renderCustomIcon(iconType, `h-4 w-4 ${iconColor}`)
+    return (
+      <TransactionIcon 
+        transaction={transaction}
+        recurrentGoalMap={recurrentGoalMap}
+        size="w-5 h-5"
+        showBackground={true}
+      />
+    )
   }
 
   // Get transaction background color
@@ -1173,9 +1148,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                 <div key={transaction.id} className="bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                                                   <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-2">
-                                                      <div className={`p-1 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
-                                                        {getTransactionIcon(transaction)}
-                                                      </div>
+                                                      {getTransactionIcon(transaction)}
                                                       <span className="text-xs text-gray-900">{months[transaction.month - 1]}</span>
                                                       {/* Navigation Link Icon */}
                                                       <button

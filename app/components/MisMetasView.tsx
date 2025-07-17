@@ -15,6 +15,7 @@ import { renderCustomIcon } from '@/lib/utils/iconRenderer'
 // import { useAttachments } from '@/lib/hooks/useAttachments'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
+import TransactionIcon from './TransactionIcon'
 
 interface MisMetasViewProps {
   user: User
@@ -364,29 +365,21 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     return hasPending ? 'pending' : 'paid'
   }
 
-  // Get transaction icon using parametrized system
+  // Get transaction icon using TransactionIcon component
   const getTransactionIcon = (transaction: Transaction) => {
-    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
-    const iconColor = getTransactionIconColor(transaction, iconType)
-    
-    // Handle REPEAT case (not supported by renderCustomIcon)
-    if (iconType === 'REPEAT') {
-      return <Repeat className={`h-3 w-3 ${iconColor}`} />
-    }
-    
-    // Handle custom icons
-    return renderCustomIcon(iconType, `h-3 w-3 ${iconColor}`)
+    return (
+      <TransactionIcon 
+        transaction={transaction}
+        recurrentGoalMap={recurrentGoalMap}
+        size="w-5 h-5"
+        showBackground={true}
+      />
+    )
   }
 
-  // Get transaction background color
-  const getTransactionBackground = (transaction: Transaction) => {
-    const iconType = getTransactionIconType(transaction, recurrentGoalMap)
-    return getTransactionIconBackground(transaction, iconType)
-  }
-
-  // Get goal icon using parametrized system
+  // Get goal icon using TransactionIcon component
   const getGoalIcon = (goal: GoalData) => {
-    // Create a mock transaction to use with the parametrized system
+    // Create a mock transaction to use with TransactionIcon
     const mockTransaction = {
       type: 'expense' as const,
       source_type: goal.key.startsWith('recurrent') ? 'recurrent' as const : 'non_recurrent' as const,
@@ -406,16 +399,14 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       notes: null
     }
     
-    const iconType = getTransactionIconType(mockTransaction, recurrentGoalMap)
-    const iconColor = getTransactionIconColor(mockTransaction, iconType)
-    
-    // Handle REPEAT case (not supported by renderCustomIcon)
-    if (iconType === 'REPEAT') {
-      return <Repeat className={`h-3 w-3 ${iconColor}`} />
-    }
-    
-    // Handle custom icons
-    return renderCustomIcon(iconType, `h-3 w-3 ${iconColor}`)
+    return (
+      <TransactionIcon 
+        transaction={mockTransaction}
+        recurrentGoalMap={recurrentGoalMap}
+        size="w-5 h-5"
+        showBackground={true}
+      />
+    )
   }
 
   // Get goal icon background color using parametrized system
@@ -1046,9 +1037,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                   {yearData.transactions.map((transaction) => (
                                     <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 min-h-[20px]">
                                       <div className="flex items-center space-x-2">
-                                        <div className={`p-1 rounded-full ${getTransactionBackground(transaction)} transition-all duration-300 hover:scale-110`}>
-                                          {getTransactionIcon(transaction)}
-                                        </div>
+                                        {getTransactionIcon(transaction)}
                                         <span className="text-xs font-medium text-gray-700 min-w-0 month-name">
                                           {months[transaction.month - 1]}
                                         </span>
