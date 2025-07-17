@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip, Settings, Trash2, Edit2 } from 'lucide-react'
+import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip, Settings, Trash2, Edit2, Tag } from 'lucide-react'
 import { type Transaction, type User, type TransactionAttachment, type RecurrentExpense } from '@/lib/supabase'
 import { fetchUserTransactions, fetchAttachmentCounts, fetchUserExpenses } from '@/lib/dataUtils'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
@@ -1296,7 +1296,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
                               category.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#e4effa] text-[#3f70ad]'
                             }`}>
-                              <DollarSign className="h-4 w-4" />
+                              <Tag className="h-4 w-4" />
                             </div>
                             <div className="flex-1">
                               <input
@@ -1342,7 +1342,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
                                 category.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#e4effa] text-[#3f70ad]'
                               }`}>
-                                <DollarSign className="h-4 w-4" />
+                                <Tag className="h-4 w-4" />
                               </div>
                               <span className="text-sm text-gray-dark font-medium">
                                 {category.name}
