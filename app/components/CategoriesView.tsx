@@ -1302,7 +1302,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           // Edit mode
                           <div className="flex-1 flex items-center space-x-2">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                              category.isDefault ? 'bg-[#e5e5e5] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
+                              category.isDefault ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-green-primary'
                             }`}>
                               <Tag className="h-4 w-4" fill="currentColor" />
                             </div>
@@ -1348,7 +1348,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           <>
                             <div className="flex items-center space-x-3">
                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                                category.isDefault ? 'bg-[#e5e5e5] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
+                                category.isDefault ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-green-primary'
                               }`}>
                                 <Tag className="h-4 w-4" fill="currentColor" />
                               </div>
@@ -1542,7 +1542,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    categoryToEdit.old.isDefault ? 'bg-[#e5e5e5] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
+                    categoryToEdit.old.isDefault ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-green-primary'
                   }`}>
                     <Tag className="h-4 w-4" fill="currentColor" />
                   </div>
