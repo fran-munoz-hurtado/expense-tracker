@@ -862,8 +862,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       {/* Header */}
       <div className="p-6 lg:p-8 pb-4">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Transacciones por Categoría</h1>
-          <p className="text-gray-600">Organiza y analiza tus gastos agrupados por categoría</p>
+          <h2 className="text-xl font-semibold text-gray-dark">Transacciones por Categoría</h2>
+          <p className="text-sm text-green-dark">Organiza y analiza tus gastos agrupados por categoría</p>
         </div>
 
         {/* Error Display */}
@@ -884,11 +884,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       <div className="flex-1 flex px-6 lg:px-8 pb-6 lg:pb-8 gap-4 min-h-0">
         {/* Left Column - Categories List */}
         <div className="w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <div className="bg-neutral-bg border-b border-border-light py-2 px-4 rounded-t-md">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-medium text-green-dark">
                 Categorías
-              </h2>
+              </span>
               <button
                 onClick={handleCategoryManagementClick}
                 className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
