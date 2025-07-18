@@ -1643,7 +1643,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 {/* Category */}
                                 {transaction.type === 'expense' && 
                                  !(transaction.category === 'Ahorro' && 
-                                   (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && (
+                                   (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
+                                 !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
                                   <button
                                     onClick={() => handleCategoryClick(transaction)}
                                     className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
@@ -1857,7 +1858,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             {/* Category */}
                             {transaction.type === 'expense' && 
                              !(transaction.category === 'Ahorro' && 
-                               (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && (
+                               (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
+                             !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
                               <button
                                 onClick={() => handleCategoryClick(transaction)}
                                 className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
