@@ -1031,7 +1031,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="w-full lg:w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="bg-neutral-bg border-b border-neutral-200 py-2 px-4 rounded-t-md">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-green-dark">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                       Categorías
                     </span>
                     <button
