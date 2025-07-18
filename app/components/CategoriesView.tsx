@@ -1213,7 +1213,15 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                 <div key={recurrentGroup.sourceId} className="bg-gray-50 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                                   {/* Recurrent Group Header */}
                                   <button
-                                    onClick={() => toggleRecurrentGroup(group.categoryName, recurrentGroup.sourceId)}
+                                    onClick={() => {
+                                      toggleRecurrentGroup(group.categoryName, recurrentGroup.sourceId)
+                                      // Seleccionar la primera transacción del grupo recurrente para la tabla de detalle
+                                      const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
+                                      if (firstTransaction) {
+                                        console.log('🖱️ CategoriesView: Recurrent group clicked, selecting first transaction', firstTransaction)
+                                        setSelectedRecurrentTransaction(firstTransaction)
+                                      }
+                                    }}
                                     className="w-full p-4 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 rounded-lg"
                                   >
                                     <div className="flex items-center justify-between">
@@ -1342,14 +1350,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                 <div className="px-3 pb-3 bg-white rounded-b-lg">
                                                   <div className="space-y-1">
                                                     {yearGroup.transactions.map((transaction) => (
-                                                      <button 
-                                                        key={transaction.id} 
-                                                        onClick={() => {
-                                                          console.log('🖱️ CategoriesView: Recurrent transaction clicked', transaction)
-                                                          setSelectedRecurrentTransaction(transaction)
-                                                        }}
-                                                        className="w-full bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 cursor-pointer"
-                                                      >
+                                                      <div key={transaction.id} className="bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                                                         <div className="flex items-center justify-between">
                                                           <div className="flex items-center space-x-2">
                                                             <TransactionIcon 
@@ -1405,7 +1406,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                             <AttachmentClip transaction={transaction} />
                                                           </div>
                                                         </div>
-                                                      </button>
+                                                      </div>
                                                     ))}
                                                   </div>
                                                 </div>
