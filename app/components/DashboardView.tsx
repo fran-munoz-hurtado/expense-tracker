@@ -1343,320 +1343,519 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       )}
 
       {/* Modern Compact Filters Section */}
-      <div className="mt-2 mb-4 bg-white border border-border-light rounded-mdplus shadow-soft">
-        {/* Filter Toggle Button */}
-        <div className="p-3 border-b border-border-light">
-          <button
-            onClick={() => setFiltersExpanded(!filtersExpanded)}
-            className="w-full flex items-center justify-between text-left hover:bg-[#f5f5f1] hover:shadow-sm rounded-lg p-2 transition-colors duration-200 ease-in-out"
-          >
-            <div className="flex items-center space-x-2">
-              <div className="p-1 bg-beige rounded-lg">
-                <svg className="h-3 w-3 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                </svg>
+      <div className="max-w-4xl mx-auto mb-4">
+        <div className="rounded-xl bg-white shadow-soft p-4">
+          {/* Filter Toggle Button */}
+          <div className="pb-3 border-b border-border-light">
+            <button
+              onClick={() => setFiltersExpanded(!filtersExpanded)}
+              className="w-full flex items-center justify-between text-left hover:bg-[#f5f5f1] hover:shadow-sm rounded-lg p-2 transition-colors duration-200 ease-in-out"
+            >
+              <div className="flex items-center space-x-2">
+                <div className="p-1 bg-beige rounded-lg">
+                  <svg className="h-3 w-3 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-medium text-green-dark font-sans">Filtros Avanzados</h3>
+                <div className="text-xs text-green-dark bg-beige px-2 py-0.5 rounded-full">
+                  {finalSortedTransactions.length} resultados
+                </div>
               </div>
-              <h3 className="text-sm font-medium text-green-dark font-sans">Filtros Avanzados</h3>
-              <div className="text-xs text-green-dark bg-beige px-2 py-0.5 rounded-full">
-                {finalSortedTransactions.length} resultados
-              </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              {/* Active filters summary */}
-              <div className="flex items-center space-x-1 text-xs">
-                <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
-                  {months[selectedMonth - 1]} {selectedYear}
-                </span>
-                {filterType !== 'all' && (
+              <div className="flex items-center space-x-2">
+                {/* Active filters summary */}
+                <div className="flex items-center space-x-1 text-xs">
                   <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
-                    {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
+                    {months[selectedMonth - 1]} {selectedYear}
                   </span>
-                )}
-              </div>
-              <div className={`transform transition-transform duration-200 ease-in-out ${filtersExpanded ? 'rotate-180' : ''}`}>
-                <svg className="h-4 w-4 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
-          </button>
-        </div>
-
-        {/* Expandable Filters Content */}
-        {filtersExpanded && (
-          <div className="p-3 border-t border-border-light">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* Modern Year Filter */}
-              <div className="relative group">
-                <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Año</label>
-                <div className="relative">
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="w-full px-2 py-2 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
-                  >
-                    {availableYears.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <svg className="h-3 w-3 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
+                  {filterType !== 'all' && (
+                    <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
+                      {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
+                    </span>
+                  )}
+                </div>
+                <div className={`transform transition-transform duration-200 ease-in-out ${filtersExpanded ? 'rotate-180' : ''}`}>
+                  <svg className="h-4 w-4 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 </div>
               </div>
-              
-              {/* Modern Month Filter */}
-              <div className="relative group">
-                <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Mes</label>
-                <div className="relative">
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                    className="w-full px-2 py-2 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
-                  >
-                    {months.map((month, index) => (
-                      <option key={index + 1} value={index + 1}>{month}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <svg className="h-3 w-3 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Modern Type Filter - Toggle Buttons */}
-              <div className="relative group">
-                <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Tipo</label>
-                <div className="flex space-x-1 bg-neutral-bg p-1 rounded-mdplus border border-border-light">
-                  <button
-                    onClick={() => setFilterType('all')}
-                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                      filterType === 'all'
-                        ? 'bg-green-primary text-white shadow-soft'
-                        : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                    }`}
-                  >
-                    Todos
-                  </button>
-                  <button
-                    onClick={() => setFilterType('recurrent')}
-                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                      filterType === 'recurrent'
-                        ? 'bg-green-primary text-white shadow-soft'
-                        : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                    }`}
-                  >
-                    Recurrentes
-                  </button>
-                  <button
-                    onClick={() => setFilterType('non_recurrent')}
-                    className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                      filterType === 'non_recurrent'
-                        ? 'bg-green-primary text-white shadow-soft'
-                        : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                    }`}
-                  >
-                    Únicos
-                  </button>
-                </div>
-              </div>
-              
-              {/* Quick Actions */}
-              <div className="relative group">
-                <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Acciones</label>
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => {
-                      setSelectedYear(new Date().getFullYear());
-                      setSelectedMonth(new Date().getMonth() + 1);
-                      setFilterType('all');
-                    }}
-                    className="w-full px-2 py-1.5 bg-green-primary text-white text-xs font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
-                  >
-                    Mes Actual
-                  </button>
-                </div>
-              </div>
-            </div>
+            </button>
           </div>
-        )}
+
+          {/* Expandable Filters Content */}
+          {filtersExpanded && (
+            <div className="p-3 border-t border-border-light">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Modern Year Filter */}
+                <div className="relative group">
+                  <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Año</label>
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(Number(e.target.value))}
+                      className="w-full px-2 py-2 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
+                    >
+                      {availableYears.map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                      <svg className="h-3 w-3 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Modern Month Filter */}
+                <div className="relative group">
+                  <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Mes</label>
+                  <div className="relative">
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                      className="w-full px-2 py-2 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
+                    >
+                      {months.map((month, index) => (
+                        <option key={index + 1} value={index + 1}>{month}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                      <svg className="h-3 w-3 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Modern Type Filter - Toggle Buttons */}
+                <div className="relative group">
+                  <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Tipo</label>
+                  <div className="flex space-x-1 bg-neutral-bg p-1 rounded-mdplus border border-border-light">
+                    <button
+                      onClick={() => setFilterType('all')}
+                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                        filterType === 'all'
+                          ? 'bg-green-primary text-white shadow-soft'
+                          : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
+                      }`}
+                    >
+                      Todos
+                    </button>
+                    <button
+                      onClick={() => setFilterType('recurrent')}
+                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                        filterType === 'recurrent'
+                          ? 'bg-green-primary text-white shadow-soft'
+                          : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
+                      }`}
+                    >
+                      Recurrentes
+                    </button>
+                    <button
+                      onClick={() => setFilterType('non_recurrent')}
+                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                        filterType === 'non_recurrent'
+                          ? 'bg-green-primary text-white shadow-soft'
+                          : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
+                      }`}
+                    >
+                      Únicos
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Quick Actions */}
+                <div className="relative group">
+                  <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Acciones</label>
+                  <div className="flex space-x-1">
+                    <button
+                      onClick={() => {
+                        setSelectedYear(new Date().getFullYear());
+                        setSelectedMonth(new Date().getMonth() + 1);
+                        setFilterType('all');
+                      }}
+                      className="w-full px-2 py-1.5 bg-green-primary text-white text-xs font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
+                    >
+                      Mes Actual
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Transactions List */}
-      <div className="bg-white border border-border-light rounded-xl shadow-soft p-3">
-        <div className="px-6 py-4 border-b border-border-light">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
-            <h2 className="text-lg font-semibold text-gray-dark font-sans">
-              {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
-            </h2>
+      <div className="max-w-4xl mx-auto">
+        <div className="rounded-xl bg-white shadow-soft p-4">
+          <div className="pb-4 border-b border-border-light">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
+              <h2 className="text-sm font-medium text-gray-dark font-sans mb-1">
+                {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
+              </h2>
+            </div>
           </div>
-        </div>
 
-        {loading ? (
-          <div className="p-6 text-center text-green-dark font-sans">{texts.loading}</div>
-        ) : finalSortedTransactions.length === 0 ? (
-          <div className="p-6 text-center text-green-dark font-sans">{texts.empty.noTransactions}</div>
-        ) : (
-          <>
-            {/* Desktop Table View */}
-            <div className="hidden lg:block overflow-x-auto" onMouseLeave={() => setHoveredRow(null)}>
-              <table className="min-w-full divide-y divide-border-light">
-                <thead className="bg-neutral-bg">
-                  <tr>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
-                      onClick={() => handleSort('description')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>{texts.description}</span>
-                        {sortField === 'description' && (
-                          sortDirection === 'asc' ? 
-                            <ChevronUp className="h-4 w-4" /> : 
-                            <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
-                      onClick={() => handleSort('status')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>{texts.status}</span>
-                        {sortField === 'status' && (
-                          sortDirection === 'asc' ? 
-                            <ChevronUp className="h-4 w-4" /> : 
-                            <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
-                      onClick={() => handleSort('value')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>{texts.amount}</span>
-                        {sortField === 'value' && (
-                          sortDirection === 'asc' ? 
-                            <ChevronUp className="h-4 w-4" /> : 
-                            <ChevronDown className="h-4 w-4" />
-                        )}
-                      </div>
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider font-sans">
-                      {texts.paid}
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-dark uppercase tracking-wider font-sans">
-                      {texts.actions}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-border-light">
-                  {finalSortedTransactions.map((transaction) => {
-                    const isSavingsTransaction = transaction.category === 'Ahorro'
-                    return (
-                      <tr key={transaction.id} className="bg-white hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex items-center space-x-2">
-                              {/* Usar TransactionIcon parametrizado */}
-                              <TransactionIcon 
-                                transaction={transaction}
-                                recurrentGoalMap={recurrentGoalMap}
-                                size="w-4 h-4"
-                                showBackground={true}
-                              />
-                            </div>
-                            <div>
-                              <div className="text-xs font-medium text-gray-dark flex items-center gap-2 transaction-description font-sans">
-                                <span>{transaction.description}</span>
-                                {/* Navigation Link Icon for Goal Transactions */}
-                                {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
-                                  <button
-                                    onClick={() => handleNavigateToGoal(transaction)}
-                                    className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
-                                    title={`Ir a Mis Metas - ${transaction.description}`}
-                                  >
-                                    <svg 
-                                      className="w-3 h-3" 
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      strokeWidth="2" 
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                  </button>
-                                )}
-                                {/* Days until due - moved to right side of description */}
-                                {null}
+          {loading ? (
+            <div className="p-6 text-center text-green-dark font-sans">{texts.loading}</div>
+          ) : finalSortedTransactions.length === 0 ? (
+            <div className="p-6 text-center text-green-dark font-sans">{texts.empty.noTransactions}</div>
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden lg:block overflow-x-auto" onMouseLeave={() => setHoveredRow(null)}>
+                <table className="min-w-full divide-y divide-border-light">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th 
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
+                        onClick={() => handleSort('description')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>{texts.description}</span>
+                          {sortField === 'description' && (
+                            sortDirection === 'asc' ? 
+                              <ChevronUp className="h-4 w-4" /> : 
+                              <ChevronDown className="h-4 w-4" />
+                          )}
+                        </div>
+                      </th>
+                      <th 
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
+                        onClick={() => handleSort('status')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>{texts.status}</span>
+                          {sortField === 'status' && (
+                            sortDirection === 'asc' ? 
+                              <ChevronUp className="h-4 w-4" /> : 
+                              <ChevronDown className="h-4 w-4" />
+                          )}
+                        </div>
+                      </th>
+                      <th 
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
+                        onClick={() => handleSort('value')}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <span>{texts.amount}</span>
+                          {sortField === 'value' && (
+                            sortDirection === 'asc' ? 
+                              <ChevronUp className="h-4 w-4" /> : 
+                              <ChevronDown className="h-4 w-4" />
+                          )}
+                        </div>
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                        {texts.paid}
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                        {texts.actions}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-border-light">
+                    {finalSortedTransactions.map((transaction) => {
+                      const isSavingsTransaction = transaction.category === 'Ahorro'
+                      return (
+                        <tr key={transaction.id} className="bg-white hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md">
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-3">
+                              <div className="flex items-center space-x-2">
+                                {/* Usar TransactionIcon parametrizado */}
+                                <TransactionIcon 
+                                  transaction={transaction}
+                                  recurrentGoalMap={recurrentGoalMap}
+                                  size="w-4 h-4"
+                                  showBackground={true}
+                                />
                               </div>
-                              
-                              {/* Due date and additional info below description */}
-                              <div className="flex items-center gap-4 mt-1">
-                                {/* Due date */}
-                                {transaction.deadline && (
-                                  <span className="text-xs font-medium text-green-dark font-sans">
-                                    Vence: {(() => {
-                                      const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                      return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                                    })()}
+                              <div>
+                                <div className="text-xs font-medium text-gray-dark flex items-center gap-2 transaction-description font-sans">
+                                  <span>{transaction.description}</span>
+                                  {/* Navigation Link Icon for Goal Transactions */}
+                                  {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
+                                    <button
+                                      onClick={() => handleNavigateToGoal(transaction)}
+                                      className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
+                                      title={`Ir a Mis Metas - ${transaction.description}`}
+                                    >
+                                      <svg 
+                                        className="w-3 h-3" 
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        strokeWidth="2" 
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                      </svg>
+                                    </button>
+                                  )}
+                                  {/* Category - moved to same line as title */}
+                                  {transaction.type === 'expense' && 
+                                   !(transaction.category === 'Ahorro' && 
+                                     (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
+                                   !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
+                                    <button
+                                      onClick={() => handleCategoryClick(transaction)}
+                                      className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
+                                    >
+                                      {transaction.category && transaction.category !== 'sin categoría' 
+                                        ? transaction.category 
+                                        : 'sin categoría'}
+                                    </button>
+                                  )}
+                                  
+                                  {/* Info icon with tooltip */}
+                                  {(transaction.deadline || transaction.source_type === 'recurrent') && (
+                                    <div className="relative group">
+                                      <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
+                                      <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
+                                        {transaction.deadline && (
+                                          <div>
+                                            Vence: {(() => {
+                                              const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                              return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                                            })()}
+                                          </div>
+                                        )}
+                                        {transaction.source_type === 'recurrent' && (
+                                          (() => {
+                                            const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+                                            if (recurrentExpense) {
+                                              return (
+                                                <div>
+                                                  Rango: {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
+                                                </div>
+                                              )
+                                            }
+                                            return null
+                                          })()
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
+                              getStatusColor(transaction)
+                            )}>
+                              {getStatusText(transaction)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-dark transaction-amount font-sans"> 
+                            {formatCurrency(transaction.value)}
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={transaction.status === 'paid'}
+                                onChange={(e) => {
+                                  console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                                  handleCheckboxChange(transaction.id, e.target.checked)
+                                }}
+                                className="sr-only"
+                                id={`checkbox-${transaction.id}`}
+                              />
+                              <label
+                                htmlFor={`checkbox-${transaction.id}`}
+                                className={`
+                                  sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
+                                  ${transaction.status === 'paid' 
+                                    ? 'bg-green-primary border-green-primary' 
+                                    : 'bg-beige border-2 border-border-light hover:border-green-primary hover:shadow-soft'
+                                  }
+                                  rounded-full overflow-hidden cursor-pointer
+                                  transition-all duration-200
+                                  ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
+                                `}
+                              >
+                                {/* Checkmark with white color */}
+                                {transaction.status === 'paid' && (
+                                  <svg
+                                    className="w-3 h-3 text-white relative z-10"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    style={{
+                                      strokeDasharray: '50',
+                                      strokeDashoffset: '50',
+                                      animation: 'checkmark 0.15s ease-out forwards'
+                                    }}
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={3}
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                )}
+                                
+                                {/* Hover effect */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
+                              </label>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-x-1">
+                              <button
+                                onClick={() => handleAttachmentList(transaction)}
+                                className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                title="View attachments"
+                              >
+                                <Paperclip className="h-4 w-4" />
+                                {attachmentCounts[transaction.id] > 0 && (
+                                  <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
+                                    {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
                                   </span>
                                 )}
-                                
-                                {/* Date range for recurrent transactions */}
-                                {transaction.source_type === 'recurrent' && (
-                                  (() => {
-                                    const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
-                                    if (recurrentExpense) {
-                                      return (
-                                        <span className="text-xs font-medium text-green-dark font-sans">
-                                          {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
-                                        </span>
-                                      )
-                                    }
-                                    return null
-                                  })()
-                                )}
-                                
-                                {/* Category */}
-                                {transaction.type === 'expense' && 
-                                 !(transaction.category === 'Ahorro' && 
-                                   (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
-                                 !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
-                                  <button
-                                    onClick={() => handleCategoryClick(transaction)}
-                                    className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
-                                  >
-                                    {transaction.category && transaction.category !== 'sin categoría' 
-                                      ? transaction.category 
-                                      : 'sin categoría'}
-                                  </button>
-                                )}
-                              </div>
+                              </button>
+                              <button
+                                onClick={() => handleModifyTransaction(transaction.id)}
+                                className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                title="Modify transaction"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteTransaction(transaction.id)}
+                                className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                title="Delete transaction"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
                             </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="lg:hidden space-y-4">
+                {finalSortedTransactions.map((transaction) => {
+                  const isSavingsTransaction = transaction.category === 'Ahorro'
+                  return (
+                    <div key={transaction.id} className="bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150">
+                      {/* Header */}
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex items-center space-x-2 flex-1 min-w-0">
+                          {/* Usar TransactionIcon parametrizado - Mobile */}
+                          <TransactionIcon 
+                            transaction={transaction}
+                            recurrentGoalMap={recurrentGoalMap}
+                            size="w-4 h-4"
+                            showBackground={true}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <h3 className="text-xs font-medium text-gray-dark truncate flex items-center gap-2 transaction-description font-sans">
+                              <span>{transaction.description}</span>
+                              {/* Navigation Link Icon for Goal Transactions - Mobile View */}
+                              {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
+                                <button
+                                  onClick={() => handleNavigateToGoal(transaction)}
+                                  className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
+                                  title={`Ir a Mis Metas - ${transaction.description}`}
+                                >
+                                  <svg 
+                                    className="w-3 h-3" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                  </svg>
+                                </button>
+                              )}
+                              
+                              {/* Category - moved to same line as title */}
+                              {transaction.type === 'expense' && 
+                               !(transaction.category === 'Ahorro' && 
+                                 (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
+                               !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
+                                <button
+                                  onClick={() => handleCategoryClick(transaction)}
+                                  className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
+                                >
+                                  {transaction.category && transaction.category !== 'sin categoría' 
+                                    ? transaction.category 
+                                    : 'sin categoría'}
+                                </button>
+                              )}
+                              
+                              {/* Info icon with tooltip */}
+                              {(transaction.deadline || transaction.source_type === 'recurrent') && (
+                                <div className="relative group">
+                                  <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
+                                  <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
+                                    {transaction.deadline && (
+                                      <div>
+                                        Vence: {(() => {
+                                          const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                          return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                                        })()}
+                                      </div>
+                                    )}
+                                    {transaction.source_type === 'recurrent' && (
+                                      (() => {
+                                        const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+                                        if (recurrentExpense) {
+                                          return (
+                                            <div>
+                                              Rango: {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
+                                            </div>
+                                          )
+                                        }
+                                        return null
+                                      })()
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </h3>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        </div>
+                        <div className="text-right ml-2">
+                          <div className="text-xs text-gray-dark transaction-amount font-sans">{formatCurrency(transaction.value)}</div>
                           <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
                             getStatusColor(transaction)
                           )}>
                             {getStatusText(transaction)}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-xs text-gray-dark transaction-amount font-sans"> 
-                          {formatCurrency(transaction.value)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        </div>
+                      </div>
+
+                      {/* Details */}
+                      <div className="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                          <span className="text-xs text-green-dark font-sans">Tipo:</span>
+                          <div className="text-sm font-medium text-gray-dark capitalize font-sans">
+                            {transaction.source_type === 'recurrent' ? texts.recurrent : texts.nonRecurrent}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-between pt-3 border-t border-border-light">
+                        <div className="flex items-center space-x-1">
                           <div className="relative">
                             <input
                               type="checkbox"
                               checked={transaction.status === 'paid'}
                               onChange={(e) => {
-                                console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                                console.log(`🔘 Mobile: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
                                 handleCheckboxChange(transaction.id, e.target.checked)
                               }}
                               className="sr-only"
@@ -1702,240 +1901,44 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
                             </label>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => handleAttachmentList(transaction)}
-                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
-                              title="View attachments"
-                            >
-                              <Paperclip className="h-4 w-4" />
-                              {attachmentCounts[transaction.id] > 0 && (
-                                <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
-                                  {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
-                                </span>
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleModifyTransaction(transaction.id)}
-                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
-                              title="Modify transaction"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTransaction(transaction.id)}
-                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
-                              title="Delete transaction"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="lg:hidden space-y-4">
-              {finalSortedTransactions.map((transaction) => {
-                const isSavingsTransaction = transaction.category === 'Ahorro'
-                return (
-                  <div key={transaction.id} className="bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150">
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex items-center space-x-2 flex-1 min-w-0">
-                        {/* Usar TransactionIcon parametrizado - Mobile */}
-                        <TransactionIcon 
-                          transaction={transaction}
-                          recurrentGoalMap={recurrentGoalMap}
-                          size="w-4 h-4"
-                          showBackground={true}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-xs font-medium text-gray-dark truncate flex items-center gap-2 transaction-description font-sans">
-                            <span>{transaction.description}</span>
-                            {/* Navigation Link Icon for Goal Transactions - Mobile View */}
-                            {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
-                              <button
-                                onClick={() => handleNavigateToGoal(transaction)}
-                                className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
-                                title={`Ir a Mis Metas - ${transaction.description}`}
-                              >
-                                <svg 
-                                  className="w-3 h-3" 
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  strokeWidth="2" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                </svg>
-                              </button>
-                            )}
-                            {/* Days until due - added to mobile view */}
-                            {null}
-                          </h3>
-                          
-                          {/* Due date and additional info below description */}
-                          <div className="flex items-center gap-3 mt-1 flex-wrap">
-                            {/* Due date */}
-                            {transaction.deadline && (
-                              <span className="text-xs font-medium text-green-dark font-sans">
-                                Vence: {(() => {
-                                  const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                                })()}
+                          <span className="text-sm text-gray-dark ml-1 font-sans">Mark as paid</span>
+                        </div>
+                        <div className="flex items-center gap-x-1">
+                          <button
+                            onClick={() => handleAttachmentList(transaction)}
+                            className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
+                            title="View attachments"
+                          >
+                            <Paperclip className="h-4 w-4" />
+                            {attachmentCounts[transaction.id] > 0 && (
+                              <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
+                                {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
                               </span>
                             )}
-                            
-                            {/* Date range for recurrent transactions */}
-                            {transaction.source_type === 'recurrent' && (
-                              (() => {
-                                const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
-                                if (recurrentExpense) {
-                                  return (
-                                    <span className="text-xs font-medium text-green-dark font-sans">
-                                      {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
-                                    </span>
-                                  )
-                                }
-                                return null
-                              })()
-                            )}
-                            
-                            {/* Category */}
-                            {transaction.type === 'expense' && 
-                             !(transaction.category === 'Ahorro' && 
-                               (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
-                             !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
-                              <button
-                                onClick={() => handleCategoryClick(transaction)}
-                                className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
-                              >
-                                {transaction.category && transaction.category !== 'sin categoría' 
-                                  ? transaction.category 
-                                  : 'sin categoría'}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right ml-2">
-                        <div className="text-xs text-gray-dark transaction-amount font-sans">{formatCurrency(transaction.value)}</div>
-                        <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
-                          getStatusColor(transaction)
-                        )}>
-                          {getStatusText(transaction)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Details */}
-                    <div className="grid grid-cols-2 gap-4 mb-3">
-                      <div>
-                        <span className="text-xs text-green-dark font-sans">Tipo:</span>
-                        <div className="text-sm font-medium text-gray-dark capitalize font-sans">
-                          {transaction.source_type === 'recurrent' ? texts.recurrent : texts.nonRecurrent}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center justify-between pt-3 border-t border-border-light">
-                      <div className="flex items-center space-x-1">
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={transaction.status === 'paid'}
-                            onChange={(e) => {
-                              console.log(`🔘 Mobile: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
-                              handleCheckboxChange(transaction.id, e.target.checked)
-                            }}
-                            className="sr-only"
-                            id={`checkbox-${transaction.id}`}
-                          />
-                          <label
-                            htmlFor={`checkbox-${transaction.id}`}
-                            className={`
-                              sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
-                              ${transaction.status === 'paid' 
-                                ? 'bg-green-primary border-green-primary' 
-                                : 'bg-beige border-2 border-border-light hover:border-green-primary hover:shadow-soft'
-                              }
-                              rounded-full overflow-hidden cursor-pointer
-                              transition-all duration-200
-                              ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
-                            `}
+                          </button>
+                          <button
+                            onClick={() => handleModifyTransaction(transaction.id)}
+                            className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                            title="Modify transaction"
                           >
-                            {/* Checkmark with white color */}
-                            {transaction.status === 'paid' && (
-                              <svg
-                                className="w-3 h-3 text-white relative z-10"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                                style={{
-                                  strokeDasharray: '50',
-                                  strokeDashoffset: '50',
-                                  animation: 'checkmark 0.15s ease-out forwards'
-                                }}
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={3}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                            
-                            {/* Hover effect */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
-                          </label>
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTransaction(transaction.id)}
+                            className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                            title="Delete transaction"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
-                        <span className="text-sm text-gray-dark ml-1 font-sans">Mark as paid</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleAttachmentList(transaction)}
-                          className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
-                          title="View attachments"
-                        >
-                          <Paperclip className="h-4 w-4" />
-                          {attachmentCounts[transaction.id] > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
-                              {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
-                            </span>
-                          )}
-                        </button>
-                        <button
-                          onClick={() => handleModifyTransaction(transaction.id)}
-                          className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
-                          title="Modify transaction"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTransaction(transaction.id)}
-                          className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
-                          title="Delete transaction"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          </>
-        )}
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Delete Confirmation Modal */}
