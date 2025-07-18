@@ -1,13 +1,13 @@
 'use client'
 
-import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X, Target, FolderOpen, TrendingUp } from 'lucide-react'
+import { Home, BarChart3, Plus, LogOut, User as UserIcon, Menu, X, Target, FolderOpen, TrendingUp, Trophy } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useState } from 'react'
 import { texts } from '@/lib/translations'
 
 interface SidebarProps {
-  activeView: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos'
-  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos') => void
+  activeView: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros'
+  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros') => void
   onAddExpense: () => void
   user: User
   onLogout: () => void
@@ -30,6 +30,12 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
       description: texts.dashboard
     },
     {
+      id: 'mis-ahorros',
+      label: 'Mis ahorros',
+      icon: Trophy,
+      description: 'Revisa y organiza tus transacciones de ahorro'
+    },
+    {
       id: 'general-dashboard',
       label: texts.allExpenses,
       icon: BarChart3,
@@ -49,7 +55,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
     }
   ]
 
-  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos') => {
+  const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros') => {
     onViewChange(view)
     setIsMobileMenuOpen(false) // Close mobile menu when navigating
   }
@@ -121,7 +127,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleViewChange(item.id as 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories')}
+                  onClick={() => handleViewChange(item.id as 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros')}
                   className={`
                     w-full flex items-center gap-3 px-3 py-2 rounded-mdplus text-left transition-colors text-sm lg:text-base font-sans
                     ${isActive 

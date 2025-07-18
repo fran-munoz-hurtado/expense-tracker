@@ -9,6 +9,7 @@ export type AppRoute =
   | { type: 'debug' }
   | { type: 'mis-metas'; year?: number }
   | { type: 'categories'; year?: number; month?: number }
+  | { type: 'mis-ahorros' }
 
 // Navigation configuration for each route
 export const ROUTE_CONFIG = {
@@ -39,6 +40,10 @@ export const ROUTE_CONFIG = {
   'categories': {
     path: '/',
     params: ['view', 'year', 'month']
+  },
+  'mis-ahorros': {
+    path: '/',
+    params: ['view']
   }
 } as const
 
@@ -126,6 +131,10 @@ export class NavigationService {
         }
         return `/?${params.toString()}`
       
+      case 'mis-ahorros':
+        params.set('view', 'mis-ahorros')
+        return `/?${params.toString()}`
+      
       default:
         throw new Error(`Unknown route type: ${(route as any).type}`)
     }
@@ -199,6 +208,11 @@ export class NavigationService {
       }
     }
 
+    // Parse mis-ahorros route
+    if (view === 'mis-ahorros') {
+      return { type: 'mis-ahorros' }
+    }
+
     // Fallback to home
     return { type: 'home' }
   }
@@ -244,6 +258,13 @@ export class NavigationService {
    */
   async navigateToCategories(year?: number, month?: number): Promise<void> {
     await this.navigate({ type: 'categories', year, month })
+  }
+
+  /**
+   * Navigate to mis-ahorros view
+   */
+  async navigateToMisAhorros(): Promise<void> {
+    await this.navigate({ type: 'mis-ahorros' })
   }
 
   /**

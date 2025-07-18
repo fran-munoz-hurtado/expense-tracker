@@ -154,6 +154,21 @@ export function useAppNavigation() {
     }
   }, [navigationService])
 
+  const navigateToMisAhorros = useCallback(async () => {
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+    
+    try {
+      await navigationService.navigateToMisAhorros()
+    } catch (error) {
+      setState(prev => ({ 
+        ...prev, 
+        error: error instanceof Error ? error.message : 'Navigation failed' 
+      }))
+    } finally {
+      setState(prev => ({ ...prev, isLoading: false }))
+    }
+  }, [navigationService])
+
   // Generic navigation function
   const navigate = useCallback(async (route: AppRoute) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }))
@@ -189,6 +204,7 @@ export function useAppNavigation() {
     navigateToCategories,
     navigateToHome,
     navigateToComoVamos,
+    navigateToMisAhorros,
     navigate,
     
     // Utility functions

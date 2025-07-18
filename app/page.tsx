@@ -10,6 +10,7 @@ import GeneralDashboardView from './components/GeneralDashboardView'
 import MisMetasView from './components/MisMetasView'
 import CategoriesView from './components/CategoriesView'
 import ComoVamosView from './components/ComoVamosView'
+import MisAhorrosView from './components/MisAhorrosView'
 import Sidebar from './components/Sidebar'
 import Navbar from './components/Navbar'
 import LoginPage from './components/LoginPage'
@@ -76,7 +77,7 @@ function Home() {
     localStorage.setItem('expenseTrackerUser', JSON.stringify(updatedUser))
   }
 
-  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos') => {
+  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros') => {
     console.log('🔄 handleViewChange called with view:', view)
     try {
       switch (view) {
@@ -112,6 +113,11 @@ function Home() {
           console.log('📍 Navigating to como-vamos...')
           await navigation.navigateToComoVamos()
           console.log('✅ Como vamos navigation completed')
+          break
+        case 'mis-ahorros':
+          console.log('📍 Navigating to mis-ahorros...')
+          await navigation.navigateToMisAhorros()
+          console.log('✅ Mis ahorros navigation completed')
           break
       }
     } catch (error) {
@@ -420,6 +426,8 @@ function Home() {
         )
       case 'como-vamos':
         return <ComoVamosView user={user} />
+      case 'mis-ahorros':
+        return <MisAhorrosView user={user} />
       default:
         // Default to como-vamos for home route
         return <ComoVamosView user={user} />
