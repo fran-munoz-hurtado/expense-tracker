@@ -1510,7 +1510,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 {/* Desktop Table View */}
                 <div className="hidden lg:block" onMouseLeave={() => setHoveredRow(null)}>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full">
+                    <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
                           <th 
