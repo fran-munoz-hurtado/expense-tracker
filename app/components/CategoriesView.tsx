@@ -286,6 +286,43 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     return hasOverdue ? 'overdue' : 'on-time'
   }
 
+  // Status functions - same logic as DashboardView for consistency
+  const getStatusText = (transaction: Transaction) => {
+    if (transaction.status === 'paid') return 'Pagado'
+    if (transaction.deadline) {
+      // Parse the date string to avoid timezone issues and compare only dates
+      const [year, month, day] = transaction.deadline.split('-').map(Number);
+      const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+      
+      // Create today's date without time
+      const today = new Date();
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      if (deadlineDate < todayDate) {
+        return 'Vencido'
+      }
+    }
+    return 'Pendiente'
+  }
+
+  const getStatusColor = (transaction: Transaction) => {
+    if (transaction.status === 'paid') return 'bg-green-light text-green-primary'
+    if (transaction.deadline) {
+      // Parse the date string to avoid timezone issues and compare only dates
+      const [year, month, day] = transaction.deadline.split('-').map(Number);
+      const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+      
+      // Create today's date without time
+      const today = new Date();
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      
+      if (deadlineDate < todayDate) {
+        return 'bg-error-bg text-error-red'
+      }
+    }
+    return 'bg-warning-bg text-warning-yellow'
+  }
+
   // Fetch transactions data
   const fetchData = async () => {
     try {
@@ -1287,18 +1324,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                       </span>
                                                       <span className={cn(
                                                         "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans",
-                                                        transaction.status === 'paid' 
-                                                          ? 'bg-green-light text-green-primary'
-                                                          : transaction.deadline && isDateOverdue(transaction.deadline)
-                                                            ? 'bg-error-bg text-error-red'
-                                                            : 'bg-warning-bg text-warning-yellow'
+                                                        getStatusColor(transaction)
                                                       )}>
-                                                        {transaction.status === 'paid' 
-                                                          ? 'Pagado' 
-                                                          : transaction.deadline && isDateOverdue(transaction.deadline)
-                                                            ? 'Vencido'
-                                                            : 'Pendiente'
-                                                        }
+                                                        {getStatusText(transaction)}
                                                       </span>
                                                       {/* Attachment Clip */}
                                                       <AttachmentClip transaction={transaction} />
@@ -1321,10 +1349,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                       
                       {/* Non-Recurrent Transactions - Level 1 Flat Layout */}
                       {group.nonRecurrentTransactions.map((transaction) => {
-                        // Calculate status: "Al día" if not overdue, "Vencido" if overdue
-                        const isOverdue = transaction.status === 'pending' && transaction.deadline && isDateOverdue(transaction.deadline)
-                        const status = isOverdue ? 'Vencido' : 'Al día'
-                        
                         return (
                           <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                             <div className="flex items-center justify-between">
@@ -1342,8 +1366,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               {/* RIGHT: Total Value + Status */}
                               <div className="flex items-center space-x-3">
                                 <span className="text-xs text-gray-600">{formatCurrency(transaction.value)}</span>
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${isOverdue ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'}`}>
-                                  {status}
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${getStatusColor(transaction)}`}>
+                                  {getStatusText(transaction)}
                                 </span>
                                 {/* Attachment Clip */}
                                 <AttachmentClip transaction={transaction} />
