@@ -1510,8 +1510,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 {/* Desktop Table View */}
                 <div className="hidden lg:block" onMouseLeave={() => setHoveredRow(null)}>
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                           <th 
                             className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
@@ -1552,10 +1552,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               )}
                             </div>
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                          <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                             {texts.paid}
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                          <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                             {texts.actions}
                           </th>
                         </tr>
@@ -1658,67 +1658,69 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   {formatCurrency(transaction.value)}
                                 </div>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <div className="relative">
-                                  <input
-                                    type="checkbox"
-                                    checked={transaction.status === 'paid'}
-                                    onChange={(e) => {
-                                      console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
-                                      handleCheckboxChange(transaction.id, e.target.checked)
-                                    }}
-                                    className="sr-only"
-                                    id={`checkbox-${transaction.id}`}
-                                  />
-                                  <label
-                                    htmlFor={`checkbox-${transaction.id}`}
-                                    className={`
-                                      sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
-                                      ${transaction.status === 'paid' 
-                                        ? 'bg-green-primary border-green-primary' 
-                                        : 'bg-beige border-2 border-border-light hover:border-green-primary hover:shadow-soft'
-                                      }
-                                      rounded-full overflow-hidden cursor-pointer
-                                      transition-all duration-200
-                                      ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
-                                    `}
-                                  >
-                                    {/* Checkmark with white color */}
-                                    {transaction.status === 'paid' && (
-                                      <svg
-                                        className="w-3 h-3 text-white relative z-10"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        style={{
-                                          strokeDasharray: '50',
-                                          strokeDashoffset: '50',
-                                          animation: 'checkmark 0.15s ease-out forwards'
-                                        }}
-                                      >
-                                        <path
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                          strokeWidth={3}
-                                          d="M5 13l4 4L19 7"
-                                        />
-                                      </svg>
-                                    )}
-                                    
-                                    {/* Hover effect */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
-                                  </label>
+                              <td className="px-4 py-3 whitespace-nowrap text-center">
+                                <div className="flex items-center justify-center">
+                                  <div className="relative">
+                                    <input
+                                      type="checkbox"
+                                      checked={transaction.status === 'paid'}
+                                      onChange={(e) => {
+                                        console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                                        handleCheckboxChange(transaction.id, e.target.checked)
+                                      }}
+                                      className="sr-only"
+                                      id={`checkbox-${transaction.id}`}
+                                    />
+                                    <label
+                                      htmlFor={`checkbox-${transaction.id}`}
+                                      className={`
+                                        sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
+                                        ${transaction.status === 'paid' 
+                                          ? 'bg-green-primary border-green-primary' 
+                                          : 'bg-beige border-2 border-border-light hover:border-green-primary hover:shadow-soft'
+                                        }
+                                        rounded-full overflow-hidden cursor-pointer
+                                        transition-all duration-200
+                                        ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
+                                      `}
+                                    >
+                                      {/* Checkmark with white color */}
+                                      {transaction.status === 'paid' && (
+                                        <svg
+                                          className="w-3 h-3 text-white relative z-10"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          viewBox="0 0 24 24"
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          style={{
+                                            strokeDasharray: '50',
+                                            strokeDashoffset: '50',
+                                            animation: 'checkmark 0.15s ease-out forwards'
+                                          }}
+                                        >
+                                          <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={3}
+                                            d="M5 13l4 4L19 7"
+                                          />
+                                        </svg>
+                                      )}
+                                      
+                                      {/* Hover effect */}
+                                      <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
+                                    </label>
+                                  </div>
                                 </div>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <div className="flex items-center gap-x-1">
+                              <td className="px-2 py-3 whitespace-nowrap">
+                                <div className="flex items-center gap-x-0.5">
                                   <button
                                     onClick={() => handleAttachmentList(transaction)}
-                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-1 rounded-md transition-all duration-200 hover:scale-105"
                                     title="View attachments"
                                   >
-                                    <Paperclip className="h-4 w-4" />
+                                    <Paperclip className="w-3 h-3" />
                                     {attachmentCounts[transaction.id] > 0 && (
                                       <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
                                         {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
@@ -1727,17 +1729,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   </button>
                                   <button
                                     onClick={() => handleModifyTransaction(transaction.id)}
-                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-1 rounded-md transition-all duration-200 hover:scale-105"
                                     title="Modify transaction"
                                   >
-                                    <Edit className="h-4 w-4" />
+                                    <Edit className="w-3 h-3" />
                                   </button>
                                   <button
                                     onClick={() => handleDeleteTransaction(transaction.id)}
-                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-1 rounded-md transition-all duration-200 hover:scale-105"
                                     title="Delete transaction"
                                   >
-                                    <Trash2 className="h-4 w-4" />
+                                    <Trash2 className="w-3 h-3" />
                                   </button>
                                 </div>
                               </td>
@@ -1910,13 +1912,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             </div>
                             <span className="text-sm text-gray-dark ml-1 font-sans">Mark as paid</span>
                           </div>
-                          <div className="flex items-center gap-x-1">
+                          <div className="flex items-center gap-x-0.5">
                             <button
                               onClick={() => handleAttachmentList(transaction)}
-                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-1 rounded-md transition-all duration-200 hover:scale-105"
                               title="View attachments"
                             >
-                              <Paperclip className="h-4 w-4" />
+                              <Paperclip className="w-3 h-3" />
                               {attachmentCounts[transaction.id] > 0 && (
                                 <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
                                   {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
@@ -1925,17 +1927,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             </button>
                             <button
                               onClick={() => handleModifyTransaction(transaction.id)}
-                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-1 rounded-md transition-all duration-200 hover:scale-105"
                               title="Modify transaction"
                             >
-                              <Edit className="h-4 w-4" />
+                              <Edit className="w-3 h-3" />
                             </button>
                             <button
                               onClick={() => handleDeleteTransaction(transaction.id)}
-                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-1 rounded-md transition-all duration-200 hover:scale-105"
                               title="Delete transaction"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
                         </div>
