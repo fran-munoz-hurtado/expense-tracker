@@ -27,24 +27,9 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
         setLoading(true)
         setError(null)
         
-        // Fetch transactions for multiple months to get historical data
-        const promises = []
-        
-        // Get last 12 months of data for historical savings
-        for (let i = 0; i < 12; i++) {
-          let month = currentMonth - i
-          let year = currentYear
-          
-          if (month <= 0) {
-            month += 12
-            year -= 1
-          }
-          
-          promises.push(fetchUserTransactions(user, month, year))
-        }
-        
-        const results = await Promise.all(promises)
-        const allTransactions = results.flat()
+        // Fetch ALL historical transactions without month/year filters
+        // This will get complete historical data for savings calculations
+        const allTransactions = await fetchUserTransactions(user)
         
         setTransactions(allTransactions)
       } catch (err) {
@@ -56,7 +41,7 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
     }
 
     fetchData()
-  }, [user, currentMonth, currentYear])
+  }, [user])
 
   // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
@@ -258,9 +243,14 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
           <h2 className="text-xl font-semibold text-gray-dark">Mis ahorros</h2>
           <p className="text-sm text-green-dark">Revisa y organiza aquí tus transacciones de ahorro</p>
         </div>
+      </div>
 
-        {/* Resumen de ahorro */}
-        <ResumenAhorro />
+      {/* Main Content */}
+      <div className="flex-1 px-6 lg:px-8 pb-6 lg:pb-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Resumen de ahorro */}
+          <ResumenAhorro />
+        </div>
       </div>
     </div>
   )
