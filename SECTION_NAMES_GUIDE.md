@@ -10,7 +10,7 @@ lib/translations.ts
 
 ## Secciones Principales
 
-### 1. Control del Mes (antes "Este Mes")
+### 1. El mes (antes "Control del Mes")
 - **Clave**: `thisMonth`
 - **Ubicación**: Línea ~35 en `lib/translations.ts`
 - **Función**: Dashboard mensual con transacciones específicas del mes seleccionado
@@ -30,7 +30,7 @@ Abre `lib/translations.ts` y busca las siguientes líneas:
 totalBalance: "Total del Mes",
 totalIncome: "Cuánto entra",
 totalExpenses: "Cuánto sale",
-thisMonth: "Control del Mes",        // ← Cambiar aquí
+thisMonth: "El mes",        // ← Cambiar aquí
 lastMonth: "Mes pasado",
 thisYear: "Este año",
 lastYear: "Año pasado",

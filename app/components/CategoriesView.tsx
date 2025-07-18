@@ -236,10 +236,10 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
   const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
 
-  // Navigation function to redirect to Control del mes
+  // Navigation function to redirect to El mes
   const handleNavigateToMonth = async (month: number, year: number) => {
     try {
-      console.log(`🗂️ CategoriesView: Navigating to Control del mes - Month: ${month}, Year: ${year}`)
+      console.log(`🗂️ CategoriesView: Navigating to El mes - Month: ${month}, Year: ${year}`)
       await navigation.navigateToDashboard(month, year)
     } catch (error) {
       console.error('❌ CategoriesView: Navigation error:', error)
@@ -1301,7 +1301,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                       <button
                                                         onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
                                                         className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
-                                                        title={`Ir a Control del mes - ${months[transaction.month - 1]} ${transaction.year}`}
+                                                        title={`Ir a El mes - ${months[transaction.month - 1]} ${transaction.year}`}
                                                       >
                                                         <svg 
                                                           className="w-3 h-3" 
