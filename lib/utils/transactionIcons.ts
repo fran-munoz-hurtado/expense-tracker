@@ -87,7 +87,7 @@ export function getTransactionIconBackground(
 
 /**
  * Gets the special shadow and border effects for all transaction icons
- * Creates enhanced volume and depth effect while preserving existing colors
+ * Creates a clean floating effect that makes icons appear elevated above the screen
  * @param transaction - The transaction object
  * @param iconType - The icon type returned by getTransactionIconType
  * @returns CSS class string for the shadow and border effects
@@ -96,12 +96,12 @@ export function getTransactionIconShadow(
   transaction: Transaction, 
   iconType: string
 ): string {
-  // Very pronounced "medal" effect with dramatic volume and depth
-  const baseEffect = 'shadow-[0px_6px_18px_rgba(0,0,0,0.25),inset_0px_3px_6px_rgba(255,255,255,0.95),inset_0px_-4px_8px_rgba(0,0,0,0.15)] border-2 border-[rgba(0,0,0,0.15)]'
+  // Clean floating effect - appears lifted above the screen
+  const baseEffect = 'shadow-[0px_4px_12px_rgba(0,0,0,0.15),0px_2px_4px_rgba(0,0,0,0.10)] border border-[rgba(0,0,0,0.08)]'
   
   // Add extra glow for savings transactions
   if (iconType === 'SAVINGS_TROPHY') {
-    return `${baseEffect} shadow-[0_0_20px_rgba(61,159,101,0.5),0px_6px_18px_rgba(0,0,0,0.25),inset_0px_3px_6px_rgba(255,255,255,0.95),inset_0px_-4px_8px_rgba(0,0,0,0.15)]`
+    return `${baseEffect} shadow-[0_0_16px_rgba(61,159,101,0.4),0px_4px_12px_rgba(0,0,0,0.15),0px_2px_4px_rgba(0,0,0,0.10)]`
   }
   
   return baseEffect
