@@ -1122,30 +1122,15 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               {/* Right Column - Canvas/Detail Area */}
               <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden min-h-96">
                 {!selectedCategory ? (
-                  <div className="flex flex-col h-full">
-                    {/* Header - similar to other section headers */}
-                    <div className="p-6 border-b border-gray-200">
-                      <div className="mb-4">
-                        <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                          Sin categoría seleccionada
-                        </h3>
-                        <p className="text-xs text-gray-500 font-sans">
-                          Selecciona una categoría para ver sus transacciones
-                        </p>
-                      </div>
-                    </div>
-                    
-                    {/* Empty state content */}
-                    <div className="flex-1 flex items-center justify-center">
-                      <div className="text-center py-6">
-                        <FileText className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                        <p className="text-sm font-medium text-gray-dark font-sans mb-1">
-                          Explora tus gastos por categoría
-                        </p>
-                        <p className="text-xs text-gray-500 font-sans">
-                          Haz clic en una categoría de la izquierda para ver sus transacciones asociadas
-                        </p>
-                      </div>
+                  <div className="flex items-center justify-center h-full">
+                    <div className="text-center py-6">
+                      <FileText className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-gray-dark font-sans mb-1">
+                        Explora tus gastos por categoría
+                      </p>
+                      <p className="text-xs text-gray-500 font-sans">
+                        Haz clic en una categoría de la izquierda para ver sus transacciones asociadas
+                      </p>
                     </div>
                   </div>
                 ) : (
