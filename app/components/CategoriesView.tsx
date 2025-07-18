@@ -1608,8 +1608,10 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                     {formatCurrency(transaction.value)}
                                   </div>
                                 </td>
-                                <td className="px-4 py-3 whitespace-nowrap text-center">
-                                  <AttachmentClip transaction={transaction} />
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="flex justify-center">
+                                    <AttachmentClip transaction={transaction} />
+                                  </div>
                                 </td>
                               </tr>
                             ))}
