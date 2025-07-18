@@ -984,261 +984,292 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
       {/* Modify Confirmation Modal */}
       {showModifyConfirmation && modifyConfirmationData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center mb-4">
-              <div className="p-2 bg-green-100 rounded-lg mr-3">
-                <CheckCircle className="h-6 w-6 text-green-600" />
-              </div>
-              <h3 className="text-lg font-bold text-gray-900">Confirm Modification</h3>
-            </div>
-            
-            <div className="space-y-3 mb-6">
-              <div className="bg-gray-50 p-3 rounded-md">
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Description:</span> {modifyConfirmationData.description}
-                </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Value:</span> {formatCurrency(modifyConfirmationData.value)}
-                </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  <span className="font-medium">Period:</span> {modifyConfirmationData.period}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Action:</span> {modifyConfirmationData.action}
-                </p>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={() => {
+                setShowModifyConfirmation(false)
+                setModifyConfirmationData(null)
+              }}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
 
-              <div className="bg-yellow-50 p-3 rounded-md border border-yellow-200">
-                <p className="text-sm text-yellow-800">Are you sure you want to proceed with this modification?</p>
+            <div className="px-6 py-4 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                  <CheckCircle className="h-4 w-4 text-green-primary" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Confirmar modificación</h2>
               </div>
-            </div>
-
-            <div className="flex flex-col space-y-2">
-              <button
-                onClick={handleConfirmModifySubmit}
-                className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                Confirm Modification
-              </button>
+              <p className="text-sm text-gray-500">Revisa los datos antes de guardar</p>
               
-              <button
-                onClick={() => {
-                  setShowModifyConfirmation(false)
-                  setModifyConfirmationData(null)
-                }}
-                className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
+              {/* Información de la transacción */}
+              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Descripción:</span>
+                  <span className="text-sm font-medium text-gray-900">{modifyConfirmationData.description}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Valor:</span>
+                  <span className="text-sm font-medium text-gray-900">{formatCurrency(modifyConfirmationData.value)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Período:</span>
+                  <span className="text-sm font-medium text-gray-900">{modifyConfirmationData.period}</span>
+                </div>
+              </div>
+
+              {/* Advertencia */}
+              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span className="text-yellow-600 text-xs font-bold">!</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="w-full space-y-2">
+                <button
+                  onClick={handleConfirmModifySubmit}
+                  className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
+                >
+                  Guardar cambios
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowModifyConfirmation(false)
+                    setModifyConfirmationData(null)
+                  }}
+                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
       )}
 
       {/* Modify Form Modal */}
       {showModifyForm && modifyFormData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg mr-3">
-                  <Edit className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-bold text-gray-900">Modify Transaction</h3>
-              </div>
-              <button
-                onClick={() => {
-                  setShowModifyForm(false)
-                  setModifyFormData(null)
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => {
+                setShowModifyForm(false)
+                setModifyFormData(null)
+              }}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 z-10"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
             
             <form onSubmit={(e) => {
               e.preventDefault()
               handleModifyFormSubmit(modifyFormData)
-            }}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
-                  </label>
-                  <input
-                    type="text"
-                    value={modifyFormData.description}
-                    onChange={(e) => setModifyFormData({
-                      ...modifyFormData,
-                      description: e.target.value
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
+            }} className="p-6 space-y-4">
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-6">
+                <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                  <Edit className="h-4 w-4 text-green-primary" />
                 </div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {modifyFormData.modifySeries ? 'Modificar Serie Recurrente' : 'Modificar Transacción'}
+                </h2>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Value
-                  </label>
-                  <input
-                    type="number"
-                    value={modifyFormData.value}
-                    onChange={(e) => setModifyFormData({
-                      ...modifyFormData,
-                      value: Number(e.target.value)
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
+              {/* Descripción */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-dark">
+                  Descripción
+                </label>
+                <input
+                  type="text"
+                  value={modifyFormData.description}
+                  onChange={(e) => setModifyFormData({
+                    ...modifyFormData,
+                    description: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                  required
+                />
+              </div>
 
-                {modifyFormData.type === 'recurrent' && modifyFormData.modifySeries && (
-                  <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          From Month
-                        </label>
-                        <select
-                          value={modifyFormData.month_from}
-                          onChange={(e) => setModifyFormData({
-                            ...modifyFormData,
-                            month_from: Number(e.target.value)
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          To Month
-                        </label>
-                        <select
-                          value={modifyFormData.month_to}
-                          onChange={(e) => setModifyFormData({
-                            ...modifyFormData,
-                            month_to: Number(e.target.value)
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          From Year
-                        </label>
-                        <input
-                          type="number"
-                          value={modifyFormData.year_from}
-                          onChange={(e) => setModifyFormData({
-                            ...modifyFormData,
-                            year_from: Number(e.target.value)
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          To Year
-                        </label>
-                        <input
-                          type="number"
-                          value={modifyFormData.year_to}
-                          onChange={(e) => setModifyFormData({
-                            ...modifyFormData,
-                            year_to: Number(e.target.value)
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
+              {/* Valor */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-dark">
+                  Valor
+                </label>
+                <input
+                  type="number"
+                  value={modifyFormData.value}
+                  onChange={(e) => setModifyFormData({
+                    ...modifyFormData,
+                    value: Number(e.target.value)
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </div>
 
-                {modifyFormData.type === 'non_recurrent' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Month
+              {/* Campos específicos para serie recurrente */}
+              {modifyFormData.type === 'recurrent' && modifyFormData.modifySeries && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">
+                        Mes desde
                       </label>
                       <select
-                        value={modifyFormData.month}
+                        value={modifyFormData.month_from}
                         onChange={(e) => setModifyFormData({
                           ...modifyFormData,
-                          month: Number(e.target.value)
+                          month_from: Number(e.target.value)
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                       >
                         {months.map((month, index) => (
                           <option key={index + 1} value={index + 1}>{month}</option>
                         ))}
                       </select>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Year
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">
+                        Mes hasta
+                      </label>
+                      <select
+                        value={modifyFormData.month_to}
+                        onChange={(e) => setModifyFormData({
+                          ...modifyFormData,
+                          month_to: Number(e.target.value)
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                      >
+                        {months.map((month, index) => (
+                          <option key={index + 1} value={index + 1}>{month}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">
+                        Año desde
                       </label>
                       <input
                         type="number"
-                        value={modifyFormData.year}
+                        value={modifyFormData.year_from}
                         onChange={(e) => setModifyFormData({
                           ...modifyFormData,
-                          year: Number(e.target.value)
+                          year_from: Number(e.target.value)
                         })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">
+                        Año hasta
+                      </label>
+                      <input
+                        type="number"
+                        value={modifyFormData.year_to}
+                        onChange={(e) => setModifyFormData({
+                          ...modifyFormData,
+                          year_to: Number(e.target.value)
+                        })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                         required
                       />
                     </div>
                   </div>
-                )}
+                </>
+              )}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Payment Deadline (Optional)
-                  </label>
-                  <input
-                    type="date"
-                    value={modifyFormData.payment_deadline}
-                    onChange={(e) => setModifyFormData({
-                      ...modifyFormData,
-                      payment_deadline: e.target.value
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
+              {/* Campos específicos para transacción no recurrente */}
+              {modifyFormData.type === 'non_recurrent' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-dark">
+                      Mes
+                    </label>
+                    <select
+                      value={modifyFormData.month}
+                      onChange={(e) => setModifyFormData({
+                        ...modifyFormData,
+                        month: Number(e.target.value)
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                    >
+                      {months.map((month, index) => (
+                        <option key={index + 1} value={index + 1}>{month}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-dark">
+                      Año
+                    </label>
+                    <input
+                      type="number"
+                      value={modifyFormData.year}
+                      onChange={(e) => setModifyFormData({
+                        ...modifyFormData,
+                        year: Number(e.target.value)
+                      })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                      required
+                    />
+                  </div>
                 </div>
+              )}
+
+              {/* Fecha de vencimiento */}
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-gray-dark">
+                  Fecha de Vencimiento (Opcional)
+                </label>
+                <input
+                  type="date"
+                  value={modifyFormData.payment_deadline}
+                  onChange={(e) => setModifyFormData({
+                    ...modifyFormData,
+                    payment_deadline: e.target.value
+                  })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                />
               </div>
 
-              <div className="flex space-x-3 mt-6">
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Save Changes
-                </button>
+              {/* Botones */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
                   onClick={() => {
                     setShowModifyForm(false)
                     setModifyFormData(null)
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
                 >
-                  Cancel
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
+                >
+                  Guardar Cambios
                 </button>
               </div>
             </form>

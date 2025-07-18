@@ -203,7 +203,7 @@ export default function DebugTest({ user }: DebugTestProps) {
               <div key={expense.id} className="p-3 bg-gray-50 rounded border text-sm">
                 <div className="font-medium">{expense.description}</div>
                 <div className="text-gray-600">
-                  ${expense.value} - {expense.month_from}/{expense.year_from} to {expense.month_to}/{expense.year_to}
+                  ${expense.value} - {expense.month_from}/{expense.year_from} a {expense.month_to}/{expense.year_to}
                 </div>
                 {expense.payment_day_deadline && (
                   <div className="text-xs text-gray-500">

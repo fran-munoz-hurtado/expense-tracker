@@ -740,7 +740,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     if (!modifyFormData) return
 
     const period = modifyFormData.type === 'recurrent' 
-      ? `${months[modifyFormData.month_from - 1]} ${modifyFormData.year_from} to ${months[modifyFormData.month_to - 1]} ${modifyFormData.year_to}`
+      ? `${months[modifyFormData.month_from - 1]} ${modifyFormData.year_from} a ${months[modifyFormData.month_to - 1]} ${modifyFormData.year_to}`
       : `${months[modifyFormData.month - 1]} ${modifyFormData.year}`
 
     const action = modifyFormData.type === 'recurrent' && modifyFormData.modifySeries 
@@ -2058,13 +2058,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
       {/* Modify Form Modal */}
       {showModifyForm && modifyFormData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Overlay borroso y semitransparente */}
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+          <section className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <button
               onClick={resetModifyForm}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 z-10"
               aria-label="Cerrar"
             >
               <X className="h-5 w-5" />
@@ -2074,41 +2074,39 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               // Full form for series modification
               modifyFormData.type === 'recurrent' ? (
                 // Recurrent Expense Form
-                <form onSubmit={handleModifyFormSubmit} className="flex flex-col gap-6 p-6 sm:p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-lg mx-auto animate-fade-in">
-                  <div className="flex justify-between items-center mb-2">
-                    <button
-                      type="button"
-                      onClick={resetModifyForm}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:underline"
-                    >
-                      ← Cancelar
-                    </button>
+                <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                      <Edit className="h-4 w-4 text-green-primary" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Modificar Serie Recurrente</h2>
                   </div>
 
                   {/* Descripción */}
                   {!(modifyFormData.type === 'recurrent' && modifyFormData.category === 'Ahorro') && (
-                    <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Descripción</label>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Descripción</label>
                       <input
                         type="text"
                         value={modifyFormData.description}
                         onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                         placeholder="Descripción"
                         required
                       />
                     </div>
                   )}
 
-                  {/* Mes y Año */}
-                  <div className="flex flex-col gap-2">
-                    <div className="flex gap-4">
-                      <div className="flex-1 flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Mes desde</label>
+                  {/* Período */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-dark">Mes desde</label>
                         <select
                           value={modifyFormData.month_from}
                           onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_from: Number(e.target.value) } : null)}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                           required
                         >
                           {months.map((month, index) => (
@@ -2116,12 +2114,12 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           ))}
                         </select>
                       </div>
-                      <div className="flex-1 flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Año desde</label>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-dark">Año desde</label>
                         <select
                           value={modifyFormData.year_from}
                           onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_from: Number(e.target.value) } : null)}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                           required
                         >
                           {availableYears.map((year, index) => (
@@ -2130,13 +2128,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         </select>
                       </div>
                     </div>
-                    <div className="flex gap-4 mt-2">
-                      <div className="flex-1 flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Mes hasta</label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-dark">Mes hasta</label>
                         <select
                           value={modifyFormData.month_to}
                           onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_to: Number(e.target.value) } : null)}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                           required
                         >
                           {months.map((month, index) => (
@@ -2144,12 +2142,12 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           ))}
                         </select>
                       </div>
-                      <div className="flex-1 flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">Año hasta</label>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-dark">Año hasta</label>
                         <select
                           value={modifyFormData.year_to}
                           onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_to: Number(e.target.value) } : null)}
-                          className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                           required
                         >
                           {availableYears.map((year, index) => (
@@ -2161,9 +2159,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   </div>
 
                   {/* Monto y Día de Vencimiento */}
-                  <div className="flex gap-4 items-end">
-                    <div className="flex-1 flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Monto ($)</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
                       <input
                         type="text"
                         value={getCurrencyInputValue(modifyFormData.value)}
@@ -2172,12 +2170,12 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           value: parseCurrency(e.target.value)
                         } : null)}
                         placeholder="$0.00"
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                         required
                       />
                     </div>
-                    <div className="flex-1 flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Día de Vencimiento (1-31)</label>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Día de Vencimiento</label>
                       <input
                         type="number"
                         min="1"
@@ -2185,40 +2183,42 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         value={modifyFormData.payment_day_deadline}
                         onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_day_deadline: e.target.value } : null)}
                         placeholder="15"
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                       />
                     </div>
                   </div>
 
                   {/* Checkbox de meta (isgoal) solo para GASTO/RECURRENTE */}
                   {modifyFormData.type === 'recurrent' && modifyFormData.modifySeries && (
-                    <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 mt-2 shadow-sm">
+                    <div className="flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-md px-4 py-3">
                       <input
                         id="isgoal-checkbox"
                         type="checkbox"
                         checked={modifyFormData.isgoal || false}
                         onChange={e => setModifyFormData(prev => prev ? { ...prev, isgoal: e.target.checked } : null)}
-                        className="accent-blue-600 w-5 h-5 rounded-lg border-2 border-blue-400 focus:ring-2 focus:ring-blue-300 transition-all shadow-sm"
+                        className="w-4 h-4 text-green-primary border-gray-300 rounded focus:ring-green-primary focus:ring-2 mt-0.5"
                       />
-                      <label htmlFor="isgoal-checkbox" className="flex-1 text-sm text-blue-900 font-medium select-none cursor-pointer">
-                        ¿Este gasto recurrente es una <span className="font-bold text-blue-700">meta</span> que quieres cumplir?<br />
-                        <span className="text-xs text-blue-700 font-normal">Ejemplo: pagar un carro, un viaje, un crédito, etc. Marca esta opción si este gasto es un objetivo personal que estás pagando mes a mes.</span>
+                      <label htmlFor="isgoal-checkbox" className="flex-1 text-sm text-gray-700 cursor-pointer">
+                        ¿Este gasto recurrente es una <span className="font-medium">meta</span> que quieres cumplir?
+                        <span className="block text-xs text-gray-500 mt-1">
+                          Ejemplo: pagar un carro, un viaje, un crédito, etc. Marca esta opción si este gasto es un objetivo personal que estás pagando mes a mes.
+                        </span>
                       </label>
                     </div>
                   )}
 
                   {/* Botones */}
-                  <div className="flex justify-end gap-3 mt-2">
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                       type="button"
                       onClick={resetModifyForm}
-                      className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-all"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
                     >
                       Guardar Cambios
                     </button>
@@ -2226,38 +2226,36 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 </form>
               ) : (
                 // Non-Recurrent Expense Form
-                <form onSubmit={handleModifyFormSubmit} className="flex flex-col gap-6 p-6 sm:p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-lg mx-auto animate-fade-in">
-                  <div className="flex justify-between items-center mb-2">
-                    <button
-                      type="button"
-                      onClick={resetModifyForm}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:underline"
-                    >
-                      ← Cancelar
-                    </button>
+                <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
+                  {/* Header */}
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                      <Edit className="h-4 w-4 text-green-primary" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
                   </div>
 
                   {/* Descripción */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Descripción</label>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-dark">Descripción</label>
                     <input
                       type="text"
                       value={modifyFormData.description}
                       onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                       placeholder="Descripción"
                       required
                     />
                   </div>
 
                   {/* Mes y Año */}
-                  <div className="flex gap-4">
-                    <div className="flex-1 flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Mes</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Mes</label>
                       <select
                         value={modifyFormData.month}
                         onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month: Number(e.target.value) } : null)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                         required
                       >
                         {months.map((month, index) => (
@@ -2265,12 +2263,12 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         ))}
                       </select>
                     </div>
-                    <div className="flex-1 flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Año</label>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Año</label>
                       <select
                         value={modifyFormData.year}
                         onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                         required
                       >
                         {availableYears.map((year, index) => (
@@ -2281,9 +2279,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   </div>
 
                   {/* Monto y Fecha de Vencimiento */}
-                  <div className="flex gap-4">
-                    <div className="flex-1 flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Monto ($)</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
                       <input
                         type="text"
                         value={getCurrencyInputValue(modifyFormData.value)}
@@ -2292,33 +2290,33 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           value: parseCurrency(e.target.value)
                         } : null)}
                         placeholder="$0.00"
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                         required
                       />
                     </div>
-                    <div className="flex-1 flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Fecha de Vencimiento</label>
                       <input
                         type="date"
                         value={modifyFormData.payment_deadline}
                         onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                       />
                     </div>
                   </div>
 
                   {/* Botones */}
-                  <div className="flex justify-end gap-3 mt-2">
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                       type="button"
                       onClick={resetModifyForm}
-                      className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-all"
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
                     >
                       Guardar Cambios
                     </button>
@@ -2327,34 +2325,32 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               )
             ) : (
               // Simple form for individual transaction modification
-              <form onSubmit={handleModifyFormSubmit} className="flex flex-col gap-6 p-6 sm:p-8 bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-lg mx-auto animate-fade-in">
-                <div className="flex justify-between items-center mb-2">
-                  <button
-                    type="button"
-                    onClick={resetModifyForm}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium focus:outline-none focus:underline"
-                  >
-                    ← Cancelar
-                  </button>
+              <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                    <Edit className="h-4 w-4 text-green-primary" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
                 </div>
 
                 {/* Descripción */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-gray-700">Descripción</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-dark">Descripción</label>
                   <input
                     type="text"
                     value={modifyFormData.description}
                     onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                     placeholder="Descripción"
                     required
                   />
                 </div>
 
                 {/* Monto y Fecha de Vencimiento */}
-                <div className="flex gap-4">
-                  <div className="flex-1 flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Monto ($)</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
                     <input
                       type="text"
                       value={getCurrencyInputValue(modifyFormData.value)}
@@ -2363,33 +2359,33 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         value: parseCurrency(e.target.value)
                       } : null)}
                       placeholder="$0.00"
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                       required
                     />
                   </div>
-                  <div className="flex-1 flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-dark">Fecha de Vencimiento</label>
                     <input
                       type="date"
                       value={modifyFormData.payment_deadline}
                       onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                      className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all text-base"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                     />
                   </div>
                 </div>
 
                 {/* Botones */}
-                <div className="flex justify-end gap-3 mt-2">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                   <button
                     type="button"
                     onClick={resetModifyForm}
-                    className="px-6 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-all"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
                   >
                     Guardar Cambios
                   </button>
@@ -2405,7 +2401,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Overlay borroso y semitransparente */}
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
             <button
               onClick={() => {
                 setShowModifyConfirmation(false)
@@ -2417,60 +2413,49 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               <X className="h-5 w-5" />
             </button>
 
-            <div className="p-5 flex flex-col gap-4 items-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mb-2">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+            <div className="px-6 py-4 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                  <CheckCircle className="h-4 w-4 text-green-primary" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Confirmar modificación</h2>
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Confirmar Modificación</h2>
-              <p className="text-gray-700 text-sm font-medium mb-4 text-center">Revisa los cambios antes de confirmar</p>
+              <p className="text-sm text-gray-500">Revisa los datos antes de guardar</p>
               
-              {/* Información de la modificación */}
-              <div className="w-full bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Acción:</span>
-                    <span className="text-sm text-gray-900 font-semibold capitalize">{modifyConfirmationData.action}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Tipo:</span>
-                    <span className="text-sm text-gray-900 font-semibold">
-                      {modifyConfirmationData.type === 'recurrent' ? 'Recurrente' : 'No Recurrente'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Descripción:</span>
-                    <span className="text-sm text-gray-900 font-semibold">{modifyConfirmationData.description}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Valor:</span>
-                    <span className="text-sm text-gray-900 font-semibold">{formatCurrency(modifyConfirmationData.value)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Período:</span>
-                    <span className="text-sm text-gray-900 font-semibold">{modifyConfirmationData.period}</span>
-                  </div>
+              {/* Información de la transacción */}
+              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Descripción:</span>
+                  <span className="text-sm font-medium text-gray-900">{modifyConfirmationData.description}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Valor:</span>
+                  <span className="text-sm font-medium text-gray-900">{formatCurrency(modifyConfirmationData.value)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Período:</span>
+                  <span className="text-sm font-medium text-gray-900">{modifyConfirmationData.period}</span>
                 </div>
               </div>
 
-              <div className="w-full bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
+              {/* Advertencia */}
+              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
                     <span className="text-yellow-600 text-xs font-bold">!</span>
                   </div>
                   <div>
-                    <p className="text-sm text-yellow-800 font-medium">
-                      ¿Estás seguro de que quieres {modifyConfirmationData.action}?
-                    </p>
-                    <p className="text-xs text-yellow-700 mt-1">Esta acción no se puede deshacer</p>
+                    <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
                   </div>
                 </div>
               </div>
 
-              <div className="w-full space-y-3">
+              {/* Botones de acción */}
+              <div className="w-full space-y-2">
                 <button
                   onClick={handleConfirmModifySubmit}
                   disabled={loading}
-                  className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold shadow-md hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <div className="flex items-center justify-center">
@@ -2478,7 +2463,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       Guardando...
                     </div>
                   ) : (
-                    'Confirmar y Guardar'
+                    'Guardar cambios'
                   )}
                 </button>
                 
@@ -2487,7 +2472,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     setShowModifyConfirmation(false)
                     setModifyConfirmationData(null)
                   }}
-                  className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancelar
                 </button>
