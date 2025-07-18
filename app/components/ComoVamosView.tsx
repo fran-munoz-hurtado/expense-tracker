@@ -479,7 +479,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
                 const daysUntilText = getDaysUntilDeadlineText(transaction.deadline!)
                 
                 return (
-                  <div key={transaction.id} className={`py-3 ${index === 0 ? 'pt-0' : ''}`}>
+                  <div key={transaction.id} className={`py-3 ${index === 0 ? 'pt-0' : ''} ${transaction.category === 'Ahorro' ? 'bg-green-50 rounded-lg px-3 mx-2' : ''}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3 flex-1">
                         <TransactionIcon
