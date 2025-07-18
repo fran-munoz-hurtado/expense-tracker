@@ -1323,342 +1323,543 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   }
 
   return (
-    <div className="flex-1 p-6 lg:p-8 bg-gray-50 min-h-screen">
+    <div className="flex-1 flex flex-col h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-4"></div>
+      <div className="p-6 lg:p-8 pb-4">
+        <div className="mb-4"></div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-400" />
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 mb-1">{texts.errorOccurred}</h3>
-              <div className="text-sm text-red-700">
-                {error}
+        {/* Error Display */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex">
+              <AlertCircle className="h-5 w-5 text-red-400" />
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800 mb-1">{texts.errorOccurred}</h3>
+                <div className="text-sm text-red-700">
+                  {error}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Modern Compact Filters Section */}
-      <div className="max-w-4xl mx-auto mb-4">
-        <div className="rounded-xl bg-white shadow-soft p-4">
-          {/* Filter Toggle Button */}
-          <div className="pb-3 border-b border-border-light">
-            <button
-              onClick={() => setFiltersExpanded(!filtersExpanded)}
-              className="w-full flex items-center justify-between text-left hover:bg-[#f5f5f1] hover:shadow-sm rounded-lg p-2 transition-colors duration-200 ease-in-out"
-            >
-              <div className="flex items-center space-x-2">
-                <div className="p-1 bg-beige rounded-lg">
-                  <svg className="h-3 w-3 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                  </svg>
-                </div>
-                <h3 className="text-sm font-medium text-green-dark font-sans">Filtros Avanzados</h3>
-                <div className="text-xs text-green-dark bg-beige px-2 py-0.5 rounded-full">
-                  {finalSortedTransactions.length} resultados
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                {/* Active filters summary */}
-                <div className="flex items-center space-x-1 text-xs">
-                  <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
-                    {months[selectedMonth - 1]} {selectedYear}
-                  </span>
-                  {filterType !== 'all' && (
-                    <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
-                      {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
-                    </span>
-                  )}
-                </div>
-                <div className={`transform transition-transform duration-200 ease-in-out ${filtersExpanded ? 'rotate-180' : ''}`}>
-                  <svg className="h-4 w-4 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </button>
-          </div>
-
-          {/* Expandable Filters Content */}
-          {filtersExpanded && (
-            <div className="pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Modern Year Filter */}
-                <div className="relative group">
-                  <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Año</label>
-                  <div className="relative">
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
-                    >
-                      {availableYears.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Modern Month Filter */}
-                <div className="relative group">
-                  <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Mes</label>
-                  <div className="relative">
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                      className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
-                    >
-                      {months.map((month, index) => (
-                        <option key={index + 1} value={index + 1}>{month}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Modern Type Filter - Toggle Buttons */}
-                <div className="relative group">
-                  <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Tipo</label>
-                  <div className="flex space-x-1 bg-neutral-bg p-1 rounded-mdplus border border-border-light">
-                    <button
-                      onClick={() => setFilterType('all')}
-                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                        filterType === 'all'
-                          ? 'bg-green-primary text-white shadow-soft'
-                          : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                      }`}
-                    >
-                      Todos
-                    </button>
-                    <button
-                      onClick={() => setFilterType('recurrent')}
-                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                        filterType === 'recurrent'
-                          ? 'bg-green-primary text-white shadow-soft'
-                          : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                      }`}
-                    >
-                      Recurrentes
-                    </button>
-                    <button
-                      onClick={() => setFilterType('non_recurrent')}
-                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                        filterType === 'non_recurrent'
-                          ? 'bg-green-primary text-white shadow-soft'
-                          : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                      }`}
-                    >
-                      Únicos
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Quick Actions */}
-                <div className="relative group">
-                  <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Acciones</label>
-                  <div className="flex space-x-1">
-                    <button
-                      onClick={() => {
-                        setSelectedYear(new Date().getFullYear());
-                        setSelectedMonth(new Date().getMonth() + 1);
-                        setFilterType('all');
-                      }}
-                      className="w-full px-3 py-2.5 bg-green-primary text-white text-sm font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
-                    >
-                      Mes Actual
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
-      {/* Transactions List */}
-      <div className="max-w-4xl mx-auto">
-        <div className="rounded-xl bg-white shadow-soft p-4">
-          <div className="pb-4 border-b border-border-light">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
-              <h2 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
-              </h2>
+      {/* Main Content */}
+      <div className="flex-1 px-6 lg:px-8 pb-6 lg:pb-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Modern Compact Filters Section */}
+          <div className="rounded-xl bg-white shadow-soft p-4">
+            {/* Filter Toggle Button */}
+            <div className="pb-3 border-b border-border-light">
+              <button
+                onClick={() => setFiltersExpanded(!filtersExpanded)}
+                className="w-full flex items-center justify-between text-left hover:bg-[#f5f5f1] hover:shadow-sm rounded-lg p-2 transition-colors duration-200 ease-in-out"
+              >
+                <div className="flex items-center space-x-2">
+                  <div className="p-1 bg-beige rounded-lg">
+                    <svg className="h-3 w-3 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-medium text-green-dark font-sans">Filtros Avanzados</h3>
+                  <div className="text-xs text-green-dark bg-beige px-2 py-0.5 rounded-full">
+                    {finalSortedTransactions.length} resultados
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {/* Active filters summary */}
+                  <div className="flex items-center space-x-1 text-xs">
+                    <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
+                      {months[selectedMonth - 1]} {selectedYear}
+                    </span>
+                    {filterType !== 'all' && (
+                      <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
+                        {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
+                      </span>
+                    )}
+                  </div>
+                  <div className={`transform transition-transform duration-200 ease-in-out ${filtersExpanded ? 'rotate-180' : ''}`}>
+                    <svg className="h-4 w-4 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </button>
             </div>
+
+            {/* Expandable Filters Content */}
+            {filtersExpanded && (
+              <div className="pt-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Modern Year Filter */}
+                  <div className="relative group">
+                    <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Año</label>
+                    <div className="relative">
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(Number(e.target.value))}
+                        className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
+                      >
+                        {availableYears.map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Modern Month Filter */}
+                  <div className="relative group">
+                    <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Mes</label>
+                    <div className="relative">
+                      <select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                        className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
+                      >
+                        {months.map((month, index) => (
+                          <option key={index + 1} value={index + 1}>{month}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                        <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Modern Type Filter - Toggle Buttons */}
+                  <div className="relative group">
+                    <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Tipo</label>
+                    <div className="flex space-x-1 bg-neutral-bg p-1 rounded-mdplus border border-border-light">
+                      <button
+                        onClick={() => setFilterType('all')}
+                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                          filterType === 'all'
+                            ? 'bg-green-primary text-white shadow-soft'
+                            : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
+                        }`}
+                      >
+                        Todos
+                      </button>
+                      <button
+                        onClick={() => setFilterType('recurrent')}
+                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                          filterType === 'recurrent'
+                            ? 'bg-green-primary text-white shadow-soft'
+                            : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
+                        }`}
+                      >
+                        Recurrentes
+                      </button>
+                      <button
+                        onClick={() => setFilterType('non_recurrent')}
+                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                          filterType === 'non_recurrent'
+                            ? 'bg-green-primary text-white shadow-soft'
+                            : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
+                        }`}
+                      >
+                        Únicos
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Quick Actions */}
+                  <div className="relative group">
+                    <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Acciones</label>
+                    <div className="flex space-x-1">
+                      <button
+                        onClick={() => {
+                          setSelectedYear(new Date().getFullYear());
+                          setSelectedMonth(new Date().getMonth() + 1);
+                          setFilterType('all');
+                        }}
+                        className="w-full px-3 py-2.5 bg-green-primary text-white text-sm font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
+                      >
+                        Mes Actual
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {loading ? (
-            <div className="p-6 text-center text-green-dark font-sans">{texts.loading}</div>
-          ) : finalSortedTransactions.length === 0 ? (
-            <div className="p-6 text-center text-green-dark font-sans">{texts.empty.noTransactions}</div>
-          ) : (
-            <>
-              {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto" onMouseLeave={() => setHoveredRow(null)}>
-                <table className="min-w-full">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th 
-                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
-                        onClick={() => handleSort('description')}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>{texts.description}</span>
-                          {sortField === 'description' && (
-                            sortDirection === 'asc' ? 
-                              <ChevronUp className="h-4 w-4" /> : 
-                              <ChevronDown className="h-4 w-4" />
-                          )}
-                        </div>
-                      </th>
-                      <th 
-                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
-                        onClick={() => handleSort('status')}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>{texts.status}</span>
-                          {sortField === 'status' && (
-                            sortDirection === 'asc' ? 
-                              <ChevronUp className="h-4 w-4" /> : 
-                              <ChevronDown className="h-4 w-4" />
-                          )}
-                        </div>
-                      </th>
-                      <th 
-                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
-                        onClick={() => handleSort('value')}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>{texts.amount}</span>
-                          {sortField === 'value' && (
-                            sortDirection === 'asc' ? 
-                              <ChevronUp className="h-4 w-4" /> : 
-                              <ChevronDown className="h-4 w-4" />
-                          )}
-                        </div>
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
-                        {texts.paid}
-                      </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
-                        {texts.actions}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white">
-                    {finalSortedTransactions.map((transaction) => {
-                      const isSavingsTransaction = transaction.category === 'Ahorro'
-                      return (
-                        <tr key={transaction.id} className="bg-white hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md border-b border-gray-100">
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex items-center space-x-2">
-                                {/* Usar TransactionIcon parametrizado */}
-                                <TransactionIcon 
-                                  transaction={transaction}
-                                  recurrentGoalMap={recurrentGoalMap}
-                                  size="w-4 h-4"
-                                  showBackground={true}
-                                />
-                              </div>
-                              <div>
-                                <div className="text-xs font-medium text-gray-dark flex items-center gap-2 transaction-description font-sans">
-                                  <span>{transaction.description}</span>
-                                  {/* Navigation Link Icon for Goal Transactions */}
-                                  {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
-                                    <button
-                                      onClick={() => handleNavigateToGoal(transaction)}
-                                      className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
-                                      title={`Ir a Mis Metas - ${transaction.description}`}
-                                    >
-                                      <svg 
-                                        className="w-3 h-3" 
-                                        fill="none" 
-                                        stroke="currentColor" 
-                                        strokeWidth="2" 
-                                        viewBox="0 0 24 24"
-                                      >
-                                        <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                      </svg>
-                                    </button>
-                                  )}
-                                  {/* Category - moved to same line as title */}
-                                  {transaction.type === 'expense' && 
-                                   !(transaction.category === 'Ahorro' && 
-                                     (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
-                                   !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
-                                    <button
-                                      onClick={() => handleCategoryClick(transaction)}
-                                      className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
-                                    >
-                                      {transaction.category && transaction.category !== 'sin categoría' 
-                                        ? transaction.category 
-                                        : 'sin categoría'}
-                                    </button>
-                                  )}
-                                  
-                                  {/* Info icon with tooltip */}
-                                  {(transaction.deadline || transaction.source_type === 'recurrent') && (
-                                    <div className="relative group">
-                                      <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
-                                      <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
-                                        {transaction.deadline && (
-                                          <div>
-                                            Vence: {(() => {
-                                              const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                              return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                                            })()}
-                                          </div>
-                                        )}
-                                        {transaction.source_type === 'recurrent' && (
-                                          (() => {
-                                            const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
-                                            if (recurrentExpense) {
-                                              return (
-                                                <div>
-                                                  Rango: {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
-                                                </div>
-                                              )
-                                            }
-                                            return null
-                                          })()
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
+          {/* Transactions List */}
+          <div className="rounded-xl bg-white shadow-soft p-4">
+            <div className="pb-4 border-b border-border-light">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
+                <h2 className="text-sm font-medium text-gray-dark font-sans mb-1">
+                  {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
+                </h2>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="p-6 text-center text-green-dark font-sans">{texts.loading}</div>
+            ) : finalSortedTransactions.length === 0 ? (
+              <div className="p-6 text-center text-green-dark font-sans">{texts.empty.noTransactions}</div>
+            ) : (
+              <>
+                {/* Desktop Table View */}
+                <div className="hidden lg:block" onMouseLeave={() => setHoveredRow(null)}>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th 
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
+                            onClick={() => handleSort('description')}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <span>{texts.description}</span>
+                              {sortField === 'description' && (
+                                sortDirection === 'asc' ? 
+                                  <ChevronUp className="h-4 w-4" /> : 
+                                  <ChevronDown className="h-4 w-4" />
+                              )}
                             </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          </th>
+                          <th 
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
+                            onClick={() => handleSort('status')}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <span>{texts.status}</span>
+                              {sortField === 'status' && (
+                                sortDirection === 'asc' ? 
+                                  <ChevronUp className="h-4 w-4" /> : 
+                                  <ChevronDown className="h-4 w-4" />
+                              )}
+                            </div>
+                          </th>
+                          <th 
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
+                            onClick={() => handleSort('value')}
+                          >
+                            <div className="flex items-center space-x-1">
+                              <span>{texts.amount}</span>
+                              {sortField === 'value' && (
+                                sortDirection === 'asc' ? 
+                                  <ChevronUp className="h-4 w-4" /> : 
+                                  <ChevronDown className="h-4 w-4" />
+                              )}
+                            </div>
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                            {texts.paid}
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                            {texts.actions}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white">
+                        {finalSortedTransactions.map((transaction) => {
+                          const isSavingsTransaction = transaction.category === 'Ahorro'
+                          return (
+                            <tr key={transaction.id} className="bg-white hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md border-b border-gray-100">
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className="flex items-center space-x-3">
+                                  <div className="flex items-center space-x-2">
+                                    {/* Usar TransactionIcon parametrizado */}
+                                    <TransactionIcon 
+                                      transaction={transaction}
+                                      recurrentGoalMap={recurrentGoalMap}
+                                      size="w-4 h-4"
+                                      showBackground={true}
+                                    />
+                                  </div>
+                                  <div>
+                                    <div className="text-xs font-medium text-gray-dark flex items-center gap-2 transaction-description font-sans">
+                                      <span>{transaction.description}</span>
+                                      {/* Navigation Link Icon for Goal Transactions */}
+                                      {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
+                                        <button
+                                          onClick={() => handleNavigateToGoal(transaction)}
+                                          className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
+                                          title={`Ir a Mis Metas - ${transaction.description}`}
+                                        >
+                                          <svg 
+                                            className="w-3 h-3" 
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            strokeWidth="2" 
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                          </svg>
+                                        </button>
+                                      )}
+                                      {/* Category - moved to same line as title */}
+                                      {transaction.type === 'expense' && 
+                                       !(transaction.category === 'Ahorro' && 
+                                         (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
+                                       !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
+                                        <button
+                                          onClick={() => handleCategoryClick(transaction)}
+                                          className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
+                                        >
+                                          {transaction.category && transaction.category !== 'sin categoría' 
+                                            ? transaction.category 
+                                            : 'sin categoría'}
+                                        </button>
+                                      )}
+                                      
+                                      {/* Info icon with tooltip */}
+                                      {(transaction.deadline || transaction.source_type === 'recurrent') && (
+                                        <div className="relative group">
+                                          <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
+                                          <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
+                                            {transaction.deadline && (
+                                              <div>
+                                                Vence: {(() => {
+                                                  const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                                  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                                                })()}
+                                              </div>
+                                            )}
+                                            {transaction.source_type === 'recurrent' && (
+                                              (() => {
+                                                const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+                                                if (recurrentExpense) {
+                                                  return (
+                                                    <div>
+                                                      Rango: {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
+                                                    </div>
+                                                  )
+                                                }
+                                                return null
+                                              })()
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
+                                  getStatusColor(transaction)
+                                )}>
+                                  {getStatusText(transaction)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-dark transaction-amount font-sans"> 
+                                {formatCurrency(transaction.value)}
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className="relative">
+                                  <input
+                                    type="checkbox"
+                                    checked={transaction.status === 'paid'}
+                                    onChange={(e) => {
+                                      console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                                      handleCheckboxChange(transaction.id, e.target.checked)
+                                    }}
+                                    className="sr-only"
+                                    id={`checkbox-${transaction.id}`}
+                                  />
+                                  <label
+                                    htmlFor={`checkbox-${transaction.id}`}
+                                    className={`
+                                      sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
+                                      ${transaction.status === 'paid' 
+                                        ? 'bg-green-primary border-green-primary' 
+                                        : 'bg-beige border-2 border-border-light hover:border-green-primary hover:shadow-soft'
+                                      }
+                                      rounded-full overflow-hidden cursor-pointer
+                                      transition-all duration-200
+                                      ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
+                                    `}
+                                  >
+                                    {/* Checkmark with white color */}
+                                    {transaction.status === 'paid' && (
+                                      <svg
+                                        className="w-3 h-3 text-white relative z-10"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        style={{
+                                          strokeDasharray: '50',
+                                          strokeDashoffset: '50',
+                                          animation: 'checkmark 0.15s ease-out forwards'
+                                        }}
+                                      >
+                                        <path
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                          strokeWidth={3}
+                                          d="M5 13l4 4L19 7"
+                                        />
+                                      </svg>
+                                    )}
+                                    
+                                    {/* Hover effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
+                                  </label>
+                                </div>
+                              </td>
+                              <td className="px-4 py-4 whitespace-nowrap">
+                                <div className="flex items-center gap-x-1">
+                                  <button
+                                    onClick={() => handleAttachmentList(transaction)}
+                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                    title="View attachments"
+                                  >
+                                    <Paperclip className="h-4 w-4" />
+                                    {attachmentCounts[transaction.id] > 0 && (
+                                      <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
+                                        {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
+                                      </span>
+                                    )}
+                                  </button>
+                                  <button
+                                    onClick={() => handleModifyTransaction(transaction.id)}
+                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                    title="Modify transaction"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteTransaction(transaction.id)}
+                                    className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                                    title="Delete transaction"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="lg:hidden space-y-4">
+                  {finalSortedTransactions.map((transaction) => {
+                    const isSavingsTransaction = transaction.category === 'Ahorro'
+                    return (
+                      <div key={transaction.id} className="bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150">
+                        {/* Header */}
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex items-center space-x-2 flex-1 min-w-0">
+                            {/* Usar TransactionIcon parametrizado - Mobile */}
+                            <TransactionIcon 
+                              transaction={transaction}
+                              recurrentGoalMap={recurrentGoalMap}
+                              size="w-4 h-4"
+                              showBackground={true}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-xs font-medium text-gray-dark truncate flex items-center gap-2 transaction-description font-sans">
+                                <span>{transaction.description}</span>
+                                {/* Navigation Link Icon for Goal Transactions - Mobile View */}
+                                {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
+                                  <button
+                                    onClick={() => handleNavigateToGoal(transaction)}
+                                    className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
+                                    title={`Ir a Mis Metas - ${transaction.description}`}
+                                  >
+                                    <svg 
+                                      className="w-3 h-3" 
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      strokeWidth="2" 
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                  </button>
+                                )}
+                                
+                                {/* Category - moved to same line as title */}
+                                {transaction.type === 'expense' && 
+                                 !(transaction.category === 'Ahorro' && 
+                                   (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
+                                 !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
+                                  <button
+                                    onClick={() => handleCategoryClick(transaction)}
+                                    className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
+                                  >
+                                    {transaction.category && transaction.category !== 'sin categoría' 
+                                      ? transaction.category 
+                                      : 'sin categoría'}
+                                  </button>
+                                )}
+                                
+                                {/* Info icon with tooltip */}
+                                {(transaction.deadline || transaction.source_type === 'recurrent') && (
+                                  <div className="relative group">
+                                    <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
+                                    <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
+                                      {transaction.deadline && (
+                                        <div>
+                                          Vence: {(() => {
+                                            const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                            return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+                                          })()}
+                                        </div>
+                                      )}
+                                      {transaction.source_type === 'recurrent' && (
+                                        (() => {
+                                          const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+                                          if (recurrentExpense) {
+                                            return (
+                                              <div>
+                                                Rango: {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
+                                              </div>
+                                            )
+                                          }
+                                          return null
+                                        })()
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </h3>
+                            </div>
+                          </div>
+                          <div className="text-right ml-2">
+                            <div className="text-xs text-gray-dark transaction-amount font-sans">{formatCurrency(transaction.value)}</div>
                             <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
                               getStatusColor(transaction)
                             )}>
                               {getStatusText(transaction)}
                             </span>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-dark transaction-amount font-sans"> 
-                            {formatCurrency(transaction.value)}
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
+                          </div>
+                        </div>
+
+                        {/* Details */}
+                        <div className="grid grid-cols-2 gap-4 mb-3">
+                          <div>
+                            <span className="text-xs text-green-dark font-sans">Tipo:</span>
+                            <div className="text-sm font-medium text-gray-dark capitalize font-sans">
+                              {transaction.source_type === 'recurrent' ? texts.recurrent : texts.nonRecurrent}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center justify-between pt-3 border-t border-border-light">
+                          <div className="flex items-center space-x-1">
                             <div className="relative">
                               <input
                                 type="checkbox"
                                 checked={transaction.status === 'paid'}
                                 onChange={(e) => {
-                                  console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
+                                  console.log(`🔘 Mobile: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
                                   handleCheckboxChange(transaction.id, e.target.checked)
                                 }}
                                 className="sr-only"
@@ -1704,486 +1905,538 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
                               </label>
                             </div>
-                          </td>
-                          <td className="px-4 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-x-1">
-                              <button
-                                onClick={() => handleAttachmentList(transaction)}
-                                className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
-                                title="View attachments"
-                              >
-                                <Paperclip className="h-4 w-4" />
-                                {attachmentCounts[transaction.id] > 0 && (
-                                  <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
-                                    {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
-                                  </span>
-                                )}
-                              </button>
-                              <button
-                                onClick={() => handleModifyTransaction(transaction.id)}
-                                className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
-                                title="Modify transaction"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteTransaction(transaction.id)}
-                                className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
-                                title="Delete transaction"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Mobile Card View */}
-              <div className="lg:hidden space-y-4">
-                {finalSortedTransactions.map((transaction) => {
-                  const isSavingsTransaction = transaction.category === 'Ahorro'
-                  return (
-                    <div key={transaction.id} className="bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150">
-                      {/* Header */}
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center space-x-2 flex-1 min-w-0">
-                          {/* Usar TransactionIcon parametrizado - Mobile */}
-                          <TransactionIcon 
-                            transaction={transaction}
-                            recurrentGoalMap={recurrentGoalMap}
-                            size="w-4 h-4"
-                            showBackground={true}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <h3 className="text-xs font-medium text-gray-dark truncate flex items-center gap-2 transaction-description font-sans">
-                              <span>{transaction.description}</span>
-                              {/* Navigation Link Icon for Goal Transactions - Mobile View */}
-                              {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
-                                <button
-                                  onClick={() => handleNavigateToGoal(transaction)}
-                                  className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
-                                  title={`Ir a Mis Metas - ${transaction.description}`}
-                                >
-                                  <svg 
-                                    className="w-3 h-3" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                  </svg>
-                                </button>
-                              )}
-                              
-                              {/* Category - moved to same line as title */}
-                              {transaction.type === 'expense' && 
-                               !(transaction.category === 'Ahorro' && 
-                                 (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
-                               !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
-                                <button
-                                  onClick={() => handleCategoryClick(transaction)}
-                                  className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
-                                >
-                                  {transaction.category && transaction.category !== 'sin categoría' 
-                                    ? transaction.category 
-                                    : 'sin categoría'}
-                                </button>
-                              )}
-                              
-                              {/* Info icon with tooltip */}
-                              {(transaction.deadline || transaction.source_type === 'recurrent') && (
-                                <div className="relative group">
-                                  <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
-                                  <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
-                                    {transaction.deadline && (
-                                      <div>
-                                        Vence: {(() => {
-                                          const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                          return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                                        })()}
-                                      </div>
-                                    )}
-                                    {transaction.source_type === 'recurrent' && (
-                                      (() => {
-                                        const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
-                                        if (recurrentExpense) {
-                                          return (
-                                            <div>
-                                              Rango: {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
-                                            </div>
-                                          )
-                                        }
-                                        return null
-                                      })()
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </h3>
+                            <span className="text-sm text-gray-dark ml-1 font-sans">Mark as paid</span>
                           </div>
-                        </div>
-                        <div className="text-right ml-2">
-                          <div className="text-xs text-gray-dark transaction-amount font-sans">{formatCurrency(transaction.value)}</div>
-                          <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
-                            getStatusColor(transaction)
-                          )}>
-                            {getStatusText(transaction)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Details */}
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div>
-                          <span className="text-xs text-green-dark font-sans">Tipo:</span>
-                          <div className="text-sm font-medium text-gray-dark capitalize font-sans">
-                            {transaction.source_type === 'recurrent' ? texts.recurrent : texts.nonRecurrent}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-between pt-3 border-t border-border-light">
-                        <div className="flex items-center space-x-1">
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={transaction.status === 'paid'}
-                              onChange={(e) => {
-                                console.log(`🔘 Mobile: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
-                                handleCheckboxChange(transaction.id, e.target.checked)
-                              }}
-                              className="sr-only"
-                              id={`checkbox-${transaction.id}`}
-                            />
-                            <label
-                              htmlFor={`checkbox-${transaction.id}`}
-                              className={`
-                                sophisticated-checkbox relative inline-flex items-center justify-center w-5 h-5
-                                ${transaction.status === 'paid' 
-                                  ? 'bg-green-primary border-green-primary' 
-                                  : 'bg-beige border-2 border-border-light hover:border-green-primary hover:shadow-soft'
-                                }
-                                rounded-full overflow-hidden cursor-pointer
-                                transition-all duration-200
-                                ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
-                              `}
+                          <div className="flex items-center gap-x-1">
+                            <button
+                              onClick={() => handleAttachmentList(transaction)}
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
+                              title="View attachments"
                             >
-                              {/* Checkmark with white color */}
-                              {transaction.status === 'paid' && (
-                                <svg
-                                  className="w-3 h-3 text-white relative z-10"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  style={{
-                                    strokeDasharray: '50',
-                                    strokeDashoffset: '50',
-                                    animation: 'checkmark 0.15s ease-out forwards'
-                                  }}
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={3}
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
+                              <Paperclip className="h-4 w-4" />
+                              {attachmentCounts[transaction.id] > 0 && (
+                                <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
+                                  {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
+                                </span>
                               )}
-                              
-                              {/* Hover effect */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
-                            </label>
+                            </button>
+                            <button
+                              onClick={() => handleModifyTransaction(transaction.id)}
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                              title="Modify transaction"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTransaction(transaction.id)}
+                              className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
+                              title="Delete transaction"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
-                          <span className="text-sm text-gray-dark ml-1 font-sans">Mark as paid</span>
-                        </div>
-                        <div className="flex items-center gap-x-1">
-                          <button
-                            onClick={() => handleAttachmentList(transaction)}
-                            className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-2 rounded-md transition-all duration-200 hover:scale-105"
-                            title="View attachments"
-                          >
-                            <Paperclip className="h-4 w-4" />
-                            {attachmentCounts[transaction.id] > 0 && (
-                              <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
-                                {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
-                              </span>
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleModifyTransaction(transaction.id)}
-                            className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
-                            title="Modify transaction"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteTransaction(transaction.id)}
-                            className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-2 rounded-md transition-all duration-200 hover:scale-105"
-                            title="Delete transaction"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && deleteModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
-            <button
-              onClick={handleCancelDelete}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="px-6 py-4 flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-error-bg rounded-full p-1.5">
-                  <Trash2 className="h-4 w-4 text-error-red" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900">Confirmar Eliminación</h2>
-              </div>
-              <p className="text-sm text-gray-500">¿Estás seguro de que quieres eliminar esta transacción?</p>
-              
-              {/* Información de la transacción */}
-              <div className="w-full bg-gray-50 rounded-lg p-3 space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Descripción:</span>
-                  <span className="text-sm font-medium text-gray-900">{deleteModalData.transaction.description}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Valor:</span>
-                  <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteModalData.transaction.value)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Fecha:</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {deleteModalData.transaction.deadline ? (() => {
-                      const [year, month, day] = deleteModalData.transaction.deadline!.split('-').map(Number);
-                      return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                    })() : `${months[deleteModalData.transaction.month - 1]} ${deleteModalData.transaction.year}`}
-                  </span>
-                </div>
-              </div>
-
-              {/* Mensaje específico según el tipo */}
-              {deleteModalData.isRecurrent ? (
-                <div className="w-full bg-red-50 border border-red-200 rounded-lg p-2.5">
-                  <div className="flex items-start gap-2.5">
-                    <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
-                      <Info className="h-3 w-3 text-red-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-red-800 font-medium mb-0.5">Esta es una transacción recurrente.</p>
-                      <p className="text-sm text-red-800">Elige qué quieres eliminar:</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full bg-red-50 border border-red-200 rounded-lg p-2.5">
-                  <div className="flex items-start gap-2.5">
-                    <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
-                      <Info className="h-3 w-3 text-red-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-red-800">¿Estás seguro de que quieres eliminar esta transacción?</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Botones de acción */}
-              <div className="w-full space-y-2">
-                {deleteModalData.isRecurrent ? (
-                  <>
-                    <button
-                      onClick={handleDeleteSeries}
-                      className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
-                    >
-                      Toda la Serie
-                    </button>
-                    <button
-                      onClick={handleDeleteIndividual}
-                      className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
-                    >
-                      Solo Esta Transacción
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => handleConfirmDelete(false)}
-                    className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
-                  >
-                    Eliminar Transacción
-                  </button>
-                )}
-                
+          {/* Delete Confirmation Modal */}
+          {showDeleteModal && deleteModalData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
                 <button
                   onClick={handleCancelDelete}
-                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
                 >
-                  Cancelar
+                  <X className="h-5 w-5" />
                 </button>
-              </div>
+
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-error-bg rounded-full p-1.5">
+                      <Trash2 className="h-4 w-4 text-error-red" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Confirmar Eliminación</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">¿Estás seguro de que quieres eliminar esta transacción?</p>
+                  
+                  {/* Información de la transacción */}
+                  <div className="w-full bg-gray-50 rounded-lg p-3 space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Descripción:</span>
+                      <span className="text-sm font-medium text-gray-900">{deleteModalData.transaction.description}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Valor:</span>
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteModalData.transaction.value)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Fecha:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {deleteModalData.transaction.deadline ? (() => {
+                          const [year, month, day] = deleteModalData.transaction.deadline!.split('-').map(Number);
+                          return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
+                        })() : `${months[deleteModalData.transaction.month - 1]} ${deleteModalData.transaction.year}`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Mensaje específico según el tipo */}
+                  {deleteModalData.isRecurrent ? (
+                    <div className="w-full bg-red-50 border border-red-200 rounded-lg p-2.5">
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
+                          <Info className="h-3 w-3 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-red-800 font-medium mb-0.5">Esta es una transacción recurrente.</p>
+                          <p className="text-sm text-red-800">Elige qué quieres eliminar:</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full bg-red-50 border border-red-200 rounded-lg p-2.5">
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
+                          <Info className="h-3 w-3 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-red-800">¿Estás seguro de que quieres eliminar esta transacción?</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Botones de acción */}
+                  <div className="w-full space-y-2">
+                    {deleteModalData.isRecurrent ? (
+                      <>
+                        <button
+                          onClick={handleDeleteSeries}
+                          className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
+                        >
+                          Toda la Serie
+                        </button>
+                        <button
+                          onClick={handleDeleteIndividual}
+                          className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
+                        >
+                          Solo Esta Transacción
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => handleConfirmDelete(false)}
+                        className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
+                      >
+                        Eliminar Transacción
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={handleCancelDelete}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </section>
             </div>
-          </section>
-        </div>
-      )}
+          )}
 
-      {/* Modify Confirmation Modal */}
-      {showModifyModal && modifyModalData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
-            <button
-              onClick={handleCancelModify}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="px-6 py-4 flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
-                  <Edit className="h-4 w-4 text-green-primary" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
-              </div>
-              <p className="text-sm text-gray-500">Selecciona cómo quieres modificar esta transacción</p>
-              
-              {/* Información de la transacción */}
-              <div className="w-full bg-gray-50 rounded-lg p-3 space-y-1.5">
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Descripción:</span>
-                  <span className="text-sm font-medium text-gray-900">{modifyModalData.transaction.description}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Valor:</span>
-                  <span className="text-sm font-medium text-gray-900">{formatCurrency(modifyModalData.transaction.value)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-500">Fecha:</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {modifyModalData.transaction.deadline ? (() => {
-                      const [year, month, day] = modifyModalData.transaction.deadline!.split('-').map(Number);
-                      return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                    })() : `${months[modifyModalData.transaction.month - 1]} ${modifyModalData.transaction.year}`}
-                  </span>
-                </div>
-              </div>
-
-              {modifyModalData.isRecurrent ? (
-                <div className="w-full bg-green-light border border-green-200 rounded-lg p-2.5">
-                  <div className="flex items-start gap-2.5">
-                    <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                      <Info className="h-3 w-3 text-green-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-green-primary font-medium mb-0.5">Esta es una transacción recurrente</p>
-                      <p className="text-sm text-green-primary">Elige qué quieres modificar:</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="w-full bg-green-light border border-green-200 rounded-lg p-2.5">
-                  <div className="flex items-start gap-2.5">
-                    <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                      <Info className="h-3 w-3 text-green-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-green-primary">¿Estás seguro de que quieres modificar esta transacción?</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="w-full space-y-2">
-                {modifyModalData.isRecurrent ? (
-                  <>
-                    <button
-                      onClick={() => handleConfirmModify(true)}
-                      className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
-                    >
-                      Toda la Serie
-                    </button>
-                    <button
-                      onClick={() => handleConfirmModify(false)}
-                      className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
-                    >
-                      Solo Esta Transacción
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => handleConfirmModify(false)}
-                    className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
-                  >
-                    Modificar Transacción
-                  </button>
-                )}
-                
+          {/* Modify Confirmation Modal */}
+          {showModifyModal && modifyModalData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
                 <button
                   onClick={handleCancelModify}
-                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
                 >
-                  Cancelar
+                  <X className="h-5 w-5" />
                 </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
 
-      {/* Modify Form Modal */}
-      {showModifyForm && modifyFormData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={resetModifyForm}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 z-10"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            {modifyFormData.modifySeries ? (
-              // Full form for series modification
-              modifyFormData.type === 'recurrent' ? (
-                // Recurrent Expense Form
-                <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
-                  {/* Header */}
-                  <div className="flex items-center gap-3 mb-6">
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
                       <Edit className="h-4 w-4 text-green-primary" />
                     </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Modificar Serie Recurrente</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">Selecciona cómo quieres modificar esta transacción</p>
+                  
+                  {/* Información de la transacción */}
+                  <div className="w-full bg-gray-50 rounded-lg p-3 space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Descripción:</span>
+                      <span className="text-sm font-medium text-gray-900">{modifyModalData.transaction.description}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Valor:</span>
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(modifyModalData.transaction.value)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-500">Fecha:</span>
+                      <span className="text-sm font-medium text-gray-900">
+                        {modifyModalData.transaction.deadline ? (() => {
+                          const [year, month, day] = modifyModalData.transaction.deadline!.split('-').map(Number);
+                          return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
+                        })() : `${months[modifyModalData.transaction.month - 1]} ${modifyModalData.transaction.year}`}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Descripción */}
-                  {!(modifyFormData.type === 'recurrent' && modifyFormData.category === 'Ahorro') && (
+                  {modifyModalData.isRecurrent ? (
+                    <div className="w-full bg-green-light border border-green-200 rounded-lg p-2.5">
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                          <Info className="h-3 w-3 text-green-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-green-primary font-medium mb-0.5">Esta es una transacción recurrente</p>
+                          <p className="text-sm text-green-primary">Elige qué quieres modificar:</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="w-full bg-green-light border border-green-200 rounded-lg p-2.5">
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                          <Info className="h-3 w-3 text-green-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-green-primary">¿Estás seguro de que quieres modificar esta transacción?</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="w-full space-y-2">
+                    {modifyModalData.isRecurrent ? (
+                      <>
+                        <button
+                          onClick={() => handleConfirmModify(true)}
+                          className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
+                        >
+                          Toda la Serie
+                        </button>
+                        <button
+                          onClick={() => handleConfirmModify(false)}
+                          className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
+                        >
+                          Solo Esta Transacción
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => handleConfirmModify(false)}
+                        className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
+                      >
+                        Modificar Transacción
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={handleCancelModify}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Modify Form Modal */}
+          {showModifyForm && modifyFormData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <button
+                  onClick={resetModifyForm}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 z-10"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                {modifyFormData.modifySeries ? (
+                  // Full form for series modification
+                  modifyFormData.type === 'recurrent' ? (
+                    // Recurrent Expense Form
+                    <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
+                      {/* Header */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                          <Edit className="h-4 w-4 text-green-primary" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Modificar Serie Recurrente</h2>
+                      </div>
+
+                      {/* Descripción */}
+                      {!(modifyFormData.type === 'recurrent' && modifyFormData.category === 'Ahorro') && (
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-dark">Descripción</label>
+                          <input
+                            type="text"
+                            value={modifyFormData.description}
+                            onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                            placeholder="Descripción"
+                            required
+                          />
+                        </div>
+                      )}
+
+                      {/* Período */}
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-dark">Mes desde</label>
+                            <select
+                              value={modifyFormData.month_from}
+                              onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_from: Number(e.target.value) } : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                              required
+                            >
+                              {months.map((month, index) => (
+                                <option key={index + 1} value={index + 1}>{month}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-dark">Año desde</label>
+                            <select
+                              value={modifyFormData.year_from}
+                              onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_from: Number(e.target.value) } : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                              required
+                            >
+                              {availableYears.map((year, index) => (
+                                <option key={index} value={year}>{year}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-dark">Mes hasta</label>
+                            <select
+                              value={modifyFormData.month_to}
+                              onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_to: Number(e.target.value) } : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                              required
+                            >
+                              {months.map((month, index) => (
+                                <option key={index + 1} value={index + 1}>{month}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="block text-sm font-medium text-gray-dark">Año hasta</label>
+                            <select
+                              value={modifyFormData.year_to}
+                              onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_to: Number(e.target.value) } : null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                              required
+                            >
+                              {availableYears.map((year, index) => (
+                                <option key={index} value={year}>{year}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Monto y Día de Vencimiento */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
+                          <input
+                            type="text"
+                            value={getCurrencyInputValue(modifyFormData.value)}
+                            onChange={(e) => setModifyFormData(prev => prev ? { 
+                              ...prev, 
+                              value: parseCurrency(e.target.value)
+                            } : null)}
+                            placeholder="$0.00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-dark">Día de Vencimiento</label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="31"
+                            value={modifyFormData.payment_day_deadline}
+                            onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_day_deadline: e.target.value } : null)}
+                            placeholder="15"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Checkbox de meta (isgoal) solo para GASTO/RECURRENTE */}
+                      {modifyFormData.type === 'recurrent' && modifyFormData.modifySeries && (
+                        <div className="flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-md px-4 py-3">
+                          <input
+                            id="isgoal-checkbox"
+                            type="checkbox"
+                            checked={modifyFormData.isgoal || false}
+                            onChange={e => setModifyFormData(prev => prev ? { ...prev, isgoal: e.target.checked } : null)}
+                            className="w-4 h-4 text-green-primary border-gray-300 rounded focus:ring-green-primary focus:ring-2 mt-0.5"
+                          />
+                          <label htmlFor="isgoal-checkbox" className="flex-1 text-sm text-gray-700 cursor-pointer">
+                            ¿Este gasto recurrente es una <span className="font-medium">meta</span> que quieres cumplir?
+                            <span className="block text-xs text-gray-500 mt-1">
+                              Ejemplo: pagar un carro, un viaje, un crédito, etc. Marca esta opción si este gasto es un objetivo personal que estás pagando mes a mes.
+                            </span>
+                          </label>
+                        </div>
+                      )}
+
+                      {/* Botones */}
+                      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                        <button
+                          type="button"
+                          onClick={resetModifyForm}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
+                        >
+                          Guardar Cambios
+                        </button>
+                      </div>
+                    </form>
+                  ) : (
+                    // Non-Recurrent Expense Form
+                    <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
+                      {/* Header */}
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                          <Edit className="h-4 w-4 text-green-primary" />
+                        </div>
+                        <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
+                      </div>
+
+                      {/* Descripción */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-dark">Descripción</label>
+                        <input
+                          type="text"
+                          value={modifyFormData.description}
+                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                          placeholder="Descripción"
+                          required
+                        />
+                      </div>
+
+                      {/* Mes y Año */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-dark">Mes</label>
+                          <select
+                            value={modifyFormData.month}
+                            onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month: Number(e.target.value) } : null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                            required
+                          >
+                            {months.map((month, index) => (
+                              <option key={index + 1} value={index + 1}>{month}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-dark">Año</label>
+                          <select
+                            value={modifyFormData.year}
+                            onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                            required
+                          >
+                            {availableYears.map((year, index) => (
+                              <option key={index} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Monto y Fecha de Vencimiento */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
+                          <input
+                            type="text"
+                            value={getCurrencyInputValue(modifyFormData.value)}
+                            onChange={(e) => setModifyFormData(prev => prev ? { 
+                              ...prev, 
+                              value: parseCurrency(e.target.value)
+                            } : null)}
+                            placeholder="$0.00"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <label className="block text-sm font-medium text-gray-dark">Fecha de Vencimiento</label>
+                          <input
+                            type="date"
+                            value={modifyFormData.payment_deadline}
+                            onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Botones */}
+                      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                        <button
+                          type="button"
+                          onClick={resetModifyForm}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
+                        >
+                          Guardar Cambios
+                        </button>
+                      </div>
+                    </form>
+                  )
+                ) : (
+                  // Simple form for individual transaction modification
+                  <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
+                    {/* Header */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                        <Edit className="h-4 w-4 text-green-primary" />
+                      </div>
+                      <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
+                    </div>
+
+                    {/* Descripción */}
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-dark">Descripción</label>
                       <input
@@ -2195,860 +2448,612 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         required
                       />
                     </div>
-                  )}
 
-                  {/* Período */}
-                  <div className="space-y-4">
+                    {/* Monto y Fecha de Vencimiento */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-dark">Mes desde</label>
-                        <select
-                          value={modifyFormData.month_from}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_from: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                        <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
+                        <input
+                          type="text"
+                          value={getCurrencyInputValue(modifyFormData.value)}
+                          onChange={(e) => setModifyFormData(prev => prev ? { 
+                            ...prev, 
+                            value: parseCurrency(e.target.value)
+                          } : null)}
+                          placeholder="$0.00"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                           required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
+                        />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-dark">Año desde</label>
-                        <select
-                          value={modifyFormData.year_from}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_from: Number(e.target.value) } : null)}
+                        <label className="block text-sm font-medium text-gray-dark">Fecha de Vencimiento</label>
+                        <input
+                          type="date"
+                          value={modifyFormData.payment_deadline}
+                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
+                        />
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-dark">Mes hasta</label>
-                        <select
-                          value={modifyFormData.month_to}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_to: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
-                          required
-                        >
-                          {months.map((month, index) => (
-                            <option key={index + 1} value={index + 1}>{month}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-dark">Año hasta</label>
-                        <select
-                          value={modifyFormData.year_to}
-                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_to: Number(e.target.value) } : null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
-                          required
-                        >
-                          {availableYears.map((year, index) => (
-                            <option key={index} value={year}>{year}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </div>
 
-                  {/* Monto y Día de Vencimiento */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
-                      <input
-                        type="text"
-                        value={getCurrencyInputValue(modifyFormData.value)}
-                        onChange={(e) => setModifyFormData(prev => prev ? { 
-                          ...prev, 
-                          value: parseCurrency(e.target.value)
-                        } : null)}
-                        placeholder="$0.00"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-dark">Día de Vencimiento</label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="31"
-                        value={modifyFormData.payment_day_deadline}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_day_deadline: e.target.value } : null)}
-                        placeholder="15"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Checkbox de meta (isgoal) solo para GASTO/RECURRENTE */}
-                  {modifyFormData.type === 'recurrent' && modifyFormData.modifySeries && (
-                    <div className="flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-md px-4 py-3">
-                      <input
-                        id="isgoal-checkbox"
-                        type="checkbox"
-                        checked={modifyFormData.isgoal || false}
-                        onChange={e => setModifyFormData(prev => prev ? { ...prev, isgoal: e.target.checked } : null)}
-                        className="w-4 h-4 text-green-primary border-gray-300 rounded focus:ring-green-primary focus:ring-2 mt-0.5"
-                      />
-                      <label htmlFor="isgoal-checkbox" className="flex-1 text-sm text-gray-700 cursor-pointer">
-                        ¿Este gasto recurrente es una <span className="font-medium">meta</span> que quieres cumplir?
-                        <span className="block text-xs text-gray-500 mt-1">
-                          Ejemplo: pagar un carro, un viaje, un crédito, etc. Marca esta opción si este gasto es un objetivo personal que estás pagando mes a mes.
-                        </span>
-                      </label>
-                    </div>
-                  )}
-
-                  {/* Botones */}
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <button
-                      type="button"
-                      onClick={resetModifyForm}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
-                    >
-                      Guardar Cambios
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                // Non-Recurrent Expense Form
-                <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
-                  {/* Header */}
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
-                      <Edit className="h-4 w-4 text-green-primary" />
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
-                  </div>
-
-                  {/* Descripción */}
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-dark">Descripción</label>
-                    <input
-                      type="text"
-                      value={modifyFormData.description}
-                      onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
-                      placeholder="Descripción"
-                      required
-                    />
-                  </div>
-
-                  {/* Mes y Año */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-dark">Mes</label>
-                      <select
-                        value={modifyFormData.month}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month: Number(e.target.value) } : null)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
-                        required
+                    {/* Botones */}
+                    <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                      <button
+                        type="button"
+                        onClick={resetModifyForm}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
                       >
-                        {months.map((month, index) => (
-                          <option key={index + 1} value={index + 1}>{month}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-dark">Año</label>
-                      <select
-                        value={modifyFormData.year}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
-                        required
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
                       >
-                        {availableYears.map((year, index) => (
-                          <option key={index} value={year}>{year}</option>
-                        ))}
-                      </select>
+                        Guardar Cambios
+                      </button>
                     </div>
-                  </div>
+                  </form>
+                )}
+              </section>
+            </div>
+          )}
 
-                  {/* Monto y Fecha de Vencimiento */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
-                      <input
-                        type="text"
-                        value={getCurrencyInputValue(modifyFormData.value)}
-                        onChange={(e) => setModifyFormData(prev => prev ? { 
-                          ...prev, 
-                          value: parseCurrency(e.target.value)
-                        } : null)}
-                        placeholder="$0.00"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="block text-sm font-medium text-gray-dark">Fecha de Vencimiento</label>
-                      <input
-                        type="date"
-                        value={modifyFormData.payment_deadline}
-                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Botones */}
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                    <button
-                      type="button"
-                      onClick={resetModifyForm}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
-                    >
-                      Guardar Cambios
-                    </button>
-                  </div>
-                </form>
-              )
-            ) : (
-              // Simple form for individual transaction modification
-              <form onSubmit={handleModifyFormSubmit} className="p-6 space-y-4">
-                {/* Header */}
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
-                    <Edit className="h-4 w-4 text-green-primary" />
-                  </div>
-                  <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
-                </div>
-
-                {/* Descripción */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-dark">Descripción</label>
-                  <input
-                    type="text"
-                    value={modifyFormData.description}
-                    onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
-                    placeholder="Descripción"
-                    required
-                  />
-                </div>
-
-                {/* Monto y Fecha de Vencimiento */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-dark">Monto ($)</label>
-                    <input
-                      type="text"
-                      value={getCurrencyInputValue(modifyFormData.value)}
-                      onChange={(e) => setModifyFormData(prev => prev ? { 
-                        ...prev, 
-                        value: parseCurrency(e.target.value)
-                      } : null)}
-                      placeholder="$0.00"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-dark">Fecha de Vencimiento</label>
-                    <input
-                      type="date"
-                      value={modifyFormData.payment_deadline}
-                      onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Botones */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={resetModifyForm}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] transition-colors"
-                  >
-                    Guardar Cambios
-                  </button>
-                </div>
-              </form>
-            )}
-          </section>
-        </div>
-      )}
-
-      {/* Modify Confirmation Modal */}
-      {showModifyConfirmation && modifyConfirmationData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
-            <button
-              onClick={() => {
-                setShowModifyConfirmation(false)
-                setModifyConfirmationData(null)
-              }}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="px-6 py-4 flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
-                  <CheckCircle className="h-4 w-4 text-green-primary" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900">Confirmar modificación</h2>
-              </div>
-              <p className="text-sm text-gray-500">Revisa los datos antes de guardar</p>
-              
-              {/* Información de la transacción */}
-              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Descripción:</span>
-                  <span className="text-sm font-medium text-gray-900">{modifyConfirmationData.description}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Valor:</span>
-                  <span className="text-sm font-medium text-gray-900">{formatCurrency(modifyConfirmationData.value)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Período:</span>
-                  <span className="text-sm font-medium text-gray-900">{modifyConfirmationData.period}</span>
-                </div>
-              </div>
-
-              {/* Advertencia */}
-              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
-                <div className="flex items-start gap-2.5">
-                  <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <span className="text-yellow-600 text-xs font-bold">!</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botones de acción */}
-              <div className="w-full space-y-2">
-                <button
-                  onClick={handleConfirmModifySubmit}
-                  disabled={loading}
-                  className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Guardando...
-                    </div>
-                  ) : (
-                    'Guardar cambios'
-                  )}
-                </button>
-                
+          {/* Modify Confirmation Modal */}
+          {showModifyConfirmation && modifyConfirmationData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
                 <button
                   onClick={() => {
                     setShowModifyConfirmation(false)
                     setModifyConfirmationData(null)
                   }}
-                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
                 >
-                  Cancelar
+                  <X className="h-5 w-5" />
                 </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
 
-      {/* File Upload Modal */}
-      {showAttachmentModal && selectedTransactionForAttachment && (
-        <FileUploadModal
-          isOpen={showAttachmentModal}
-          onClose={() => {
-            setShowAttachmentModal(false)
-            setSelectedTransactionForAttachment(null)
-          }}
-          transactionId={selectedTransactionForAttachment.id}
-          userId={user.id}
-          onUploadComplete={handleAttachmentUploadComplete}
-        />
-      )}
-
-      {/* Attachments List Modal */}
-      {showAttachmentsList && selectedTransactionForList && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl p-0 w-full max-w-md shadow-sm border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => {
-                setShowAttachmentsList(false)
-                setSelectedTransactionForList(null)
-              }}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-              aria-label="Cerrar"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            
-            <div className="px-4 py-3 flex flex-col gap-2">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full">
-                  <Paperclip className="h-4 w-4 text-green-primary" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-medium text-gray-900">Archivos Adjuntos</h2>
-                  <p className="text-sm text-gray-500">Para: {selectedTransactionForList.description}</p>
-                </div>
-              </div>
-              
-              <div className="border-t border-gray-200 pt-3">
-                <TransactionAttachments
-                  transactionId={selectedTransactionForList.id}
-                  userId={user.id}
-                  onAttachmentDeleted={handleAttachmentDeleted}
-                  onAddAttachment={() => handleAttachmentUpload(selectedTransactionForList)}
-                />
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* Category Editing Modal */}
-      {showCategoryModal && selectedTransactionForCategory && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
-              <h2 className="text-base font-semibold text-neutral-900">Seleccionar Categoría</h2>
-              <button
-                onClick={() => {
-                  setShowCategoryModal(false)
-                  setSelectedTransactionForCategory(null)
-                  setSelectedCategory('')
-                  setCustomCategoryInput('')
-                  setShowAddCategoryInput(false)
-                  setNewCategoryInput('')
-                  setShowDuplicateCategoryModal(false)
-                  setDuplicateCategoryName('')
-                  // Reset add category state
-                  setAddingCategory(false)
-                  setAddCategoryError(null)
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="px-5 py-4">
-              <div className="mb-4">
-                <p className="text-sm text-neutral-500 mb-3">
-                  Para: {selectedTransactionForCategory.description}
-                </p>
-              </div>
-
-              {/* Categories list */}
-              <div className="mb-4">
-                <h3 className="text-sm text-neutral-500 mb-2">Categorías disponibles:</h3>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {/* First option: Sin categoría (red styling) */}
-                  <div
-                    className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
-                      selectedCategory === 'Sin categoría'
-                        ? 'bg-green-50'
-                        : 'bg-neutral-bg hover:bg-[#f5f6f4]'
-                    }`}
-                    onClick={() => handleCategorySelection('Sin categoría')}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#fcebea] text-green-600">
-                        <Tag className="h-4 w-4" fill="currentColor" />
-                      </div>
-                      <span className="text-sm text-neutral-700 font-medium">
-                        Sin categoría
-                      </span>
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                      <CheckCircle className="h-4 w-4 text-green-primary" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Confirmar modificación</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">Revisa los datos antes de guardar</p>
+                  
+                  {/* Información de la transacción */}
+                  <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Descripción:</span>
+                      <span className="text-sm font-medium text-gray-900">{modifyConfirmationData.description}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Valor:</span>
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(modifyConfirmationData.value)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Período:</span>
+                      <span className="text-sm font-medium text-gray-900">{modifyConfirmationData.period}</span>
                     </div>
                   </div>
 
-                  {/* Current category */}
-                  {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
-                    <div
-                      className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
-                        selectedCategory === selectedTransactionForCategory.category
-                          ? 'bg-green-50'
-                          : 'bg-neutral-bg hover:bg-[#f5f6f4]'
-                      }`}
-                      onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#e6f4ea] text-green-600">
-                          <Tag className="h-4 w-4" fill="currentColor" />
-                        </div>
-                        <span className="text-sm text-neutral-700 font-medium">
-                          {selectedTransactionForCategory.category}
-                        </span>
+                  {/* Advertencia */}
+                  <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <span className="text-yellow-600 text-xs font-bold">!</span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
                       </div>
                     </div>
-                  )}
+                  </div>
 
-                  {/* Other available categories */}
-                  {availableCategories
-                    .filter(cat => cat !== 'Sin categoría' && cat !== selectedTransactionForCategory.category)
-                    .map((category) => {
-                      // Check if this is a default category
-                      const isDefault = Object.values(CATEGORIES.EXPENSE).includes(category as any)
-                      
-                      return (
+                  {/* Botones de acción */}
+                  <div className="w-full space-y-2">
+                    <button
+                      onClick={handleConfirmModifySubmit}
+                      disabled={loading}
+                      className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Guardando...
+                        </div>
+                      ) : (
+                        'Guardar cambios'
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setShowModifyConfirmation(false)
+                        setModifyConfirmationData(null)
+                      }}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* File Upload Modal */}
+          {showAttachmentModal && selectedTransactionForAttachment && (
+            <FileUploadModal
+              isOpen={showAttachmentModal}
+              onClose={() => {
+                setShowAttachmentModal(false)
+                setSelectedTransactionForAttachment(null)
+              }}
+              transactionId={selectedTransactionForAttachment.id}
+              userId={user.id}
+              onUploadComplete={handleAttachmentUploadComplete}
+            />
+          )}
+
+          {/* Attachments List Modal */}
+          {showAttachmentsList && selectedTransactionForList && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-xl p-0 w-full max-w-md shadow-sm border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
+                <button
+                  onClick={() => {
+                    setShowAttachmentsList(false)
+                    setSelectedTransactionForList(null)
+                  }}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                
+                <div className="px-4 py-3 flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full">
+                      <Paperclip className="h-4 w-4 text-green-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-medium text-gray-900">Archivos Adjuntos</h2>
+                      <p className="text-sm text-gray-500">Para: {selectedTransactionForList.description}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t border-gray-200 pt-3">
+                    <TransactionAttachments
+                      transactionId={selectedTransactionForList.id}
+                      userId={user.id}
+                      onAttachmentDeleted={handleAttachmentDeleted}
+                      onAddAttachment={() => handleAttachmentUpload(selectedTransactionForList)}
+                    />
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Category Editing Modal */}
+          {showCategoryModal && selectedTransactionForCategory && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
+                  <h2 className="text-base font-semibold text-neutral-900">Seleccionar Categoría</h2>
+                  <button
+                    onClick={() => {
+                      setShowCategoryModal(false)
+                      setSelectedTransactionForCategory(null)
+                      setSelectedCategory('')
+                      setCustomCategoryInput('')
+                      setShowAddCategoryInput(false)
+                      setNewCategoryInput('')
+                      setShowDuplicateCategoryModal(false)
+                      setDuplicateCategoryName('')
+                      // Reset add category state
+                      setAddingCategory(false)
+                      setAddCategoryError(null)
+                    }}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="px-5 py-4">
+                  <div className="mb-4">
+                    <p className="text-sm text-neutral-500 mb-3">
+                      Para: {selectedTransactionForCategory.description}
+                    </p>
+                  </div>
+
+                  {/* Categories list */}
+                  <div className="mb-4">
+                    <h3 className="text-sm text-neutral-500 mb-2">Categorías disponibles:</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {/* First option: Sin categoría (red styling) */}
+                      <div
+                        className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
+                          selectedCategory === 'Sin categoría'
+                            ? 'bg-green-50'
+                            : 'bg-neutral-bg hover:bg-[#f5f6f4]'
+                        }`}
+                        onClick={() => handleCategorySelection('Sin categoría')}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#fcebea] text-green-600">
+                            <Tag className="h-4 w-4" fill="currentColor" />
+                          </div>
+                          <span className="text-sm text-neutral-700 font-medium">
+                            Sin categoría
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Current category */}
+                      {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
                         <div
-                          key={category}
                           className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
-                            selectedCategory === category
+                            selectedCategory === selectedTransactionForCategory.category
                               ? 'bg-green-50'
                               : 'bg-neutral-bg hover:bg-[#f5f6f4]'
                           }`}
-                          onClick={() => handleCategorySelection(category)}
+                          onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
                         >
                           <div className="flex items-center space-x-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                              isDefault ? 'bg-[#e6f4ea] text-green-600' : 'bg-[#f0f0ec] text-[#7c8c7c]'
-                            }`}>
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#e6f4ea] text-green-600">
                               <Tag className="h-4 w-4" fill="currentColor" />
                             </div>
                             <span className="text-sm text-neutral-700 font-medium">
-                              {category}
+                              {selectedTransactionForCategory.category}
                             </span>
                           </div>
                         </div>
-                      )
-                    })}
-                </div>
-              </div>
-
-              {/* Add new category section */}
-              {!showAddCategoryInput ? (
-                <div className="mb-4">
-                  <button
-                    onClick={() => setShowAddCategoryInput(true)}
-                    className="w-full flex items-center gap-2 px-4 py-2 border border-dashed border-border-light rounded-md text-sm text-green-dark hover:bg-[#f8fbf7] cursor-pointer transition-colors"
-                  >
-                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span>Agregar nueva categoría</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="mb-4 mt-4 border-t border-border-light pt-4">
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-xs font-medium text-neutral-500 mb-1">
-                        Nueva categoría
-                      </label>
-                      <input
-                        type="text"
-                        value={newCategoryInput}
-                        onChange={(e) => setNewCategoryInput(e.target.value)}
-                        placeholder="Nombre de la categoría"
-                        className="w-full px-3 py-1.5 rounded-md border border-border-light text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-green-600"
-                        maxLength={50}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handleAddCategory()
-                          } else if (e.key === 'Escape') {
-                            handleCancelAddCategory()
-                          }
-                        }}
-                        autoFocus
-                      />
-                      {addCategoryError && (
-                        <p className="text-red-500 text-xs mt-1">{addCategoryError}</p>
                       )}
+
+                      {/* Other available categories */}
+                      {availableCategories
+                        .filter(cat => cat !== 'Sin categoría' && cat !== selectedTransactionForCategory.category)
+                        .map((category) => {
+                          // Check if this is a default category
+                          const isDefault = Object.values(CATEGORIES.EXPENSE).includes(category as any)
+                          
+                          return (
+                            <div
+                              key={category}
+                              className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
+                                selectedCategory === category
+                                  ? 'bg-green-50'
+                                  : 'bg-neutral-bg hover:bg-[#f5f6f4]'
+                              }`}
+                              onClick={() => handleCategorySelection(category)}
+                            >
+                              <div className="flex items-center space-x-3">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                                  isDefault ? 'bg-[#e6f4ea] text-green-600' : 'bg-[#f0f0ec] text-[#7c8c7c]'
+                                }`}>
+                                  <Tag className="h-4 w-4" fill="currentColor" />
+                                </div>
+                                <span className="text-sm text-neutral-700 font-medium">
+                                  {category}
+                                </span>
+                              </div>
+                            </div>
+                          )
+                        })}
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                  </div>
+
+                  {/* Add new category section */}
+                  {!showAddCategoryInput ? (
+                    <div className="mb-4">
                       <button
-                        onClick={handleAddCategory}
-                        disabled={addingCategory || !newCategoryInput.trim()}
-                        className="bg-green-100 text-green-800 hover:bg-green-200 rounded-md px-4 py-2 text-sm font-medium transition-all w-full sm:w-auto disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        onClick={() => setShowAddCategoryInput(true)}
+                        className="w-full flex items-center gap-2 px-4 py-2 border border-dashed border-border-light rounded-md text-sm text-green-dark hover:bg-[#f8fbf7] cursor-pointer transition-colors"
                       >
-                        {addingCategory ? 'Agregando...' : 'Agregar'}
+                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span>Agregar nueva categoría</span>
                       </button>
-                      <button
-                        onClick={handleCancelAddCategory}
-                        disabled={addingCategory}
-                        className="bg-neutral-100 text-neutral-600 hover:bg-neutral-200 rounded-md px-4 py-2 text-sm font-medium transition-all w-full sm:w-auto disabled:bg-gray-50 disabled:cursor-not-allowed"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex space-x-2 pt-4 border-t">
-                <button
-                  onClick={() => {
-                    setShowCategoryModal(false)
-                    setSelectedTransactionForCategory(null)
-                    setSelectedCategory('')
-                    setCustomCategoryInput('')
-                    setShowAddCategoryInput(false)
-                    setNewCategoryInput('')
-                    setShowDuplicateCategoryModal(false)
-                    setDuplicateCategoryName('')
-                    // Reset add category state
-                    setAddingCategory(false)
-                    setAddCategoryError(null)
-                  }}
-                  className="flex-1 bg-neutral-100 text-neutral-600 py-2 px-3 rounded-md hover:bg-neutral-200 transition-colors text-sm font-medium"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => handleUpdateCategory()}
-                  disabled={loading || !selectedCategory}
-                  className="flex-1 bg-green-primary text-white py-2 px-3 rounded-md hover:bg-[#77b16e] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
-                >
-                  {loading ? 'Guardando...' : 'Actualizar'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Duplicate Category Modal */}
-      {showDuplicateCategoryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
-            <button
-              onClick={() => {
-                setShowDuplicateCategoryModal(false)
-                setDuplicateCategoryName('')
-              }}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="p-5 flex flex-col gap-4 items-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-2">
-                <AlertCircle className="h-6 w-6 text-yellow-600" />
-              </div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Categoría Duplicada</h2>
-              <p className="text-gray-700 text-sm font-medium mb-4 text-center">
-                La categoría "{duplicateCategoryName}" ya existe.
-              </p>
-              
-              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800 font-medium">
-                  Esta categoría ya existe en el sistema (sin importar mayúsculas/minúsculas).
-                </p>
-                <p className="text-sm text-yellow-700 mt-1">
-                  Intenta con un nombre diferente o selecciona la categoría existente.
-                </p>
-              </div>
-
-              {/* Action Button */}
-              <div className="w-full">
-                <button
-                  onClick={() => {
-                    setShowDuplicateCategoryModal(false)
-                    setDuplicateCategoryName('')
-                  }}
-                  className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
-                >
-                  Entendido
-                </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {/* Delete Series Confirmation Modal */}
-      {showDeleteSeriesConfirmation && deleteSeriesConfirmationData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
-            <button
-              onClick={handleCancelDeleteSeries}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="px-6 py-4 flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full p-1.5">
-                  <Trash2 className="h-4 w-4 text-error-red" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900">Confirmar eliminación</h2>
-              </div>
-              <p className="text-sm text-gray-500">Revisa los datos antes de eliminar</p>
-              
-              {/* Información de la transacción */}
-              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Descripción:</span>
-                  <span className="text-sm font-medium text-gray-900">{deleteSeriesConfirmationData.description}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Valor:</span>
-                  <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteSeriesConfirmationData.value)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Período:</span>
-                  <span className="text-sm font-medium text-gray-900">{deleteSeriesConfirmationData.period}</span>
-                </div>
-              </div>
-
-              {/* Advertencia */}
-              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
-                <div className="flex items-start gap-2.5">
-                  <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <span className="text-yellow-600 text-xs font-bold">!</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botones de acción */}
-              <div className="w-full space-y-2">
-                <button
-                  onClick={handleConfirmDeleteSeries}
-                  disabled={loading}
-                  className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
-                      Eliminando...
                     </div>
                   ) : (
-                    'Eliminar serie'
+                    <div className="mb-4 mt-4 border-t border-border-light pt-4">
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-neutral-500 mb-1">
+                            Nueva categoría
+                          </label>
+                          <input
+                            type="text"
+                            value={newCategoryInput}
+                            onChange={(e) => setNewCategoryInput(e.target.value)}
+                            placeholder="Nombre de la categoría"
+                            className="w-full px-3 py-1.5 rounded-md border border-border-light text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-green-600"
+                            maxLength={50}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                handleAddCategory()
+                              } else if (e.key === 'Escape') {
+                                handleCancelAddCategory()
+                              }
+                            }}
+                            autoFocus
+                          />
+                          {addCategoryError && (
+                            <p className="text-red-500 text-xs mt-1">{addCategoryError}</p>
+                          )}
+                        </div>
+                        <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                          <button
+                            onClick={handleAddCategory}
+                            disabled={addingCategory || !newCategoryInput.trim()}
+                            className="bg-green-100 text-green-800 hover:bg-green-200 rounded-md px-4 py-2 text-sm font-medium transition-all w-full sm:w-auto disabled:bg-gray-300 disabled:cursor-not-allowed"
+                          >
+                            {addingCategory ? 'Agregando...' : 'Agregar'}
+                          </button>
+                          <button
+                            onClick={handleCancelAddCategory}
+                            disabled={addingCategory}
+                            className="bg-neutral-100 text-neutral-600 hover:bg-neutral-200 rounded-md px-4 py-2 text-sm font-medium transition-all w-full sm:w-auto disabled:bg-gray-50 disabled:cursor-not-allowed"
+                          >
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   )}
+                  
+                  <div className="flex space-x-2 pt-4 border-t">
+                    <button
+                      onClick={() => {
+                        setShowCategoryModal(false)
+                        setSelectedTransactionForCategory(null)
+                        setSelectedCategory('')
+                        setCustomCategoryInput('')
+                        setShowAddCategoryInput(false)
+                        setNewCategoryInput('')
+                        setShowDuplicateCategoryModal(false)
+                        setDuplicateCategoryName('')
+                        // Reset add category state
+                        setAddingCategory(false)
+                        setAddCategoryError(null)
+                      }}
+                      className="flex-1 bg-neutral-100 text-neutral-600 py-2 px-3 rounded-md hover:bg-neutral-200 transition-colors text-sm font-medium"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => handleUpdateCategory()}
+                      disabled={loading || !selectedCategory}
+                      className="flex-1 bg-green-primary text-white py-2 px-3 rounded-md hover:bg-[#77b16e] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                    >
+                      {loading ? 'Guardando...' : 'Actualizar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Duplicate Category Modal */}
+          {showDuplicateCategoryModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+                <button
+                  onClick={() => {
+                    setShowDuplicateCategoryModal(false)
+                    setDuplicateCategoryName('')
+                  }}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5" />
                 </button>
-                
+
+                <div className="p-5 flex flex-col gap-4 items-center">
+                  <div className="flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-full mb-2">
+                    <AlertCircle className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Categoría Duplicada</h2>
+                  <p className="text-gray-700 text-sm font-medium mb-4 text-center">
+                    La categoría "{duplicateCategoryName}" ya existe.
+                  </p>
+                  
+                  <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800 font-medium">
+                      Esta categoría ya existe en el sistema (sin importar mayúsculas/minúsculas).
+                    </p>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      Intenta con un nombre diferente o selecciona la categoría existente.
+                    </p>
+                  </div>
+
+                  {/* Action Button */}
+                  <div className="w-full">
+                    <button
+                      onClick={() => {
+                        setShowDuplicateCategoryModal(false)
+                        setDuplicateCategoryName('')
+                      }}
+                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                    >
+                      Entendido
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Delete Series Confirmation Modal */}
+          {showDeleteSeriesConfirmation && deleteSeriesConfirmationData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
                 <button
                   onClick={handleCancelDeleteSeries}
-                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
                 >
-                  Cancelar
+                  <X className="h-5 w-5" />
                 </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
 
-      {/* Delete Individual Confirmation Modal */}
-      {showDeleteIndividualConfirmation && deleteIndividualConfirmationData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Overlay borroso y semitransparente */}
-          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
-            <button
-              onClick={handleCancelDeleteIndividual}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-              aria-label="Cerrar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <div className="px-6 py-4 flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full p-1.5">
-                  <Trash2 className="h-4 w-4 text-error-red" />
-                </div>
-                <h2 className="text-lg font-semibold text-gray-900">Confirmar eliminación</h2>
-              </div>
-              <p className="text-sm text-gray-500">Revisa los datos antes de eliminar</p>
-              
-              {/* Información de la transacción */}
-              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Descripción:</span>
-                  <span className="text-sm font-medium text-gray-900">{deleteIndividualConfirmationData.description}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Valor:</span>
-                  <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteIndividualConfirmationData.value)}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">Fecha:</span>
-                  <span className="text-sm font-medium text-gray-900">{deleteIndividualConfirmationData.date}</span>
-                </div>
-              </div>
-
-              {/* Advertencia */}
-              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
-                <div className="flex items-start gap-2.5">
-                  <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
-                    <span className="text-yellow-600 text-xs font-bold">!</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botones de acción */}
-              <div className="w-full space-y-2">
-                <button
-                  onClick={handleConfirmDeleteIndividual}
-                  disabled={loading}
-                  className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
-                      Eliminando...
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full p-1.5">
+                      <Trash2 className="h-4 w-4 text-error-red" />
                     </div>
-                  ) : (
-                    'Eliminar transacción'
-                  )}
-                </button>
-                
+                    <h2 className="text-lg font-semibold text-gray-900">Confirmar eliminación</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">Revisa los datos antes de eliminar</p>
+                  
+                  {/* Información de la transacción */}
+                  <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Descripción:</span>
+                      <span className="text-sm font-medium text-gray-900">{deleteSeriesConfirmationData.description}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Valor:</span>
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteSeriesConfirmationData.value)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Período:</span>
+                      <span className="text-sm font-medium text-gray-900">{deleteSeriesConfirmationData.period}</span>
+                    </div>
+                  </div>
+
+                  {/* Advertencia */}
+                  <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <span className="text-yellow-600 text-xs font-bold">!</span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botones de acción */}
+                  <div className="w-full space-y-2">
+                    <button
+                      onClick={handleConfirmDeleteSeries}
+                      disabled={loading}
+                      className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
+                          Eliminando...
+                        </div>
+                      ) : (
+                        'Eliminar serie'
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={handleCancelDeleteSeries}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Delete Individual Confirmation Modal */}
+          {showDeleteIndividualConfirmation && deleteIndividualConfirmationData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
                 <button
                   onClick={handleCancelDeleteIndividual}
-                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
                 >
-                  Cancelar
+                  <X className="h-5 w-5" />
                 </button>
-              </div>
+
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full p-1.5">
+                      <Trash2 className="h-4 w-4 text-error-red" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Confirmar eliminación</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">Revisa los datos antes de eliminar</p>
+                  
+                  {/* Información de la transacción */}
+                  <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Descripción:</span>
+                      <span className="text-sm font-medium text-gray-900">{deleteIndividualConfirmationData.description}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Valor:</span>
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteIndividualConfirmationData.value)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">Fecha:</span>
+                      <span className="text-sm font-medium text-gray-900">{deleteIndividualConfirmationData.date}</span>
+                    </div>
+                  </div>
+
+                  {/* Advertencia */}
+                  <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
+                    <div className="flex items-start gap-2.5">
+                      <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
+                        <span className="text-yellow-600 text-xs font-bold">!</span>
+                      </div>
+                      <div>
+                        <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botones de acción */}
+                  <div className="w-full space-y-2">
+                    <button
+                      onClick={handleConfirmDeleteIndividual}
+                      disabled={loading}
+                      className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
+                          Eliminando...
+                        </div>
+                      ) : (
+                        'Eliminar transacción'
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={handleCancelDeleteIndividual}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </section>
             </div>
-          </section>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 } 
