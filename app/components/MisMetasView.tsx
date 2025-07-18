@@ -901,8 +901,29 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                         <div className="flex items-center justify-between">
                           {/* Left Section: Icon + Description + Years */}
                           <div className="flex items-center space-x-3">
-                            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getGoalIconBackground(goal)} transition-all duration-300 hover:scale-110`}>
-                              {getGoalIcon(goal)}
+                            <div className="transition-all duration-300 hover:scale-110">
+                              <TransactionIcon 
+                                transaction={{
+                                  type: 'expense' as const,
+                                  source_type: goal.key.startsWith('recurrent') ? 'recurrent' as const : 'non_recurrent' as const,
+                                  source_id: goal.source.id || 0,
+                                  category: goal.source.category || 'general',
+                                  status: 'pending' as const,
+                                  id: 0,
+                                  user_id: user.id,
+                                  description: goal.source.description,
+                                  value: 0,
+                                  month: 1,
+                                  year: 2025,
+                                  created_at: new Date().toISOString(),
+                                  updated_at: new Date().toISOString(),
+                                  deadline: null
+                                }}
+                                recurrentGoalMap={recurrentGoalMap}
+                                size="w-4 h-4"
+                                containerSize="w-6 h-6"
+                                showBackground={true}
+                              />
                             </div>
                             <div>
                               <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>

@@ -1181,8 +1181,28 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-3">
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getRecurrentGroupBackground(recurrentGroup)} transition-all duration-300 hover:scale-110`}>
-                                    {getRecurrentGroupIconSmall(recurrentGroup)}
+                                  <div className="transition-all duration-300 hover:scale-110">
+                                    {(() => {
+                                      const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
+                                      
+                                      if (!firstTransaction) {
+                                        return (
+                                          <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#fdf5d3]">
+                                            <Repeat className="h-4 w-4 text-[#5d7760]" />
+                                          </div>
+                                        )
+                                      }
+                                      
+                                      return (
+                                        <TransactionIcon 
+                                          transaction={firstTransaction}
+                                          recurrentGoalMap={recurrentGoalMap}
+                                          size="w-4 h-4"
+                                          containerSize="w-6 h-6"
+                                          showBackground={true}
+                                        />
+                                      )
+                                    })()}
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <span className="text-xs font-medium text-gray-900">{recurrentGroup.description}</span>
