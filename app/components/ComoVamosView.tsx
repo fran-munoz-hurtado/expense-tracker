@@ -170,17 +170,15 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
   // Get category icon using the same system as CategoriesView
   const getCategoryIcon = (categoryName: string) => {
     return (
-      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+      <Tag className={`h-4 w-4 transform rotate-180 ${
         categoryName === 'sin categoría' || categoryName === 'Sin categoría'
-          ? 'bg-red-100 text-red-600'
+          ? 'text-[#d9534f]'
           : (() => {
               // Check if it's a default category
               const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(categoryName as any)
-              return isDefaultCategory ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-[#3d9f65]'
+              return isDefaultCategory ? 'text-[#5d7760]' : 'text-[#3d9f65]'
             })()
-      }`}>
-        <Tag className="h-4 w-4 fill-current" />
-      </div>
+      } fill-current`} />
     )
   }
 

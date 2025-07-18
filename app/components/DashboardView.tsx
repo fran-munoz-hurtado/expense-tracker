@@ -2684,9 +2684,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         onClick={() => handleCategorySelection('Sin categoría')}
                       >
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#fcebea] text-green-600">
-                            <Tag className="h-4 w-4" fill="currentColor" />
-                          </div>
+                          <Tag className="h-4 w-4 transform rotate-180 text-[#d9534f] fill-current" />
                           <span className="text-sm text-neutral-700 font-medium">
                             Sin categoría
                           </span>
@@ -2704,9 +2702,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
                         >
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#e6f4ea] text-green-600">
-                              <Tag className="h-4 w-4" fill="currentColor" />
-                            </div>
+                            <Tag className="h-4 w-4 transform rotate-180 text-[#3d9f65] fill-current" />
                             <span className="text-sm text-neutral-700 font-medium">
                               {selectedTransactionForCategory.category}
                             </span>
@@ -2732,11 +2728,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               onClick={() => handleCategorySelection(category)}
                             >
                               <div className="flex items-center space-x-3">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                                  isDefault ? 'bg-[#e6f4ea] text-green-600' : 'bg-[#f0f0ec] text-[#7c8c7c]'
-                                }`}>
-                                  <Tag className="h-4 w-4" fill="currentColor" />
-                                </div>
+                                <Tag className={`h-4 w-4 transform rotate-180 ${
+                                  isDefault ? 'text-[#3d9f65]' : 'text-[#5d7760]'
+                                } fill-current`} />
                                 <span className="text-sm text-neutral-700 font-medium">
                                   {category}
                                 </span>
