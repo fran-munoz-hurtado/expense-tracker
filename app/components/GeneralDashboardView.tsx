@@ -1476,11 +1476,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 <button
                   onClick={handleConfirmDeleteSeries}
                   disabled={loading}
-                  className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
                       Eliminando...
                     </div>
                   ) : (
@@ -1556,11 +1556,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 <button
                   onClick={handleConfirmDeleteIndividual}
                   disabled={loading}
-                  className="w-full px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
                       Eliminando...
                     </div>
                   ) : (
