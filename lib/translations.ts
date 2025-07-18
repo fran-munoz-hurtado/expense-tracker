@@ -16,9 +16,9 @@ export const translations = {
   errorOccurred: 'Ocurrió un error',
   
   // Navigation
-  thisMonth: 'El mes',
-  allExpenses: 'Panorama General',
-  misMetas: 'Mis metas',
+  thisMonth: 'Mis cuentas',
+  allExpenses: 'Balance general',
+  misMetas: 'Mis objetivos',
   dashboard: 'Dashboard',
   yearlySummary: 'Resumen Anual',
   
@@ -171,6 +171,6 @@ export const texts = translations
 
 // Section titles for easy customization
 export const SECTION_TITLES = {
-  MONTH_CONTROL: 'El mes',
-  GENERAL_OVERVIEW: 'Panorama General',
+  MONTH_CONTROL: 'Mis cuentas',
+  GENERAL_OVERVIEW: 'Balance general',
 } as const; 

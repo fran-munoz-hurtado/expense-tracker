@@ -1,6 +1,5 @@
-// Dashboard Table Utilities
-// Centraliza la lógica de obtención de totales, pagados, pendientes y porcentaje para cualquier tipo de columna
-// Facilita el mantenimiento y la extensión de la tabla de Panorama General
+// Configuración de columnas para tabla de transacciones
+// Facilita el mantenimiento y la extensión de la tabla de Balance general
 
 import { Transaction } from '@/lib/supabase'
 

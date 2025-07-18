@@ -10,15 +10,25 @@ lib/translations.ts
 
 ## Secciones Principales
 
-### 1. El mes (antes "Control del Mes")
+### 1. Mis cuentas (antes "Control del Mes")
 - **Clave**: `thisMonth`
-- **Ubicación**: Línea ~35 en `lib/translations.ts`
+- **Ubicación**: Línea ~20 en `lib/translations.ts`
 - **Función**: Dashboard mensual con transacciones específicas del mes seleccionado
 
-### 2. Panorama General (antes "Todos los Gastos")
+### 2. Balance general (antes "Todos los Gastos")
 - **Clave**: `allExpenses`
-- **Ubicación**: Línea ~75 en `lib/translations.ts`
+- **Ubicación**: Línea ~21 en `lib/translations.ts`
 - **Función**: Resumen anual por mes y tipo de gasto
+
+### 3. ¿En qué gasto? (antes "Por Categorías")
+- **Clave**: `label` en Sidebar
+- **Ubicación**: Línea ~40 en `app/components/Sidebar.tsx`
+- **Función**: Análisis de gastos organizados por categoría
+
+### 4. Mis objetivos (antes "Mis Metas")
+- **Clave**: `misMetas`
+- **Ubicación**: Línea ~22 en `lib/translations.ts`
+- **Función**: Gestión y monitoreo de metas financieras
 
 ## Cómo Cambiar los Nombres
 
@@ -30,108 +40,80 @@ Abre `lib/translations.ts` y busca las siguientes líneas:
 totalBalance: "Total del Mes",
 totalIncome: "Cuánto entra",
 totalExpenses: "Cuánto sale",
-thisMonth: "El mes",        // ← Cambiar aquí
+thisMonth: "Mis cuentas",        // ← Cambiar aquí
 lastMonth: "Mes pasado",
 thisYear: "Este año",
-lastYear: "Año pasado",
-
-// ... más código ...
-
-allExpenses: "Panorama General",     // ← Cambiar aquí
-yearlySummary: "Resumen anual por mes y tipo",
+// ... más líneas
+allExpenses: "Balance general",     // ← Cambiar aquí
+misMetas: "Mis objetivos",        // ← Cambiar aquí
 ```
 
-### Paso 2: Cambiar los valores
-Simplemente modifica los valores entre comillas:
+### Paso 2: Editar el Sidebar (para "¿En qué gasto?")
+Abre `app/components/Sidebar.tsx` y busca:
 
 ```typescript
-// Ejemplo de cambio
-thisMonth: "Mi Vista Mensual",       // Nuevo nombre
-allExpenses: "Resumen Anual",        // Nuevo nombre
+{
+  id: 'categories',
+  label: '¿En qué gasto?',    // ← Cambiar aquí
+  icon: FolderOpen,
+  description: 'Analiza tus gastos organizados por categoría'
+},
 ```
 
-### Paso 3: Guardar y verificar
-1. Guarda el archivo
-2. El servidor se recargará automáticamente
-3. Verifica que los cambios aparezcan en la interfaz
+### Paso 3: Verificar cambios
+Los nombres se actualizarán automáticamente en:
+- 🧭 Sidebar de navegación
+- 📊 Títulos de las páginas
+- 🔗 Referencias internas
+- 📱 Tooltips y ayudas
 
-## Ventajas de esta Implementación
+### Ejemplos de Uso Anterior
 
-✅ **Centralizado**: Todos los nombres están en un solo lugar
-✅ **Fácil de mantener**: No hay nombres hardcodeados en componentes
-✅ **Consistente**: Todos los componentes usan las mismas traducciones
-✅ **Escalable**: Fácil agregar nuevos idiomas en el futuro
-✅ **Sin rompimientos**: Los cambios no afectan la funcionalidad
-
-## Estructura de Archivos
-
-```
-lib/
-├── translations.ts          # ← Nombres centralizados aquí
-├── services/
-│   └── NavigationService.ts # Usa las traducciones
-└── hooks/
-    └── useAppNavigation.ts  # Usa las traducciones
-
-app/
-├── components/
-│   ├── Sidebar.tsx         # Usa las traducciones
-│   ├── DashboardView.tsx   # Usa las traducciones
-│   └── GeneralDashboardView.tsx # Usa las traducciones
-└── page.tsx                # Usa las traducciones
-```
-
-## Ejemplos de Cambios
-
-### Cambio Simple
 ```typescript
-// Antes
-thisMonth: "Control del Mes",
-allExpenses: "Panorama General",
+// ANTES (versión antigua)
+export const translations = {
+  // Navigation  
+  thisMonth: "Control del Mes",
+  allExpenses: "Panorama General",
+  misMetas: "Mis metas",
+  // ... resto del archivo
+}
 
-// Después
-thisMonth: "Mi Mes",
-allExpenses: "Vista General",
+// Sidebar antes
+{
+  id: 'categories',
+  label: 'Por Categorías',
+  // ...
+}
 ```
 
-### Cambio con Emojis
 ```typescript
-// Antes
-thisMonth: "Control del Mes",
-allExpenses: "Panorama General",
+// DESPUÉS (versión actual)
+export const translations = {
+  // Navigation  
+  thisMonth: "Mis cuentas",
+  allExpenses: "Balance general", 
+  misMetas: "Mis objetivos",
+  // ... resto del archivo
+}
 
-// Después
-thisMonth: "📊 Control del Mes",
-allExpenses: "📈 Panorama General",
+// Sidebar después
+{
+  id: 'categories',
+  label: '¿En qué gasto?',
+  // ...
+}
 ```
 
-### Cambio Más Descriptivo
-```typescript
-// Antes
-thisMonth: "Control del Mes",
-allExpenses: "Panorama General",
+### Impacto de los Cambios
 
-// Después
-thisMonth: "Vista Mensual Detallada",
-allExpenses: "Resumen Anual Completo",
-```
+✅ **Automaticamente actualizados:**
+- Sidebar de navegación
+- Títulos de páginas
+- Referencias en tooltips
+- Logs de depuración
 
-## Notas Importantes
-
-- **No hardcodear**: Nunca pongas los nombres directamente en los componentes
-- **Usar traducciones**: Siempre usa `texts.thisMonth` y `texts.allExpenses`
-- **Consistencia**: Mantén el mismo estilo de lenguaje en toda la app
-- **Testing**: Verifica que los cambios funcionen en todas las vistas
-
-## Troubleshooting
-
-### Si los cambios no aparecen:
-1. Verifica que guardaste el archivo
-2. Revisa que el servidor se recargó
-3. Limpia el caché del navegador
-4. Reinicia el servidor si es necesario
-
-### Si hay errores:
-1. Verifica la sintaxis TypeScript
-2. Asegúrate de que las comillas estén correctas
-3. Revisa que no haya caracteres especiales problemáticos 
+⚠️ **Require actualización manual:**
+- Comentarios en el código
+- Documentación adicional
+- Archivos de configuración externos 

@@ -111,7 +111,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     }
   }
 
-  // Navigation function to go to El mes
+  // Navigation function to go to Mis cuentas
   const handleNavigateToControlDelMes = () => {
     navigation.navigateToDashboard(currentMonth, currentYear)
   }

@@ -37,7 +37,7 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
     },
     {
       id: 'categories',
-      label: 'Por Categorías',
+      label: '¿En qué gasto?',
       icon: FolderOpen,
       description: 'Analiza tus gastos organizados por categoría'
     },
