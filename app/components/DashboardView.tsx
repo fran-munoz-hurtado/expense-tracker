@@ -2031,25 +2031,25 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
               {/* Mensaje específico según el tipo */}
               {deleteModalData.isRecurrent ? (
-                <div className="w-full bg-error-bg border border-red-200 rounded-lg p-2.5">
+                <div className="w-full bg-red-50 border border-red-200 rounded-lg p-2.5">
                   <div className="flex items-start gap-2.5">
                     <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
-                      <Info className="h-3 w-3 text-error-red" />
+                      <Info className="h-3 w-3 text-red-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-error-red font-medium mb-0.5">Esta es una transacción de gasto recurrente.</p>
-                      <p className="text-sm text-error-red">Elige qué quieres eliminar:</p>
+                      <p className="text-sm text-red-800 font-medium mb-0.5">Esta es una transacción recurrente.</p>
+                      <p className="text-sm text-red-800">Elige qué quieres eliminar:</p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="w-full bg-error-bg border border-red-200 rounded-lg p-2.5">
+                <div className="w-full bg-red-50 border border-red-200 rounded-lg p-2.5">
                   <div className="flex items-start gap-2.5">
                     <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
-                      <Info className="h-3 w-3 text-error-red" />
+                      <Info className="h-3 w-3 text-red-600" />
                     </div>
                     <div>
-                      <p className="text-sm text-error-red">¿Estás seguro de que quieres eliminar esta transacción?</p>
+                      <p className="text-sm text-red-800">¿Estás seguro de que quieres eliminar esta transacción?</p>
                     </div>
                   </div>
                 </div>
