@@ -1025,9 +1025,13 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                     {yearData.transactions.map((transaction) => (
                                       <div key={transaction.id} className="flex items-center justify-between py-2 px-3 bg-white rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 min-h-[20px]">
                                         <div className="flex items-center space-x-2">
-                                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTransactionBackground(transaction)}`}>
-                                            {getTransactionIconOnly(transaction)}
-                                          </div>
+                                          <TransactionIcon 
+                                            transaction={transaction}
+                                            recurrentGoalMap={recurrentGoalMap}
+                                            size="w-4 h-4"
+                                            containerSize="w-6 h-6"
+                                            showBackground={true}
+                                          />
                                           <span className="text-xs font-medium text-gray-700 min-w-0 month-name">
                                             {months[transaction.month - 1]}
                                           </span>

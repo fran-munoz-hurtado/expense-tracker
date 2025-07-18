@@ -1288,9 +1288,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                 <div key={transaction.id} className="bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
                                                   <div className="flex items-center justify-between">
                                                     <div className="flex items-center space-x-2">
-                                                      <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTransactionBackground(transaction)}`}>
-                                                        {getTransactionIconOnly(transaction)}
-                                                      </div>
+                                                      <TransactionIcon 
+                                                        transaction={transaction}
+                                                        recurrentGoalMap={recurrentGoalMap}
+                                                        size="w-4 h-4"
+                                                        containerSize="w-6 h-6"
+                                                        showBackground={true}
+                                                      />
                                                       <span className="text-xs text-gray-900">{months[transaction.month - 1]}</span>
                                                       {transaction.year === new Date().getFullYear() && transaction.month === new Date().getMonth() + 1 && (
                                                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
@@ -1359,9 +1363,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             <div className="flex items-center justify-between">
                               {/* LEFT: Icon + Description + Year */}
                               <div className="flex items-center space-x-3">
-                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${getTransactionBackground(transaction)}`}>
-                                  {getTransactionIconOnly(transaction)}
-                                </div>
+                                <TransactionIcon 
+                                  transaction={transaction}
+                                  recurrentGoalMap={recurrentGoalMap}
+                                  size="w-4 h-4"
+                                  containerSize="w-6 h-6"
+                                  showBackground={true}
+                                />
                                 <div className="flex items-center space-x-2">
                                   <span className="text-xs text-gray-900">{transaction.description}</span>
                                   <span className="text-xs text-gray-500">{months[transaction.month - 1]} {transaction.year}</span>
