@@ -96,12 +96,12 @@ export function getTransactionIconShadow(
   transaction: Transaction, 
   iconType: string
 ): string {
-  // Clean floating effect - appears lifted above the screen
-  const baseEffect = 'shadow-[0px_4px_12px_rgba(0,0,0,0.15),0px_2px_4px_rgba(0,0,0,0.10)] border border-[rgba(0,0,0,0.08)]'
+  // Very pronounced floating effect using standard Tailwind classes  
+  const baseEffect = 'shadow-2xl border-2 border-gray-300 ring-4 ring-gray-100'
   
   // Add extra glow for savings transactions
   if (iconType === 'SAVINGS_TROPHY') {
-    return `${baseEffect} shadow-[0_0_16px_rgba(61,159,101,0.4),0px_4px_12px_rgba(0,0,0,0.15),0px_2px_4px_rgba(0,0,0,0.10)]`
+    return `${baseEffect} shadow-green-500 ring-green-200 border-green-300`
   }
   
   return baseEffect
