@@ -1511,6 +1511,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                           Monto
                         </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                          Adjuntos
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white">
@@ -1545,7 +1548,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           <React.Fragment key={year}>
                             {/* Year divider row */}
                             <tr>
-                              <td colSpan={4} className="px-4 pt-4 pb-2 border-t border-gray-200 bg-white">
+                              <td colSpan={5} className="px-4 pt-4 pb-2 border-t border-gray-200 bg-white">
                                 <div className="text-sm text-gray-500 font-sans">
                                   {year}
                                 </div>
@@ -1604,6 +1607,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                   <div className="text-sm font-medium text-gray-900 font-sans">
                                     {formatCurrency(transaction.value)}
                                   </div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-center">
+                                  <AttachmentClip transaction={transaction} />
                                 </td>
                               </tr>
                             ))}
