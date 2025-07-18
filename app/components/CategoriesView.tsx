@@ -1071,13 +1071,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             setSelectedCategory(group.categoryName)
                           }}
                           className={`w-full p-4 text-left border-b border-gray-100 transition-colors ${
-                            isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
+                            isSelected ? 'bg-gray-50' : 'hover:bg-gray-50'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
                               <div className="flex-1 min-w-0">
-                                <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-dark'} truncate font-sans`}>
+                                <h3 className="text-sm font-medium text-gray-dark truncate font-sans">
                                   {displayName}
                                 </h3>
                                 <div className="mt-1 mb-1">
@@ -1100,7 +1100,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             </div>
                             
                             <div className="text-right flex-shrink-0">
-                              <p className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-dark'} font-sans`}>
+                              <p className="text-sm font-medium text-gray-dark font-sans">
                                 {formatCurrency(group.total)}
                               </p>
                               <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
