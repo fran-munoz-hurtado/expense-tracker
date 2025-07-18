@@ -1385,23 +1385,23 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
           {/* Expandable Filters Content */}
           {filtersExpanded && (
-            <div className="p-3 border-t border-border-light">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Modern Year Filter */}
                 <div className="relative group">
-                  <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Año</label>
+                  <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Año</label>
                   <div className="relative">
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="w-full px-2 py-2 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
+                      className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
                     >
                       {availableYears.map(year => (
                         <option key={year} value={year}>{year}</option>
                       ))}
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-3 w-3 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
@@ -1410,19 +1410,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 
                 {/* Modern Month Filter */}
                 <div className="relative group">
-                  <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Mes</label>
+                  <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Mes</label>
                   <div className="relative">
                     <select
                       value={selectedMonth}
                       onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                      className="w-full px-2 py-2 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
+                      className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
                     >
                       {months.map((month, index) => (
                         <option key={index + 1} value={index + 1}>{month}</option>
                       ))}
                     </select>
                     <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-3 w-3 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
@@ -1431,11 +1431,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 
                 {/* Modern Type Filter - Toggle Buttons */}
                 <div className="relative group">
-                  <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Tipo</label>
+                  <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Tipo</label>
                   <div className="flex space-x-1 bg-neutral-bg p-1 rounded-mdplus border border-border-light">
                     <button
                       onClick={() => setFilterType('all')}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
                         filterType === 'all'
                           ? 'bg-green-primary text-white shadow-soft'
                           : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
@@ -1445,7 +1445,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     </button>
                     <button
                       onClick={() => setFilterType('recurrent')}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
                         filterType === 'recurrent'
                           ? 'bg-green-primary text-white shadow-soft'
                           : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
@@ -1455,7 +1455,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     </button>
                     <button
                       onClick={() => setFilterType('non_recurrent')}
-                      className={`flex-1 px-2 py-1.5 text-xs font-medium rounded-mdplus transition-all duration-200 font-sans ${
+                      className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
                         filterType === 'non_recurrent'
                           ? 'bg-green-primary text-white shadow-soft'
                           : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
@@ -1468,7 +1468,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 
                 {/* Quick Actions */}
                 <div className="relative group">
-                  <label className="block text-xs font-medium text-gray-dark mb-1 font-sans">Acciones</label>
+                  <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Acciones</label>
                   <div className="flex space-x-1">
                     <button
                       onClick={() => {
@@ -1476,7 +1476,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         setSelectedMonth(new Date().getMonth() + 1);
                         setFilterType('all');
                       }}
-                      className="w-full px-2 py-1.5 bg-green-primary text-white text-xs font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
+                      className="w-full px-3 py-2.5 bg-green-primary text-white text-sm font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
                     >
                       Mes Actual
                     </button>
@@ -1507,7 +1507,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
             <>
               {/* Desktop Table View */}
               <div className="hidden lg:block overflow-x-auto" onMouseLeave={() => setHoveredRow(null)}>
-                <table className="min-w-full divide-y divide-border-light">
+                <table className="min-w-full">
                   <thead className="bg-gray-50">
                     <tr>
                       <th 
@@ -1557,11 +1557,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-border-light">
+                  <tbody className="bg-white">
                     {finalSortedTransactions.map((transaction) => {
                       const isSavingsTransaction = transaction.category === 'Ahorro'
                       return (
-                        <tr key={transaction.id} className="bg-white hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md">
+                        <tr key={transaction.id} className="bg-white hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md border-b border-gray-100">
                           <td className="px-4 py-4 whitespace-nowrap">
                             <div className="flex items-center space-x-3">
                               <div className="flex items-center space-x-2">
