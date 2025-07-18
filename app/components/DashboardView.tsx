@@ -1493,7 +1493,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
           {/* Transactions List */}
           <div className="rounded-xl bg-white shadow-soft p-4">
-            <div className="pb-4 border-b border-border-light">
+            <div className="mb-4">
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0">
                 <h2 className="text-sm font-medium text-gray-dark font-sans mb-1">
                   {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
@@ -1564,8 +1564,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         {finalSortedTransactions.map((transaction) => {
                           const isSavingsTransaction = transaction.category === 'Ahorro'
                           return (
-                            <tr key={transaction.id} className="bg-white hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md border-b border-gray-100">
-                              <td className="px-4 py-4 whitespace-nowrap">
+                            <tr key={transaction.id} className="bg-white hover:bg-gray-50 transition-colors border-b border-gray-100">
+                              <td className="px-4 py-3 whitespace-nowrap">
                                 <div className="flex items-center space-x-3">
                                   <div className="flex items-center space-x-2">
                                     {/* Usar TransactionIcon parametrizado */}
@@ -1577,7 +1577,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                     />
                                   </div>
                                   <div>
-                                    <div className="text-xs font-medium text-gray-dark flex items-center gap-2 transaction-description font-sans">
+                                    <div className="text-sm font-medium text-gray-900 flex items-center gap-2 transaction-description font-sans">
                                       <span>{transaction.description}</span>
                                       {/* Navigation Link Icon for Goal Transactions */}
                                       {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
@@ -1597,6 +1597,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                           </svg>
                                         </button>
                                       )}
+                                      
                                       {/* Category - moved to same line as title */}
                                       {transaction.type === 'expense' && 
                                        !(transaction.category === 'Ahorro' && 
@@ -1645,17 +1646,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
+                              <td className="px-4 py-3 whitespace-nowrap">
                                 <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
                                   getStatusColor(transaction)
                                 )}>
                                   {getStatusText(transaction)}
                                 </span>
                               </td>
-                              <td className="px-4 py-4 whitespace-nowrap text-xs text-gray-dark transaction-amount font-sans"> 
-                                {formatCurrency(transaction.value)}
+                              <td className="px-4 py-3 whitespace-nowrap text-right">
+                                <div className="text-sm font-medium text-gray-900 font-sans">
+                                  {formatCurrency(transaction.value)}
+                                </div>
                               </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
+                              <td className="px-4 py-3 whitespace-nowrap">
                                 <div className="relative">
                                   <input
                                     type="checkbox"
@@ -1708,7 +1711,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   </label>
                                 </div>
                               </td>
-                              <td className="px-4 py-4 whitespace-nowrap">
+                              <td className="px-4 py-3 whitespace-nowrap">
                                 <div className="flex items-center gap-x-1">
                                   <button
                                     onClick={() => handleAttachmentList(transaction)}
@@ -1751,7 +1754,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   {finalSortedTransactions.map((transaction) => {
                     const isSavingsTransaction = transaction.category === 'Ahorro'
                     return (
-                      <div key={transaction.id} className="bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150">
+                      <div key={transaction.id} className="bg-white rounded-lg shadow-soft border border-border-light p-4 mobile-card hover:bg-gray-50 transition-colors">
                         {/* Header */}
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex items-center space-x-2 flex-1 min-w-0">
@@ -1763,7 +1766,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               showBackground={true}
                             />
                             <div className="min-w-0 flex-1">
-                              <h3 className="text-xs font-medium text-gray-dark truncate flex items-center gap-2 transaction-description font-sans">
+                              <h3 className="text-sm font-medium text-gray-900 truncate flex items-center gap-2 transaction-description font-sans">
                                 <span>{transaction.description}</span>
                                 {/* Navigation Link Icon for Goal Transactions - Mobile View */}
                                 {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
@@ -1832,7 +1835,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             </div>
                           </div>
                           <div className="text-right ml-2">
-                            <div className="text-xs text-gray-dark transaction-amount font-sans">{formatCurrency(transaction.value)}</div>
+                            <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(transaction.value)}</div>
                             <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
                               getStatusColor(transaction)
                             )}>
