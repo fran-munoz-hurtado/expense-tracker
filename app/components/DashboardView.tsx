@@ -1166,40 +1166,49 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     return null
   }
 
+  // Helper function to get days until deadline and format it - same logic as ComoVamosView
+  const getDaysUntilDeadlineText = (deadline: string) => {
+    const [year, month, day] = deadline.split('-').map(Number);
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const deadlineDate = new Date(year, month - 1, day);
+    const diffTime = deadlineDate.getTime() - todayDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays > 0) {
+      return {
+        text: `Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`,
+        className: 'text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full'
+      };
+    } else if (diffDays === 0) {
+      return {
+        text: 'Vence hoy',
+        className: 'text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full'
+      };
+    } else {
+      return {
+        text: `Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`,
+        className: 'text-xs font-medium text-error-red bg-error-bg px-2 py-1 rounded-full'
+      };
+    }
+  }
+
+  // Updated getStatusText function to show specific due date text instead of simple states
   const getStatusText = (transaction: Transaction) => {
     if (transaction.status === 'paid') return texts.paid
     if (transaction.deadline) {
-      // Parse the date string to avoid timezone issues and compare only dates
-      const [year, month, day] = transaction.deadline.split('-').map(Number);
-      const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
-      
-      // Create today's date without time
-      const today = new Date();
-      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
-      if (deadlineDate < todayDate) {
-        return texts.overdue
-      }
+      return getDaysUntilDeadlineText(transaction.deadline).text
     }
     return texts.pending
   }
 
+  // Updated getStatusColor function to use consistent colors from getDaysUntilDeadlineText
   const getStatusColor = (transaction: Transaction) => {
-    if (transaction.status === 'paid') return `bg-blue-100 text-blue-800`
+    if (transaction.status === 'paid') return 'bg-green-light text-green-primary' // Keep the same "Pagado" badge style
     if (transaction.deadline) {
-      // Parse the date string to avoid timezone issues and compare only dates
-      const [year, month, day] = transaction.deadline.split('-').map(Number);
-      const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
-      
-      // Create today's date without time
-      const today = new Date();
-      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-      
-      if (deadlineDate < todayDate) {
-        return 'bg-red-100 text-red-800'
-      }
+      return getDaysUntilDeadlineText(transaction.deadline).className
     }
-    return 'bg-yellow-100 text-yellow-800'
+    return 'bg-warning-bg text-warning-yellow' // Default for pending without deadline
   }
 
   // 1. Construyo un mapa de recurrentes con isgoal=true
@@ -1583,34 +1592,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   </button>
                                 )}
                                 {/* Days until due - moved to right side of description */}
-                                {(() => {
-                                  if (!transaction.deadline || transaction.status === 'paid') return null;
-                                  const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                  const today = new Date();
-                                  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                                  const deadlineDate = new Date(year, month - 1, day);
-                                  const diffTime = deadlineDate.getTime() - todayDate.getTime();
-                                  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                                  if (diffDays > 0) {
-                                    return (
-                                      <span className="text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full">
-                                        {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
-                                      </span>
-                                    );
-                                  } else if (diffDays === 0) {
-                                    return (
-                                      <span className="text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full">
-                                        Vence hoy
-                                      </span>
-                                    );
-                                  } else {
-                                    return (
-                                      <span className="text-xs font-medium text-error-red bg-error-bg px-2 py-1 rounded-full">
-                                        {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
-                                      </span>
-                                    );
-                                  }
-                                })()}
+                                {null}
                               </div>
                               
                               {/* Due date and additional info below description */}
@@ -1659,10 +1641,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={cn("inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-sans", 
-                            transaction.status === 'paid' ? 'bg-green-light text-green-primary' :
-                            transaction.deadline && isDateOverdue(transaction.deadline) ? 'bg-error-bg text-error-red' : 
-                            'bg-warning-bg text-warning-yellow'
+                          <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
+                            getStatusColor(transaction)
                           )}>
                             {getStatusText(transaction)}
                           </span>
@@ -1798,34 +1778,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               </button>
                             )}
                             {/* Days until due - added to mobile view */}
-                            {(() => {
-                              if (!transaction.deadline || transaction.status === 'paid') return null;
-                              const [year, month, day] = transaction.deadline.split('-').map(Number);
-                              const today = new Date();
-                              const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                              const deadlineDate = new Date(year, month - 1, day);
-                              const diffTime = deadlineDate.getTime() - todayDate.getTime();
-                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                              if (diffDays > 0) {
-                                return (
-                                  <span className="text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full">
-                                    {`Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`}
-                                  </span>
-                                );
-                              } else if (diffDays === 0) {
-                                return (
-                                  <span className="text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full">
-                                    Vence hoy
-                                  </span>
-                                );
-                              } else {
-                                return (
-                                  <span className="text-xs font-medium text-error-red bg-error-bg px-2 py-1 rounded-full">
-                                    {`Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`}
-                                  </span>
-                                );
-                              }
-                            })()}
+                            {null}
                           </h3>
                           
                           {/* Due date and additional info below description */}
@@ -1875,9 +1828,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       <div className="text-right ml-2">
                         <div className="text-xs text-gray-dark transaction-amount font-sans">{formatCurrency(transaction.value)}</div>
                         <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
-                          transaction.status === 'paid' ? 'bg-green-light text-green-primary' :
-                          transaction.deadline && isDateOverdue(transaction.deadline) ? 'bg-error-bg text-error-red' : 
-                          'bg-warning-bg text-warning-yellow'
+                          getStatusColor(transaction)
                         )}>
                           {getStatusText(transaction)}
                         </span>
