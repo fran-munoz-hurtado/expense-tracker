@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown } from 'lucide-react'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
@@ -1847,7 +1847,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Overlay borroso y semitransparente */}
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
             <button
               onClick={handleCancelDelete}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
@@ -1856,26 +1856,28 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               <X className="h-5 w-5" />
             </button>
 
-            <div className="p-5 flex flex-col gap-4 items-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mb-2">
-                <Trash2 className="h-6 w-6 text-red-600" />
+            <div className="px-6 py-4 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-error-bg rounded-full p-1.5">
+                  <Trash2 className="h-4 w-4 text-error-red" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Confirmar Eliminación</h2>
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Confirmar Eliminación</h2>
-              <p className="text-gray-700 text-sm font-medium mb-4 text-center">¿Estás seguro de que quieres eliminar esta transacción?</p>
+              <p className="text-sm text-gray-500">¿Estás seguro de que quieres eliminar esta transacción?</p>
               
               {/* Información de la transacción */}
-              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-2">
+              <div className="w-full bg-gray-50 rounded-lg p-3 space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Descripción:</span>
-                  <span className="text-sm text-gray-900 font-semibold">{deleteModalData.transaction.description}</span>
+                  <span className="text-sm text-gray-500">Descripción:</span>
+                  <span className="text-sm font-medium text-gray-900">{deleteModalData.transaction.description}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Valor:</span>
-                  <span className="text-sm text-gray-900 font-semibold">{formatCurrency(deleteModalData.transaction.value)}</span>
+                  <span className="text-sm text-gray-500">Valor:</span>
+                  <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteModalData.transaction.value)}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-600">Fecha:</span>
-                  <span className="text-sm text-gray-900 font-semibold">
+                  <span className="text-sm text-gray-500">Fecha:</span>
+                  <span className="text-sm font-medium text-gray-900">
                     {deleteModalData.transaction.deadline ? (() => {
                       const [year, month, day] = deleteModalData.transaction.deadline!.split('-').map(Number);
                       return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
@@ -1886,37 +1888,51 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
               {/* Mensaje específico según el tipo */}
               {deleteModalData.isRecurrent ? (
-                <div className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800 font-medium mb-2">Esta es una transacción de gasto recurrente.</p>
-                  <p className="text-sm text-blue-700">Elige qué quieres eliminar:</p>
+                <div className="w-full bg-error-bg border border-red-200 rounded-lg p-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
+                      <Info className="h-3 w-3 text-error-red" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-error-red font-medium mb-0.5">Esta es una transacción de gasto recurrente.</p>
+                      <p className="text-sm text-error-red">Elige qué quieres eliminar:</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
-                <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-sm text-yellow-800">¿Estás seguro de que quieres eliminar esta transacción?</p>
+                <div className="w-full bg-error-bg border border-red-200 rounded-lg p-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <div className="flex-shrink-0 w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
+                      <Info className="h-3 w-3 text-error-red" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-error-red">¿Estás seguro de que quieres eliminar esta transacción?</p>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {/* Botones de acción */}
-              <div className="w-full space-y-3">
+              <div className="w-full space-y-2">
                 {deleteModalData.isRecurrent ? (
                   <>
                     <button
                       onClick={() => handleConfirmDelete(true)}
-                      className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                      className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
                     >
-                      Eliminar Serie Completa
+                      Toda la Serie
                     </button>
                     <button
                       onClick={() => handleConfirmDelete(false)}
-                      className="w-full px-4 py-3 bg-blue-500 text-white rounded-xl font-semibold hover:bg-blue-600 transition-colors shadow-sm"
+                      className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
                     >
-                      Eliminar Solo Esta
+                      Solo Esta Transacción
                     </button>
                   </>
                 ) : (
                   <button
                     onClick={() => handleConfirmDelete(false)}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-sm"
+                    className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
                   >
                     Eliminar Transacción
                   </button>
@@ -1924,7 +1940,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 
                 <button
                   onClick={handleCancelDelete}
-                  className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancelar
                 </button>
@@ -1939,7 +1955,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           {/* Overlay borroso y semitransparente */}
           <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-          <section className="relative bg-white rounded-xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
             <button
               onClick={handleCancelModify}
               className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
@@ -1948,73 +1964,73 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               <X className="h-5 w-5" />
             </button>
 
-            <div className="p-5 flex flex-col gap-4 items-center">
-              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mb-2">
-                <Edit className="h-6 w-6 text-blue-600" />
+            <div className="px-6 py-4 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                  <Edit className="h-4 w-4 text-green-primary" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Modificar Transacción</h2>
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-gray-900 mb-1">Modificar Transacción</h2>
-              <p className="text-gray-700 text-sm font-medium mb-4 text-center">Selecciona cómo quieres modificar esta transacción</p>
+              <p className="text-sm text-gray-500">Selecciona cómo quieres modificar esta transacción</p>
               
               {/* Información de la transacción */}
-              <div className="w-full bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Descripción:</span>
-                    <span className="text-sm text-gray-900 font-semibold">{modifyModalData.transaction.description}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Valor:</span>
-                    <span className="text-sm text-gray-900 font-semibold">{formatCurrency(modifyModalData.transaction.value)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Fecha:</span>
-                    <span className="text-sm text-gray-900 font-semibold">
-                      {modifyModalData.transaction.deadline ? (() => {
-                        const [year, month, day] = modifyModalData.transaction.deadline!.split('-').map(Number);
-                        return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                      })() : `${months[modifyModalData.transaction.month - 1]} ${modifyModalData.transaction.year}`}
-                    </span>
-                  </div>
+              <div className="w-full bg-gray-50 rounded-lg p-3 space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Descripción:</span>
+                  <span className="text-sm font-medium text-gray-900">{modifyModalData.transaction.description}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Valor:</span>
+                  <span className="text-sm font-medium text-gray-900">{formatCurrency(modifyModalData.transaction.value)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-500">Fecha:</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {modifyModalData.transaction.deadline ? (() => {
+                      const [year, month, day] = modifyModalData.transaction.deadline!.split('-').map(Number);
+                      return `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
+                    })() : `${months[modifyModalData.transaction.month - 1]} ${modifyModalData.transaction.year}`}
+                  </span>
                 </div>
               </div>
 
               {modifyModalData.isRecurrent ? (
-                <div className="w-full bg-blue-50 rounded-xl p-4 border border-blue-200">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 text-xs font-bold">i</span>
+                <div className="w-full bg-green-light border border-green-200 rounded-lg p-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                      <Info className="h-3 w-3 text-green-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-blue-800 font-medium mb-1">Esta es una transacción recurrente</p>
-                      <p className="text-xs text-blue-700">Elige qué quieres modificar:</p>
+                      <p className="text-sm text-green-primary font-medium mb-0.5">Esta es una transacción recurrente</p>
+                      <p className="text-sm text-green-primary">Elige qué quieres modificar:</p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="w-full bg-yellow-50 rounded-xl p-4 border border-yellow-200">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 w-6 h-6 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <span className="text-yellow-600 text-xs font-bold">!</span>
+                <div className="w-full bg-green-light border border-green-200 rounded-lg p-2.5">
+                  <div className="flex items-start gap-2.5">
+                    <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                      <Info className="h-3 w-3 text-green-primary" />
                     </div>
                     <div>
-                      <p className="text-sm text-yellow-800 font-medium">¿Estás seguro de que quieres modificar esta transacción?</p>
+                      <p className="text-sm text-green-primary">¿Estás seguro de que quieres modificar esta transacción?</p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="w-full space-y-3">
+              <div className="w-full space-y-2">
                 {modifyModalData.isRecurrent ? (
                   <>
                     <button
                       onClick={() => handleConfirmModify(true)}
-                      className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                      className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
                     >
                       Toda la Serie
                     </button>
                     <button
                       onClick={() => handleConfirmModify(false)}
-                      className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                      className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
                     >
                       Solo Esta Transacción
                     </button>
@@ -2022,7 +2038,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 ) : (
                   <button
                     onClick={() => handleConfirmModify(false)}
-                    className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+                    className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
                   >
                     Modificar Transacción
                   </button>
@@ -2030,7 +2046,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 
                 <button
                   onClick={handleCancelModify}
-                  className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm"
+                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancelar
                 </button>
@@ -2539,9 +2555,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       {/* Category Editing Modal */}
       {showCategoryModal && selectedTransactionForCategory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h2 className="text-lg font-semibold text-gray-900">Seleccionar Categoría</h2>
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
+              <h2 className="text-base font-semibold text-neutral-900">Seleccionar Categoría</h2>
               <button
                 onClick={() => {
                   setShowCategoryModal(false)
@@ -2562,72 +2578,54 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               </button>
             </div>
             
-            <div className="p-4">
+            <div className="px-5 py-4">
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-3">
-                  Para "{selectedTransactionForCategory.description}"
+                <p className="text-sm text-neutral-500 mb-3">
+                  Para: {selectedTransactionForCategory.description}
                 </p>
               </div>
 
               {/* Categories list */}
               <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Categorías disponibles:</h3>
+                <h3 className="text-sm text-neutral-500 mb-2">Categorías disponibles:</h3>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {/* First option: Sin categoría (red styling) */}
                   <div
-                    className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                    className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
                       selectedCategory === 'Sin categoría'
-                        ? 'bg-blue-50 border border-blue-200'
-                        : 'bg-red-50 hover:bg-red-100'
+                        ? 'bg-green-50'
+                        : 'bg-neutral-bg hover:bg-[#f5f6f4]'
                     }`}
                     onClick={() => handleCategorySelection('Sin categoría')}
                   >
                     <div className="flex items-center space-x-3">
-                      <div className={`p-1.5 rounded-full ${
-                        selectedCategory === 'Sin categoría' ? 'bg-blue-100' : 'bg-red-100'
-                      }`}>
-                        <DollarSign className={`h-3 w-3 ${
-                          selectedCategory === 'Sin categoría' ? 'text-blue-600' : 'text-red-600'
-                        }`} />
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#fcebea] text-green-600">
+                        <Tag className="h-4 w-4" fill="currentColor" />
                       </div>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm text-neutral-700 font-medium">
                         Sin categoría
                       </span>
                     </div>
-                    {selectedCategory === 'Sin categoría' && (
-                      <div className="flex items-center">
-                        <CheckCircle className="h-4 w-4 text-blue-600" />
-                      </div>
-                    )}
                   </div>
 
-                  {/* Current category (blue styling) */}
+                  {/* Current category */}
                   {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
                     <div
-                      className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                      className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
                         selectedCategory === selectedTransactionForCategory.category
-                          ? 'bg-blue-50 border border-blue-200'
-                          : 'bg-blue-50 hover:bg-blue-100'
+                          ? 'bg-green-50'
+                          : 'bg-neutral-bg hover:bg-[#f5f6f4]'
                       }`}
                       onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
                     >
                       <div className="flex items-center space-x-3">
-                        <div className={`p-1.5 rounded-full ${
-                          selectedCategory === selectedTransactionForCategory.category ? 'bg-blue-100' : 'bg-blue-100'
-                        }`}>
-                          <DollarSign className={`h-3 w-3 ${
-                            selectedCategory === selectedTransactionForCategory.category ? 'text-blue-600' : 'text-blue-600'
-                          }`} />
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm bg-[#e6f4ea] text-green-600">
+                          <Tag className="h-4 w-4" fill="currentColor" />
                         </div>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm text-neutral-700 font-medium">
                           {selectedTransactionForCategory.category}
                         </span>
                       </div>
-                      {selectedCategory === selectedTransactionForCategory.category && (
-                        <div className="flex items-center">
-                          <CheckCircle className="h-4 w-4 text-blue-600" />
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -2641,38 +2639,23 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       return (
                         <div
                           key={category}
-                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors ${
+                          className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
                             selectedCategory === category
-                              ? 'bg-blue-50 border border-blue-200'
-                              : 'bg-gray-50 hover:bg-gray-100'
+                              ? 'bg-green-50'
+                              : 'bg-neutral-bg hover:bg-[#f5f6f4]'
                           }`}
                           onClick={() => handleCategorySelection(category)}
                         >
                           <div className="flex items-center space-x-3">
-                            <div className={`p-1.5 rounded-full ${
-                              selectedCategory === category 
-                                ? 'bg-blue-100' 
-                                : isDefault 
-                                  ? 'bg-gray-100' 
-                                  : 'bg-blue-100'
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
+                              isDefault ? 'bg-[#e6f4ea] text-green-600' : 'bg-[#f0f0ec] text-[#7c8c7c]'
                             }`}>
-                              <DollarSign className={`h-3 w-3 ${
-                                selectedCategory === category 
-                                  ? 'text-blue-600' 
-                                  : isDefault 
-                                    ? 'text-gray-600' 
-                                    : 'text-blue-600'
-                              }`} />
+                              <Tag className="h-4 w-4" fill="currentColor" />
                             </div>
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm text-neutral-700 font-medium">
                               {category}
                             </span>
                           </div>
-                          {selectedCategory === category && (
-                            <div className="flex items-center">
-                              <CheckCircle className="h-4 w-4 text-blue-600" />
-                            </div>
-                          )}
                         </div>
                       )
                     })}
@@ -2684,16 +2667,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 <div className="mb-4">
                   <button
                     onClick={() => setShowAddCategoryInput(true)}
-                    className="w-full p-3 text-left border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-2 border border-dashed border-border-light rounded-md text-sm text-green-dark hover:bg-[#f8fbf7] cursor-pointer transition-colors"
                   >
-                    <span className="text-sm font-medium">+ Agregar nueva categoría</span>
+                    <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>Agregar nueva categoría</span>
                   </button>
                 </div>
               ) : (
-                <div className="mb-4">
+                <div className="mb-4 mt-4 border-t border-border-light pt-4">
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-medium text-neutral-500 mb-1">
                         Nueva categoría
                       </label>
                       <input
@@ -2701,7 +2687,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         value={newCategoryInput}
                         onChange={(e) => setNewCategoryInput(e.target.value)}
                         placeholder="Nombre de la categoría"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-1.5 rounded-md border border-border-light text-sm text-neutral-700 focus:outline-none focus:ring-2 focus:ring-green-600"
                         maxLength={50}
                         onKeyPress={(e) => {
                           if (e.key === 'Enter') {
@@ -2716,18 +2702,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         <p className="text-red-500 text-xs mt-1">{addCategoryError}</p>
                       )}
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-col sm:flex-row gap-2 mt-3">
                       <button
                         onClick={handleAddCategory}
                         disabled={addingCategory || !newCategoryInput.trim()}
-                        className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                        className="bg-green-100 text-green-800 hover:bg-green-200 rounded-md px-4 py-2 text-sm font-medium transition-all w-full sm:w-auto disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
                         {addingCategory ? 'Agregando...' : 'Agregar'}
                       </button>
                       <button
                         onClick={handleCancelAddCategory}
                         disabled={addingCategory}
-                        className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                        className="bg-neutral-100 text-neutral-600 hover:bg-neutral-200 rounded-md px-4 py-2 text-sm font-medium transition-all w-full sm:w-auto disabled:bg-gray-50 disabled:cursor-not-allowed"
                       >
                         Cancelar
                       </button>
@@ -2751,14 +2737,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     setAddingCategory(false)
                     setAddCategoryError(null)
                   }}
-                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                  className="flex-1 bg-neutral-100 text-neutral-600 py-2 px-3 rounded-md hover:bg-neutral-200 transition-colors text-sm font-medium"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={() => handleUpdateCategory()}
                   disabled={loading || !selectedCategory}
-                  className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="flex-1 bg-green-primary text-white py-2 px-3 rounded-md hover:bg-[#77b16e] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                 >
                   {loading ? 'Guardando...' : 'Actualizar'}
                 </button>
