@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Trophy } from 'lucide-react'
+import { Trophy, AlertTriangle } from 'lucide-react'
 import { type User, type Transaction } from '@/lib/supabase'
 import { fetchUserTransactions } from '@/lib/dataUtils'
 
@@ -84,10 +84,10 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
   const ResumenAhorro = () => {
     if (loading) {
       return (
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="rounded-xl bg-white shadow-soft p-4">
           <div className="animate-pulse">
-            <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+            <div className="h-3 bg-gray-200 rounded w-2/3 mb-4"></div>
             <div className="h-3 bg-gray-200 rounded w-full mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           </div>
@@ -97,7 +97,7 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
 
     if (error) {
       return (
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="rounded-xl bg-white shadow-soft p-4">
           <div className="text-center text-red-500">{error}</div>
         </div>
       )
@@ -108,7 +108,7 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
       t.type === 'expense' && t.category === 'Ahorro'
     )
 
-    // Calculate savings stats (same logic as MonthlyProgressBar)
+    // Calculate savings stats (same logic as ResumenMensual)
     const totalSavings = savingsTransactions.reduce((sum, t) => sum + t.value, 0)
     const paidSavings = savingsTransactions.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
     const pendingSavings = savingsTransactions.filter(t => {
@@ -122,10 +122,10 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
       return isDateOverdue(t.deadline)
     }).reduce((sum, t) => sum + t.value, 0)
 
-    // Calculate percentages
-    const percentage = totalSavings > 0 ? Math.round((paidSavings / totalSavings) * 100) : 0
-    const totalProgressPercentage = totalSavings > 0 ? Math.round(((paidSavings + overdueSavings) / totalSavings) * 100) : 0
-    const hasOverdue = overdueSavings > 0
+    // Calculate percentages (same logic as ResumenMensual)
+    const porcentajePagado = totalSavings > 0 ? Math.round((paidSavings / totalSavings) * 100) : 0
+    const porcentajeVencido = totalSavings > 0 ? Math.round((overdueSavings / totalSavings) * 100) : 0
+    const tieneVencimientos = overdueSavings > 0
 
     // Calculate current month savings data
     const currentMonthTransactions = transactions.filter(t => 
@@ -147,18 +147,21 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
     // If no savings, show motivational message
     if (totalSavings === 0) {
       return (
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-              <Trophy className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-dark">Resumen de ahorro</h3>
-              <p className="text-sm text-green-dark">Tu progreso general con el dinero que has decidido guardar</p>
-            </div>
+        <div className="rounded-xl bg-white shadow-soft p-4">
+          {/* Header */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
+              Resumen de ahorro
+            </h3>
+            <p className="text-xs text-gray-500 font-sans">
+              Tu progreso general con el dinero que has decidido guardar
+            </p>
           </div>
           
           <div className="text-center py-8">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trophy className="h-6 w-6 text-green-600" />
+            </div>
             <p className="text-gray-500 mb-4">
               Aún no has registrado ningún ahorro.<br />
               Empieza hoy a construir tu futuro financiero.
@@ -172,98 +175,68 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
     }
 
     return (
-      <div className="bg-white rounded-xl shadow-sm p-6">
+      <div className="rounded-xl bg-white shadow-soft p-4">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-            <Trophy className="h-5 w-5 text-green-600" />
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold text-gray-dark">Resumen de ahorro</h3>
-            <p className="text-sm text-green-dark">Tu progreso general con el dinero que has decidido guardar</p>
-          </div>
+        <div className="mb-4">
+          <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
+            Resumen de ahorro
+          </h3>
+          <p className="text-xs text-gray-500 font-sans">
+            Tu progreso general con el dinero que has decidido guardar
+          </p>
         </div>
 
-        {/* Progress Bar (same logic as MonthlyProgressBar) */}
-        <div className="mb-4">
-          <div className="relative">
-            {/* Background bar */}
-            <div className="w-full h-3 bg-beige rounded-mdplus overflow-hidden shadow-inner relative">
-              {/* Progreso pagado (verde) */}
-              {paidSavings > 0 && (
-                <div
-                  className={`absolute left-0 top-0 h-full bg-green-primary transition-all duration-1000 ease-out ${overdueSavings > 0 ? 'rounded-l-mdplus' : 'rounded-mdplus'}`}
-                  style={{ width: `${totalSavings > 0 ? (paidSavings / totalSavings) * 100 : 0}%`, zIndex: 1 }}
-                />
-              )}
-              {/* Progreso overdue (rojo) */}
-              {overdueSavings > 0 && (
-                <div
-                  className={`absolute top-0 h-full bg-error-red transition-all duration-1000 ease-out ${paidSavings > 0 ? 'rounded-r-mdplus' : 'rounded-mdplus'}`}
-                  style={{ left: `${totalSavings > 0 ? (paidSavings / totalSavings) * 100 : 0}%`, width: `${totalSavings > 0 ? (overdueSavings / totalSavings) * 100 : 0}%`, zIndex: 2 }}
-                />
-              )}
-            </div>
+        {/* Barra de progreso de ahorros (idéntica a ResumenMensual) */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-dark font-sans">Progreso de ahorro</span>
+            <span className="text-xs text-gray-500 font-sans">
+              Guardado: {porcentajePagado}% ({formatCurrency(paidSavings)})
+            </span>
+          </div>
+          
+          <div className="relative w-full h-3 bg-[#f0f0ec] rounded-full overflow-hidden">
+            {/* Pagado (verde) */}
+            <div 
+              className="absolute left-0 top-0 h-3 bg-green-primary transition-all duration-300"
+              style={{ width: `${porcentajePagado}%` }}
+            ></div>
             
-            {/* Tooltip de progreso pagado */}
-            <div
-              className="absolute -top-8 transition-all duration-1000 ease-out"
-              style={{
-                left: `${totalSavings > 0 ? (paidSavings / totalSavings) * 100 : 0}%`,
-                transform: 'translateX(-50%)',
-                zIndex: 20
-              }}
-            >
-              <div className="text-white text-xs px-2 py-1 rounded-mdplus shadow-soft font-medium bg-green-primary">
-                <div>{percentage}%</div>
-                <div className="text-xs opacity-90">{formatCurrency(paidSavings)}</div>
-              </div>
-              {/* Conditional pointer */}
-              {((totalSavings > 0 ? (paidSavings / totalSavings) * 100 : 0) < 98) && (
-                <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-dark mx-auto"></div>
-              )}
-            </div>
-            
-            {/* Overdue tooltip */}
-            {hasOverdue && (
-              <div
-                className="absolute -top-8 transition-all duration-1000 ease-out"
-                style={{
-                  left: `${Math.min(totalProgressPercentage, 95)}%`,
-                  transform: 'translateX(-50%)',
-                  zIndex: 10
+            {/* Ahorro vencido (rojo), si aplica */}
+            {tieneVencimientos && porcentajeVencido > 0 && (
+              <div 
+                className="absolute top-0 h-3 bg-error-bg transition-all duration-300"
+                style={{ 
+                  left: `${porcentajePagado}%`, 
+                  width: `${porcentajeVencido}%` 
                 }}
+              ></div>
+            )}
+            
+            {/* Badge flotante con porcentaje */}
+            {porcentajePagado > 0 && (
+              <div 
+                className="absolute -top-6 transform -translate-x-1/2 text-xs px-2 py-0.5 bg-green-primary text-white rounded-full shadow-sm font-sans"
+                style={{ left: `${Math.min(Math.max(porcentajePagado, 10), 90)}%` }}
               >
-                <div className="bg-error-red text-white text-xs px-2 py-1 rounded-mdplus shadow-soft font-medium">
-                  <div>{totalProgressPercentage}%</div>
-                  <div className="text-xs opacity-90">{formatCurrency(paidSavings + overdueSavings)}</div>
-                </div>
-                {totalProgressPercentage < 98 && (
-                  <div className="w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-error-red mx-auto"></div>
-                )}
+                {porcentajePagado}%
               </div>
             )}
           </div>
-        </div>
 
-        {/* Progress text */}
-        <div className="mb-4">
-          <p className="text-sm text-gray-dark font-medium">
-            Guardado: {percentage}% ({formatCurrency(paidSavings)} de {formatCurrency(totalSavings)})
-          </p>
-          
-          {/* Overdue warning */}
-          {hasOverdue && (
-            <p className="text-sm text-error-red mt-1 font-medium">
-              ⚠️ Falta por guardar {formatCurrency(overdueSavings)}
+          {/* Indicador de ahorro vencido */}
+          {tieneVencimientos && (
+            <p className="text-xs text-error-red mt-1 flex items-center gap-1 font-sans">
+              <AlertTriangle className="w-3 h-3" /> 
+              Falta por guardar ({formatCurrency(overdueSavings)})
             </p>
           )}
         </div>
 
         {/* Current month info */}
         {currentMonthSavings > 0 && (
-          <div className="bg-green-50 rounded-lg p-3 mt-4">
-            <p className="text-sm text-gray-dark">
+          <div className="mt-4 pt-3 border-t border-gray-100">
+            <p className="text-xs text-gray-500 font-sans">
               Este mes has ahorrado {formatCurrency(currentMonthSavings)} 
               {currentMonthIncome > 0 && (
                 <span className="text-green-600 font-medium">
