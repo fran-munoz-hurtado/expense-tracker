@@ -57,12 +57,22 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     return deadlineDate < todayDate;
   }
 
-  // Delete confirmation modal state
+  // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deleteModalData, setDeleteModalData] = useState<{
     transactionId: number
     transaction: Transaction
     isRecurrent: boolean
+  } | null>(null)
+
+  // Delete series confirmation state
+  const [showDeleteSeriesConfirmation, setShowDeleteSeriesConfirmation] = useState(false)
+  const [deleteSeriesConfirmationData, setDeleteSeriesConfirmationData] = useState<{
+    description: string
+    value: number
+    period: string
+    transactionId: number
+    transaction: Transaction
   } | null>(null)
 
   // Modify modal state
@@ -356,6 +366,69 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   const handleCancelDelete = () => {
     setShowDeleteModal(false)
     setDeleteModalData(null)
+  }
+
+  const handleDeleteSeries = async () => {
+    if (!deleteModalData) return
+
+    const { transaction } = deleteModalData
+    
+    // Get the recurrent expense data for the confirmation modal
+    const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+    if (!recurrentExpense) {
+      setError('Original recurrent expense not found')
+      return
+    }
+
+    const period = `${months[recurrentExpense.month_from - 1]} ${recurrentExpense.year_from} - ${months[recurrentExpense.month_to - 1]} ${recurrentExpense.year_to}`
+
+    setDeleteSeriesConfirmationData({
+      description: transaction.description,
+      value: transaction.value,
+      period,
+      transactionId: deleteModalData.transactionId,
+      transaction: transaction
+    })
+    
+    setShowDeleteModal(false)
+    setShowDeleteSeriesConfirmation(true)
+  }
+
+  const handleConfirmDeleteSeries = async () => {
+    if (!deleteSeriesConfirmationData) return
+
+    const { transactionId, transaction } = deleteSeriesConfirmationData
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Delete the entire recurrent series
+      const { error } = await supabase
+        .from('recurrent_expenses')
+        .delete()
+        .eq('id', transaction.source_id)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      // Trigger global data refresh using the new system
+      console.log('🔄 Triggering global data refresh after series deletion')
+      refreshData(user.id, 'delete_transaction')
+      
+    } catch (error) {
+      console.error('Error deleting series:', error)
+      setError(`Error al eliminar serie: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    } finally {
+      setLoading(false)
+      setShowDeleteSeriesConfirmation(false)
+      setDeleteSeriesConfirmationData(null)
+    }
+  }
+
+  const handleCancelDeleteSeries = () => {
+    setShowDeleteSeriesConfirmation(false)
+    setDeleteSeriesConfirmationData(null)
   }
 
   // Modify transaction functions
@@ -839,7 +912,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 {deleteModalData.isRecurrent ? (
                   <>
                     <button
-                      onClick={() => handleConfirmDelete(true)}
+                      onClick={handleDeleteSeries}
                       className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
                     >
                       Toda la Serie
@@ -1274,6 +1347,86 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Delete Series Confirmation Modal */}
+      {showDeleteSeriesConfirmation && deleteSeriesConfirmationData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={handleCancelDeleteSeries}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="px-6 py-4 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full p-1.5">
+                  <Trash2 className="h-4 w-4 text-error-red" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Confirmar eliminación</h2>
+              </div>
+              <p className="text-sm text-gray-500">Revisa los datos antes de eliminar</p>
+              
+              {/* Información de la transacción */}
+              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Descripción:</span>
+                  <span className="text-sm font-medium text-gray-900">{deleteSeriesConfirmationData.description}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Valor:</span>
+                  <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteSeriesConfirmationData.value)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Período:</span>
+                  <span className="text-sm font-medium text-gray-900">{deleteSeriesConfirmationData.period}</span>
+                </div>
+              </div>
+
+              {/* Advertencia */}
+              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span className="text-yellow-600 text-xs font-bold">!</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="w-full space-y-2">
+                <button
+                  onClick={handleConfirmDeleteSeries}
+                  disabled={loading}
+                  className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Eliminando...
+                    </div>
+                  ) : (
+                    'Eliminar serie'
+                  )}
+                </button>
+                
+                <button
+                  onClick={handleCancelDeleteSeries}
+                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </section>
         </div>
       )}
     </div>
