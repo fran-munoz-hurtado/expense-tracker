@@ -1196,7 +1196,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         <div className="p-3 border-b border-border-light">
           <button
             onClick={() => setFiltersExpanded(!filtersExpanded)}
-            className="w-full flex items-center justify-between text-left hover:bg-border-light rounded-lg p-2 transition-colors"
+            className="w-full flex items-center justify-between text-left hover:bg-[#f5f5f1] hover:shadow-sm rounded-lg p-2 transition-colors duration-200 ease-in-out"
           >
             <div className="flex items-center space-x-2">
               <div className="p-1 bg-beige rounded-lg">
@@ -1221,7 +1221,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   </span>
                 )}
               </div>
-              <div className={`transform transition-transform duration-200 ${filtersExpanded ? 'rotate-180' : ''}`}>
+              <div className={`transform transition-transform duration-200 ease-in-out ${filtersExpanded ? 'rotate-180' : ''}`}>
                 <svg className="h-4 w-4 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
