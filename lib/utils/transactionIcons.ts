@@ -86,17 +86,23 @@ export function getTransactionIconBackground(
 }
 
 /**
- * Gets the special shadow class for savings transactions
+ * Gets the special shadow and border effects for all transaction icons
+ * Creates a subtle "medal" or "coin" effect with soft elevation
  * @param transaction - The transaction object
  * @param iconType - The icon type returned by getTransactionIconType
- * @returns CSS class string for the shadow effect
+ * @returns CSS class string for the shadow and border effects
  */
 export function getTransactionIconShadow(
   transaction: Transaction, 
   iconType: string
 ): string {
+  // Apply subtle "medal" effect to all icons
+  const baseEffect = 'shadow-[0px_2px_4px_rgba(0,0,0,0.08)] border border-[rgba(0,0,0,0.05)]'
+  
+  // Add extra glow for savings transactions
   if (iconType === 'SAVINGS_TROPHY') {
-    return 'shadow-[0_0_8px_rgba(61,159,101,0.25)]'
+    return `${baseEffect} shadow-[0_0_8px_rgba(61,159,101,0.25),0px_2px_4px_rgba(0,0,0,0.08)]`
   }
-  return ''
+  
+  return baseEffect
 } 
