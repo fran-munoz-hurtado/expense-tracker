@@ -992,8 +992,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       {/* Header */}
       <div className="p-6 lg:p-8 pb-4">
         <div className="mb-4">
-          <h2 className="text-xl font-semibold text-gray-dark">Transacciones por Categoría</h2>
-          <p className="text-sm text-green-dark">Organiza y analiza tus gastos agrupados por categoría</p>
+          <h2 className="text-lg font-semibold text-neutral-900">¿En qué gasto?</h2>
+          <p className="text-sm text-neutral-500">Analiza tus gastos organizados por categoría</p>
         </div>
 
         {/* Error Display */}
@@ -1011,410 +1011,412 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       </div>
 
       {/* Main Content - Two Column Layout */}
-      <div className="flex-1 flex px-6 lg:px-8 pb-6 lg:pb-8 gap-4 min-h-0">
-        {/* Left Column - Categories List */}
-        <div className="w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="bg-neutral-bg border-b border-border-light py-2 px-4 rounded-t-md">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-green-dark">
-                Categorías
-              </span>
-              <button
-                onClick={handleCategoryManagementClick}
-                className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Gestionar categorías"
-              >
-                <Settings className="h-4 w-4" />
-              </button>
+      <div className="flex-1 px-6 sm:px-8 lg:px-16 pb-6 lg:pb-8">
+        <div className="flex flex-col lg:flex-row gap-4 min-h-0 max-w-4xl mx-auto">
+          {/* Left Column - Categories List */}
+          <div className="w-full lg:w-1/3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <div className="bg-neutral-bg border-b border-neutral-200 py-2 px-4 rounded-t-md">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-green-dark">
+                  Categorías
+                </span>
+                <button
+                  onClick={handleCategoryManagementClick}
+                  className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Gestionar categorías"
+                >
+                  <Settings className="h-4 w-4" />
+                </button>
+              </div>
             </div>
+
+            {loading ? (
+              <div className="p-6 text-center text-gray-500">{texts.loading}</div>
+            ) : categoryGroups.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">No hay categorías para mostrar</div>
+            ) : (
+              <div className="overflow-y-auto max-h-96 lg:max-h-none">
+                {categoryGroups.map((group) => {
+                  const displayName = getCategoryDisplayName(group.categoryName)
+                  const isSelected = selectedCategory === group.categoryName
+                  
+                  return (
+                    <button
+                      key={group.categoryName}
+                      onClick={() => {
+                        console.log('🖱️ CategoriesView: Category clicked', {
+                          categoryName: group.categoryName,
+                          previousSelection: selectedCategory,
+                          group: {
+                            count: group.count,
+                            total: group.total,
+                            recurrentGroups: group.recurrentGroups.length,
+                            nonRecurrentTransactions: group.nonRecurrentTransactions.length
+                          }
+                        })
+                        setSelectedCategory(group.categoryName)
+                      }}
+                      className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
+                        isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 ${
+                            group.categoryName === 'sin categoría' || group.categoryName === 'Sin categoría'
+                              ? 'bg-red-100 text-red-600'
+                              : (() => {
+                                  // Check if it's a default category
+                                  const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
+                                  return isDefaultCategory ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-[#3d9f65]'
+                                })()
+                          }`}>
+                            <Tag className="h-4 w-4 fill-current" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'} truncate`}>
+                              {displayName}
+                            </h3>
+                            <p className="text-xs text-gray-500">{group.count} transacciones</p>
+                          </div>
+                        </div>
+                        
+                        <div className="text-right flex-shrink-0">
+                          <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
+                            {formatCurrency(group.total)}
+                          </p>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                            getCategoryStatus(group.categoryName) === 'overdue' 
+                              ? 'bg-red-100 text-red-600' 
+                              : 'bg-green-100 text-green-600'
+                          }`}>
+                            {getCategoryStatus(group.categoryName) === 'overdue' ? 'Vencido' : 'Actual'}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
-          {loading ? (
-            <div className="p-6 text-center text-gray-500">{texts.loading}</div>
-          ) : categoryGroups.length === 0 ? (
-            <div className="p-6 text-center text-gray-500">No hay categorías para mostrar</div>
-          ) : (
-            <div className="overflow-y-auto">
-              {categoryGroups.map((group) => {
-                const displayName = getCategoryDisplayName(group.categoryName)
-                const isSelected = selectedCategory === group.categoryName
+          {/* Right Column - Canvas/Detail Area */}
+          <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden min-h-96">
+            {!selectedCategory ? (
+              <div className="flex flex-col items-center justify-center gap-2 text-center h-full px-4 py-8">
+                {/* Ícono */}
+                <div className="w-8 h-8 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
+                  <Tag className="w-6 h-6 fill-current" />
+                </div>
                 
-                return (
-                  <button
-                    key={group.categoryName}
-                    onClick={() => {
-                      console.log('🖱️ CategoriesView: Category clicked', {
-                        categoryName: group.categoryName,
-                        previousSelection: selectedCategory,
-                        group: {
-                          count: group.count,
-                          total: group.total,
-                          recurrentGroups: group.recurrentGroups.length,
-                          nonRecurrentTransactions: group.nonRecurrentTransactions.length
-                        }
-                      })
-                      setSelectedCategory(group.categoryName)
-                    }}
-                    className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
-                      isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 ${
-                          group.categoryName === 'sin categoría' || group.categoryName === 'Sin categoría'
-                            ? 'bg-red-100 text-red-600'
-                            : (() => {
-                                // Check if it's a default category
-                                const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
-                                return isDefaultCategory ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-[#3d9f65]'
-                              })()
-                        }`}>
-                          <Tag className="h-4 w-4 fill-current" />
-                        </div>
-                        <div>
-                          <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                            {displayName}
-                          </h3>
-                          <p className="text-xs text-gray-500">{group.count} transacciones</p>
-                        </div>
-                      </div>
-                      
-                      <div className="text-right">
-                        <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
-                          {formatCurrency(group.total)}
-                        </p>
-                        <span className={`px-2 py-1 rounded-md text-xs font-medium font-sans ${
-                          getCategoryStatus(group.categoryName) === 'overdue' 
-                            ? 'bg-error-bg text-error-red' 
-                            : 'bg-green-light text-green-primary'
-                        }`}>
-                          {getCategoryStatus(group.categoryName) === 'overdue' ? 'Vencido' : 'Al día'}
-                        </span>
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Right Column - Canvas/Detail Area */}
-        <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          {!selectedCategory ? (
-            <div className="flex flex-col items-center justify-center gap-2 text-center h-full px-4 py-8">
-              {/* Ícono */}
-              <div className="w-8 h-8 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
-                <Tag className="w-6 h-6 fill-current" />
+                {/* Textos */}
+                <p className="text-sm font-medium text-gray-dark opacity-80">Selecciona una categoría</p>
+                <p className="text-sm text-green-dark opacity-60">Haz clic en una categoría de la izquierda para ver sus transacciones</p>
               </div>
-              
-              {/* Textos */}
-              <p className="text-sm font-medium text-gray-dark opacity-80">Selecciona una categoría</p>
-              <p className="text-sm text-green-dark opacity-60">Haz clic en una categoría de la izquierda para ver sus transacciones</p>
-            </div>
-          ) : (
-            <div className="flex flex-col h-full">
-              {/* Selected Category Content - Direct Transaction Hierarchy */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {(() => {
-                  const group = categoryGroups.find(g => g.categoryName === selectedCategory)
-                  
-                  // Debug logging
-                  console.log('🔍 CategoriesView Debug:', {
-                    selectedCategory,
-                    categoryGroups: categoryGroups.map(g => ({
-                      name: g.categoryName,
-                      count: g.count,
-                      recurrentGroups: g.recurrentGroups.length,
-                      nonRecurrentTransactions: g.nonRecurrentTransactions.length
-                    })),
-                    foundGroup: group ? {
-                      name: group.categoryName,
-                      count: group.count,
-                      recurrentGroups: group.recurrentGroups.length,
-                      nonRecurrentTransactions: group.nonRecurrentTransactions.length
-                    } : null
-                  })
-                  
-                  if (!group) {
-                    console.log('❌ No group found for selectedCategory:', selectedCategory)
+            ) : (
+              <div className="flex flex-col h-full">
+                {/* Selected Category Content - Direct Transaction Hierarchy */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  {(() => {
+                    const group = categoryGroups.find(g => g.categoryName === selectedCategory)
+                    
+                    // Debug logging
+                    console.log('🔍 CategoriesView Debug:', {
+                      selectedCategory,
+                      categoryGroups: categoryGroups.map(g => ({
+                        name: g.categoryName,
+                        count: g.count,
+                        recurrentGroups: g.recurrentGroups.length,
+                        nonRecurrentTransactions: g.nonRecurrentTransactions.length
+                      })),
+                      foundGroup: group ? {
+                        name: group.categoryName,
+                        count: group.count,
+                        recurrentGroups: group.recurrentGroups.length,
+                        nonRecurrentTransactions: group.nonRecurrentTransactions.length
+                      } : null
+                    })
+                    
+                    if (!group) {
+                      console.log('❌ No group found for selectedCategory:', selectedCategory)
+                      return (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No se encontró la categoría seleccionada</p>
+                          <p className="text-xs text-gray-400 mt-2">Categoría: {selectedCategory}</p>
+                        </div>
+                      )
+                    }
+                    
+                    // Check if group has any transactions
+                    const hasTransactions = group.recurrentGroups.length > 0 || group.nonRecurrentTransactions.length > 0
+                    
+                    if (!hasTransactions) {
+                      console.log('⚠️ Group found but no transactions:', group)
+                      return (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500">No hay transacciones en esta categoría</p>
+                          <p className="text-xs text-gray-400 mt-2">Categoría: {group.categoryName}</p>
+                        </div>
+                      )
+                    }
+
                     return (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500">No se encontró la categoría seleccionada</p>
-                        <p className="text-xs text-gray-400 mt-2">Categoría: {selectedCategory}</p>
-                      </div>
-                    )
-                  }
-                  
-                  // Check if group has any transactions
-                  const hasTransactions = group.recurrentGroups.length > 0 || group.nonRecurrentTransactions.length > 0
-                  
-                  if (!hasTransactions) {
-                    console.log('⚠️ Group found but no transactions:', group)
-                    return (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500">No hay transacciones en esta categoría</p>
-                        <p className="text-xs text-gray-400 mt-2">Categoría: {group.categoryName}</p>
-                      </div>
-                    )
-                  }
+                      <div className="space-y-3">
+                        {/* Recurrent Groups */}
+                        {group.recurrentGroups.map((recurrentGroup) => {
+                          const groupKey = `${group.categoryName}-${recurrentGroup.sourceId}`
+                          const isRecurrentExpanded = expandedRecurrentGroups.has(groupKey)
+                          
+                          // Determine the year range for the description
+                          const firstYear = recurrentGroup.yearGroups[0]?.year;
+                          const lastYear = recurrentGroup.yearGroups[recurrentGroup.yearGroups.length - 1]?.year;
+                          const yearRange = firstYear === lastYear ? `${firstYear}` : `${firstYear}-${lastYear}`;
 
-                  return (
-                    <div className="space-y-3">
-                      {/* Recurrent Groups */}
-                      {group.recurrentGroups.map((recurrentGroup) => {
-                        const groupKey = `${group.categoryName}-${recurrentGroup.sourceId}`
-                        const isRecurrentExpanded = expandedRecurrentGroups.has(groupKey)
-                        
-                        // Determine the year range for the description
-                        const firstYear = recurrentGroup.yearGroups[0]?.year;
-                        const lastYear = recurrentGroup.yearGroups[recurrentGroup.yearGroups.length - 1]?.year;
-                        const yearRange = firstYear === lastYear ? `${firstYear}` : `${firstYear}-${lastYear}`;
-
-                        return (
-                          <div key={recurrentGroup.sourceId} className="bg-gray-50 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
-                            {/* Recurrent Group Header */}
-                            <button
-                              onClick={() => toggleRecurrentGroup(group.categoryName, recurrentGroup.sourceId)}
-                              className="w-full p-4 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 rounded-lg"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center space-x-3">
-                                  <div className="transition-all duration-300 hover:scale-110">
-                                    {(() => {
-                                      const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
-                                      
-                                      if (!firstTransaction) {
-                                        return (
-                                          <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#fdf5d3]">
-                                            <Repeat className="h-4 w-4 text-[#5d7760]" />
-                                          </div>
-                                        )
-                                      }
-                                      
-                                      return (
-                                        <TransactionIcon 
-                                          transaction={firstTransaction}
-                                          recurrentGoalMap={recurrentGoalMap}
-                                          size="w-4 h-4"
-                                          containerSize="w-6 h-6"
-                                          showBackground={true}
-                                        />
-                                      )
-                                    })()}
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-xs font-medium text-gray-900">{recurrentGroup.description}</span>
-                                    <span className="text-xs text-gray-500">({recurrentGroup.yearGroups.length} {recurrentGroup.yearGroups.length === 1 ? 'año' : 'años'}: {yearRange})</span>
-                                  </div>
-                                </div>
-                                
-                                {/* RIGHT: Total Value + Status + Expand Icon */}
-                                <div className="flex items-center space-x-3">
-                                  <span className="text-xs text-gray-600">{formatCurrency(recurrentGroup.total)}</span>
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${recurrentGroup.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'}`}>
-                                    {recurrentGroup.overdue > 0 ? 'Vencido' : 'Al día'}
-                                  </span>
-                                  
-                                  {isRecurrentExpanded ? (
-                                    <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
-                                  ) : (
-                                    <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
-                                  )}
-                                </div>
-                              </div>
-                            </button>
-
-                            {/* Recurrent Group Transactions */}
-                            {isRecurrentExpanded && (
-                              <div className="px-4 pb-4 bg-white rounded-b-lg">
-                                <div className="space-y-2">
-                                  {recurrentGroup.yearGroups.map((yearGroup) => {
-                                    const yearKey = `${group.categoryName}-${recurrentGroup.sourceId}-${yearGroup.year}`
-                                    const isYearGroupExpanded = expandedYearGroups.has(yearKey)
-
-                                    return (
-                                      <div key={yearGroup.year} className="bg-gray-50 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
-                                        {/* Year Group Header */}
-                                        <button
-                                          onClick={() => toggleYearGroup(group.categoryName, recurrentGroup.sourceId, yearGroup.year)}
-                                          className="w-full p-3 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 rounded-lg"
-                                        >
-                                          <div className="flex items-center justify-between">
-                                            {/* LEFT: Blue icon + Year + Actual + Months */}
-                                            <div className="flex items-center space-x-2">
-                                              <div className="p-1 rounded-full bg-blue-100 transition-all duration-300 hover:scale-110">
-                                                <Calendar className="h-3 w-3 text-blue-600" />
-                                              </div>
-                                              <div className="flex items-center space-x-2">
-                                                <span className="text-xs text-gray-900">{yearGroup.year}</span>
-                                                {yearGroup.year === new Date().getFullYear() && (
-                                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
-                                                    Actual
-                                                  </span>
-                                                )}
-                                                <span className="text-xs text-gray-500">({yearGroup.transactions.length} meses)</span>
-                                              </div>
+                          return (
+                            <div key={recurrentGroup.sourceId} className="bg-gray-50 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                              {/* Recurrent Group Header */}
+                              <button
+                                onClick={() => toggleRecurrentGroup(group.categoryName, recurrentGroup.sourceId)}
+                                className="w-full p-4 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 rounded-lg"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="transition-all duration-300 hover:scale-110">
+                                      {(() => {
+                                        const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
+                                        
+                                        if (!firstTransaction) {
+                                          return (
+                                            <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#fdf5d3]">
+                                              <Repeat className="h-4 w-4 text-[#5d7760]" />
                                             </div>
-                                            
-                                            {/* RIGHT: Total Value + Status with specific logic */}
-                                            <div className="flex items-center space-x-3">
-                                              <span className="text-xs text-gray-600">{formatCurrency(yearGroup.total)}</span>
-                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${(() => {
-                                                const currentYear = new Date().getFullYear()
-                                                const hasOverdue = yearGroup.overdue > 0
-                                                
-                                                if (hasOverdue) {
-                                                  return 'bg-error-bg text-error-red'
-                                                } else if (yearGroup.year === currentYear) {
-                                                  return 'bg-green-light text-green-primary'
-                                                } else if (yearGroup.year < currentYear) {
-                                                  return 'bg-green-light text-green-primary'
-                                                } else {
-                                                  return 'bg-warning-bg text-warning-yellow'
-                                                }
-                                              })()}`}>
-                                                {(() => {
+                                          )
+                                        }
+                                        
+                                        return (
+                                          <TransactionIcon 
+                                            transaction={firstTransaction}
+                                            recurrentGoalMap={recurrentGoalMap}
+                                            size="w-4 h-4"
+                                            containerSize="w-6 h-6"
+                                            showBackground={true}
+                                          />
+                                        )
+                                      })()}
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-xs font-medium text-gray-900">{recurrentGroup.description}</span>
+                                      <span className="text-xs text-gray-500">({recurrentGroup.yearGroups.length} {recurrentGroup.yearGroups.length === 1 ? 'año' : 'años'}: {yearRange})</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* RIGHT: Total Value + Status + Expand Icon */}
+                                  <div className="flex items-center space-x-3">
+                                    <span className="text-xs text-gray-600">{formatCurrency(recurrentGroup.total)}</span>
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${recurrentGroup.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'}`}>
+                                      {recurrentGroup.overdue > 0 ? 'Vencido' : 'Al día'}
+                                    </span>
+                                    
+                                    {isRecurrentExpanded ? (
+                                      <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                    )}
+                                  </div>
+                                </div>
+                              </button>
+
+                              {/* Recurrent Group Transactions */}
+                              {isRecurrentExpanded && (
+                                <div className="px-4 pb-4 bg-white rounded-b-lg">
+                                  <div className="space-y-2">
+                                    {recurrentGroup.yearGroups.map((yearGroup) => {
+                                      const yearKey = `${group.categoryName}-${recurrentGroup.sourceId}-${yearGroup.year}`
+                                      const isYearGroupExpanded = expandedYearGroups.has(yearKey)
+
+                                      return (
+                                        <div key={yearGroup.year} className="bg-gray-50 rounded-lg border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                                          {/* Year Group Header */}
+                                          <button
+                                            onClick={() => toggleYearGroup(group.categoryName, recurrentGroup.sourceId, yearGroup.year)}
+                                            className="w-full p-3 text-left transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm hover:bg-gray-50 rounded-lg"
+                                          >
+                                            <div className="flex items-center justify-between">
+                                              {/* LEFT: Blue icon + Year + Actual + Months */}
+                                              <div className="flex items-center space-x-2">
+                                                <div className="p-1 rounded-full bg-blue-100 transition-all duration-300 hover:scale-110">
+                                                  <Calendar className="h-3 w-3 text-blue-600" />
+                                                </div>
+                                                <div className="flex items-center space-x-2">
+                                                  <span className="text-xs text-gray-900">{yearGroup.year}</span>
+                                                  {yearGroup.year === new Date().getFullYear() && (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                                                      Actual
+                                                    </span>
+                                                  )}
+                                                  <span className="text-xs text-gray-500">({yearGroup.transactions.length} meses)</span>
+                                                </div>
+                                              </div>
+                                              
+                                              {/* RIGHT: Total Value + Status with specific logic */}
+                                              <div className="flex items-center space-x-3">
+                                                <span className="text-xs text-gray-600">{formatCurrency(yearGroup.total)}</span>
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${(() => {
                                                   const currentYear = new Date().getFullYear()
                                                   const hasOverdue = yearGroup.overdue > 0
                                                   
                                                   if (hasOverdue) {
-                                                    return 'Vencido'
+                                                    return 'bg-error-bg text-error-red'
                                                   } else if (yearGroup.year === currentYear) {
-                                                    return 'Al día'
+                                                    return 'bg-green-light text-green-primary'
                                                   } else if (yearGroup.year < currentYear) {
-                                                    return 'Pagado'
+                                                    return 'bg-green-light text-green-primary'
                                                   } else {
-                                                    return 'Pendiente'
+                                                    return 'bg-warning-bg text-warning-yellow'
                                                   }
-                                                })()}
-                                              </span>
-                                              
-                                              {isYearGroupExpanded ? (
-                                                <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
-                                              ) : (
-                                                <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
-                                              )}
-                                            </div>
-                                          </div>
-                                        </button>
-
-                                        {/* Year Group Transactions */}
-                                        {isYearGroupExpanded && (
-                                          <div className="px-3 pb-3 bg-white rounded-b-lg">
-                                            <div className="space-y-1">
-                                              {yearGroup.transactions.map((transaction) => (
-                                                <div key={transaction.id} className="bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
-                                                  <div className="flex items-center justify-between">
-                                                    <div className="flex items-center space-x-2">
-                                                      <TransactionIcon 
-                                                        transaction={transaction}
-                                                        recurrentGoalMap={recurrentGoalMap}
-                                                        size="w-4 h-4"
-                                                        containerSize="w-6 h-6"
-                                                        showBackground={true}
-                                                      />
-                                                      <span className="text-xs text-gray-900">{months[transaction.month - 1]}</span>
-                                                      {transaction.year === new Date().getFullYear() && transaction.month === new Date().getMonth() + 1 && (
-                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
-                                                          Actual
-                                                        </span>
-                                                      )}
-                                                      {/* Navigation Link Icon */}
-                                                      <button
-                                                        onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
-                                                        className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
-                                                        title={`Ir a Mis cuentas - ${months[transaction.month - 1]} ${transaction.year}`}
-                                                      >
-                                                        <svg 
-                                                          className="w-3 h-3" 
-                                                          fill="none" 
-                                                          stroke="currentColor" 
-                                                          strokeWidth="2" 
-                                                          viewBox="0 0 24 24"
-                                                        >
-                                                          <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                                        </svg>
-                                                      </button>
-                                                      {transaction.deadline && (
-                                                        <span className="text-xs text-gray-500">
-                                                          Vence: {(() => {
-                                                            const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                                            return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}`;
-                                                          })()}
-                                                        </span>
-                                                      )}
-                                                    </div>
+                                                })()}`}>
+                                                  {(() => {
+                                                    const currentYear = new Date().getFullYear()
+                                                    const hasOverdue = yearGroup.overdue > 0
                                                     
-                                                    <div className="flex items-center space-x-2">
-                                                      <span className="text-xs text-gray-900">
-                                                        {formatCurrency(transaction.value)}
-                                                      </span>
-                                                      <span className={cn(
-                                                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans",
-                                                        getStatusColor(transaction)
-                                                      )}>
-                                                        {getStatusText(transaction)}
-                                                      </span>
-                                                      {/* Attachment Clip */}
-                                                      <AttachmentClip transaction={transaction} />
+                                                    if (hasOverdue) {
+                                                      return 'Vencido'
+                                                    } else if (yearGroup.year === currentYear) {
+                                                      return 'Al día'
+                                                    } else if (yearGroup.year < currentYear) {
+                                                      return 'Pagado'
+                                                    } else {
+                                                      return 'Pendiente'
+                                                    }
+                                                  })()}
+                                                </span>
+                                                
+                                                {isYearGroupExpanded ? (
+                                                  <ChevronUp className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                                ) : (
+                                                  <ChevronDown className="h-4 w-4 text-gray-400 transition-all duration-300" />
+                                                )}
+                                              </div>
+                                            </div>
+                                          </button>
+
+                                          {/* Year Group Transactions */}
+                                          {isYearGroupExpanded && (
+                                            <div className="px-3 pb-3 bg-white rounded-b-lg">
+                                              <div className="space-y-1">
+                                                {yearGroup.transactions.map((transaction) => (
+                                                  <div key={transaction.id} className="bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                                                    <div className="flex items-center justify-between">
+                                                      <div className="flex items-center space-x-2">
+                                                        <TransactionIcon 
+                                                          transaction={transaction}
+                                                          recurrentGoalMap={recurrentGoalMap}
+                                                          size="w-4 h-4"
+                                                          containerSize="w-6 h-6"
+                                                          showBackground={true}
+                                                        />
+                                                        <span className="text-xs text-gray-900">{months[transaction.month - 1]}</span>
+                                                        {transaction.year === new Date().getFullYear() && transaction.month === new Date().getMonth() + 1 && (
+                                                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                                                            Actual
+                                                          </span>
+                                                        )}
+                                                        {/* Navigation Link Icon */}
+                                                        <button
+                                                          onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                                          className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
+                                                          title={`Ir a Mis cuentas - ${months[transaction.month - 1]} ${transaction.year}`}
+                                                        >
+                                                          <svg 
+                                                            className="w-3 h-3" 
+                                                            fill="none" 
+                                                            stroke="currentColor" 
+                                                            strokeWidth="2" 
+                                                            viewBox="0 0 24 24"
+                                                          >
+                                                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                          </svg>
+                                                        </button>
+                                                        {transaction.deadline && (
+                                                          <span className="text-xs text-gray-500">
+                                                            Vence: {(() => {
+                                                              const [year, month, day] = transaction.deadline.split('-').map(Number);
+                                                              return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}`;
+                                                            })()}
+                                                          </span>
+                                                        )}
+                                                      </div>
+                                                      
+                                                      <div className="flex items-center space-x-2">
+                                                        <span className="text-xs text-gray-900">
+                                                          {formatCurrency(transaction.value)}
+                                                        </span>
+                                                        <span className={cn(
+                                                          "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans",
+                                                          getStatusColor(transaction)
+                                                        )}>
+                                                          {getStatusText(transaction)}
+                                                        </span>
+                                                        {/* Attachment Clip */}
+                                                        <AttachmentClip transaction={transaction} />
+                                                      </div>
                                                     </div>
                                                   </div>
-                                                </div>
-                                              ))}
+                                                ))}
+                                              </div>
                                             </div>
-                                          </div>
-                                        )}
-                                      </div>
-                                    )
-                                  })}
+                                          )}
+                                        </div>
+                                      )
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      })}
-                      
-                      {/* Non-Recurrent Transactions - Level 1 Flat Layout */}
-                      {group.nonRecurrentTransactions.map((transaction) => {
-                        return (
-                          <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
-                            <div className="flex items-center justify-between">
-                              {/* LEFT: Icon + Description + Year */}
-                              <div className="flex items-center space-x-3">
-                                <TransactionIcon 
-                                  transaction={transaction}
-                                  recurrentGoalMap={recurrentGoalMap}
-                                  size="w-4 h-4"
-                                  containerSize="w-6 h-6"
-                                  showBackground={true}
-                                />
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-xs text-gray-900">{transaction.description}</span>
-                                  <span className="text-xs text-gray-500">{months[transaction.month - 1]} {transaction.year}</span>
+                              )}
+                            </div>
+                          )
+                        })}
+                        
+                        {/* Non-Recurrent Transactions - Level 1 Flat Layout */}
+                        {group.nonRecurrentTransactions.map((transaction) => {
+                          return (
+                            <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                              <div className="flex items-center justify-between">
+                                {/* LEFT: Icon + Description + Year */}
+                                <div className="flex items-center space-x-3">
+                                  <TransactionIcon 
+                                    transaction={transaction}
+                                    recurrentGoalMap={recurrentGoalMap}
+                                    size="w-4 h-4"
+                                    containerSize="w-6 h-6"
+                                    showBackground={true}
+                                  />
+                                  <div className="flex items-center space-x-2">
+                                    <span className="text-xs text-gray-900">{transaction.description}</span>
+                                    <span className="text-xs text-gray-500">{months[transaction.month - 1]} {transaction.year}</span>
+                                  </div>
                                 </div>
-                              </div>
-                              
-                              {/* RIGHT: Total Value + Status */}
-                              <div className="flex items-center space-x-3">
-                                <span className="text-xs text-gray-600">{formatCurrency(transaction.value)}</span>
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${getStatusColor(transaction)}`}>
-                                  {getStatusText(transaction)}
-                                </span>
-                                {/* Attachment Clip */}
-                                <AttachmentClip transaction={transaction} />
+                                
+                                {/* RIGHT: Total Value + Status */}
+                                <div className="flex items-center space-x-3">
+                                  <span className="text-xs text-gray-600">{formatCurrency(transaction.value)}</span>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${getStatusColor(transaction)}`}>
+                                    {getStatusText(transaction)}
+                                  </span>
+                                  {/* Attachment Clip */}
+                                  <AttachmentClip transaction={transaction} />
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )
-                })()}
+                          )
+                        })}
+                      </div>
+                    )
+                  })()}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
       
