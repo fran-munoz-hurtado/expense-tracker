@@ -95,10 +95,6 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
       `}>
         <div className="p-4 lg:p-6 border-b border-border-light">
           <h1 className="text-lg lg:text-xl font-bold text-gray-dark font-sans">{texts.appTitle}</h1>
-          <div className="mt-2 flex items-center gap-2 text-sm text-green-dark">
-            <UserIcon className="h-4 w-4" />
-            <span className="truncate">{user.first_name} {user.last_name}</span>
-          </div>
         </div>
         
         <div className="flex-1 p-4">

@@ -146,9 +146,6 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
           {/* Left side - Welcome message */}
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
             <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-primary rounded-full flex items-center justify-center flex-shrink-0 border-2 border-white">
-                <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
-              </div>
               <div className="min-w-0">
                 <h1 className="text-base sm:text-xl font-semibold text-gray-dark font-sans truncate">
                   {greeting}, {user.first_name} {user.last_name}
@@ -161,24 +158,8 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
             </div>
           </div>
 
-          {/* Right side - Actions and time */}
+          {/* Right side - User menu only */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-            {/* Quick stats indicator */}
-            <div className="hidden lg:flex items-center space-x-2 px-3 py-1 bg-beige rounded-full">
-              <DollarSign className="h-4 w-4 text-green-dark" />
-              <span className="text-sm font-medium text-green-dark font-sans">{texts.appTitle}</span>
-            </div>
-
-            {/* Notifications */}
-            <button className="p-1.5 sm:p-2 text-green-dark hover:text-gray-dark hover:bg-border-light rounded-full transition-colors">
-              <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-
-            {/* Settings */}
-            <button className="p-1.5 sm:p-2 text-green-dark hover:text-gray-dark hover:bg-border-light rounded-full transition-colors">
-              <Settings className="h-4 w-4 sm:h-5 sm:w-5" />
-            </button>
-
             {/* User menu */}
             <div className="relative" ref={dropdownRef}>
               <button 
