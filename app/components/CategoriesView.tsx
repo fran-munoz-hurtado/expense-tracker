@@ -1292,6 +1292,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                         {getTransactionIconOnly(transaction)}
                                                       </div>
                                                       <span className="text-xs text-gray-900">{months[transaction.month - 1]}</span>
+                                                      {transaction.year === new Date().getFullYear() && transaction.month === new Date().getMonth() + 1 && (
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                                                          Actual
+                                                        </span>
+                                                      )}
                                                       {/* Navigation Link Icon */}
                                                       <button
                                                         onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
