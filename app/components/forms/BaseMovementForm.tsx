@@ -3,7 +3,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { MovementType, getMovementConfig } from '@/lib/config/icons'
+import { MovementType, getMovementConfig, MOVEMENT_TYPES } from '@/lib/config/icons'
 import { User } from '@/lib/supabase'
 import { 
   FORM_CONFIGS,
@@ -21,6 +21,7 @@ import {
 import RecurrentFormFields from './RecurrentFormFields'
 import NonRecurrentFormFields from './NonRecurrentFormFields'
 import CategorySelector from './CategorySelector'
+import TransactionIcon from '../TransactionIcon'
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 interface BaseMovementFormProps {
@@ -249,19 +250,54 @@ export default function BaseMovementForm({
   const hasErrors = errors.length > 0
   const submitError = errors.find(error => error.field === 'submit')
   
+  // Generate header icon using the same system as the selection view
+  const getHeaderIcon = () => {
+    // Create a mock transaction to use with TransactionIcon
+    const mockTransaction = {
+      id: 0,
+      user_id: typeof user?.id === 'string' ? parseInt(user.id) : (user?.id || 0),
+      description: '',
+      value: 0,
+      month: 1,
+      year: 2025,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deadline: null,
+      notes: null,
+      status: 'pending' as const,
+      // Movement type specific properties
+      type: MOVEMENT_TYPES[movementType].type,
+      source_type: MOVEMENT_TYPES[movementType].source_type,
+      source_id: 1,
+      category: movementType === 'SAVINGS' ? 'Ahorro' : 'general',
+    }
+    
+    // Mock recurrentGoalMap - only GOAL should be true
+    const mockRecurrentGoalMap = {
+      1: movementType === 'GOAL'
+    }
+    
+    return (
+      <TransactionIcon 
+        transaction={mockTransaction}
+        recurrentGoalMap={mockRecurrentGoalMap}
+        size="w-4 h-4"
+        showBackground={true}
+      />
+    )
+  }
+  
   return (
     <div className={`bg-white rounded-xl shadow-lg border border-gray-200 ${className}`}>
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-4 py-3 border-b border-gray-200">
         <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-lg bg-${movementConfig.color}-100`}>
-            <movementConfig.icon className={`h-5 w-5 text-${movementConfig.color}-600`} />
-          </div>
+          {getHeaderIcon()}
           <div>
             <h3 className="text-lg font-semibold text-gray-900">
               {getFormTitle()}
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-xs text-gray-500">
               {getFormDescription()}
             </p>
           </div>
@@ -269,7 +305,7 @@ export default function BaseMovementForm({
       </div>
       
       {/* Form */}
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="p-4 space-y-3">
         {/* Form Fields */}
         {config.formType === 'recurrent' ? (
           <RecurrentFormFields
@@ -298,24 +334,9 @@ export default function BaseMovementForm({
           />
         )}
         
-        {/* Category Info for Fixed Categories */}
-        {!config.showCategorySelector && config.defaultCategory && (
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-gray-700">
-                Categoría: {config.defaultCategory}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Esta categoría se asignará automáticamente
-            </p>
-          </div>
-        )}
-        
         {/* Submit Error */}
         {submitError && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="bg-red-50 border border-red-200 rounded-md px-3 py-2">
             <div className="flex items-center space-x-2">
               <AlertCircle className="h-4 w-4 text-red-600" />
               <span className="text-sm font-medium text-red-700">
@@ -326,19 +347,19 @@ export default function BaseMovementForm({
         )}
         
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end space-x-3 pt-3 border-t border-gray-200">
           <button
             type="button"
             onClick={onCancel}
             disabled={isSubmitting || isValidating}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={isSubmitting || isValidating || hasErrors}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+            className="px-4 py-2 text-sm bg-green-primary text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
           >
             {(isSubmitting || isValidating) && (
               <Loader2 className="h-4 w-4 animate-spin" />

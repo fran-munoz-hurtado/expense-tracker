@@ -50,10 +50,10 @@ export default function CategorySelector({
   if (loading) {
     return (
       <div className={`space-y-2 ${className}`}>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Categoría *
         </label>
-        <div className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500">
+        <div className="w-full h-9 px-3 text-sm rounded-md border border-gray-300 bg-gray-50 text-gray-500 flex items-center">
           Cargando categorías...
         </div>
       </div>
@@ -62,16 +62,16 @@ export default function CategorySelector({
   
   return (
     <div className={`space-y-2 ${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-gray-700 mb-1">
         Categoría *
       </label>
       <select
         value={selectedCategory || 'Sin categoría'}
         onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-4 py-3 rounded-xl border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all text-base ${
+        className={`w-full h-9 px-3 text-sm rounded-md border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all ${
           getFieldError() 
             ? 'border-red-300 focus:border-red-500' 
-            : 'border-gray-200 focus:border-blue-500'
+            : 'border-gray-300 focus:border-blue-500'
         }`}
       >
         {categories.map(category => (
@@ -81,7 +81,7 @@ export default function CategorySelector({
         ))}
       </select>
       {getFieldError() && (
-        <p className="mt-1 text-sm text-red-600">
+        <p className="mt-1 text-xs text-red-600">
           {getFieldError()?.message}
         </p>
       )}

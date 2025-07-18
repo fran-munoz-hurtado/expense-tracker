@@ -571,7 +571,7 @@ function Home() {
               </div>
             </section>
           ) : (
-            <div className="relative z-10 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto">
               <BaseMovementForm
                 movementType={selectedMovementType}
                 user={user}

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, TrendingUp, Clock } from 'lucide-react'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
@@ -11,7 +11,6 @@ import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
-import MonthlyProgressBar from './MonthlyProgressBar'
 import TransactionIcon from './TransactionIcon'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
@@ -1333,80 +1332,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
             </div>
           </div>
         )}
-      </div>
-
-      {/* Financial Overview Section - Always Visible */}
-      <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-1.5">
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-1.5">
-          {/* Total Ingresos del Mes */}
-          <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center space-x-1.5 mb-0.5">
-              <TrendingUp className="h-3 w-3 text-gray-600 flex-shrink-0 -mt-px" />
-              <p className="text-xs font-medium text-black leading-none">{texts.monthlyIncomeTotal}</p>
-            </div>
-            <p className="text-sm text-black leading-none px-2">{formatCurrency(monthlyStats.totalIncome)}</p>
-          </div>
-
-          {/* Contenedor de Gastos Agrupados */}
-          <div className="lg:col-span-4 bg-gradient-to-br from-orange-50 to-red-50 p-1.5 rounded-xl border-2 border-orange-200 shadow-sm">
-            <div className="grid grid-cols-4 gap-1.5">
-              {/* Total Gastos del Mes */}
-              <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-                <div className="flex items-center space-x-1.5 mb-0.5">
-                  <DollarSign className="h-3 w-3 text-gray-600 flex-shrink-0 -mt-px" />
-                  <p className="text-xs font-medium text-black leading-none">Total Gastos</p>
-                </div>
-                <p className="text-sm text-black leading-none px-2">{formatCurrency(monthlyStats.totalExpenses)}</p>
-              </div>
-
-              {/* Ya pagado */}
-              <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-                <div className="flex items-center space-x-1.5 mb-0.5">
-                  <CheckCircle className="h-3 w-3 text-gray-600 flex-shrink-0 -mt-px" />
-                  <p className="text-xs font-medium text-black leading-none">Ya pagado</p>
-                </div>
-                <p className="text-sm text-black leading-none px-2">{formatCurrency(monthlyStats.paid)}</p>
-              </div>
-
-              {/* Falta pagar */}
-              <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-                <div className="flex items-center space-x-1.5 mb-0.5">
-                  <Clock className="h-3 w-3 text-gray-600 flex-shrink-0 -mt-px" />
-                  <p className="text-xs font-medium text-black leading-none">Falta pagar</p>
-                </div>
-                <p className="text-sm text-black leading-none px-2">{formatCurrency(monthlyStats.pending)}</p>
-              </div>
-
-              {/* Se pasó la fecha */}
-              <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-                <div className="flex items-center space-x-1.5 mb-0.5">
-                  <AlertCircle className="h-3 w-3 text-gray-600 flex-shrink-0 -mt-px" />
-                  <p className="text-xs font-medium text-black leading-none">Se pasó</p>
-                </div>
-                <p className="text-sm text-black leading-none px-2">{formatCurrency(monthlyStats.overdue)}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* CuantoQueda */}
-          <div className="bg-white p-1.5 rounded-lg border border-gray-200 shadow-sm">
-            <div className="flex items-center space-x-1.5 mb-0.5">
-              <CheckCircle className="h-3 w-3 text-gray-600 flex-shrink-0 -mt-px" />
-              <p className="text-xs font-medium text-black leading-none">{texts.cuantoQueda}</p>
-            </div>
-            <p className="text-sm text-black leading-none px-2">{formatCurrency(monthlyStats.balance)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Monthly Progress Bar with Integrated Totals */}
-      <div className="mb-4 bg-white border border-gray-200 rounded-xl shadow-sm p-3">
-        <MonthlyProgressBar
-          paid={monthlyStats.paid}
-          total={monthlyStats.total}
-          pending={monthlyStats.pending}
-          overdue={monthlyStats.overdue}
-        />
       </div>
 
       {/* Transactions List */}

@@ -216,11 +216,11 @@ export default function RecurrentFormFields({
   }, [isGoal, goalInputMode, installments, onGoalValidationChange])
   
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-3 ${className}`}>
       {/* Description */}
       {!hideDescription && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Descripción *
           </label>
           <input
@@ -231,15 +231,15 @@ export default function RecurrentFormFields({
               description: e.target.value
             })}
             placeholder="Ej: Arriendo del apartamento"
-            className={`w-full px-4 py-3 rounded-xl border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400 ${
+            className={`w-full h-9 px-3 text-sm rounded-md border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400 ${
               getFieldError('description') 
                 ? 'border-red-300 focus:border-red-500' 
-                : 'border-gray-200 focus:border-blue-500'
+                : 'border-gray-300 focus:border-blue-500'
             }`}
             maxLength={200}
           />
           {getFieldError('description') && (
-            <p className="mt-1 text-sm text-red-600">
+            <p className="mt-1 text-xs text-red-600">
               {getFieldError('description')?.message}
             </p>
           )}
@@ -248,7 +248,7 @@ export default function RecurrentFormFields({
 
       {/* Value */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Valor *
         </label>
         <input
@@ -257,51 +257,51 @@ export default function RecurrentFormFields({
           onChange={handleValueChange}
           onBlur={handleValueBlur}
           placeholder="$0"
-          className={`w-full px-4 py-3 rounded-xl border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400 ${
+          className={`w-full h-9 px-3 text-sm rounded-md border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400 ${
             getFieldError('value') 
               ? 'border-red-300 focus:border-red-500' 
-              : 'border-gray-200 focus:border-blue-500'
+              : 'border-gray-300 focus:border-blue-500'
           }`}
         />
         {getFieldError('value') && (
-          <p className="mt-1 text-sm text-red-600">
+          <p className="mt-1 text-xs text-red-600">
             {getFieldError('value')?.message}
           </p>
         )}
       </div>
 
       {/* Date Range */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <fieldset className="border border-gray-100 rounded-md px-3 py-2">
+        <legend className="text-sm font-medium text-gray-700 px-2">
           Período *
-        </label>
+        </legend>
         
         {/* Goal-specific input mode toggle */}
         {isGoal && (
-          <div className="mb-4">
-            <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          <div className="mb-3">
+            <div className="flex space-x-1 bg-gray-100 p-1 rounded-md">
               <button
                 type="button"
                 onClick={() => handleGoalInputModeChange('date_range')}
-                className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 py-1 rounded-sm text-xs font-medium transition-colors ${
                   goalInputMode === 'date_range'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                <Calendar className="h-4 w-4 inline mr-1" />
+                <Calendar className="h-3 w-3 inline mr-1" />
                 Rango de fechas
               </button>
               <button
                 type="button"
                 onClick={() => handleGoalInputModeChange('installments')}
-                className={`flex-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 py-1 rounded-sm text-xs font-medium transition-colors ${
                   goalInputMode === 'installments'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                <Target className="h-4 w-4 inline mr-1" />
+                <Target className="h-3 w-3 inline mr-1" />
                 Número de cuotas
               </button>
             </div>
@@ -311,7 +311,7 @@ export default function RecurrentFormFields({
         {/* Conditional rendering based on goal input mode */}
         {(!isGoal || goalInputMode === 'date_range') ? (
           // Traditional date range input
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             {/* From */}
             <div>
               <label className="block text-xs text-gray-500 mb-1">Desde</label>
@@ -322,10 +322,10 @@ export default function RecurrentFormFields({
                     ...formData,
                     month_from: parseInt(e.target.value)
                   })}
-                  className={`px-3 py-2 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-blue-100 transition-all ${
+                  className={`h-9 px-2 text-sm rounded-md border bg-white focus:ring-2 focus:ring-blue-100 transition-all ${
                     getFieldError('month_from') || getFieldError('temporal_range')
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : 'border-gray-300 focus:border-blue-500'
                   }`}
                 >
                   {AVAILABLE_MONTHS.map(month => (
@@ -340,10 +340,10 @@ export default function RecurrentFormFields({
                     ...formData,
                     year_from: parseInt(e.target.value)
                   })}
-                  className={`px-3 py-2 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-blue-100 transition-all ${
+                  className={`h-9 px-2 text-sm rounded-md border bg-white focus:ring-2 focus:ring-blue-100 transition-all ${
                     getFieldError('year_from') || getFieldError('temporal_range')
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : 'border-gray-300 focus:border-blue-500'
                   }`}
                 >
                   {AVAILABLE_YEARS.map(year => (
@@ -365,10 +365,10 @@ export default function RecurrentFormFields({
                     ...formData,
                     month_to: parseInt(e.target.value)
                   })}
-                  className={`px-3 py-2 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-blue-100 transition-all ${
+                  className={`h-9 px-2 text-sm rounded-md border bg-white focus:ring-2 focus:ring-blue-100 transition-all ${
                     getFieldError('month_to') || getFieldError('temporal_range')
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : 'border-gray-300 focus:border-blue-500'
                   }`}
                 >
                   {AVAILABLE_MONTHS.map(month => (
@@ -383,10 +383,10 @@ export default function RecurrentFormFields({
                     ...formData,
                     year_to: parseInt(e.target.value)
                   })}
-                  className={`px-3 py-2 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-blue-100 transition-all ${
+                  className={`h-9 px-2 text-sm rounded-md border bg-white focus:ring-2 focus:ring-blue-100 transition-all ${
                     getFieldError('year_to') || getFieldError('temporal_range')
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : 'border-gray-300 focus:border-blue-500'
                   }`}
                 >
                   {AVAILABLE_YEARS.map(year => (
@@ -400,7 +400,7 @@ export default function RecurrentFormFields({
           </div>
         ) : (
           // Installments input mode
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Start date */}
             <div>
               <label className="block text-xs text-gray-500 mb-1">Fecha de inicio</label>
@@ -411,10 +411,10 @@ export default function RecurrentFormFields({
                     ...formData,
                     month_from: parseInt(e.target.value)
                   })}
-                  className={`px-3 py-2 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-blue-100 transition-all ${
+                  className={`h-9 px-2 text-sm rounded-md border bg-white focus:ring-2 focus:ring-blue-100 transition-all ${
                     getFieldError('month_from') || getFieldError('temporal_range')
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : 'border-gray-300 focus:border-blue-500'
                   }`}
                 >
                   {AVAILABLE_MONTHS.map(month => (
@@ -429,10 +429,10 @@ export default function RecurrentFormFields({
                     ...formData,
                     year_from: parseInt(e.target.value)
                   })}
-                  className={`px-3 py-2 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-blue-100 transition-all ${
+                  className={`h-9 px-2 text-sm rounded-md border bg-white focus:ring-2 focus:ring-blue-100 transition-all ${
                     getFieldError('year_from') || getFieldError('temporal_range')
                       ? 'border-red-300 focus:border-red-500' 
-                      : 'border-gray-200 focus:border-blue-500'
+                      : 'border-gray-300 focus:border-blue-500'
                   }`}
                 >
                   {AVAILABLE_YEARS.map(year => (
@@ -453,25 +453,25 @@ export default function RecurrentFormFields({
                 max="240"
                 value={installmentsInputValue}
                 onChange={handleInstallmentsChange}
-                className={`w-full px-3 py-2 rounded-lg border bg-white text-sm focus:ring-2 focus:ring-blue-100 transition-all ${
+                className={`w-full h-9 px-3 text-sm rounded-md border bg-white focus:ring-2 focus:ring-blue-100 transition-all ${
                   getFieldError('installments')
                     ? 'border-red-300 focus:border-red-500' 
-                    : 'border-gray-200 focus:border-blue-500'
+                    : 'border-gray-300 focus:border-blue-500'
                 }`}
                 placeholder="Ej: 12, 180 (15 años)"
               />
               {getFieldError('installments') && (
-                <p className="mt-1 text-sm text-red-600">
+                <p className="mt-1 text-xs text-red-600">
                   {getFieldError('installments')?.message}
                 </p>
               )}
             </div>
             
             {/* Preview */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-md px-2 py-1">
               <div className="flex items-center space-x-2">
-                <Info className="h-4 w-4 text-yellow-600 flex-shrink-0" />
-                <span className="text-sm text-yellow-700">
+                <Info className="h-3 w-3 text-yellow-600 flex-shrink-0" />
+                <span className="text-xs text-yellow-700">
                   {formatInstallmentPreview(formData.month_from, formData.year_from, installments)}
                 </span>
               </div>
@@ -480,17 +480,17 @@ export default function RecurrentFormFields({
         )}
         
         {(getFieldError('temporal_range') || getFieldError('month_from') || getFieldError('year_from')) && (
-          <p className="mt-1 text-sm text-red-600">
+          <p className="mt-1 text-xs text-red-600">
             {getFieldError('temporal_range')?.message || 
              getFieldError('month_from')?.message || 
              getFieldError('year_from')?.message}
           </p>
         )}
-      </div>
+      </fieldset>
 
       {/* Payment Day */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Día de pago
           <span className="text-xs text-gray-500 ml-1">(opcional)</span>
         </label>
@@ -501,14 +501,14 @@ export default function RecurrentFormFields({
           value={formData.payment_day_deadline || ''}
           onChange={handlePaymentDayChange}
           placeholder="Día del mes (1-31)"
-          className={`w-full px-4 py-3 rounded-xl border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all text-base placeholder-gray-400 ${
+          className={`w-full h-9 px-3 text-sm rounded-md border bg-white shadow-sm focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400 ${
             getFieldError('payment_day_deadline') 
               ? 'border-red-300 focus:border-red-500' 
-              : 'border-gray-200 focus:border-blue-500'
+              : 'border-gray-300 focus:border-blue-500'
           }`}
         />
         {getFieldError('payment_day_deadline') && (
-          <p className="mt-1 text-sm text-red-600">
+          <p className="mt-1 text-xs text-red-600">
             {getFieldError('payment_day_deadline')?.message}
           </p>
         )}
