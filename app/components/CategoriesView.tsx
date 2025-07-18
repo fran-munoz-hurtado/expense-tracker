@@ -1080,13 +1080,22 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                 <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-dark'} truncate font-sans`}>
                                   {displayName}
                                 </h3>
+                                <div className="mt-1 mb-1">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    (() => {
+                                      const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
+                                      return isDefaultCategory 
+                                        ? 'bg-gray-100 text-gray-600' 
+                                        : 'bg-green-100 text-green-700'
+                                    })()
+                                  }`}>
+                                    {(() => {
+                                      const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
+                                      return isDefaultCategory ? 'Predeterminada' : 'Creada por ti'
+                                    })()}
+                                  </span>
+                                </div>
                                 <p className="text-xs text-gray-500 font-sans">{group.count} transacciones</p>
-                                <p className="text-xs text-gray-500 font-sans">
-                                  {(() => {
-                                    const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
-                                    return isDefaultCategory ? 'Predeterminada' : 'Creada por ti'
-                                  })()}
-                                </p>
                               </div>
                             </div>
                             
@@ -1508,9 +1517,15 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                 <span className="text-sm text-gray-dark font-medium">
                                   {category.name}
                                 </span>
-                                <p className="text-xs text-gray-500 font-sans">
-                                  {category.isDefault ? 'Predeterminada' : 'Creada por ti'}
-                                </p>
+                                <div className="mt-1">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                    category.isDefault 
+                                      ? 'bg-gray-100 text-gray-600' 
+                                      : 'bg-green-100 text-green-700'
+                                  }`}>
+                                    {category.isDefault ? 'Predeterminada' : 'Creada por ti'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                             <div className="flex gap-2">
@@ -1705,9 +1720,15 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                       <span className="mx-2">→</span>
                       <span className="text-sm text-green-dark font-medium">{categoryToEdit.new}</span>
                     </div>
-                    <p className="text-xs text-gray-500 font-sans">
-                      {categoryToEdit.old.isDefault ? 'Predeterminada' : 'Creada por ti'}
-                    </p>
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        categoryToEdit.old.isDefault 
+                          ? 'bg-gray-100 text-gray-600' 
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {categoryToEdit.old.isDefault ? 'Predeterminada' : 'Creada por ti'}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 

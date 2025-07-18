@@ -2688,9 +2688,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             <span className="text-sm text-neutral-700 font-medium">
                               Sin categoría
                             </span>
-                            <p className="text-xs text-gray-500 font-sans">
-                              Predeterminada
-                            </p>
+                            <div className="mt-1">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                Predeterminada
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -2710,12 +2712,19 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               <span className="text-sm text-neutral-700 font-medium">
                                 {selectedTransactionForCategory.category}
                               </span>
-                              <p className="text-xs text-gray-500 font-sans">
-                                {(() => {
-                                  const isDefault = Object.values(CATEGORIES.EXPENSE).includes(selectedTransactionForCategory.category as any)
-                                  return isDefault ? 'Predeterminada' : 'Creada por ti'
-                                })()}
-                              </p>
+                              <div className="mt-1">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                  (() => {
+                                    const isDefault = Object.values(CATEGORIES.EXPENSE).includes(selectedTransactionForCategory.category as any)
+                                    return isDefault ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'
+                                  })()
+                                }`}>
+                                  {(() => {
+                                    const isDefault = Object.values(CATEGORIES.EXPENSE).includes(selectedTransactionForCategory.category as any)
+                                    return isDefault ? 'Predeterminada' : 'Creada por ti'
+                                  })()}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -2743,9 +2752,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                   <span className="text-sm text-neutral-700 font-medium">
                                     {category}
                                   </span>
-                                  <p className="text-xs text-gray-500 font-sans">
-                                    {isDefault ? 'Predeterminada' : 'Creada por ti'}
-                                  </p>
+                                  <div className="mt-1">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      isDefault ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'
+                                    }`}>
+                                      {isDefault ? 'Predeterminada' : 'Creada por ti'}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                             </div>
