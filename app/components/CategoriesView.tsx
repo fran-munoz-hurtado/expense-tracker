@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip, Settings, Trash2, Edit2, Tag } from 'lucide-react'
+import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip, Settings, Trash2, Edit2, Tag, Plus } from 'lucide-react'
 import { type Transaction, type User, type TransactionAttachment, type RecurrentExpense } from '@/lib/supabase'
 import { fetchUserTransactions, fetchAttachmentCounts, fetchUserExpenses } from '@/lib/dataUtils'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
@@ -1188,9 +1188,23 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         if (!hasTransactions) {
                           console.log('⚠️ Group found but no transactions:', group)
                           return (
-                            <div className="text-center py-8">
-                              <p className="text-gray-500">No hay transacciones en esta categoría</p>
-                              <p className="text-xs text-gray-400 mt-2">Categoría: {group.categoryName}</p>
+                            <div className="text-center px-4 py-6">
+                              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FileText className="h-6 w-6 text-gray-400" />
+                              </div>
+                              <p className="text-sm font-medium text-gray-dark font-sans mb-1">
+                                Esta categoría aún no tiene transacciones
+                              </p>
+                              <p className="text-xs text-gray-500 font-sans mb-4">
+                                Agrega una transacción para comenzar a visualizar tus gastos aquí.
+                              </p>
+                              <button
+                                onClick={() => navigation.navigateToDashboard(new Date().getMonth() + 1, new Date().getFullYear())}
+                                className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-md hover:bg-gray-50 transition-all duration-200 hover:shadow-sm font-sans"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Añadir transacción
+                              </button>
                             </div>
                           )
                         }
