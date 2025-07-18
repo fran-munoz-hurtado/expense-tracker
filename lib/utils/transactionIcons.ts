@@ -96,12 +96,12 @@ export function getTransactionIconShadow(
   transaction: Transaction, 
   iconType: string
 ): string {
-  // Directional shadow for floating effect - projected down and to the right
-  const baseEffect = 'shadow-[2px_4px_12px_rgba(0,0,0,0.15),1px_2px_4px_rgba(0,0,0,0.1)]'
+  // Subtle but visible floating effect - mantener colores originales
+  const baseEffect = 'shadow-lg border border-gray-300 ring-2 ring-gray-100'
   
-  // Add extra glow for savings transactions
+  // Add extra effects for savings transactions - mantener colores originales
   if (iconType === 'SAVINGS_TROPHY') {
-    return `${baseEffect} shadow-[0_0_16px_rgba(61,159,101,0.3),2px_4px_12px_rgba(0,0,0,0.15),1px_2px_4px_rgba(0,0,0,0.1)]`
+    return `${baseEffect} shadow-green-300 ring-green-200 border-green-300`
   }
   
   return baseEffect
