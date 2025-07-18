@@ -74,8 +74,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const [sortField, setSortField] = useState<'description' | 'deadline' | 'status' | 'value' | null>(null)
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
 
-  // Expandable filters state
-  const [filtersExpanded, setFiltersExpanded] = useState(false)
+  // Expandable filters state - REMOVED (filters now always visible)
+  // const [filtersExpanded, setFiltersExpanded] = useState(false)
 
   // Delete confirmation state
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -1349,146 +1349,66 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Modern Compact Filters Section */}
           <div className="rounded-xl bg-white shadow-soft p-4">
-            {/* Filter Toggle Button */}
-            <div className="pb-3 border-b border-border-light">
-              <button
-                onClick={() => setFiltersExpanded(!filtersExpanded)}
-                className="w-full flex items-center justify-between text-left hover:bg-[#f5f5f1] hover:shadow-sm rounded-lg p-2 transition-colors duration-200 ease-in-out"
-              >
-                <div className="flex items-center space-x-2">
-                  <div className="p-1 bg-beige rounded-lg">
-                    <svg className="h-3 w-3 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-sm font-medium text-green-dark font-sans">Filtros Avanzados</h3>
-                  <div className="text-xs text-green-dark bg-beige px-2 py-0.5 rounded-full">
-                    {finalSortedTransactions.length} resultados
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {/* Active filters summary */}
-                  <div className="flex items-center space-x-1 text-xs">
-                    <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
-                      {months[selectedMonth - 1]} {selectedYear}
-                    </span>
-                    {filterType !== 'all' && (
-                      <span className="bg-info-bg text-info-blue px-1.5 py-0.5 rounded-full font-medium">
-                        {filterType === 'recurrent' ? 'Recurrentes' : 'Únicos'}
-                      </span>
-                    )}
-                  </div>
-                  <div className={`transform transition-transform duration-200 ease-in-out ${filtersExpanded ? 'rotate-180' : ''}`}>
-                    <svg className="h-4 w-4 text-green-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Year Filter */}
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Año</label>
+                <div className="relative">
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
+                  >
+                    {availableYears.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </div>
-              </button>
-            </div>
-
-            {/* Expandable Filters Content */}
-            {filtersExpanded && (
-              <div className="pt-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {/* Modern Year Filter */}
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Año</label>
-                    <div className="relative">
-                      <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
-                      >
-                        {availableYears.map(year => (
-                          <option key={year} value={year}>{year}</option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                        <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Modern Month Filter */}
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Mes</label>
-                    <div className="relative">
-                      <select
-                        value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                        className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
-                      >
-                        {months.map((month, index) => (
-                          <option key={index + 1} value={index + 1}>{month}</option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                        <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Modern Type Filter - Toggle Buttons */}
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Tipo</label>
-                    <div className="flex space-x-1 bg-neutral-bg p-1 rounded-mdplus border border-border-light">
-                      <button
-                        onClick={() => setFilterType('all')}
-                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                          filterType === 'all'
-                            ? 'bg-green-primary text-white shadow-soft'
-                            : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                        }`}
-                      >
-                        Todos
-                      </button>
-                      <button
-                        onClick={() => setFilterType('recurrent')}
-                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                          filterType === 'recurrent'
-                            ? 'bg-green-primary text-white shadow-soft'
-                            : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                        }`}
-                      >
-                        Recurrentes
-                      </button>
-                      <button
-                        onClick={() => setFilterType('non_recurrent')}
-                        className={`flex-1 px-3 py-2 text-sm font-medium rounded-mdplus transition-all duration-200 font-sans ${
-                          filterType === 'non_recurrent'
-                            ? 'bg-green-primary text-white shadow-soft'
-                            : 'bg-neutral-bg text-green-dark border border-border-light hover:bg-border-light'
-                        }`}
-                      >
-                        Únicos
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {/* Quick Actions */}
-                  <div className="relative group">
-                    <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Acciones</label>
-                    <div className="flex space-x-1">
-                      <button
-                        onClick={() => {
-                          setSelectedYear(new Date().getFullYear());
-                          setSelectedMonth(new Date().getMonth() + 1);
-                          setFilterType('all');
-                        }}
-                        className="w-full px-3 py-2.5 bg-green-primary text-white text-sm font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
-                      >
-                        Mes Actual
-                      </button>
-                    </div>
+              </div>
+              
+              {/* Month Filter */}
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Mes</label>
+                <div className="relative">
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                    className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
+                  >
+                    {months.map((month, index) => (
+                      <option key={index + 1} value={index + 1}>{month}</option>
+                    ))}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                    <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
                   </div>
                 </div>
               </div>
-            )}
+              
+              {/* Current Month Button */}
+              <div className="relative group">
+                <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Acciones</label>
+                <div className="flex space-x-1">
+                  <button
+                    onClick={() => {
+                      setSelectedYear(new Date().getFullYear());
+                      setSelectedMonth(new Date().getMonth() + 1);
+                      setFilterType('all');
+                    }}
+                    className="w-full px-3 py-2.5 bg-green-primary text-white text-sm font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
+                  >
+                    Mes Actual
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Transactions List */}
@@ -1499,12 +1419,85 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   {texts.forMonth} {months[selectedMonth - 1]} {selectedYear}
                 </h2>
               </div>
+              
+              {/* Monthly Summary - Only show when there are transactions */}
+              {finalSortedTransactions.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 font-sans leading-relaxed">
+                    {(() => {
+                      const incomeAmount = finalSortedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0);
+                      const expenseAmount = finalSortedTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0);
+                      const paidAmount = finalSortedTransactions.filter(t => t.type === 'expense' && t.status === 'paid').reduce((sum, t) => sum + t.value, 0);
+                      const pendingAmount = finalSortedTransactions.filter(t => t.type === 'expense' && t.status === 'pending').reduce((sum, t) => sum + t.value, 0);
+                      
+                      // Check for overdue payments
+                      const overdueAmount = finalSortedTransactions.filter(t => {
+                        if (t.type !== 'expense' || t.status !== 'pending' || !t.deadline) return false;
+                        const [year, month, day] = t.deadline.split('-').map(Number);
+                        const deadlineDate = new Date(year, month - 1, day);
+                        const today = new Date();
+                        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                        return deadlineDate < todayDate;
+                      }).reduce((sum, t) => sum + t.value, 0);
+                      
+                      // Check for savings transactions this month
+                      const paidSavings = finalSortedTransactions.filter(t => 
+                        t.type === 'expense' && 
+                        t.category === 'Ahorro' && 
+                        t.status === 'paid'
+                      ).reduce((sum, t) => sum + t.value, 0);
+                      
+                      const plannedSavings = finalSortedTransactions.filter(t => 
+                        t.type === 'expense' && 
+                        t.category === 'Ahorro' && 
+                        t.status === 'pending'
+                      ).reduce((sum, t) => sum + t.value, 0);
+                      
+                      const hasCapacityToSave = incomeAmount > expenseAmount;
+                      
+                      return (
+                        <>
+                          Este mes generaste <span className="text-green-600 font-semibold">{formatCurrency(incomeAmount)}</span> en ingresos, registraste <span className="text-blue-700 font-semibold">{formatCurrency(expenseAmount)}</span> en gastos, {paidAmount === 0 ? (
+                            <span className="text-red-400 font-semibold">aún no has pagado nada</span>
+                          ) : (
+                            <>has pagado <span className="text-green-700 font-semibold">{formatCurrency(paidAmount)}</span></>
+                          )} y {pendingAmount === 0 ? (
+                            <span className="text-green-600 font-semibold">ya pagaste todo 💚</span>
+                          ) : (
+                            <>te falta pagar <span className="text-orange-500 font-semibold">{formatCurrency(pendingAmount)}</span></>
+                          )}.{overdueAmount > 0 && (
+                            <> De los cuáles <span className="text-red-500 font-semibold">{formatCurrency(overdueAmount)}</span> están vencidos.</>
+                          )} {paidSavings > 0 ? (
+                            <> <span className="text-green-600 font-semibold">🏆 Este mes ahorraste {formatCurrency(paidSavings)}. ¡Excelente trabajo! 👏</span></>
+                          ) : plannedSavings > 0 ? (
+                            <> <span className="text-green-600 font-semibold">💡 Este mes planeaste ahorrar {formatCurrency(plannedSavings)}. ¡No olvides hacerlo!</span></>
+                          ) : hasCapacityToSave ? (
+                            <> <span className="text-green-600 font-semibold">💡 Este mes podrías guardar una parte para tu futuro. ¡Empieza con lo que puedas!</span></>
+                          ) : (
+                            <> <span className="text-green-600 font-semibold">💡 Considera revisar tus gastos para encontrar oportunidades de ahorro.</span></>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </p>
+                </div>
+              )}
             </div>
 
             {loading ? (
               <div className="p-6 text-center text-green-dark font-sans">{texts.loading}</div>
             ) : finalSortedTransactions.length === 0 ? (
-              <div className="p-6 text-center text-green-dark font-sans">{texts.empty.noTransactions}</div>
+              <div className="text-center px-4 py-8">
+                <div className="w-16 h-16 bg-green-light rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Plus className="h-8 w-8 text-green-primary" />
+                </div>
+                <h3 className="text-base font-medium text-gray-500 mb-2 font-sans opacity-80">
+                  No tienes transacciones registradas para este mes aún.
+                </h3>
+                <p className="text-sm text-gray-400 font-sans opacity-60">
+                  Empieza agregando tus ingresos o gastos y toma el control de tu dinero.
+                </p>
+              </div>
             ) : (
               <>
                 {/* Desktop Table View */}
