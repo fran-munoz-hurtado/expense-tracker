@@ -2684,15 +2684,15 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         onClick={() => handleCategorySelection('Sin categoría')}
                       >
                         <div className="flex items-center space-x-3">
-                          <Tag className="h-4 w-4 transform rotate-180 text-[#d9534f] fill-current" />
+                          <Tag className="h-4 w-4 transform rotate-90 text-[#d9534f] fill-current" />
                           <span className="text-sm text-neutral-700 font-medium">
                             Sin categoría
                           </span>
                         </div>
                       </div>
 
-                      {/* Current category */}
-                      {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'sin categoría' && (
+                      {/* Current category (if not "Sin categoría") */}
+                      {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'Sin categoría' && (
                         <div
                           className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
                             selectedCategory === selectedTransactionForCategory.category
@@ -2702,7 +2702,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
                         >
                           <div className="flex items-center space-x-3">
-                            <Tag className="h-4 w-4 transform rotate-180 text-[#3d9f65] fill-current" />
+                            <Tag className="h-4 w-4 transform rotate-90 text-[#3d9f65] fill-current" />
                             <span className="text-sm text-neutral-700 font-medium">
                               {selectedTransactionForCategory.category}
                             </span>
@@ -2728,7 +2728,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               onClick={() => handleCategorySelection(category)}
                             >
                               <div className="flex items-center space-x-3">
-                                <Tag className={`h-4 w-4 transform rotate-180 ${
+                                <Tag className={`h-4 w-4 transform rotate-90 ${
                                   isDefault ? 'text-[#3d9f65]' : 'text-[#5d7760]'
                                 } fill-current`} />
                                 <span className="text-sm text-neutral-700 font-medium">

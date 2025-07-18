@@ -1076,7 +1076,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                              <Tag className={`h-4 w-4 transform rotate-180 ${
+                              <Tag className={`h-4 w-4 transform rotate-90 ${
                                 group.categoryName === 'sin categoría' || group.categoryName === 'Sin categoría'
                                   ? 'text-[#d9534f]'
                                   : (() => {

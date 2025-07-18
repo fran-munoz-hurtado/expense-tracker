@@ -170,7 +170,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
   // Get category icon using the same system as CategoriesView
   const getCategoryIcon = (categoryName: string) => {
     return (
-      <Tag className={`h-4 w-4 transform rotate-180 ${
+      <Tag className={`h-4 w-4 transform rotate-90 ${
         categoryName === 'sin categoría' || categoryName === 'Sin categoría'
           ? 'text-[#d9534f]'
           : (() => {
