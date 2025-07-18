@@ -1076,22 +1076,17 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                              <Tag className={`h-4 w-4 transform rotate-90 ${
-                                group.categoryName === 'sin categoría' || group.categoryName === 'Sin categoría'
-                                  ? 'text-[#d9534f]'
-                                  : (() => {
-                                      // Check if it's a default category
-                                      const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
-                                      return isDefaultCategory 
-                                        ? 'text-[#5d7760]' 
-                                        : 'text-[#3d9f65]'
-                                    })()
-                              } fill-current`} />
                               <div className="flex-1 min-w-0">
                                 <h3 className={`text-sm font-medium ${isSelected ? 'text-blue-900' : 'text-gray-dark'} truncate font-sans`}>
                                   {displayName}
                                 </h3>
                                 <p className="text-xs text-gray-500 font-sans">{group.count} transacciones</p>
+                                <p className="text-xs text-gray-500 font-sans">
+                                  {(() => {
+                                    const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
+                                    return isDefaultCategory ? 'Predeterminada' : 'Creada por ti'
+                                  })()}
+                                </p>
                               </div>
                             </div>
                             
@@ -1119,11 +1114,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden min-h-96">
                 {!selectedCategory ? (
                   <div className="flex flex-col items-center justify-center gap-2 text-center h-full px-4 py-8">
-                    {/* Ícono */}
-                    <div className="w-8 h-8 rounded-full bg-[#f0f0ec] text-[#7c8c7c] flex items-center justify-center">
-                      <Tag className="w-6 h-6 fill-current" />
-                    </div>
-                    
                     {/* Textos */}
                     <p className="text-sm font-medium text-gray-dark opacity-80">Selecciona una categoría</p>
                     <p className="text-sm text-green-dark opacity-60">Haz clic en una categoría de la izquierda para ver sus transacciones</p>
@@ -1473,11 +1463,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         {editingCategory && editingCategory.name === category.name ? (
                           // Edit mode
                           <div className="flex-1 flex items-center space-x-2">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                              category.isDefault ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-green-primary'
-                            }`}>
-                              <Tag className="h-4 w-4" fill="currentColor" />
-                            </div>
                             <div className="flex-1">
                               <input
                                 type="text"
@@ -1519,14 +1504,14 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                           // View mode
                           <>
                             <div className="flex items-center space-x-3">
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                                category.isDefault ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-green-primary'
-                              }`}>
-                                <Tag className="h-4 w-4" fill="currentColor" />
+                              <div className="flex-1">
+                                <span className="text-sm text-gray-dark font-medium">
+                                  {category.name}
+                                </span>
+                                <p className="text-xs text-gray-500 font-sans">
+                                  {category.isDefault ? 'Predeterminada' : 'Creada por ti'}
+                                </p>
                               </div>
-                              <span className="text-sm text-gray-dark font-medium">
-                                {category.name}
-                              </span>
                             </div>
                             <div className="flex gap-2">
                               <button
@@ -1713,11 +1698,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
             <div className="px-5 py-4">
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    categoryToEdit.old.isDefault ? 'bg-[#f0f0ec] text-[#7c8c7c]' : 'bg-[#e0f6e8] text-green-primary'
-                  }`}>
-                    <Tag className="h-4 w-4" fill="currentColor" />
-                  </div>
                   <div>
                     <span className="text-sm text-gray-500">Cambiar nombre de:</span>
                     <div className="font-medium text-gray-900">
@@ -1725,6 +1705,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                       <span className="mx-2">→</span>
                       <span className="text-sm text-green-dark font-medium">{categoryToEdit.new}</span>
                     </div>
+                    <p className="text-xs text-gray-500 font-sans">
+                      {categoryToEdit.old.isDefault ? 'Predeterminada' : 'Creada por ti'}
+                    </p>
                   </div>
                 </div>
                 

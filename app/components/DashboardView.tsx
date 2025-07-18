@@ -2684,10 +2684,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                         onClick={() => handleCategorySelection('Sin categoría')}
                       >
                         <div className="flex items-center space-x-3">
-                          <Tag className="h-4 w-4 transform rotate-90 text-[#d9534f] fill-current" />
-                          <span className="text-sm text-neutral-700 font-medium">
-                            Sin categoría
-                          </span>
+                          <div className="flex-1">
+                            <span className="text-sm text-neutral-700 font-medium">
+                              Sin categoría
+                            </span>
+                            <p className="text-xs text-gray-500 font-sans">
+                              Predeterminada
+                            </p>
+                          </div>
                         </div>
                       </div>
 
@@ -2702,10 +2706,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
                         >
                           <div className="flex items-center space-x-3">
-                            <Tag className="h-4 w-4 transform rotate-90 text-[#3d9f65] fill-current" />
-                            <span className="text-sm text-neutral-700 font-medium">
-                              {selectedTransactionForCategory.category}
-                            </span>
+                            <div className="flex-1">
+                              <span className="text-sm text-neutral-700 font-medium">
+                                {selectedTransactionForCategory.category}
+                              </span>
+                              <p className="text-xs text-gray-500 font-sans">
+                                {(() => {
+                                  const isDefault = Object.values(CATEGORIES.EXPENSE).includes(selectedTransactionForCategory.category as any)
+                                  return isDefault ? 'Predeterminada' : 'Creada por ti'
+                                })()}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -2728,12 +2739,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                               onClick={() => handleCategorySelection(category)}
                             >
                               <div className="flex items-center space-x-3">
-                                <Tag className={`h-4 w-4 transform rotate-90 ${
-                                  isDefault ? 'text-[#3d9f65]' : 'text-[#5d7760]'
-                                } fill-current`} />
-                                <span className="text-sm text-neutral-700 font-medium">
-                                  {category}
-                                </span>
+                                <div className="flex-1">
+                                  <span className="text-sm text-neutral-700 font-medium">
+                                    {category}
+                                  </span>
+                                  <p className="text-xs text-gray-500 font-sans">
+                                    {isDefault ? 'Predeterminada' : 'Creada por ti'}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           )
