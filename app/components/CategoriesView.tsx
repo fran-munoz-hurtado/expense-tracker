@@ -256,13 +256,34 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     }).format(Math.round(value))
   }
 
-  // Helper function to check if date is overdue
+  // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
     const [year, month, day] = deadline.split('-').map(Number);
-    const deadlineDate = new Date(year, month - 1, day);
+    const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+    
+    // Create today's date without time
     const today = new Date();
     const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
     return deadlineDate < todayDate;
+  }
+
+  // Get category status (Al día/Vencido) - same logic as ComoVamosView
+  const getCategoryStatus = (categoryName: string): 'on-time' | 'overdue' => {
+    const categoryTransactions = transactions.filter(t => 
+      t.type === 'expense' && 
+      t.category === categoryName &&
+      t.category !== 'Ahorro' && 
+      !recurrentGoalMap[t.source_id]
+    )
+    
+    const hasOverdue = categoryTransactions.some(transaction => 
+      transaction.status === 'pending' && 
+      transaction.deadline && 
+      isDateOverdue(transaction.deadline)
+    )
+    
+    return hasOverdue ? 'overdue' : 'on-time'
   }
 
   // Fetch transactions data
@@ -1026,6 +1047,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         <p className={`text-sm font-semibold ${isSelected ? 'text-blue-900' : 'text-gray-900'}`}>
                           {formatCurrency(group.total)}
                         </p>
+                        <span className={`px-2 py-1 rounded-md text-xs font-medium font-sans ${
+                          getCategoryStatus(group.categoryName) === 'overdue' 
+                            ? 'bg-error-bg text-error-red' 
+                            : 'bg-green-light text-green-primary'
+                        }`}>
+                          {getCategoryStatus(group.categoryName) === 'overdue' ? 'Vencido' : 'Al día'}
+                        </span>
                       </div>
                     </div>
                   </button>
