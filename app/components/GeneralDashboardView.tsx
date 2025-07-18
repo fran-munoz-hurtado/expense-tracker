@@ -75,6 +75,16 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     transaction: Transaction
   } | null>(null)
 
+  // Delete individual transaction confirmation state
+  const [showDeleteIndividualConfirmation, setShowDeleteIndividualConfirmation] = useState(false)
+  const [deleteIndividualConfirmationData, setDeleteIndividualConfirmationData] = useState<{
+    description: string
+    value: number
+    date: string
+    transactionId: number
+    transaction: Transaction
+  } | null>(null)
+
   // Modify modal state
   const [showModifyModal, setShowModifyModal] = useState(false)
   const [modifyModalData, setModifyModalData] = useState<{
@@ -429,6 +439,66 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   const handleCancelDeleteSeries = () => {
     setShowDeleteSeriesConfirmation(false)
     setDeleteSeriesConfirmationData(null)
+  }
+
+  const handleDeleteIndividual = async () => {
+    if (!deleteModalData) return
+
+    const { transaction } = deleteModalData
+    
+    // Format date for display
+    const date = transaction.deadline ? (() => {
+      const [year, month, day] = transaction.deadline.split('-').map(Number);
+      return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
+    })() : `${months[transaction.month - 1]} ${transaction.year}`
+
+    setDeleteIndividualConfirmationData({
+      description: transaction.description,
+      value: transaction.value,
+      date,
+      transactionId: deleteModalData.transactionId,
+      transaction: transaction
+    })
+    
+    setShowDeleteModal(false)
+    setShowDeleteIndividualConfirmation(true)
+  }
+
+  const handleConfirmDeleteIndividual = async () => {
+    if (!deleteIndividualConfirmationData) return
+
+    const { transactionId, transaction } = deleteIndividualConfirmationData
+
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Delete only this transaction
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      // Trigger global data refresh using the new system
+      console.log('🔄 Triggering global data refresh after individual deletion')
+      refreshData(user.id, 'delete_transaction')
+      
+    } catch (error) {
+      console.error('Error deleting individual transaction:', error)
+      setError(`Error al eliminar transacción: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    } finally {
+      setLoading(false)
+      setShowDeleteIndividualConfirmation(false)
+      setDeleteIndividualConfirmationData(null)
+    }
+  }
+
+  const handleCancelDeleteIndividual = () => {
+    setShowDeleteIndividualConfirmation(false)
+    setDeleteIndividualConfirmationData(null)
   }
 
   // Modify transaction functions
@@ -918,7 +988,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       Toda la Serie
                     </button>
                     <button
-                      onClick={() => handleConfirmDelete(false)}
+                      onClick={handleDeleteIndividual}
                       className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
                     >
                       Solo Esta Transacción
@@ -926,7 +996,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                   </>
                 ) : (
                   <button
-                    onClick={() => handleConfirmDelete(false)}
+                    onClick={handleDeleteIndividual}
                     className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors"
                   >
                     Eliminar Transacción
@@ -1420,6 +1490,86 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                 
                 <button
                   onClick={handleCancelDeleteSeries}
+                  className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {/* Delete Individual Confirmation Modal */}
+      {showDeleteIndividualConfirmation && deleteIndividualConfirmationData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Overlay borroso y semitransparente */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+          <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <button
+              onClick={handleCancelDeleteIndividual}
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+              aria-label="Cerrar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="px-6 py-4 flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 bg-red-50 rounded-full p-1.5">
+                  <Trash2 className="h-4 w-4 text-error-red" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">Confirmar eliminación</h2>
+              </div>
+              <p className="text-sm text-gray-500">Revisa los datos antes de eliminar</p>
+              
+              {/* Información de la transacción */}
+              <div className="w-full bg-gray-50 rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Descripción:</span>
+                  <span className="text-sm font-medium text-gray-900">{deleteIndividualConfirmationData.description}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Valor:</span>
+                  <span className="text-sm font-medium text-gray-900">{formatCurrency(deleteIndividualConfirmationData.value)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">Fecha:</span>
+                  <span className="text-sm font-medium text-gray-900">{deleteIndividualConfirmationData.date}</span>
+                </div>
+              </div>
+
+              {/* Advertencia */}
+              <div className="w-full bg-yellow-50 border border-yellow-200 rounded-lg p-2.5">
+                <div className="flex items-start gap-2.5">
+                  <div className="flex-shrink-0 w-5 h-5 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <span className="text-yellow-600 text-xs font-bold">!</span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="w-full space-y-2">
+                <button
+                  onClick={handleConfirmDeleteIndividual}
+                  disabled={loading}
+                  className="w-full px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Eliminando...
+                    </div>
+                  ) : (
+                    'Eliminar transacción'
+                  )}
+                </button>
+                
+                <button
+                  onClick={handleCancelDeleteIndividual}
                   className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
                 >
                   Cancelar
