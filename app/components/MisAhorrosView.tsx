@@ -12,14 +12,12 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
       {/* Header */}
       <div className="p-6 lg:p-8 pb-4">
-        <div className="space-y-4">
-          <h1 className="text-2xl font-semibold tracking-tight">Mis ahorros</h1>
-          <p className="text-muted-foreground text-sm">
-            Revisa y organiza aquí tus transacciones de ahorro
-          </p>
-
-          {/* Aquí se irá agregando el contenido en siguientes pasos */}
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-gray-dark">Mis ahorros</h2>
+          <p className="text-sm text-green-dark">Revisa y organiza aquí tus transacciones de ahorro</p>
         </div>
+
+        {/* Aquí se irá agregando el contenido en siguientes pasos */}
       </div>
     </div>
   )
