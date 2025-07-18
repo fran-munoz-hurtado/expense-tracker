@@ -1569,6 +1569,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                       <div className="text-sm font-medium text-gray-900 font-sans">
                                         {months[transaction.month - 1]}
                                       </div>
+                                      {transaction.year === new Date().getFullYear() && transaction.month === new Date().getMonth() + 1 && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                                          Actual
+                                        </span>
+                                      )}
                                       <button
                                         onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
                                         className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
