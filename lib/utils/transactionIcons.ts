@@ -96,12 +96,12 @@ export function getTransactionIconShadow(
   transaction: Transaction, 
   iconType: string
 ): string {
-  // Enhanced "medal" effect with pronounced volume and depth
-  const baseEffect = 'shadow-[0px_3px_8px_rgba(0,0,0,0.12),inset_0px_1px_2px_rgba(255,255,255,0.8),inset_0px_-2px_4px_rgba(0,0,0,0.08)] border border-[rgba(0,0,0,0.08)]'
+  // More pronounced "medal" effect with visible volume and depth
+  const baseEffect = 'shadow-[0px_4px_12px_rgba(0,0,0,0.18),inset_0px_2px_4px_rgba(255,255,255,0.9),inset_0px_-3px_6px_rgba(0,0,0,0.12)] border border-[rgba(0,0,0,0.12)]'
   
   // Add extra glow for savings transactions
   if (iconType === 'SAVINGS_TROPHY') {
-    return `${baseEffect} shadow-[0_0_12px_rgba(61,159,101,0.3),0px_3px_8px_rgba(0,0,0,0.12),inset_0px_1px_2px_rgba(255,255,255,0.8),inset_0px_-2px_4px_rgba(0,0,0,0.08)]`
+    return `${baseEffect} shadow-[0_0_16px_rgba(61,159,101,0.4),0px_4px_12px_rgba(0,0,0,0.18),inset_0px_2px_4px_rgba(255,255,255,0.9),inset_0px_-3px_6px_rgba(0,0,0,0.12)]`
   }
   
   return baseEffect
