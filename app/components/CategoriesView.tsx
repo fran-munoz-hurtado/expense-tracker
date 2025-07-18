@@ -1070,7 +1070,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             })
                             setSelectedCategory(group.categoryName)
                           }}
-                          className={`w-full p-4 text-left border-b border-gray-100 transition-all duration-300 transform hover:scale-[1.005] hover:shadow-sm ${
+                          className={`w-full p-4 text-left border-b border-gray-100 transition-colors ${
                             isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
                           }`}
                         >
