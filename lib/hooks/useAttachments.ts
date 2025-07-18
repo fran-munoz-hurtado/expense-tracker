@@ -77,7 +77,7 @@ export function useAttachments(user: User) {
       >
         <Paperclip className="h-4 w-4" />
         {attachmentCounts[transaction.id] > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
+          <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
             {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
           </span>
         )}

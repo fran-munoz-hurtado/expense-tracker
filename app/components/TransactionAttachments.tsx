@@ -154,9 +154,9 @@ export default function TransactionAttachments({
   }
 
   const getFileIcon = (mimeType: string) => {
-    if (mimeType.startsWith('image/')) return <Image className="h-4 w-4 text-blue-500" />
-    if (mimeType === 'application/pdf') return <FileText className="h-4 w-4 text-red-500" />
-    return <File className="h-4 w-4 text-gray-500" />
+    if (mimeType.startsWith('image/')) return <Image className="h-5 w-5 text-green-primary" />
+    if (mimeType === 'application/pdf') return <FileText className="h-5 w-5 text-green-primary" />
+    return <File className="h-5 w-5 text-green-primary" />
   }
 
   const formatFileSize = (bytes: number) => {
@@ -168,18 +168,17 @@ export default function TransactionAttachments({
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CO', {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     })
   }
 
   if (loading) {
     return (
-      <div className="p-4 text-center text-gray-500">
+      <div className="p-3 text-center text-sm text-gray-500">
         Cargando archivos...
       </div>
     )
@@ -187,13 +186,8 @@ export default function TransactionAttachments({
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 w-6 h-6 bg-red-100 rounded-full flex items-center justify-center">
-            <span className="text-red-600 text-xs font-bold">!</span>
-          </div>
-          <p className="text-sm text-red-800 font-medium">{error}</p>
-        </div>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+        <p className="text-red-500 text-xs">{error}</p>
       </div>
     )
   }
@@ -201,17 +195,19 @@ export default function TransactionAttachments({
   if (attachments.length === 0) {
     return (
       <>
-        <div className="p-4 text-center text-gray-500">
-          <Paperclip className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-          <p>No hay archivos adjuntos para esta transacción</p>
+        <div className="p-3 text-center text-gray-500">
+          <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full mx-auto mb-2">
+            <Paperclip className="h-4 w-4 text-green-primary" />
+          </div>
+          <p className="text-sm font-normal">No hay archivos adjuntos para esta transacción</p>
         </div>
         
         {/* Add Files Button */}
         {onAddAttachment && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-3 pt-3 border-t border-gray-200 text-center">
             <button
               onClick={onAddAttachment}
-              className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+              className="bg-green-primary hover:bg-green-dark text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
             >
               Agregar archivos
             </button>
@@ -227,28 +223,28 @@ export default function TransactionAttachments({
         {attachments.map((attachment) => (
           <div
             key={attachment.id}
-            className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
+            className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center space-x-3 flex-1 min-w-0">
               {getFileIcon(attachment.mime_type)}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">
+                <p className="font-medium text-gray-900 text-sm truncate">
                   {attachment.file_name}
                 </p>
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
+                <div className="flex items-center space-x-3 text-xs text-gray-500">
                   <span>{formatFileSize(attachment.file_size)}</span>
                   <span>{formatDate(attachment.uploaded_at)}</span>
                   {attachment.description && (
-                    <span className="italic">"{attachment.description}"</span>
+                    <span className="italic truncate">"{attachment.description}"</span>
                   )}
                 </div>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
               <button
                 onClick={() => handlePreview(attachment)}
-                className="p-2 text-gray-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50"
+                className="p-1.5 text-gray-400 hover:text-green-primary transition-colors rounded-md hover:bg-green-light"
                 title="Ver archivo"
               >
                 <Eye className="h-4 w-4" />
@@ -256,7 +252,7 @@ export default function TransactionAttachments({
               
               <button
                 onClick={() => handleDownload(attachment)}
-                className="p-2 text-gray-400 hover:text-green-600 transition-colors rounded-lg hover:bg-green-50"
+                className="p-1.5 text-gray-400 hover:text-green-primary transition-colors rounded-md hover:bg-green-light"
                 title="Descargar archivo"
               >
                 <Download className="h-4 w-4" />
@@ -265,7 +261,7 @@ export default function TransactionAttachments({
               <button
                 onClick={() => handleDelete(attachment)}
                 disabled={deleting === attachment.id}
-                className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50 disabled:opacity-50"
+                className="p-1.5 text-gray-400 hover:text-red-600 transition-colors rounded-md hover:bg-red-50 disabled:opacity-50"
                 title="Eliminar archivo"
               >
                 <Trash2 className="h-4 w-4" />
@@ -277,10 +273,10 @@ export default function TransactionAttachments({
 
       {/* Add Files Button */}
       {onAddAttachment && (
-        <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="mt-3 pt-3 border-t border-gray-200 text-center">
           <button
             onClick={onAddAttachment}
-            className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold shadow-md hover:from-blue-600 hover:to-blue-700 transition-all"
+            className="bg-green-primary hover:bg-green-dark text-white text-sm font-medium px-4 py-2 rounded-md transition-colors"
           >
             Agregar archivos
           </button>

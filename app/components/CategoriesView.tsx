@@ -160,7 +160,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       >
         <Paperclip className="h-4 w-4 transition-all duration-200" />
         {attachmentCounts[transaction.id] > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium transition-all duration-200 hover:scale-110">
+          <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal transition-all duration-200 hover:scale-110">
             {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
           </span>
         )}
@@ -190,7 +190,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         {showTransactionAttachments && selectedTransactionForAttachments && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
             <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-            <section className="relative bg-white rounded-xl p-0 w-full max-w-2xl shadow-2xl border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
+            <section className="relative bg-white rounded-xl p-0 w-full max-w-md shadow-sm border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
               <button
                 onClick={() => {
                   setShowTransactionAttachments(false)
@@ -199,26 +199,28 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
                 aria-label="Cerrar"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
               
-              <div className="p-6 flex flex-col gap-6">
+              <div className="px-4 py-3 flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
-                    <Paperclip className="h-6 w-6 text-blue-600" />
+                  <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full">
+                    <Paperclip className="h-4 w-4 text-green-primary" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">Archivos Adjuntos</h2>
-                    <p className="text-sm text-gray-600">Para: {selectedTransactionForAttachments.description}</p>
+                    <h2 className="text-lg font-medium text-gray-900">Archivos Adjuntos</h2>
+                    <p className="text-sm text-gray-500">Para: {selectedTransactionForAttachments.description}</p>
                   </div>
                 </div>
                 
-                <TransactionAttachments
-                  transactionId={selectedTransactionForAttachments.id}
-                  userId={user.id}
-                  onAttachmentDeleted={handleAttachmentDeleted}
-                  onAddAttachment={() => handleAttachmentUpload(selectedTransactionForAttachments)}
-                />
+                <div className="border-t border-gray-200 pt-3">
+                  <TransactionAttachments
+                    transactionId={selectedTransactionForAttachments.id}
+                    userId={user.id}
+                    onAttachmentDeleted={handleAttachmentDeleted}
+                    onAddAttachment={() => handleAttachmentUpload(selectedTransactionForAttachments)}
+                  />
+                </div>
               </div>
             </section>
           </div>
