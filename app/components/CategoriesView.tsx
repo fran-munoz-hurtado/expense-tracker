@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip, Settings, Trash2, Edit2, Tag, Plus } from 'lucide-react'
 import { type Transaction, type User, type TransactionAttachment, type RecurrentExpense } from '@/lib/supabase'
 import { fetchUserTransactions, fetchAttachmentCounts, fetchUserExpenses } from '@/lib/dataUtils'
@@ -109,6 +109,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [selectedTransactionId, setSelectedTransactionId] = useState<number | null>(null)
   const [showTransactionAttachments, setShowTransactionAttachments] = useState(false)
   const [selectedTransactionForAttachments, setSelectedTransactionForAttachments] = useState<Transaction | null>(null)
+
+  // Estado para la nueva sección de detalle de transacción recurrente
+  const [selectedRecurrentTransaction, setSelectedRecurrentTransaction] = useState<Transaction | null>(null)
 
   // Load attachment counts for a list of transactions
   const loadAttachmentCounts = async (transactions: Transaction[]) => {
@@ -1339,7 +1342,14 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                 <div className="px-3 pb-3 bg-white rounded-b-lg">
                                                   <div className="space-y-1">
                                                     {yearGroup.transactions.map((transaction) => (
-                                                      <div key={transaction.id} className="bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                                                      <button 
+                                                        key={transaction.id} 
+                                                        onClick={() => {
+                                                          console.log('🖱️ CategoriesView: Recurrent transaction clicked', transaction)
+                                                          setSelectedRecurrentTransaction(transaction)
+                                                        }}
+                                                        className="w-full bg-gray-50 rounded-md p-3 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 cursor-pointer"
+                                                      >
                                                         <div className="flex items-center justify-between">
                                                           <div className="flex items-center space-x-2">
                                                             <TransactionIcon 
@@ -1395,7 +1405,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                             <AttachmentClip transaction={transaction} />
                                                           </div>
                                                         </div>
-                                                      </div>
+                                                      </button>
                                                     ))}
                                                   </div>
                                                 </div>
@@ -1451,6 +1461,159 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Detalle de Transacción Recurrente */}
+      <div className="flex-1 px-6 sm:px-8 lg:px-16 pb-6 lg:pb-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-xl shadow-sm p-6">
+            {!selectedRecurrentTransaction ? (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Calendar className="h-6 w-6 text-gray-400" />
+                </div>
+                <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
+                  Detalle de transacción
+                </h3>
+                <p className="text-xs text-gray-500 font-sans">
+                  Selecciona una transacción recurrente para ver su historial mensual
+                </p>
+              </div>
+            ) : (
+              <div>
+                {/* Header */}
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
+                    Detalle mensual: {selectedRecurrentTransaction.description}
+                  </h3>
+                  <p className="text-xs text-gray-500 font-sans">
+                    Historial completo de esta transacción recurrente
+                  </p>
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                          Período
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                          Fecha límite
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                          Estado
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
+                          Monto
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white">
+                      {(() => {
+                        // Filtrar todas las transacciones que pertenezcan a la misma serie recurrente
+                        const relatedTransactions = transactions.filter(t => 
+                          t.source_type === 'recurrent' && 
+                          t.source_id === selectedRecurrentTransaction.source_id &&
+                          t.type === selectedRecurrentTransaction.type &&
+                          t.category === selectedRecurrentTransaction.category
+                        ).sort((a, b) => {
+                          // Ordenar por año y mes
+                          if (a.year !== b.year) return a.year - b.year
+                          return a.month - b.month
+                        })
+
+                        // Agrupar por año
+                        const groupedByYear = relatedTransactions.reduce((groups, transaction) => {
+                          const year = transaction.year
+                          if (!groups[year]) {
+                            groups[year] = []
+                          }
+                          groups[year].push(transaction)
+                          return groups
+                        }, {} as Record<number, Transaction[]>)
+
+                        const sortedYears = Object.keys(groupedByYear)
+                          .map(year => parseInt(year))
+                          .sort((a, b) => a - b)
+
+                        return sortedYears.map((year) => (
+                          <React.Fragment key={year}>
+                            {/* Year divider row */}
+                            <tr>
+                              <td colSpan={4} className="px-4 pt-4 pb-2 border-t border-gray-200 bg-white">
+                                <div className="text-sm text-gray-500 font-sans">
+                                  {year}
+                                </div>
+                              </td>
+                            </tr>
+                            {/* Transactions for this year */}
+                            {groupedByYear[year].map((transaction, index) => (
+                              <tr key={transaction.id} className="hover:bg-gray-50 transition-colors border-b border-gray-100">
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="flex items-center space-x-3">
+                                    <TransactionIcon
+                                      transaction={transaction}
+                                      recurrentGoalMap={recurrentGoalMap}
+                                      size="w-4 h-4"
+                                      containerSize="w-6 h-6"
+                                    />
+                                    <div className="flex items-center space-x-2">
+                                      <div className="text-sm font-medium text-gray-900 font-sans">
+                                        {months[transaction.month - 1]}
+                                      </div>
+                                      <button
+                                        onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                        className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50 hover:scale-[1.005] hover:shadow-sm"
+                                        title={`Ir a Mis cuentas - ${months[transaction.month - 1]} ${transaction.year}`}
+                                      >
+                                        <svg 
+                                          className="w-3 h-3" 
+                                          fill="none" 
+                                          stroke="currentColor" 
+                                          strokeWidth="2" 
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <div className="text-sm text-gray-900 font-sans">
+                                    {transaction.deadline ? (() => {
+                                      const [year, month, day] = transaction.deadline.split('-').map(Number)
+                                      return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`
+                                    })() : '-'}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap">
+                                  <span className={cn(
+                                    "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans",
+                                    getStatusColor(transaction)
+                                  )}>
+                                    {getStatusText(transaction)}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-right">
+                                  <div className="text-sm font-medium text-gray-900 font-sans">
+                                    {formatCurrency(transaction.value)}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        ))
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
