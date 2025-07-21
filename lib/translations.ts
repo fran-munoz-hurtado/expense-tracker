@@ -55,7 +55,7 @@ export const translations = {
   
   // Status
   paid: 'Ya pagado',
-  pending: 'Falta pagar',
+  pending: 'Pendiente',
   overdue: 'Se pasó la fecha',
   
   // Types

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info } from 'lucide-react'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
@@ -1348,65 +1348,68 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       <div className="flex-1 px-6 lg:px-8 pb-6 lg:pb-8">
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Modern Compact Filters Section */}
-          <div className="rounded-xl bg-white shadow-soft p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Year Filter */}
-              <div className="relative group">
-                <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Año</label>
-                <div className="relative">
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
-                  >
-                    {availableYears.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+          <div className="rounded-xl bg-white shadow-soft p-6 border-b border-gray-100">
+            <div className="flex items-center justify-center">
+              <div className="inline-flex items-center gap-4 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+                {/* Year Filter */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-gray-600 font-sans">Año</label>
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(Number(e.target.value))}
+                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary text-sm text-gray-dark font-sans min-w-[80px]"
+                    >
+                      {availableYears.map(year => (
+                        <option key={year} value={year}>{year}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                      <svg className="h-3 w-3 text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Month Filter */}
-              <div className="relative group">
-                <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Mes</label>
-                <div className="relative">
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                    className="w-full px-3 py-2.5 bg-neutral-bg border border-border-light rounded-mdplus shadow-soft focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary group-hover:shadow-sm text-sm text-gray-dark font-sans"
-                  >
-                    {months.map((month, index) => (
-                      <option key={index + 1} value={index + 1}>{month}</option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <svg className="h-4 w-4 text-green-dark group-hover:text-gray-dark transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
+                
+                {/* Separator */}
+                <div className="w-px h-6 bg-gray-300"></div>
+                
+                {/* Month Filter */}
+                <div className="flex items-center gap-2">
+                  <label className="text-xs font-medium text-gray-600 font-sans">Mes</label>
+                  <div className="relative">
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary text-sm text-gray-dark font-sans min-w-[120px]"
+                    >
+                      {months.map((month, index) => (
+                        <option key={index + 1} value={index + 1}>{month}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                      <svg className="h-3 w-3 text-gray-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Current Month Button */}
-              <div className="relative group">
-                <label className="block text-sm font-medium text-gray-dark mb-2 font-sans">Acciones</label>
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => {
-                      setSelectedYear(new Date().getFullYear());
-                      setSelectedMonth(new Date().getMonth() + 1);
-                      setFilterType('all');
-                    }}
-                    className="w-full px-3 py-2.5 bg-green-primary text-white text-sm font-medium rounded-mdplus shadow-soft hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 transform hover:scale-[1.005] hover:shadow-sm font-sans"
-                  >
-                    Mes Actual
-                  </button>
-                </div>
+                
+                {/* Separator */}
+                <div className="w-px h-6 bg-gray-300"></div>
+                
+                {/* Current Month Button */}
+                <button
+                  onClick={() => {
+                    setSelectedYear(new Date().getFullYear());
+                    setSelectedMonth(new Date().getMonth() + 1);
+                    setFilterType('all');
+                  }}
+                  className="px-4 py-1.5 bg-green-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-[#77b16e] active:bg-[#5d9f67] transition-all duration-200 hover:shadow-md font-sans"
+                >
+                  Mes Actual
+                </button>
               </div>
             </div>
           </div>
@@ -1423,63 +1426,107 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               {/* Monthly Summary - Only show when there are transactions */}
               {finalSortedTransactions.length > 0 && (
                 <div className="mt-4 pt-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-500 font-sans leading-relaxed">
-                    {(() => {
-                      const incomeAmount = finalSortedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0);
-                      const expenseAmount = finalSortedTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0);
-                      const paidAmount = finalSortedTransactions.filter(t => t.type === 'expense' && t.status === 'paid').reduce((sum, t) => sum + t.value, 0);
-                      const pendingAmount = finalSortedTransactions.filter(t => t.type === 'expense' && t.status === 'pending').reduce((sum, t) => sum + t.value, 0);
-                      
-                      // Check for overdue payments
-                      const overdueAmount = finalSortedTransactions.filter(t => {
-                        if (t.type !== 'expense' || t.status !== 'pending' || !t.deadline) return false;
-                        const [year, month, day] = t.deadline.split('-').map(Number);
-                        const deadlineDate = new Date(year, month - 1, day);
-                        const today = new Date();
-                        const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-                        return deadlineDate < todayDate;
-                      }).reduce((sum, t) => sum + t.value, 0);
-                      
-                      // Check for savings transactions this month
-                      const paidSavings = finalSortedTransactions.filter(t => 
-                        t.type === 'expense' && 
-                        t.category === 'Ahorro' && 
-                        t.status === 'paid'
-                      ).reduce((sum, t) => sum + t.value, 0);
-                      
-                      const plannedSavings = finalSortedTransactions.filter(t => 
-                        t.type === 'expense' && 
-                        t.category === 'Ahorro' && 
-                        t.status === 'pending'
-                      ).reduce((sum, t) => sum + t.value, 0);
-                      
-                      const hasCapacityToSave = incomeAmount > expenseAmount;
-                      
-                      return (
-                        <>
-                          Este mes generaste <span className="text-green-600 font-semibold">{formatCurrency(incomeAmount)}</span> en ingresos, registraste <span className="text-blue-700 font-semibold">{formatCurrency(expenseAmount)}</span> en gastos, {paidAmount === 0 ? (
-                            <span className="text-red-400 font-semibold">aún no has pagado nada</span>
-                          ) : (
-                            <>has pagado <span className="text-green-700 font-semibold">{formatCurrency(paidAmount)}</span></>
-                          )} y {pendingAmount === 0 ? (
-                            <span className="text-green-600 font-semibold">ya pagaste todo 💚</span>
-                          ) : (
-                            <>te falta pagar <span className="text-orange-500 font-semibold">{formatCurrency(pendingAmount)}</span></>
-                          )}.{overdueAmount > 0 && (
-                            <> De los cuáles <span className="text-red-500 font-semibold">{formatCurrency(overdueAmount)}</span> están vencidos.</>
-                          )} {paidSavings > 0 ? (
-                            <> <span className="text-green-600 font-semibold">🏆 Este mes ahorraste {formatCurrency(paidSavings)}. ¡Excelente trabajo! 👏</span></>
-                          ) : plannedSavings > 0 ? (
-                            <> <span className="text-green-600 font-semibold">💡 Este mes planeaste ahorrar {formatCurrency(plannedSavings)}. ¡No olvides hacerlo!</span></>
-                          ) : hasCapacityToSave ? (
-                            <> <span className="text-green-600 font-semibold">💡 Este mes podrías guardar una parte para tu futuro. ¡Empieza con lo que puedas!</span></>
-                          ) : (
-                            <> <span className="text-green-600 font-semibold">💡 Considera revisar tus gastos para encontrar oportunidades de ahorro.</span></>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </p>
+                  {(() => {
+                    const incomeAmount = finalSortedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0);
+                    const expenseAmount = finalSortedTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0);
+                    const paidAmount = finalSortedTransactions.filter(t => t.type === 'expense' && t.status === 'paid').reduce((sum, t) => sum + t.value, 0);
+                    const pendingAmount = finalSortedTransactions.filter(t => t.type === 'expense' && t.status === 'pending').reduce((sum, t) => sum + t.value, 0);
+                    
+                    // Check for overdue payments
+                    const overdueAmount = finalSortedTransactions.filter(t => {
+                      if (t.type !== 'expense' || t.status !== 'pending' || !t.deadline) return false;
+                      const [year, month, day] = t.deadline.split('-').map(Number);
+                      const deadlineDate = new Date(year, month - 1, day);
+                      const today = new Date();
+                      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                      return deadlineDate < todayDate;
+                    }).reduce((sum, t) => sum + t.value, 0);
+                    
+                    const tieneVencimientos = overdueAmount > 0;
+                    const faltaPagar = pendingAmount; // Total pendiente (incluye overdue y no overdue)
+                    const cuantoQueda = incomeAmount - expenseAmount; // Cálculo del balance igual que en "¿Cómo vamos?"
+                    
+                    return (
+                      <div>
+                        {/* Cards de resumen - diseño exacto de "¿Cómo vamos?" */}
+                        <div className="grid grid-cols-3 gap-4 mb-6">
+                          {/* Ingresos */}
+                          <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
+                            <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
+                              <PiggyBank className="w-4 h-4 text-gray-400" />
+                              <span>Ingresos</span>
+                            </div>
+                            <p className="text-lg font-medium text-gray-800 font-sans">
+                              {formatCurrency(incomeAmount)}
+                            </p>
+                          </div>
+
+                          {/* Gastos registrados */}
+                          <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
+                            <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
+                              <CreditCard className="w-4 h-4 text-gray-400" />
+                              <span>Gastos Totales</span>
+                            </div>
+                            <p className="text-lg font-medium text-gray-800 font-sans">
+                              {formatCurrency(expenseAmount)}
+                            </p>
+                          </div>
+
+                          {/* Estado de pagos */}
+                          <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
+                            <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
+                              {faltaPagar > 0 ? (
+                                <AlertTriangle className="w-4 h-4 text-gray-400" />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 text-gray-400" />
+                              )}
+                              <span>Estado de pagos</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {faltaPagar > 0 ? (
+                                <span className="bg-warning-yellow text-white px-2 py-1 rounded-md text-sm font-sans">
+                                  Falta pagar {formatCurrency(faltaPagar)}
+                                </span>
+                              ) : (
+                                <span className="bg-green-primary text-white px-2 py-1 rounded-md text-sm font-sans">
+                                  Pagado {formatCurrency(paidAmount)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Badge de balance - exacto como en "¿Cómo vamos?" */}
+                        <div className="flex items-center justify-end mb-3">
+                          <div className="flex items-center space-x-2">
+                            {cuantoQueda >= 0 ? (
+                              <>
+                                <CheckCircle className="w-3 h-3 text-green-primary" />
+                                <span className="text-green-primary bg-green-light px-2 py-1 rounded-md text-xs font-sans">
+                                  Te quedan {formatCurrency(cuantoQueda)}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertTriangle className="w-3 h-3 text-error-red" />
+                                <span className="text-error-red bg-error-bg px-2 py-1 rounded-md text-xs font-sans">
+                                  Te pasaste por {formatCurrency(Math.abs(cuantoQueda))}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Mensaje de advertencia de mora - exacto como en "¿Cómo vamos?" */}
+                        {tieneVencimientos && (
+                          <p className="text-xs text-error-red mt-1 flex items-center gap-1 font-sans">
+                            <AlertTriangle className="w-3 h-3" /> 
+                            Tienes pagos en mora ({formatCurrency(overdueAmount)})
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>

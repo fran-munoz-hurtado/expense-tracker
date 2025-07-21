@@ -107,8 +107,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [showTransactionAttachments, setShowTransactionAttachments] = useState(false)
   const [selectedTransactionForAttachments, setSelectedTransactionForAttachments] = useState<Transaction | null>(null)
 
-  // Estado para la nueva sección de detalle de transacción recurrente
-  const [selectedRecurrentTransaction, setSelectedRecurrentTransaction] = useState<Transaction | null>(null)
+  // Estado para la nueva sección de detalle de transacción (recurrente o única)
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
 
   // Load attachment counts for a list of transactions
   const loadAttachmentCounts = async (transactions: Transaction[]) => {
@@ -1065,12 +1065,12 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               <p className="text-sm font-medium text-gray-dark font-sans">
                                 {formatCurrency(group.total)}
                               </p>
-                              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${
                                 getCategoryStatus(group.categoryName) === 'overdue' 
-                                  ? 'bg-red-100 text-red-600' 
-                                  : 'bg-green-100 text-green-600'
+                                  ? 'bg-error-bg text-error-red' 
+                                  : 'bg-green-light text-green-primary'
                               }`}>
-                                {getCategoryStatus(group.categoryName) === 'overdue' ? 'Vencido' : 'Actual'}
+                                {getCategoryStatus(group.categoryName) === 'overdue' ? 'Vencido' : 'Al día'}
                               </span>
                             </div>
                           </div>
@@ -1163,13 +1163,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               <div>
                                 {/* Divisor para Transacciones recurrentes */}
                                 <div className="mb-4 pb-2 border-b border-gray-200">
-                                  <h4 className="text-sm font-medium text-gray-dark font-sans">
-                                    Transacciones recurrentes
+                                  <h4 className="text-sm font-medium text-gray-500 font-sans">
+                                    Recurrentes
                                   </h4>
                                 </div>
                                 
                                 {/* Lista de grupos recurrentes */}
-                                <div className="space-y-3">
+                                <div>
                                   {group.recurrentGroups.map((recurrentGroup) => {
                                     // Determine the year range for the description
                                     const firstYear = recurrentGroup.yearGroups[0]?.year;
@@ -1184,21 +1184,22 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                           const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
                                           if (firstTransaction) {
                                             console.log('🖱️ CategoriesView: Recurrent group clicked, selecting first transaction', firstTransaction)
-                                            setSelectedRecurrentTransaction(firstTransaction)
+                                            setSelectedTransaction(firstTransaction)
                                           }
                                         }}
-                                        className="w-full bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200 text-left"
+                                        className="w-full p-3 text-left border-b border-gray-100 transition-colors hover:bg-gray-50"
                                       >
                                         <div className="flex items-center justify-between">
-                                          <div className="flex items-center space-x-3">
-                                            <div className="transition-all duration-300 hover:scale-110">
+                                          {/* Left section: Icon + Name + Date/Range */}
+                                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                            <div className="flex-shrink-0">
                                               {(() => {
                                                 const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
                                                 
                                                 if (!firstTransaction) {
                                                   return (
-                                                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-[#fdf5d3]">
-                                                      <Repeat className="h-4 w-4 text-[#5d7760]" />
+                                                    <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#fdf5d3]">
+                                                      <Repeat className="h-3 w-3 text-[#5d7760]" />
                                                     </div>
                                                   )
                                                 }
@@ -1207,24 +1208,27 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                                   <TransactionIcon 
                                                     transaction={firstTransaction}
                                                     recurrentGoalMap={recurrentGoalMap}
-                                                    size="w-4 h-4"
-                                                    containerSize="w-6 h-6"
+                                                    size="w-3 h-3"
+                                                    containerSize="w-5 h-5"
                                                     showBackground={true}
                                                   />
                                                 )
                                               })()}
                                             </div>
-                                            <div className="flex items-center space-x-2">
-                                              <span className="text-xs font-medium text-gray-900">{recurrentGroup.description}</span>
-                                              <span className="text-xs text-gray-500">({recurrentGroup.yearGroups.length} {recurrentGroup.yearGroups.length === 1 ? 'año' : 'años'}: {yearRange})</span>
+                                            <div className="min-w-0 flex-1">
+                                              <div className="flex items-center space-x-2">
+                                                <div className="text-sm font-medium text-gray-900 truncate font-sans">{recurrentGroup.description}</div>
+                                                <div className="text-xs text-gray-500 font-sans flex-shrink-0">{yearRange}</div>
+                                              </div>
                                             </div>
                                           </div>
                                           
-                                          <div className="flex items-center space-x-3">
-                                            <span className="text-xs text-gray-600">{formatCurrency(recurrentGroup.total)}</span>
+                                          {/* Right section: Status + Amount + (no attachment for recurrent groups) */}
+                                          <div className="flex items-center space-x-3 flex-shrink-0">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${recurrentGroup.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'}`}>
                                               {recurrentGroup.overdue > 0 ? 'Vencido' : 'Al día'}
                                             </span>
+                                            <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(recurrentGroup.total)}</div>
                                           </div>
                                         </div>
                                       </button>
@@ -1239,40 +1243,53 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               <div>
                                 {/* Divisor para Transacciones únicas */}
                                 <div className="mb-4 pb-2 border-b border-gray-200">
-                                  <h4 className="text-sm font-medium text-gray-dark font-sans">
-                                    Transacciones únicas
+                                  <h4 className="text-sm font-medium text-gray-500 font-sans">
+                                    Únicas
                                   </h4>
                                 </div>
                                 
                                 {/* Lista de transacciones únicas */}
-                                <div className="space-y-3">
+                                <div>
                                   {group.nonRecurrentTransactions.map((transaction) => {
                                     return (
-                                      <div key={transaction.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 transition-all duration-200 hover:shadow-sm hover:scale-[1.005] hover:border-blue-200">
+                                      <button
+                                        key={transaction.id} 
+                                        onClick={() => {
+                                          console.log('🖱️ CategoriesView: Unique transaction clicked, selecting transaction', transaction)
+                                          setSelectedTransaction(transaction)
+                                        }}
+                                        className="w-full p-3 border-b border-gray-100 transition-colors hover:bg-gray-50 text-left"
+                                      >
                                         <div className="flex items-center justify-between">
-                                          <div className="flex items-center space-x-3">
-                                            <TransactionIcon 
-                                              transaction={transaction}
-                                              recurrentGoalMap={recurrentGoalMap}
-                                              size="w-4 h-4"
-                                              containerSize="w-6 h-6"
-                                              showBackground={true}
-                                            />
-                                            <div className="flex items-center space-x-2">
-                                              <span className="text-xs text-gray-900">{transaction.description}</span>
-                                              <span className="text-xs text-gray-500">{months[transaction.month - 1]} {transaction.year}</span>
+                                          {/* Left section: Icon + Name + Date */}
+                                          <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                            <div className="flex-shrink-0">
+                                              <TransactionIcon 
+                                                transaction={transaction}
+                                                recurrentGoalMap={recurrentGoalMap}
+                                                size="w-3 h-3"
+                                                containerSize="w-5 h-5"
+                                                showBackground={true}
+                                              />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                              <div className="flex items-center space-x-2">
+                                                <div className="text-sm font-medium text-gray-900 truncate font-sans">{transaction.description}</div>
+                                                <div className="text-xs text-gray-500 font-sans flex-shrink-0">{months[transaction.month - 1]} {transaction.year}</div>
+                                              </div>
                                             </div>
                                           </div>
                                           
-                                          <div className="flex items-center space-x-3">
-                                            <span className="text-xs text-gray-600">{formatCurrency(transaction.value)}</span>
+                                          {/* Right section: Status + Amount + Attachment */}
+                                          <div className="flex items-center space-x-3 flex-shrink-0">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${getStatusColor(transaction)}`}>
                                               {getStatusText(transaction)}
                                             </span>
+                                            <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(transaction.value)}</div>
                                             <AttachmentClip transaction={transaction} />
                                           </div>
                                         </div>
-                                      </div>
+                                      </button>
                                     )
                                   })}
                                 </div>
@@ -1294,7 +1311,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       <div className="flex-1 px-6 sm:px-8 lg:px-16 pb-6 lg:pb-8">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white rounded-xl shadow-sm p-6">
-            {!selectedRecurrentTransaction ? (
+            {!selectedTransaction ? (
               <div className="text-center py-8">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Calendar className="h-6 w-6 text-gray-400" />
@@ -1303,7 +1320,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   Detalle de transacción
                 </h3>
                 <p className="text-xs text-gray-500 font-sans">
-                  Selecciona una transacción recurrente para ver su historial mensual
+                  Selecciona una transacción recurrente o única para ver su historial mensual
                 </p>
               </div>
             ) : (
@@ -1311,10 +1328,16 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 {/* Header */}
                 <div className="mb-4">
                   <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                    Detalle mensual: {selectedRecurrentTransaction.description}
+                    {selectedTransaction.source_type === 'recurrent' 
+                      ? `Detalle mensual: ${selectedTransaction.description}`
+                      : `Detalle transacción única: ${selectedTransaction.description}`
+                    }
                   </h3>
                   <p className="text-xs text-gray-500 font-sans">
-                    Historial completo de esta transacción recurrente
+                    {selectedTransaction.source_type === 'recurrent' 
+                      ? `Historial completo de esta transacción recurrente`
+                      : `Información asociada a esta transacción no recurrente`
+                    }
                   </p>
                 </div>
 
@@ -1342,17 +1365,20 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                     </thead>
                     <tbody className="bg-white">
                       {(() => {
-                        // Filtrar todas las transacciones que pertenezcan a la misma serie recurrente
-                        const relatedTransactions = transactions.filter(t => 
-                          t.source_type === 'recurrent' && 
-                          t.source_id === selectedRecurrentTransaction.source_id &&
-                          t.type === selectedRecurrentTransaction.type &&
-                          t.category === selectedRecurrentTransaction.category
-                        ).sort((a, b) => {
-                          // Ordenar por año y mes
-                          if (a.year !== b.year) return a.year - b.year
-                          return a.month - b.month
-                        })
+                        // Si es recurrente, filtrar todas las transacciones relacionadas
+                        // Si es única, solo mostrar esa transacción
+                        const relatedTransactions = selectedTransaction.source_type === 'recurrent'
+                          ? transactions.filter(t => 
+                              t.source_type === 'recurrent' && 
+                              t.source_id === selectedTransaction.source_id &&
+                              t.type === selectedTransaction.type &&
+                              t.category === selectedTransaction.category
+                            ).sort((a, b) => {
+                              // Ordenar por año y mes
+                              if (a.year !== b.year) return a.year - b.year
+                              return a.month - b.month
+                            })
+                          : [selectedTransaction] // Para únicas, solo la transacción seleccionada
 
                         // Agrupar por año
                         const groupedByYear = relatedTransactions.reduce((groups, transaction) => {
