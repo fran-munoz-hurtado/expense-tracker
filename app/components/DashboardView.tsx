@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock } from 'lucide-react'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
@@ -103,6 +103,15 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     date: string
     transactionId: number
     transaction: Transaction
+  } | null>(null)
+
+  // Payment confirmation states
+  const [showMarkAsPaidModal, setShowMarkAsPaidModal] = useState(false)
+  const [showUnmarkAsPaidModal, setShowUnmarkAsPaidModal] = useState(false)
+  const [paymentConfirmationData, setPaymentConfirmationData] = useState<{
+    transactionId: number
+    transaction: Transaction
+    action: 'mark_paid' | 'unmark_paid'
   } | null>(null)
 
   // Modify confirmation state
@@ -461,24 +470,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   const handleCheckboxChange = async (transactionId: number, isChecked: boolean) => {
     try {
-      // Add ripple effect
-      const checkbox = document.getElementById(`checkbox-${transactionId}`)?.nextElementSibling as HTMLElement;
-      if (checkbox) {
-        const ripple = document.createElement('div');
-        ripple.className = 'absolute inset-0 bg-white/40 rounded-lg animate-ripple pointer-events-none';
-        ripple.style.animation = 'ripple 0.6s ease-out';
-        checkbox.appendChild(ripple);
-        
-        setTimeout(() => {
-          ripple.remove();
-        }, 600);
-      }
-
       console.log(`🔄 handleCheckboxChange called for transaction ${transactionId}, isChecked: ${isChecked}`)
       
-      setError(null)
-      
-      // Determine the new status based on checkbox and due date
+      // Find the transaction
       const transaction = transactions.find(t => t.id === transactionId)
       if (!transaction) {
         console.error(`❌ Transaction ${transactionId} not found in transactions array`)
@@ -493,8 +487,59 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         isOverdue: transaction.deadline ? isDateOverdue(transaction.deadline) : false
       })
 
-      let newStatus: 'paid' | 'pending'
+      // Set up confirmation data
+      setPaymentConfirmationData({
+        transactionId,
+        transaction,
+        action: isChecked ? 'mark_paid' : 'unmark_paid'
+      })
+
+      // Show appropriate modal
       if (isChecked) {
+        setShowMarkAsPaidModal(true)
+      } else {
+        setShowUnmarkAsPaidModal(true)
+      }
+
+    } catch (error) {
+      console.error('❌ Error setting up payment confirmation:', error)
+      setError(`Error al configurar confirmación: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    }
+  }
+
+  // New function to handle the actual payment status update
+  const handleConfirmPaymentStatusChange = async (confirmed: boolean) => {
+    if (!confirmed || !paymentConfirmationData) {
+      // User cancelled
+      setShowMarkAsPaidModal(false)
+      setShowUnmarkAsPaidModal(false)
+      setPaymentConfirmationData(null)
+      return
+    }
+
+    try {
+      // Add ripple effect
+      const checkbox = document.getElementById(`checkbox-${paymentConfirmationData.transactionId}`)?.nextElementSibling as HTMLElement;
+      if (checkbox) {
+        const ripple = document.createElement('div');
+        ripple.className = 'absolute inset-0 bg-white/40 rounded-lg animate-ripple pointer-events-none';
+        ripple.style.animation = 'ripple 0.6s ease-out';
+        checkbox.appendChild(ripple);
+        
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      }
+
+      console.log(`🔄 Confirming payment status change for transaction ${paymentConfirmationData.transactionId}`)
+      
+      setError(null)
+      
+      const { transaction, action } = paymentConfirmationData
+
+      // Determine the new status
+      let newStatus: 'paid' | 'pending'
+      if (action === 'mark_paid') {
         newStatus = 'paid'
       } else {
         // If unchecked, check if it's overdue
@@ -510,7 +555,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       // Optimistically update the local state first for immediate UI feedback
       setTransactions(prevTransactions => 
         prevTransactions.map(t => 
-          t.id === transactionId 
+          t.id === paymentConfirmationData.transactionId 
             ? { ...t, status: newStatus }
             : t
         )
@@ -519,7 +564,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       const { data, error } = await supabase
         .from('transactions')
         .update({ status: newStatus })
-        .eq('id', transactionId)
+        .eq('id', paymentConfirmationData.transactionId)
         .eq('user_id', user.id)
 
       if (error) {
@@ -529,7 +574,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         // Revert the optimistic update on error
         setTransactions(prevTransactions => 
           prevTransactions.map(t => 
-            t.id === transactionId 
+            t.id === paymentConfirmationData.transactionId 
               ? { ...t, status: transaction.status }
               : t
           )
@@ -548,6 +593,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     } catch (error) {
       console.error('❌ Error updating status:', error)
       setError(`Error al actualizar estado: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    } finally {
+      // Close modals and reset state
+      setShowMarkAsPaidModal(false)
+      setShowUnmarkAsPaidModal(false)
+      setPaymentConfirmationData(null)
     }
   }
 
@@ -3109,6 +3159,94 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     <button
                       onClick={handleCancelDeleteIndividual}
                       className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Mark as Paid Confirmation Modal */}
+          {showMarkAsPaidModal && paymentConfirmationData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+                <button
+                  onClick={() => handleConfirmPaymentStatusChange(false)}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                      <CheckCircle className="h-4 w-4 text-green-primary" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900 font-sans">¿Confirmas?</h2>
+                  </div>
+                  <p className="text-sm text-gray-500 font-sans">Este movimiento se marcará como pagado.</p>
+
+                  {/* Botones de acción */}
+                  <div className="w-full space-y-2">
+                    <button
+                      onClick={() => handleConfirmPaymentStatusChange(true)}
+                      className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium font-sans hover:bg-[#77b16e] transition-colors"
+                    >
+                      Sí, marcar como pagado
+                    </button>
+                    
+                    <button
+                      onClick={() => handleConfirmPaymentStatusChange(false)}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium font-sans hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Unmark as Paid Confirmation Modal */}
+          {showUnmarkAsPaidModal && paymentConfirmationData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
+              {/* Overlay borroso y semitransparente */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+                <button
+                  onClick={() => handleConfirmPaymentStatusChange(false)}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full p-1.5">
+                      <RotateCcw className="h-4 w-4 text-gray-600" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900 font-sans">¿Confirmas?</h2>
+                  </div>
+                  <p className="text-sm text-gray-500 font-sans">Este movimiento ya no estará marcado como pagado.</p>
+
+                  {/* Botones de acción */}
+                  <div className="w-full space-y-2">
+                    <button
+                      onClick={() => handleConfirmPaymentStatusChange(true)}
+                      className="w-full px-4 py-2 bg-gray-600 text-white rounded-xl text-sm font-medium font-sans hover:bg-gray-700 transition-colors"
+                    >
+                      Sí, desmarcar
+                    </button>
+                    
+                    <button
+                      onClick={() => handleConfirmPaymentStatusChange(false)}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium font-sans hover:bg-gray-200 transition-colors"
                     >
                       Cancelar
                     </button>
