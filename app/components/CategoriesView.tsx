@@ -150,17 +150,17 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     console.log('Attachment deleted:', attachmentId)
   }
 
-  // Attachment clip component
+  // Attachment clip component - EXACT structure from DashboardView
   const AttachmentClip = ({ transaction, className = "" }: { transaction: Transaction, className?: string }) => {
     return (
       <button
         onClick={() => handleAttachmentList(transaction)}
-        className={`text-gray-600 hover:text-gray-800 relative flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-md p-1 rounded-md hover:bg-gray-50 ${className}`}
-        title="Ver archivos adjuntos"
+        className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-1 rounded-md transition-all duration-200 hover:scale-105"
+        title="View attachments"
       >
-        <Paperclip className="h-4 w-4 transition-all duration-200" />
+        <Paperclip className="w-3 h-3" />
         {attachmentCounts[transaction.id] > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal transition-all duration-200 hover:scale-110">
+          <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
             {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
           </span>
         )}
