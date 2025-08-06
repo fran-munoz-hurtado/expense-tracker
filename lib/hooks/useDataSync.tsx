@@ -88,9 +88,9 @@ export const useDataSyncEffect = (
   const { dataVersion, lastOperation } = useDataSync()
 
   useEffect(() => {
-    console.log(`🔄 useDataSyncEffect: Triggered by data version ${dataVersion}${lastOperation ? ` (operation: ${lastOperation})` : ''}`)
-    console.log(`🔄 useDataSyncEffect: Dependencies:`, dependencies)
-    console.log(`🔄 useDataSyncEffect: Executing effect...`)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔄 useDataSyncEffect: Triggered (version: ${dataVersion}${lastOperation ? `, operation: ${lastOperation}` : ''})`)
+    }
     return effect()
   }, [dataVersion, lastOperation, ...dependencies])
 } 

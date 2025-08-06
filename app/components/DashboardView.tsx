@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
@@ -29,6 +29,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
   const navigation = useAppNavigation()
+  
+  // Ref to prevent duplicate fetch calls with same parameters
+  const lastFetchedRef = useRef<{ userId: number; month: number; year: number } | null>(null)
   
   // Navigation function to redirect to Mis Metas with goal expansion
   const handleNavigateToGoal = async (transaction: Transaction) => {
@@ -252,12 +255,29 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     return value.toString()
   }
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!user || !selectedMonth || !selectedYear) return
+    
+    // Prevent duplicate fetch calls with same parameters
+    if (lastFetchedRef.current?.userId === user.id &&
+        lastFetchedRef.current?.month === selectedMonth &&
+        lastFetchedRef.current?.year === selectedYear) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔄 DashboardView: Skipping duplicate fetch for ${selectedYear}/${selectedMonth}`)
+      }
+      return
+    }
+    
     try {
       setError(null)
       setLoading(true)
       
-      console.log(`🔄 DashboardView: Fetching data for month ${selectedMonth}, year ${selectedYear}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 DashboardView: Loading data for ${selectedYear}/${selectedMonth}`)
+      }
+      
+      // Update last fetched parameters
+      lastFetchedRef.current = { userId: user.id, month: selectedMonth, year: selectedYear }
       
       // Use optimized data fetching with performance monitoring
       const result = await measureQueryPerformance(
@@ -272,33 +292,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         }
       )
 
-      console.log(`📊 DashboardView: Fetched ${result.transactions.length} transactions for month ${selectedMonth}, year ${selectedYear}`)
-      console.log('📋 DashboardView: Transaction details:', result.transactions.map((t: Transaction) => ({
-        id: t.id,
-        description: t.description,
-        month: t.month,
-        year: t.year,
-        value: t.value,
-        status: t.status,
-        type: t.type,
-        source_type: t.source_type
-      })))
-
-      // Log detailed transaction breakdown
-      const expenseTransactions = result.transactions.filter(t => t.type === 'expense')
-      const recurrentTransactions = expenseTransactions.filter(t => t.source_type === 'recurrent')
-      const nonRecurrentTransactions = expenseTransactions.filter(t => t.source_type === 'non_recurrent')
-      
-      console.log('📊 DashboardView: Transaction breakdown:', {
-        total: result.transactions.length,
-        expense: expenseTransactions.length,
-        income: result.transactions.filter(t => t.type === 'income').length,
-        recurrent: recurrentTransactions.length,
-        nonRecurrent: nonRecurrentTransactions.length,
-        totalValue: expenseTransactions.reduce((sum, t) => sum + t.value, 0),
-        recurrentValue: recurrentTransactions.reduce((sum, t) => sum + t.value, 0),
-        nonRecurrentValue: nonRecurrentTransactions.reduce((sum, t) => sum + t.value, 0)
-      })
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ DashboardView: Loaded ${result.transactions.length} transactions for ${selectedYear}/${selectedMonth}`)
+      }
 
       setTransactions(result.transactions)
       setRecurrentExpenses(result.expenses.recurrent)
@@ -314,27 +310,33 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     } catch (error) {
       console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      // Reset last fetched on error to allow retry
+      lastFetchedRef.current = null
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, selectedMonth, selectedYear])
 
   // Initial data fetch
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [fetchData])
 
   // Use the new data synchronization system - only depend on dataVersion and lastOperation
   useDataSyncEffect(() => {
-    console.log('🔄 DashboardView: Data sync triggered, refetching data')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 DashboardView: Data sync triggered, refetching data')
+    }
     fetchData()
-  }, []) // Empty dependency array to avoid conflicts
+  }, [fetchData]) // Include fetchData in dependencies
 
   // Separate effect for user, selectedMonth, and selectedYear changes
   useEffect(() => {
-    console.log('🔄 DashboardView: User, selectedMonth, or selectedYear changed, refetching data')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 DashboardView: User, selectedMonth, or selectedYear changed, refetching data')
+    }
     fetchData()
-  }, [user, selectedMonth, selectedYear])
+  }, [fetchData]) // fetchData already includes these dependencies
 
   // Filter transactions for selected month/year
   const filteredTransactions = transactions.filter(transaction => 
