@@ -78,46 +78,31 @@ function Home() {
   }
 
   const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros') => {
-    console.log('🔄 handleViewChange called with view:', view)
     try {
       switch (view) {
         case 'dashboard':
-          console.log('📍 Navigating to dashboard...')
           // Navigate to current month dashboard
           const currentMonth = new Date().getMonth() + 1
           const currentYear = new Date().getFullYear()
           await navigation.navigateToDashboard(currentMonth, currentYear)
-          console.log('✅ Dashboard navigation completed')
           break
         case 'general-dashboard':
-          console.log('📍 Navigating to general-dashboard...')
           await navigation.navigateToGeneralDashboard(new Date().getFullYear())
-          console.log('✅ General dashboard navigation completed')
           break
         case 'debug':
-          console.log('📍 Navigating to debug...')
           await navigation.navigateToDebug()
-          console.log('✅ Debug navigation completed')
           break
         case 'mis-metas':
-          console.log('📍 Navigating to mis-metas...')
           await navigation.navigateToMisMetas()
-          console.log('✅ Mis metas navigation completed')
           break
         case 'categories':
-          console.log('📍 Navigating to categories...')
           await navigation.navigateToCategories()
-          console.log('✅ Categories navigation completed')
           break
         case 'como-vamos':
-          console.log('📍 Navigating to como-vamos...')
           await navigation.navigateToComoVamos()
-          console.log('✅ Como vamos navigation completed')
           break
         case 'mis-ahorros':
-          console.log('📍 Navigating to mis-ahorros...')
           await navigation.navigateToMisAhorros()
-          console.log('✅ Mis ahorros navigation completed')
           break
       }
     } catch (error) {

@@ -40,7 +40,9 @@ export function useAppNavigation() {
 
   // Update state when route changes
   useEffect(() => {
-    console.log('🔄 useAppNavigation: Route changed, updating state:', currentRoute)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 useAppNavigation: Route changed:', currentRoute.type)
+    }
     setState(prev => ({
       ...prev,
       currentRoute,

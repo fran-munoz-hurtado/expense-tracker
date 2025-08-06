@@ -68,16 +68,12 @@ export class NavigationService {
     
     try {
       const url = this.buildUrl(route)
-      console.log(`🔄 Navigating to: ${url}`)
-      console.log(`🔄 Route type: ${route.type}`)
-      console.log(`🔄 Replace: ${replace}, Scroll: ${scroll}`)
       
       if (replace) {
         await this.router.replace(url, { scroll })
       } else {
         await this.router.push(url, { scroll })
       }
-      console.log('✅ Navigation completed successfully')
     } catch (error) {
       console.error('❌ Navigation error:', error)
       throw new Error(`Failed to navigate to ${route.type}`)

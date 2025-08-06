@@ -45,6 +45,9 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📍 ComoVamosView: loading started')
+        }
         setLoadingTransactions(true)
         
         const [monthTransactions, expenses] = await Promise.all([
@@ -55,6 +58,10 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
         setTransactions(monthTransactions)
         setRecurrentExpenses(expenses.recurrent)
         setNonRecurrentExpenses(expenses.nonRecurrent)
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`✅ ComoVamosView: loaded successfully with ${monthTransactions.length} transactions`)
+        }
       } catch (err) {
         console.error('Error fetching data:', err)
       } finally {
