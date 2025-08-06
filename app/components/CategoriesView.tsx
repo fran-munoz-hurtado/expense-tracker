@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip, Settings, Trash2, Edit2, Tag, Plus } from 'lucide-react'
 import { type Transaction, type User, type TransactionAttachment, type RecurrentExpense } from '@/lib/supabase'
 import { fetchUserTransactions, fetchAttachmentCounts, fetchUserExpenses } from '@/lib/dataUtils'
@@ -55,6 +55,9 @@ interface CategoryGroup {
 export default function CategoriesView({ navigationParams, user }: CategoriesViewProps) {
   const navigation = useAppNavigation()
   const { refreshData } = useDataSync()
+  
+  // Ref to prevent duplicate fetch calls with same parameters
+  const lastFetchedRef = useRef<{ userId: number } | null>(null)
   
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
@@ -324,20 +327,33 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   }
 
   // Fetch transactions data
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!user) return
+    
+    // Prevent duplicate fetch calls with same parameters
+    if (lastFetchedRef.current?.userId === user.id) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔄 CategoriesView: Skipping duplicate fetch for user ${user.id}`)
+      }
+      return
+    }
+    
     try {
       setLoading(true)
       setError(null)
       
-      console.log(`🔄 CategoriesView: Fetching all transactions`)
+      // Update last fetched parameters
+      lastFetchedRef.current = { userId: user.id }
       
       // Fetch all transactions (simplified, no filtering)
       const allTransactions = await fetchUserTransactions(user, undefined, undefined)
-      console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions`)
 
       // Fetch recurrent expenses to build recurrentGoalMap
       const expenses = await fetchUserExpenses(user)
-      console.log(`📊 CategoriesView: Fetched ${expenses.recurrent.length} recurrent expenses`)
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions`)
+      }
 
       setTransactions(allTransactions)
       setRecurrentExpenses(expenses.recurrent)
@@ -348,22 +364,25 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     } catch (error) {
       console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      // Reset last fetched on error to allow retry
+      lastFetchedRef.current = null
     } finally {
       setLoading(false)
     }
-  }
+  }, [user]) // Dependencies for useCallback
 
   // Initial data fetch
   useEffect(() => {
     fetchData()
-  }, [user])
+  }, [fetchData]) // Now depends on fetchData
 
   // Data sync effect
   useDataSyncEffect(() => {
-    console.log('🔄 CategoriesView: Data sync triggered, refetching data')
-    console.log('🔄 CategoriesView: This should sync when categories are updated in DashboardView')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 CategoriesView: Data sync triggered, refetching data')
+    }
     fetchData()
-  }, [])
+  }, [fetchData]) // Now depends on fetchData
 
   // Load categories for management modal
   const loadManagementCategories = async () => {
