@@ -16,6 +16,7 @@ import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import TransactionIcon from './TransactionIcon'
 import React from 'react' // Added missing import for React
+import { useTransactionStore } from '@/lib/store/transactionStore'
 
 interface MisMetasViewProps {
   user: User
@@ -47,6 +48,17 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
   const navigation = useAppNavigation()
+  
+  // Zustand store
+  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  
+  // Function to validate goal transactions for debugging
+  function validateGoalTransactions(transactions: Transaction[]) {
+    const invalid = transactions.filter(t => t.type !== 'expense')
+    if (invalid.length > 0 && process.env.NODE_ENV === 'development') {
+      console.warn('[zustand] MisMetasView: Found', invalid.length, 'non-expense transactions that should be excluded', invalid.slice(0, 3))
+    }
+  }
   
   // Ref to prevent duplicate fetch calls with same parameters
   const lastFetchedRef = useRef<{ userId: number } | null>(null)
@@ -160,7 +172,6 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     fetchGoalData()
   }
 
-  const [goalTransactions, setGoalTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   
@@ -237,14 +248,22 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       // Update last fetched parameters
       lastFetchedRef.current = { userId: user.id }
 
-      // Fetch all data
-      const [transactions, expenses] = await Promise.all([
+      // Use hybrid approach: fetchUserTransactions directly + Zustand state management
+      console.log('[zustand] MisMetasView: fetching all transactions for user', user.id)
+      
+      const { setTransactions, setLoading: setZustandLoading } = useTransactionStore.getState()
+      
+      setZustandLoading(true)
+      const [allTransactions, expenses] = await Promise.all([
         fetchUserTransactions(user, undefined, undefined), // Fetch all transactions
         fetchUserExpenses(user)
       ])
 
+      // Store in Zustand
+      setTransactions(allTransactions)
+
       // Load attachment counts
-      await loadAttachmentCounts(transactions)
+      await loadAttachmentCounts(allTransactions)
 
       // Filter recurrent expenses that are goals
       const goalRecurrentExpenses = expenses.recurrent.filter(re => re.isgoal)
@@ -252,19 +271,19 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       // Filter non-recurrent expenses that are goals
       const goalNonRecurrentExpenses = expenses.nonRecurrent.filter(nre => nre.isgoal)
 
-      // Filter transactions that belong to goals
-      const goalTransactions = transactions.filter(t => 
-        t.type === 'expense' && (
-          (t.source_type === 'recurrent' && goalRecurrentExpenses.some(re => re.id === t.source_id)) ||
-          (t.source_type === 'non_recurrent' && goalNonRecurrentExpenses.some(nre => nre.id === t.source_id))
-        )
-      )
+      // Validate goal transactions
+      validateGoalTransactions(allTransactions)
 
       if (process.env.NODE_ENV === 'development') {
+        const goalTransactions = allTransactions.filter(t => 
+          t.type === 'expense' && (
+            (t.source_type === 'recurrent' && goalRecurrentExpenses.some(re => re.id === t.source_id)) ||
+            (t.source_type === 'non_recurrent' && goalNonRecurrentExpenses.some(nre => nre.id === t.source_id))
+          )
+        )
         console.log(`🎯 MisMetasView: Fetched ${goalTransactions.length} goal transactions from ${goalRecurrentExpenses.length} recurrent + ${goalNonRecurrentExpenses.length} one-time goals`)
       }
 
-      setGoalTransactions(goalTransactions)
       setRecurrentExpenses(expenses.recurrent)
       setNonRecurrentExpenses(expenses.nonRecurrent)
 
@@ -275,6 +294,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       lastFetchedRef.current = null
     } finally {
       setLoading(false)
+      useTransactionStore.getState().setLoading(false)
     }
   }, [user]) // Dependencies for useCallback
 
@@ -354,6 +374,14 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   }
 
   const objectiveGroups: ObjectiveGroup[] = useMemo(() => {
+    // Filter transactions that belong to goals - use transactions from Zustand
+    const goalTransactions = transactions.filter(t => 
+      t.type === 'expense' && (
+        (t.source_type === 'recurrent' && recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)) ||
+        (t.source_type === 'non_recurrent' && nonRecurrentExpenses.filter(nre => nre.isgoal).some(nre => nre.id === t.source_id))
+      )
+    )
+    
     if (!goalTransactions.length) return []
 
     // Group by unique objective (source_type + source_id)
@@ -407,7 +435,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     })
 
     return Array.from(groupsMap.values()).sort((a, b) => a.label.localeCompare(b.label))
-  }, [goalTransactions, recurrentExpenses, nonRecurrentExpenses])
+  }, [transactions, recurrentExpenses, nonRecurrentExpenses])
 
   // Filter groups based on selected filter
   const filteredObjectiveGroups = useMemo(() => {
@@ -437,6 +465,14 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       console.error('❌ MisMetasView: Navigation error:', error)
     }
   }
+
+  // Development logging for Zustand transactions
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && !isLoading) {
+      const goalTxs = transactions.filter(t => t.type === 'expense')
+      console.log('[zustand] MisMetasView: loaded', goalTxs.length, 'transactions (possible goals) from Zustand')
+    }
+  }, [isLoading, transactions])
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
@@ -589,7 +625,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
 
             {/* Objectives List - Same design as CategoriesView transactions */}
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-              {loading ? (
+              {isLoading ? (
                 <div className="p-6 text-center text-gray-500">{texts.loading}</div>
               ) : filteredObjectiveGroups.length === 0 ? (
                 <div className="p-6 text-center text-gray-500">
@@ -856,6 +892,13 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                       {(() => {
                         // Si es recurrente, filtrar todas las transacciones relacionadas
                         // Si es única, solo mostrar esa transacción
+                        const goalTransactions = transactions.filter(t => 
+                          t.type === 'expense' && (
+                            (t.source_type === 'recurrent' && recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)) ||
+                            (t.source_type === 'non_recurrent' && nonRecurrentExpenses.filter(nre => nre.isgoal).some(nre => nre.id === t.source_id))
+                          )
+                        )
+                        
                         const relatedTransactions = selectedObjective.source_type === 'recurrent'
                           ? goalTransactions.filter(t => 
                               t.source_type === 'recurrent' && 
