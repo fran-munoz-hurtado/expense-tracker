@@ -10,6 +10,7 @@ import { useSearchParams } from 'next/navigation'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
 import { getMonthlyColumnStats, getPercentage, type ColumnType } from '@/lib/utils/dashboardTable'
 import { getColor, getGradient } from '@/lib/config/colors'
+import { useTransactionStore } from '@/lib/store/transactionStore'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -23,10 +24,20 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
   
+  // Zustand store
+  const { transactions, isLoading } = useTransactionStore()
+  
   // Ref to prevent duplicate fetch calls with same parameters
   const lastFetchedRef = useRef<{ userId: number; year: number } | null>(null)
   
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  // Function to validate that all transactions belong to the selected year
+  function validateYearTransactions(transactions: Transaction[], selectedYear: number) {
+    const invalid = transactions.filter(tx => tx.year !== selectedYear)
+    if (invalid.length > 0 && process.env.NODE_ENV === 'development') {
+      console.warn('[zustand] GeneralDashboardView: Found', invalid.length, 'transactions with wrong year:', invalid.slice(0, 3))
+    }
+  }
+  
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   const [loading, setLoading] = useState(true)
@@ -150,10 +161,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     
     try {
       setError(null)
-      setLoading(true)
+      useTransactionStore.getState().setLoading(true)
       
       if (process.env.NODE_ENV === 'development') {
         console.log(`📊 GeneralDashboardView: Loading data for year ${selectedYear}`)
+        console.log('[zustand] GeneralDashboardView: fetching all transactions for year', selectedYear)
       }
       
       // Update last fetched parameters
@@ -178,9 +190,13 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
         console.log(`✅ GeneralDashboardView: Loaded ${result.transactions.length} transactions for year ${selectedYear}`)
       }
 
-      setTransactions(result.transactions)
+      // Store data using Zustand for transactions and local state for expenses
+      useTransactionStore.getState().setTransactions(result.transactions)
       setRecurrentExpenses(result.expenses.recurrent)
       setNonRecurrentExpenses(result.expenses.nonRecurrent)
+      
+      // Validate year consistency
+      validateYearTransactions(result.transactions, selectedYear)
 
       // Process monthly data with proper separation of recurrent and non-recurrent
       const monthlyStats: Record<number, {
@@ -226,7 +242,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       setMonthlyData(monthlyStats)
 
       // Remove verbose logging - calculations complete
-      setLoading(false)
+      useTransactionStore.getState().setLoading(false)
 
     } catch (error) {
       console.error('❌ Error in fetchMonthlyData():', error)
@@ -234,7 +250,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       // Reset last fetched on error to allow retry
       lastFetchedRef.current = null
     } finally {
-      setLoading(false)
+      useTransactionStore.getState().setLoading(false)
     }
   }, [user, selectedYear]) // Dependencies for useCallback
 
@@ -250,6 +266,14 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   useEffect(() => {
     fetchMonthlyData()
   }, [fetchMonthlyData]) // Now depends on fetchMonthlyData
+
+  // Development logging for Zustand transactions
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && !isLoading) {
+      const txs = transactions.filter(t => t.year === selectedYear)
+      console.log('[zustand] GeneralDashboardView: loaded', txs.length, 'transactions for year', selectedYear, 'from Zustand')
+    }
+  }, [isLoading, transactions, selectedYear])
 
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
