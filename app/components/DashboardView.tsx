@@ -328,10 +328,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   // Development logging for Zustand transactions
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' && !isLoading) {
       console.log('[zustand] DashboardView: loaded', transactions.length, 'transactions from Zustand store')
     }
-  }, [transactions])
+  }, [transactions, isLoading])
 
   // Use the new data synchronization system - only depend on dataVersion and lastOperation
   useDataSyncEffect(() => {
