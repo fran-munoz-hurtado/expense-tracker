@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, ChevronUp, ChevronDown, TrendingUp, Info } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, measureQueryPerformance } from '@/lib/dataUtils'
@@ -22,6 +22,9 @@ interface GeneralDashboardViewProps {
 export default function GeneralDashboardView({ onNavigateToMonth, user, navigationParams }: GeneralDashboardViewProps) {
   const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
+  
+  // Ref to prevent duplicate fetch calls with same parameters
+  const lastFetchedRef = useRef<{ userId: number; year: number } | null>(null)
   
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
@@ -133,53 +136,28 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   // Remove the problematic useEffect that was causing navigation cycles
   // The parent component (app/page.tsx) now handles URL updates through the navigation service
 
-  // Use the new data synchronization system - only depend on dataVersion and lastOperation
-  useDataSyncEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`📊 GeneralDashboardView: Data sync triggered for year ${selectedYear}`)
+  const fetchMonthlyData = useCallback(async () => {
+    if (!user || !selectedYear) return
+    
+    // Prevent duplicate fetch calls with same parameters
+    if (lastFetchedRef.current?.userId === user.id &&
+        lastFetchedRef.current?.year === selectedYear) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔄 GeneralDashboardView: Skipping duplicate fetch for year ${selectedYear}`)
+      }
+      return
     }
-    fetchMonthlyData()
-  }, []) // Empty dependency array to avoid conflicts
-
-  // Separate effect for user and selectedYear changes
-  useEffect(() => {
-    if (user && selectedYear) {
-      fetchMonthlyData()
-    }
-  }, [user, selectedYear])
-
-  const months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ]
-
-  const monthAbbreviations = [
-    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-  ]
-
-  // Available years for selection - easy to extend in the future
-  const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
-
-  // Get current month and year for highlighting
-  const currentDate = new Date()
-  const currentMonth = currentDate.getMonth() + 1 // getMonth() returns 0-11, we need 1-12
-  const currentYear = currentDate.getFullYear()
-
-  // Helper function to format currency for display (rounded, no decimals)
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(Math.round(value))
-  }
-
-  const fetchMonthlyData = async () => {
+    
     try {
       setError(null)
       setLoading(true)
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📊 GeneralDashboardView: Loading data for year ${selectedYear}`)
+      }
+      
+      // Update last fetched parameters
+      lastFetchedRef.current = { userId: user.id, year: selectedYear }
       
       // Use optimized data fetching with performance monitoring
       const result = await measureQueryPerformance(
@@ -253,9 +231,52 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     } catch (error) {
       console.error('❌ Error in fetchMonthlyData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      // Reset last fetched on error to allow retry
+      lastFetchedRef.current = null
     } finally {
       setLoading(false)
     }
+  }, [user, selectedYear]) // Dependencies for useCallback
+
+  // Use the new data synchronization system - only depend on dataVersion and lastOperation
+  useDataSyncEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 GeneralDashboardView: Data sync triggered, refetching data')
+    }
+    fetchMonthlyData()
+  }, [fetchMonthlyData]) // Now depends on fetchMonthlyData
+
+  // Main effect for user and selectedYear changes
+  useEffect(() => {
+    fetchMonthlyData()
+  }, [fetchMonthlyData]) // Now depends on fetchMonthlyData
+
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
+
+  const monthAbbreviations = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  ]
+
+  // Available years for selection - easy to extend in the future
+  const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
+
+  // Get current month and year for highlighting
+  const currentDate = new Date()
+  const currentMonth = currentDate.getMonth() + 1 // getMonth() returns 0-11, we need 1-12
+  const currentYear = currentDate.getFullYear()
+
+  // Helper function to format currency for display (rounded, no decimals)
+  const formatCurrency = (value: number): string => {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(Math.round(value))
   }
 
   function getPercentageColor(percentage: number): string {
