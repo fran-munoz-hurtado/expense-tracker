@@ -32,23 +32,29 @@ export function useAppNavigation() {
 
   // Parse current route from URL - this will re-run when urlKey changes
   const currentRoute = useMemo(() => {
-    console.log('🔄 useAppNavigation: Parsing route from URL:', urlKey)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 useAppNavigation: Parsing route from URL:', urlKey)
+    }
     const route = navigationService.parseRoute(searchParams)
-    console.log('🔄 useAppNavigation: Parsed route:', route)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 useAppNavigation: Parsed route:', route)
+    }
     return route
   }, [navigationService, searchParams, urlKey])
 
   // Update state when route changes
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 useAppNavigation: Route changed:', currentRoute.type)
+    // Only log if route type actually changed to prevent noise
+    const prevRouteType = state.currentRoute.type
+    if (process.env.NODE_ENV === 'development' && prevRouteType !== currentRoute.type) {
+      console.log(`🔄 useAppNavigation: Route changed from ${prevRouteType} to ${currentRoute.type}`)
     }
     setState(prev => ({
       ...prev,
       currentRoute,
       error: null
     }))
-  }, [currentRoute])
+  }, [currentRoute, state.currentRoute.type])
 
   // Navigation functions
   const navigateToDashboard = useCallback(async (month: number, year: number) => {

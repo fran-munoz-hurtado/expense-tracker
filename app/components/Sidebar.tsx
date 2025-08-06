@@ -56,6 +56,15 @@ export default function Sidebar({ activeView, onViewChange, onAddExpense, user, 
   ]
 
   const handleViewChange = (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros') => {
+    // Prevent redundant navigation if already on the active view
+    if (activeView === view) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔄 Sidebar: Already on ${view}, skipping navigation`)
+      }
+      setIsMobileMenuOpen(false) // Still close mobile menu
+      return
+    }
+    
     onViewChange(view)
     setIsMobileMenuOpen(false) // Close mobile menu when navigating
   }

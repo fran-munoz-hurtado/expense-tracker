@@ -27,6 +27,18 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   const navigation = useAppNavigation()
 
+  // Log component mounting/unmounting for debugging
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 ComoVamosView: Component mounted')
+    }
+    return () => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔄 ComoVamosView: Component unmounted')
+      }
+    }
+  }, [])
+
   // Get current month and year
   const currentDate = new Date()
   const currentMonth = currentDate.getMonth() + 1
@@ -69,7 +81,10 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
       }
     }
 
-    fetchData()
+    // Only fetch if we have a valid user
+    if (user) {
+      fetchData()
+    }
   }, [user, currentMonth, currentYear])
 
   // Helper function to compare dates without time

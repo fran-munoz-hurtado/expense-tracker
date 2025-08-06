@@ -227,9 +227,13 @@ export class NavigationService {
    * @param year - Year number
    */
   async navigateToGeneralDashboard(year: number): Promise<void> {
-    console.log('🔄 NavigationService.navigateToGeneralDashboard called with year:', year)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 NavigationService.navigateToGeneralDashboard called with year:', year)
+    }
     await this.navigate({ type: 'general-dashboard', year })
-    console.log('✅ NavigationService.navigateToGeneralDashboard completed')
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ NavigationService.navigateToGeneralDashboard completed')
+    }
   }
 
   /**
