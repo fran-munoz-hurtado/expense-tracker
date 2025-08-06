@@ -105,7 +105,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     }
     
     return map
-  }, [recurrentExpenses.length, recurrentExpenses.map(re => `${re.id}:${re.isgoal}`).join(',')]) // More specific dependencies
+  }, [JSON.stringify(recurrentExpenses.map(re => ({ id: re.id, isgoal: re.isgoal })))]) // Use JSON.stringify for deep comparison
 
   // Direct attachment functionality implementation (without external hook)
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
@@ -149,12 +149,16 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       setShowTransactionAttachments(true)
     }
     
-    console.log('Attachment uploaded:', attachment)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Attachment uploaded:', attachment)
+    }
   }
 
   const handleAttachmentDeleted = (attachmentId: number) => {
     // Refresh attachment counts
-    console.log('Attachment deleted:', attachmentId)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Attachment deleted:', attachmentId)
+    }
   }
 
   // Attachment clip component - EXACT structure from DashboardView
@@ -246,7 +250,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   // Navigation function to redirect to Mis cuentas
   const handleNavigateToMonth = async (month: number, year: number) => {
     try {
-      console.log(`🗂️ CategoriesView: Navigating to Mis cuentas - Month: ${month}, Year: ${year}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🗂️ CategoriesView: Navigating to Mis cuentas - Month: ${month}, Year: ${year}`)
+      }
       await navigation.navigateToDashboard(month, year)
     } catch (error) {
       console.error('❌ CategoriesView: Navigation error:', error)
@@ -397,11 +403,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       const filteredCategories = categories.filter(category => category.name !== 'Sin categoría')
       
       // Debug log to check category.isDefault values
-      console.log('🔍 Management Categories Debug:', filteredCategories.map(cat => ({
-        name: cat.name,
-        isDefault: cat.isDefault,
-        type: typeof cat.isDefault
-      })))
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Management Categories Debug:', filteredCategories.map(cat => ({
+          name: cat.name,
+          isDefault: cat.isDefault,
+          type: typeof cat.isDefault
+        })))
+      }
       
       setManagementCategories(filteredCategories)
     } catch (error) {
@@ -793,7 +801,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     }
     
     return sortedCategories
-  }, [transactions.length, transactions.map(t => `${t.id}:${t.category}:${t.status}:${t.value}`).join(','), Object.keys(recurrentGoalMap).join(',')]) // More specific dependencies
+  }, [JSON.stringify(transactions.map(t => ({ id: t.id, category: t.category, status: t.status, value: t.value, type: t.type, source_id: t.source_id }))), JSON.stringify(recurrentGoalMap)]) // Use JSON.stringify for deep comparison
 
   // Get category display name with fallback
   const getCategoryDisplayName = (categoryName: string) => {
@@ -1000,16 +1008,18 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         <button
                           key={group.categoryName}
                           onClick={() => {
-                            console.log('🖱️ CategoriesView: Category clicked', {
-                              categoryName: group.categoryName,
-                              previousSelection: selectedCategory,
-                              group: {
-                                count: group.count,
-                                total: group.total,
-                                recurrentGroups: group.recurrentGroups.length,
-                                nonRecurrentTransactions: group.nonRecurrentTransactions.length
-                              }
-                            })
+                            if (process.env.NODE_ENV === 'development') {
+                              console.log('🖱️ CategoriesView: Category clicked', {
+                                categoryName: group.categoryName,
+                                previousSelection: selectedCategory,
+                                group: {
+                                  count: group.count,
+                                  total: group.total,
+                                  recurrentGroups: group.recurrentGroups.length,
+                                  nonRecurrentTransactions: group.nonRecurrentTransactions.length
+                                }
+                              })
+                            }
                             setSelectedCategory(group.categoryName)
                           }}
                           className={`w-full p-4 text-left border-b border-gray-100 transition-colors ${
@@ -1102,7 +1112,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         }
                         
                         if (!group) {
-                          console.log('❌ No group found for selectedCategory:', selectedCategory)
+                          if (process.env.NODE_ENV === 'development') {
+                            console.log('❌ No group found for selectedCategory:', selectedCategory)
+                          }
                           return (
                             <div className="text-center py-8">
                               <p className="text-gray-500">No se encontró la categoría seleccionada</p>
@@ -1115,7 +1127,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         const hasTransactions = group.recurrentGroups.length > 0 || group.nonRecurrentTransactions.length > 0
                         
                         if (!hasTransactions) {
-                          console.log('⚠️ Group found but no transactions:', group)
+                          if (process.env.NODE_ENV === 'development') {
+                            console.log('⚠️ Group found but no transactions:', group)
+                          }
                           return (
                             <div className="text-center px-4 py-6">
                               <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1165,7 +1179,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                           // Seleccionar la primera transacción del grupo recurrente para la tabla de detalle
                                           const firstTransaction = recurrentGroup.yearGroups[0]?.transactions[0]
                                           if (firstTransaction) {
-                                            console.log('🖱️ CategoriesView: Recurrent group clicked, selecting first transaction', firstTransaction)
+                                            if (process.env.NODE_ENV === 'development') {
+                                              console.log('🖱️ CategoriesView: Recurrent group clicked, selecting first transaction', firstTransaction)
+                                            }
                                             setSelectedTransaction(firstTransaction)
                                           }
                                         }}
@@ -1237,7 +1253,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                       <button
                                         key={transaction.id} 
                                         onClick={() => {
-                                          console.log('🖱️ CategoriesView: Unique transaction clicked, selecting transaction', transaction)
+                                          if (process.env.NODE_ENV === 'development') {
+                                            console.log('🖱️ CategoriesView: Unique transaction clicked, selecting transaction', transaction)
+                                          }
                                           setSelectedTransaction(transaction)
                                         }}
                                         className="w-full p-3 border-b border-gray-100 transition-colors hover:bg-gray-50 text-left"
