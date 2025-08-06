@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Trophy, AlertTriangle } from 'lucide-react'
 import { type User, type Transaction } from '@/lib/supabase'
 import { fetchUserTransactions } from '@/lib/dataUtils'
+import { useTransactionStore } from '@/lib/store/transactionStore'
 import TransactionIcon from './TransactionIcon'
 import { cn } from '@/lib/utils'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
@@ -14,10 +15,21 @@ interface MisAhorrosViewProps {
 }
 
 export default function MisAhorrosView({ user, navigationParams }: MisAhorrosViewProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
+  // Zustand store
+  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  
   const [error, setError] = useState<string | null>(null)
   const navigation = useAppNavigation()
+
+  // Optional validator to ensure data consistency
+  function validateSavingsData(transactions: Transaction[]) {
+    const savingsTransactions = transactions.filter(t => t.type === 'expense' && t.category === 'Ahorro')
+    const invalid = transactions.filter(t => t.type !== 'expense' || t.category !== 'Ahorro')
+    if (invalid.length > 0 && process.env.NODE_ENV === 'development') {
+      console.warn('[zustand] MisAhorrosView: Found', invalid.length, 'non-savings transactions in view:', invalid.slice(0, 3))
+    }
+    return savingsTransactions
+  }
 
   // Get current month and year
   const currentDate = new Date()
@@ -44,25 +56,44 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
   // Fetch ALL transactions for historical savings data
   useEffect(() => {
     const fetchData = async () => {
+      if (!user) return
+      
       try {
-        setLoading(true)
         setError(null)
+        console.log('[zustand] MisAhorrosView: fetching all transactions for user', user.id)
         
-        // Fetch ALL historical transactions without month/year filters
-        // This will get complete historical data for savings calculations
-        const allTransactions = await fetchUserTransactions(user)
+        // For historical savings, we need ALL transactions without month/year filter
+        // Using fetchUserTransactions directly for complete historical data
+        const { setTransactions, setLoading } = useTransactionStore.getState()
         
+        setLoading(true)
+        const allTransactions = await fetchUserTransactions(user) // No month/year filters
         setTransactions(allTransactions)
+        
+        // Validate savings data after fetch
+        validateSavingsData(allTransactions)
+        
       } catch (err) {
         console.error('Error fetching transactions:', err)
         setError('Error al cargar datos')
       } finally {
+        const { setLoading } = useTransactionStore.getState()
         setLoading(false)
       }
     }
 
     fetchData()
   }, [user])
+
+  // Development logging for Zustand transactions
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && !isLoading) {
+      const savings = transactions.filter(t => t.type === 'expense' && t.category === 'Ahorro')
+      if (savings.length > 0) {
+        console.log('[zustand] MisAhorrosView: loaded', savings.length, 'savings transactions from Zustand')
+      }
+    }
+  }, [isLoading, transactions])
 
   // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
@@ -125,7 +156,7 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
 
   // TablaAhorros component
   const TablaAhorros = () => {
-    if (loading) return null
+    if (isLoading) return null
     if (error) return null
     
     // Filter and sort savings transactions
@@ -347,7 +378,7 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
 
   // ResumenAhorro component
   const ResumenAhorro = () => {
-    if (loading) {
+    if (isLoading) {
       return (
         <div className="rounded-xl bg-white shadow-soft p-4">
           <div className="animate-pulse">
