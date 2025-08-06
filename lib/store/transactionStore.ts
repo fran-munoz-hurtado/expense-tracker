@@ -62,6 +62,10 @@ type TransactionStore = {
     transactionId: number
     userId: number
   }) => Promise<void>
+  deleteRecurrentSeries: (params: {
+    sourceId: number
+    userId: number
+  }) => Promise<void>
 }
 
 export const useTransactionStore = create<TransactionStore>((set, get) => ({
@@ -396,6 +400,76 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
         }
       } catch (cacheError) {
         console.warn('[zustand] deleteTransaction: error clearing cache', cacheError)
+      }
+    }
+  },
+  deleteRecurrentSeries: async ({
+    sourceId,
+    userId,
+  }) => {
+    const { transactions } = get()
+
+    // Filtrar las transacciones que pertenecen a esta serie recurrente
+    const seriesToDelete = transactions.filter(t => 
+      t.source_id === sourceId && t.source_type === 'recurrent'
+    )
+
+    if (seriesToDelete.length === 0) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[zustand] deleteRecurrentSeries: no transactions found for series', sourceId)
+      }
+      return
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] deleteRecurrentSeries: deleting series', sourceId, 'with', seriesToDelete.length, 'transactions')
+    }
+
+    // ✅ 1. Mutación optimista - eliminar toda la serie de la UI inmediatamente
+    const remainingTransactions = transactions.filter(t => 
+      !(t.source_id === sourceId && t.source_type === 'recurrent')
+    )
+    
+    set({
+      transactions: remainingTransactions,
+    })
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] deleteRecurrentSeries: optimistic deletion applied (', seriesToDelete.length, 'items)')
+    }
+
+    // ✅ 2. Persistir en Supabase - eliminar de recurrent_expenses (triggea cascade delete)
+    const { error } = await supabase
+      .from('recurrent_expenses')
+      .delete()
+      .eq('id', sourceId)
+      .eq('user_id', userId)
+
+    // ❌ 3. Revertir si hay error
+    if (error) {
+      set({
+        transactions: [...transactions], // Restaurar el array original completo
+      })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] deleteRecurrentSeries: rollback applied due to error')
+      }
+      console.error('[zustand] deleteRecurrentSeries: error deleting series', sourceId, ':', error)
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] deleteRecurrentSeries: Supabase delete OK')
+      }
+
+      // ✅ 4. Esperar brevemente para que los triggers completen
+      await new Promise(resolve => setTimeout(resolve, 600))
+
+      // ✅ 5. Sincronización global
+      try {
+        clearUserCache(userId)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[zustand] deleteRecurrentSeries: global refresh triggered')
+        }
+      } catch (cacheError) {
+        console.warn('[zustand] deleteRecurrentSeries: error clearing cache', cacheError)
       }
     }
   }
