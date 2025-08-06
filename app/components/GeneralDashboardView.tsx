@@ -198,49 +198,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       // Validate year consistency
       validateYearTransactions(result.transactions, selectedYear)
 
-      // Process monthly data with proper separation of recurrent and non-recurrent
-      const monthlyStats: Record<number, {
-        transactions: Transaction[]
-        recurrent: number
-        nonRecurrent: number
-        total: number
-        paid: number
-        pending: number
-        overdue: number
-        income: number
-        incomePaid: number
-        incomePending: number
-        incomeOverdue: number
-      }> = {}
-
-      // Initialize all months
-      for (let month = 1; month <= 12; month++) {
-        // Get all transactions for the month
-        const monthTransactions = result.transactions.filter((t: Transaction) => t.month === month)
-        
-        // Use helpers to get stats for each column type
-        const recurrentStats = getMonthlyColumnStats(monthTransactions, 'recurrent', isDateOverdue)
-        const nonRecurrentStats = getMonthlyColumnStats(monthTransactions, 'non_recurrent', isDateOverdue)
-        const incomeStats = getMonthlyColumnStats(monthTransactions, 'income', isDateOverdue)
-        const totalStats = getMonthlyColumnStats(monthTransactions, 'total', isDateOverdue)
-
-        monthlyStats[month] = {
-          transactions: monthTransactions.filter((t: Transaction) => t.type === 'expense'),
-          recurrent: recurrentStats.total,
-          nonRecurrent: nonRecurrentStats.total,
-          total: totalStats.total,
-          paid: totalStats.paid,
-          pending: totalStats.pending,
-          overdue: totalStats.overdue,
-          income: incomeStats.total,
-          incomePaid: incomeStats.paid,
-          incomePending: incomeStats.pending,
-          incomeOverdue: incomeStats.overdue
-        }
-      }
-
-      setMonthlyData(monthlyStats)
-
+      // Monthly stats will be built by separate useEffect when Zustand transactions are ready
       // Remove verbose logging - calculations complete
       useTransactionStore.getState().setLoading(false)
 
@@ -272,6 +230,61 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     if (process.env.NODE_ENV === 'development' && !isLoading) {
       const txs = transactions.filter(t => t.year === selectedYear)
       console.log('[zustand] GeneralDashboardView: loaded', txs.length, 'transactions for year', selectedYear, 'from Zustand')
+    }
+  }, [isLoading, transactions, selectedYear])
+
+  // Build monthlyData when Zustand transactions are available
+  useEffect(() => {
+    if (!isLoading && transactions.length > 0 && selectedYear) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] GeneralDashboardView: building monthlyStats with', transactions.length, 'transactions from Zustand')
+      }
+      
+      const monthlyStats: Record<number, {
+        transactions: Transaction[]
+        recurrent: number
+        nonRecurrent: number
+        total: number
+        paid: number
+        pending: number
+        overdue: number
+        income: number
+        incomePaid: number
+        incomePending: number
+        incomeOverdue: number
+      }> = {}
+
+      // Initialize all months
+      for (let month = 1; month <= 12; month++) {
+        // Get all transactions for the month using Zustand transactions
+        const monthTransactions = transactions.filter((t: Transaction) => t.month === month && t.year === selectedYear)
+        
+        // Use helpers to get stats for each column type
+        const recurrentStats = getMonthlyColumnStats(monthTransactions, 'recurrent', isDateOverdue)
+        const nonRecurrentStats = getMonthlyColumnStats(monthTransactions, 'non_recurrent', isDateOverdue)
+        const incomeStats = getMonthlyColumnStats(monthTransactions, 'income', isDateOverdue)
+        const totalStats = getMonthlyColumnStats(monthTransactions, 'total', isDateOverdue)
+
+        monthlyStats[month] = {
+          transactions: monthTransactions.filter((t: Transaction) => t.type === 'expense'),
+          recurrent: recurrentStats.total,
+          nonRecurrent: nonRecurrentStats.total,
+          total: totalStats.total,
+          paid: totalStats.paid,
+          pending: totalStats.pending,
+          overdue: totalStats.overdue,
+          income: incomeStats.total,
+          incomePaid: incomeStats.paid,
+          incomePending: incomeStats.pending,
+          incomeOverdue: incomeStats.overdue
+        }
+      }
+
+      setMonthlyData(monthlyStats)
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] GeneralDashboardView: renderizando tabla con', Object.keys(monthlyStats).length, 'meses y', transactions.length, 'transacciones')
+      }
     }
   }, [isLoading, transactions, selectedYear])
 
@@ -772,7 +785,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
             </tr>
           </thead>
           <tbody>
-            {loading ? (
+            {isLoading ? (
               <tr><td colSpan={6} className="px-3 py-2 text-center text-gray-400 animate-pulse">{texts.loading}</td></tr>
             ) :
               Object.entries(monthlyData).map(([monthStr, data], idx) => {
@@ -831,7 +844,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
       {/* Mobile Card View */}
       <div className="lg:hidden space-y-4">
-        {loading ? (
+        {isLoading ? (
           <div className="text-center text-gray-400 py-8">{texts.loading}</div>
         ) : (
           Object.entries(monthlyData).map(([monthStr, data]) => {
