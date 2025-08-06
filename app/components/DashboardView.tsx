@@ -28,7 +28,7 @@ interface DashboardViewProps {
 export default function DashboardView({ navigationParams, user, onDataChange }: DashboardViewProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { refreshData } = useDataSync()
+  const { refreshData, dataVersion } = useDataSync()
   const navigation = useAppNavigation()
   
   // Zustand store
@@ -265,11 +265,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     return value.toString()
   }
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isRetry = false) => {
     if (!user) return
     
-    // Prevent duplicate fetch calls with same parameters
-    if (lastFetchedRef.current?.userId === user.id &&
+    // Prevent duplicate fetch calls with same parameters (unless it's a retry)
+    if (!isRetry && lastFetchedRef.current?.userId === user.id &&
         lastFetchedRef.current?.month === selectedMonth &&
         lastFetchedRef.current?.year === selectedYear) {
       if (process.env.NODE_ENV === 'development') {
@@ -282,14 +282,20 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       setError(null)
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear)
+        console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear, isRetry ? '(retry)' : '')
       }
       
       // Update last fetched parameters
       lastFetchedRef.current = { userId: user.id, month: selectedMonth, year: selectedYear }
       
-      // Fetch transactions from Zustand store
-      await fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
+      // Fetch transactions from Zustand store (force refetch if it's a retry)
+      await fetchTransactions({ 
+        userId: user.id, 
+        year: selectedYear, 
+        month: selectedMonth, 
+        syncVersion: dataVersion,
+        force: isRetry 
+      })
       
       // Validate transaction integrity
       validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
@@ -319,11 +325,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       // Reset last fetched on error to allow retry
       lastFetchedRef.current = null
     }
-  }, [user, selectedMonth, selectedYear, fetchTransactions, transactions])
+  }, [user, selectedMonth, selectedYear, fetchTransactions, transactions, dataVersion])
 
   // Initial data fetch
   useEffect(() => {
-    fetchData()
+    fetchData(false)
   }, [fetchData])
 
   // Development logging for Zustand transactions
@@ -334,11 +340,11 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   }, [isLoading, transactions])
 
   // Use the new data synchronization system - only depend on dataVersion and lastOperation
-  useDataSyncEffect(() => {
+  useDataSyncEffect((isRetry) => {
     if (process.env.NODE_ENV === 'development') {
       console.log('🔄 DashboardView: Data sync triggered, refetching data')
     }
-    fetchData()
+    fetchData(isRetry)
   }, [fetchData]) // Include fetchData in dependencies
 
   // Separate effect for user, selectedMonth, and selectedYear changes
@@ -346,7 +352,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     if (process.env.NODE_ENV === 'development') {
       console.log('🔄 DashboardView: User, selectedMonth, or selectedYear changed, refetching data')
     }
-    fetchData()
+    fetchData(false)
   }, [fetchData]) // fetchData already includes these dependencies
 
   // Filter transactions for selected month/year
@@ -1040,7 +1046,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
 
   const handleAttachmentDeleted = (attachmentId: number) => {
     // Refresh attachment counts by refetching data
-    fetchData()
+    fetchData(false)
     console.log('Attachment deleted:', attachmentId)
   }
 

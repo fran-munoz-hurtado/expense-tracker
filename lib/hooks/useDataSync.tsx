@@ -82,7 +82,7 @@ export const useDataSync = () => {
 
 // Hook for components that need to react to data changes
 export const useDataSyncEffect = (
-  effect: () => void | (() => void),
+  effect: (isRetry?: boolean) => void | (() => void),
   dependencies: React.DependencyList = []
 ) => {
   const { dataVersion, lastOperation } = useDataSync()
@@ -91,6 +91,31 @@ export const useDataSyncEffect = (
     if (process.env.NODE_ENV === 'development') {
       console.log(`🔄 useDataSyncEffect: Triggered (version: ${dataVersion}${lastOperation ? `, operation: ${lastOperation}` : ''})`)
     }
-    return effect()
+    
+    // Execute the effect immediately (not a retry)
+    const cleanup = effect(false)
+    
+    // If the last operation was create_transaction, schedule a retry to ensure triggers have completed
+    if (lastOperation === 'create_transaction') {
+      const retryTimeout = setTimeout(() => {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[zustand] Retry: re-executing effect after trigger delay for create_transaction...')
+        }
+        
+        // Execute the effect again indicating it's a retry
+        effect(true)
+      }, 400)
+      
+      // Return cleanup function that clears both the original cleanup and the retry timeout
+      return () => {
+        if (cleanup && typeof cleanup === 'function') {
+          cleanup()
+        }
+        clearTimeout(retryTimeout)
+      }
+    }
+    
+    // Return original cleanup if no retry is needed
+    return cleanup
   }, [dataVersion, lastOperation, ...dependencies])
 } 
