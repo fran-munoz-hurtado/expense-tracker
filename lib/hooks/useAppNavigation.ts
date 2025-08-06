@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { NavigationService, type AppRoute } from '@/lib/navigation'
+
+// Global cache to prevent duplicate parsing logs from multiple hook instances for same URL
+const parsedUrlCache = new Map<string, boolean>()
 
 // State interface for navigation
 interface NavigationState {
@@ -14,6 +17,9 @@ export function useAppNavigation() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
+  
+  // Use ref to track previous route type to prevent unnecessary logs
+  const prevRouteTypeRef = useRef<string>('home')
   
   // Create a key that changes when URL changes to force re-renders
   const urlKey = useMemo(() => {
@@ -32,29 +38,42 @@ export function useAppNavigation() {
 
   // Parse current route from URL - this will re-run when urlKey changes
   const currentRoute = useMemo(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 useAppNavigation: Parsing route from URL:', urlKey)
-    }
     const route = navigationService.parseRoute(searchParams)
-    if (process.env.NODE_ENV === 'development') {
+    
+    // Only log from one instance to prevent duplicate logs
+    if (process.env.NODE_ENV === 'development' && !parsedUrlCache.get(urlKey)) {
+      console.log('🔄 useAppNavigation: Parsing route from URL:', urlKey)
       console.log('🔄 useAppNavigation: Parsed route:', route)
+      parsedUrlCache.set(urlKey, true)
+      
+      // Reset flag after a short delay to allow fresh logs on real navigation changes
+      setTimeout(() => {
+        parsedUrlCache.delete(urlKey)
+      }, 100)
     }
+    
     return route
   }, [navigationService, searchParams, urlKey])
 
   // Update state when route changes
   useEffect(() => {
     // Only log if route type actually changed to prevent noise
-    const prevRouteType = state.currentRoute.type
-    if (process.env.NODE_ENV === 'development' && prevRouteType !== currentRoute.type) {
-      console.log(`🔄 useAppNavigation: Route changed from ${prevRouteType} to ${currentRoute.type}`)
+    const currentRouteType = currentRoute.type
+    const prevRouteType = prevRouteTypeRef.current
+    
+    if (process.env.NODE_ENV === 'development' && prevRouteType !== currentRouteType) {
+      console.log(`🔄 useAppNavigation: Route changed from ${prevRouteType} to ${currentRouteType}`)
     }
+    
+    // Update the ref with current route type
+    prevRouteTypeRef.current = currentRouteType
+    
     setState(prev => ({
       ...prev,
       currentRoute,
       error: null
     }))
-  }, [currentRoute, state.currentRoute.type])
+  }, [currentRoute])
 
   // Navigation functions
   const navigateToDashboard = useCallback(async (month: number, year: number) => {

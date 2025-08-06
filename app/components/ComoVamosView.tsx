@@ -14,6 +14,9 @@ import TransactionIcon from './TransactionIcon'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import React from 'react'
 
+// Component instance counter for debugging
+let componentInstanceCounter = 0
+
 interface ComoVamosViewProps {
   user: User
   navigationParams?: any
@@ -26,16 +29,24 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   const navigation = useAppNavigation()
+  
+  // Track this component instance
+  const instanceId = React.useRef(0)
 
   // Log component mounting/unmounting for debugging
   useEffect(() => {
+    instanceId.current = ++componentInstanceCounter
     if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 ComoVamosView: Component mounted')
+      console.log(`🔄 ComoVamosView: Component mounted (instance #${instanceId.current})`)
+      if (componentInstanceCounter > 1) {
+        console.warn(`⚠️ ComoVamosView: Multiple instances detected! This might cause duplicate logs.`)
+      }
     }
     return () => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('🔄 ComoVamosView: Component unmounted')
+        console.log(`🔄 ComoVamosView: Component unmounted (instance #${instanceId.current})`)
       }
+      componentInstanceCounter--
     }
   }, [])
 
@@ -58,7 +69,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     const fetchData = async () => {
       try {
         if (process.env.NODE_ENV === 'development') {
-          console.log('📍 ComoVamosView: loading started')
+          console.log(`📍 ComoVamosView: loading started (instance #${instanceId.current})`)
         }
         setLoadingTransactions(true)
         
@@ -72,7 +83,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
         setNonRecurrentExpenses(expenses.nonRecurrent)
         
         if (process.env.NODE_ENV === 'development') {
-          console.log(`✅ ComoVamosView: loaded successfully with ${monthTransactions.length} transactions`)
+          console.log(`✅ ComoVamosView: loaded successfully with ${monthTransactions.length} transactions (instance #${instanceId.current})`)
         }
       } catch (err) {
         console.error('Error fetching data:', err)
