@@ -16,6 +16,7 @@ import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import { getUserActiveCategories, addUserCategory, getUserActiveCategoriesWithInfo, CategoryInfo, countAffectedTransactions, deleteUserCategory, validateCategoryForEdit, updateUserCategory } from '@/lib/services/categoryService'
 import TransactionIcon from './TransactionIcon'
+import { useTransactionStore } from '@/lib/store/transactionStore'
 
 interface CategoriesViewProps {
   navigationParams?: { year?: number; month?: number } | null
@@ -56,10 +57,23 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const navigation = useAppNavigation()
   const { refreshData } = useDataSync()
   
+  // Zustand store
+  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  
+  // Function to validate categories data for debugging
+  function validateCategoriesData(transactions: Transaction[]) {
+    const invalid = transactions.filter(t =>
+      t.type !== 'expense' ||
+      t.category === 'Ahorro'
+    )
+    if (invalid.length > 0 && process.env.NODE_ENV === 'development') {
+      console.warn('[zustand] CategoriesView: Found', invalid.length, 'transactions that should not be rendered:', invalid.slice(0, 3))
+    }
+  }
+  
   // Ref to prevent duplicate fetch calls with same parameters
   const lastFetchedRef = useRef<{ userId: number } | null>(null)
   
-  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -355,7 +369,12 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       // Update last fetched parameters
       lastFetchedRef.current = { userId: user.id }
       
-      // Fetch all transactions (simplified, no filtering)
+      // Use hybrid approach: fetchUserTransactions directly + Zustand state management
+      console.log('[zustand] CategoriesView: fetching all transactions for user', user.id)
+      
+      const { setTransactions, setLoading: setZustandLoading } = useTransactionStore.getState()
+      
+      setZustandLoading(true)
       const allTransactions = await fetchUserTransactions(user, undefined, undefined)
 
       // Fetch recurrent expenses to build recurrentGoalMap
@@ -365,8 +384,12 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions`)
       }
 
+      // Store in Zustand
       setTransactions(allTransactions)
       setRecurrentExpenses(expenses.recurrent)
+
+      // Validate categories data
+      validateCategoriesData(allTransactions)
 
       // Load attachment counts
       await loadAttachmentCounts(allTransactions)
@@ -378,6 +401,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       lastFetchedRef.current = null
     } finally {
       setLoading(false)
+      useTransactionStore.getState().setLoading(false)
     }
   }, [user]) // Dependencies for useCallback
 
@@ -385,6 +409,17 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   useEffect(() => {
     fetchData()
   }, [fetchData]) // Now depends on fetchData
+
+  // Development logging for Zustand transactions
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && !isLoading) {
+      const filtered = transactions.filter(t => 
+        t.type === 'expense' &&
+        t.category !== 'Ahorro'
+      )
+      console.log('[zustand] CategoriesView: loaded', filtered.length, 'filtered expense transactions from Zustand')
+    }
+  }, [isLoading, transactions])
 
   // Data sync effect
   useDataSyncEffect(() => {
@@ -994,7 +1029,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   </div>
                 </div>
 
-                {loading ? (
+                {isLoading ? (
                   <div className="p-6 text-center text-gray-500">{texts.loading}</div>
                 ) : categoryGroups.length === 0 ? (
                   <div className="p-6 text-center text-gray-500">No hay categorías para mostrar</div>
