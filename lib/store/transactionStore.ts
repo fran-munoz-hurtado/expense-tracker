@@ -58,6 +58,10 @@ type TransactionStore = {
     movementType: MovementType
     payload: any
   }) => Promise<void>
+  deleteTransaction: (params: {
+    transactionId: number
+    userId: number
+  }) => Promise<void>
 }
 
 export const useTransactionStore = create<TransactionStore>((set, get) => ({
@@ -334,6 +338,65 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       }
     } catch (err) {
       console.error('[zustand] createTransaction: unexpected error', err)
+    }
+  },
+  deleteTransaction: async ({
+    transactionId,
+    userId,
+  }) => {
+    const { transactions } = get()
+
+    const original = transactions.find(t => t.id === transactionId)
+    if (!original) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[zustand] deleteTransaction: transaction not found', transactionId)
+      }
+      return
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] deleteTransaction: initiating deletion for transaction', transactionId)
+    }
+
+    // ✅ 1. Mutación optimista - eliminar de la UI inmediatamente
+    set({
+      transactions: transactions.filter(t => t.id !== transactionId),
+    })
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] deleteTransaction: removed transaction', transactionId, 'from UI optimistically')
+    }
+
+    // ✅ 2. Persistir en Supabase
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', transactionId)
+      .eq('user_id', userId)
+
+    // ❌ 3. Revertir si hay error
+    if (error) {
+      set({
+        transactions: [...transactions], // Restaurar el array original completo
+      })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] deleteTransaction: restoring transaction', transactionId, 'after failure')
+      }
+      console.error('[zustand] deleteTransaction: error deleting transaction', transactionId, ':', error)
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] deleteTransaction: successfully deleted transaction', transactionId)
+      }
+
+      // ✅ 4. Sincronización global
+      try {
+        clearUserCache(userId)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[zustand] deleteTransaction: cleared cache for user', userId)
+        }
+      } catch (cacheError) {
+        console.warn('[zustand] deleteTransaction: error clearing cache', cacheError)
+      }
     }
   }
 }))
