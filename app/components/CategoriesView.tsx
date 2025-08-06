@@ -99,9 +99,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     recurrentExpenses.forEach(re => {
       if (re.isgoal) map[re.id] = true
     })
-    console.log('🎯 CategoriesView: recurrentGoalMap created', map)
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🎯 CategoriesView: recurrentGoalMap created with', Object.keys(map).length, 'goals')
+    }
+    
     return map
-  }, [recurrentExpenses])
+  }, [recurrentExpenses.length, recurrentExpenses.map(re => `${re.id}:${re.isgoal}`).join(',')]) // More specific dependencies
 
   // Direct attachment functionality implementation (without external hook)
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
@@ -624,11 +628,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
   // Group transactions by category with recurrent and year grouping
   const categoryGroups: CategoryGroup[] = useMemo(() => {
-    console.log('🔄 CategoriesView: Recalculating categoryGroups', {
-      transactionsCount: transactions.length,
-      recurrentGoalMapSize: Object.keys(recurrentGoalMap).length
-    })
-    
     // Only include expense transactions (simplified, no filtering)
     const expenseTransactions = transactions.filter(t => 
       t.type === 'expense' && 
@@ -636,25 +635,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       !recurrentGoalMap[t.source_id]
     )
     
-    console.log('📊 CategoriesView: Transaction filtering results', {
-      totalTransactions: transactions.length,
-      expenseTransactions: expenseTransactions.length,
-      filtersApplied: {
-        onlyExpenses: 'type === expense',
-        excludeAhorro: 'category !== Ahorro',
-        excludeGoals: 'isgoal !== true'
-      },
-      sampleExpenseTransactions: expenseTransactions.slice(0, 3).map(t => ({
-        id: t.id,
-        description: t.description,
-        category: t.category,
-        type: t.type,
-        source_type: t.source_type,
-        value: t.value,
-        isGoal: recurrentGoalMap[t.source_id] || false
-      }))
-    })
-
     // Group by category
     const groups = new Map<string, Transaction[]>()
     
@@ -664,15 +644,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         groups.set(category, [])
       }
       groups.get(category)!.push(transaction)
-    })
-    
-    console.log('🏷️ CategoriesView: Category grouping results', {
-      categoriesFound: Array.from(groups.keys()),
-      categoryDetails: Array.from(groups.entries()).map(([cat, trans]) => ({
-        category: cat,
-        transactionCount: trans.length,
-        totalValue: trans.reduce((sum, t) => sum + t.value, 0)
-      }))
     })
 
     // Convert to CategoryGroup objects with recurrent and year grouping
@@ -817,22 +788,12 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     // Sort categories by total amount (descending)
     const sortedCategories = categoryGroupsArray.sort((a, b) => b.total - a.total)
     
-    console.log('✅ CategoriesView: Final categoryGroups result', {
-      categoriesCount: sortedCategories.length,
-      categories: sortedCategories.map(cat => ({
-        name: cat.categoryName,
-        count: cat.count,
-        total: cat.total,
-        recurrentGroups: cat.recurrentGroups.length,
-        nonRecurrentTransactions: cat.nonRecurrentTransactions.length
-      }))
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`✅ CategoriesView: Final categoryGroups result - ${sortedCategories.length} categories`)
+    }
     
     return sortedCategories
-  }, [transactions, recurrentGoalMap])
-
-
-
+  }, [transactions.length, transactions.map(t => `${t.id}:${t.category}:${t.status}:${t.value}`).join(','), Object.keys(recurrentGoalMap).join(',')]) // More specific dependencies
 
   // Get category display name with fallback
   const getCategoryDisplayName = (categoryName: string) => {
@@ -1122,21 +1083,23 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         const group = categoryGroups.find(g => g.categoryName === selectedCategory)
                         
                         // Debug logging
-                        console.log('🔍 CategoriesView Debug:', {
-                          selectedCategory,
-                          categoryGroups: categoryGroups.map(g => ({
-                            name: g.categoryName,
-                            count: g.count,
-                            recurrentGroups: g.recurrentGroups.length,
-                            nonRecurrentTransactions: g.nonRecurrentTransactions.length
-                          })),
-                          foundGroup: group ? {
-                            name: group.categoryName,
-                            count: group.count,
-                            recurrentGroups: group.recurrentGroups.length,
-                            nonRecurrentTransactions: group.nonRecurrentTransactions.length
-                          } : null
-                        })
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log('🔍 CategoriesView Debug:', {
+                            selectedCategory,
+                            categoryGroups: categoryGroups.map(g => ({
+                              name: g.categoryName,
+                              count: g.count,
+                              recurrentGroups: g.recurrentGroups.length,
+                              nonRecurrentTransactions: g.nonRecurrentTransactions.length
+                            })),
+                            foundGroup: group ? {
+                              name: group.categoryName,
+                              count: group.count,
+                              recurrentGroups: group.recurrentGroups.length,
+                              nonRecurrentTransactions: group.nonRecurrentTransactions.length
+                            } : null
+                          })
+                        }
                         
                         if (!group) {
                           console.log('❌ No group found for selectedCategory:', selectedCategory)
