@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Target, TrendingUp, DollarSign, Calendar, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp, X, Paperclip, Repeat } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, measureQueryPerformance, fetchAttachmentCounts } from '@/lib/dataUtils'
@@ -48,6 +48,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   const { refreshData } = useDataSync()
   const navigation = useAppNavigation()
   
+  // Ref to prevent duplicate fetch calls with same parameters
+  const lastFetchedRef = useRef<{ userId: number } | null>(null)
+  
   // Direct attachment functionality implementation (without external hook)
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
   const [showAttachmentModal, setShowAttachmentModal] = useState(false)
@@ -81,7 +84,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
 
   // Handle attachment deleted event
   const handleAttachmentDeleted = (attachmentId: number) => {
-    console.log('Attachment deleted:', attachmentId)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Attachment deleted:', attachmentId)
+    }
     // Refresh data to update attachment counts
     fetchGoalData()
   }
@@ -148,7 +153,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   }
 
   const handleAttachmentUploadComplete = (attachment: TransactionAttachment) => {
-    console.log('Attachment uploaded:', attachment)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Attachment uploaded:', attachment)
+    }
     // Refresh data to update attachment counts
     fetchGoalData()
   }
@@ -212,11 +219,23 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   }
 
   // Fetch goal data and computation logic
-  const fetchGoalData = async () => {
+  const fetchGoalData = useCallback(async () => {
+    if (!user) return
+    
+    // Prevent duplicate fetch calls with same parameters
+    if (lastFetchedRef.current?.userId === user.id) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔄 MisMetasView: Skipping duplicate fetch for user ${user.id}`)
+      }
+      return
+    }
+    
     try {
-      console.log('🎯 MisMetasView: fetchGoalData started')
       setLoading(true)
       setError(null)
+      
+      // Update last fetched parameters
+      lastFetchedRef.current = { userId: user.id }
 
       // Fetch all data
       const [transactions, expenses] = await Promise.all([
@@ -224,22 +243,14 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
         fetchUserExpenses(user)
       ])
 
-      console.log('🎯 MisMetasView: Raw data fetched:', {
-        transactions: transactions.length,
-        recurrentExpenses: expenses.recurrent.length,
-        nonRecurrentExpenses: expenses.nonRecurrent.length
-      })
-
       // Load attachment counts
       await loadAttachmentCounts(transactions)
 
       // Filter recurrent expenses that are goals
       const goalRecurrentExpenses = expenses.recurrent.filter(re => re.isgoal)
-      console.log('🎯 MisMetasView: Goal recurrent expenses:', goalRecurrentExpenses.length)
 
       // Filter non-recurrent expenses that are goals
       const goalNonRecurrentExpenses = expenses.nonRecurrent.filter(nre => nre.isgoal)
-      console.log('🎯 MisMetasView: Goal non-recurrent expenses:', goalNonRecurrentExpenses.length)
 
       // Filter transactions that belong to goals
       const goalTransactions = transactions.filter(t => 
@@ -249,7 +260,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
         )
       )
 
-      console.log('🎯 MisMetasView: Goal transactions:', goalTransactions.length)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🎯 MisMetasView: Fetched ${goalTransactions.length} goal transactions from ${goalRecurrentExpenses.length} recurrent + ${goalNonRecurrentExpenses.length} one-time goals`)
+      }
 
       setGoalTransactions(goalTransactions)
       setRecurrentExpenses(expenses.recurrent)
@@ -258,10 +271,12 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     } catch (error) {
       console.error('❌ MisMetasView: Error fetching goal data:', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      // Reset last fetched on error to allow retry
+      lastFetchedRef.current = null
     } finally {
       setLoading(false)
     }
-  }
+  }, [user]) // Dependencies for useCallback
 
   // Sync with URL parameters
   useEffect(() => {
@@ -271,19 +286,18 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     }
   }, [searchParams])
 
-  // Load data on component mount and when user changes
-  useEffect(() => {
-    if (user) {
-      fetchGoalData()
-    }
-  }, [user])
-
-  // Data sync effect
+  // Data sync effect - only depend on fetchGoalData
   useDataSyncEffect(() => {
-    if (user) {
-      fetchGoalData()
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 MisMetasView: Data sync triggered, refetching data')
     }
-  }, [user])
+    fetchGoalData()
+  }, [fetchGoalData]) // Now depends on fetchGoalData
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchGoalData()
+  }, [fetchGoalData]) // Now depends on fetchGoalData
 
   // Helper function to check if a date is overdue
   const isDateOverdue = (deadline: string): boolean => {
@@ -415,7 +429,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   // Navigation function to redirect to Mis cuentas
   const handleNavigateToMonth = async (month: number, year: number) => {
     try {
-      console.log(`🎯 MisMetasView: Navigating to Mis cuentas - Month: ${month}, Year: ${year}`)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🎯 MisMetasView: Navigating to Mis cuentas - Month: ${month}, Year: ${year}`)
+      }
       await navigation.navigateToDashboard(month, year)
     } catch (error) {
       console.error('❌ MisMetasView: Navigation error:', error)
@@ -610,7 +626,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                             <button
                               key={objective.key}
                               onClick={() => {
-                                console.log('🖱️ MisMetasView: Objective clicked, selecting first transaction', firstTransaction)
+                                if (process.env.NODE_ENV === 'development') {
+                                  console.log('🖱️ MisMetasView: Objective clicked, selecting first transaction', firstTransaction)
+                                }
                                 setSelectedObjective(firstTransaction)
                               }}
                               className="w-full p-3 text-left border-b border-gray-100 transition-colors hover:bg-gray-50"
@@ -672,7 +690,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                             <button
                               key={objective.key}
                               onClick={() => {
-                                console.log('🖱️ MisMetasView: Objective clicked, selecting first transaction', firstTransaction)
+                                if (process.env.NODE_ENV === 'development') {
+                                  console.log('🖱️ MisMetasView: Objective clicked, selecting first transaction', firstTransaction)
+                                }
                                 setSelectedObjective(firstTransaction)
                               }}
                               className="w-full p-3 border-b border-gray-100 transition-colors hover:bg-gray-50 text-left"
@@ -732,7 +752,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                             <button
                               key={objective.key}
                               onClick={() => {
-                                console.log('🖱️ MisMetasView: Objective clicked, selecting first transaction', firstTransaction)
+                                if (process.env.NODE_ENV === 'development') {
+                                  console.log('🖱️ MisMetasView: Objective clicked, selecting first transaction', firstTransaction)
+                                }
                                 setSelectedObjective(firstTransaction)
                               }}
                               className="w-full p-3 border-b border-gray-100 transition-colors hover:bg-gray-50 text-left"
