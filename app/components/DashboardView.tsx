@@ -9,6 +9,7 @@ import { texts } from '@/lib/translations'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
+import { useTransactionStore } from '@/lib/store/transactionStore'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import TransactionIcon from './TransactionIcon'
@@ -29,6 +30,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
   const navigation = useAppNavigation()
+  
+  // Zustand store
+  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
   
   // Ref to prevent duplicate fetch calls with same parameters
   const lastFetchedRef = useRef<{ userId: number; month: number; year: number } | null>(null)
@@ -62,10 +66,16 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     }
   }
   
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  // Function to validate transaction integrity for debugging
+  function validateTransactionIntegrity(transactions: Transaction[], selectedYear: number, selectedMonth: number) {
+    const invalid = transactions.filter(tx => tx.year !== selectedYear || tx.month !== selectedMonth)
+    if (invalid.length > 0 && process.env.NODE_ENV === 'development') {
+      console.warn('[zustand] DashboardView: Warning – Found', invalid.length, 'transactions with mismatched month/year', invalid)
+    }
+  }
+  
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
   const [selectedMonth, setSelectedMonth] = useState(navigationParams?.month || new Date().getMonth() + 1)
   const [error, setError] = useState<string | null>(null)
@@ -256,7 +266,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   }
 
   const fetchData = useCallback(async () => {
-    if (!user || !selectedMonth || !selectedYear) return
+    if (!user) return
     
     // Prevent duplicate fetch calls with same parameters
     if (lastFetchedRef.current?.userId === user.id &&
@@ -270,39 +280,35 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     
     try {
       setError(null)
-      setLoading(true)
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`📊 DashboardView: Loading data for ${selectedYear}/${selectedMonth}`)
+        console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear)
       }
       
       // Update last fetched parameters
       lastFetchedRef.current = { userId: user.id, month: selectedMonth, year: selectedYear }
       
-      // Use optimized data fetching with performance monitoring
+      // Fetch transactions from Zustand store
+      await fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
+      
+      // Validate transaction integrity
+      validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
+      
+      // Use optimized data fetching for expenses only
       const result = await measureQueryPerformance(
-        'fetchDashboardData',
+        'fetchDashboardExpenses',
         async () => {
-          const [transactions, expenses] = await Promise.all([
-            fetchUserTransactions(user, selectedMonth, selectedYear),
-            fetchUserExpenses(user)
-          ])
-          
-          return { transactions, expenses }
+          const expenses = await fetchUserExpenses(user)
+          return { expenses }
         }
       )
 
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ DashboardView: Loaded ${result.transactions.length} transactions for ${selectedYear}/${selectedMonth}`)
-      }
-
-      setTransactions(result.transactions)
       setRecurrentExpenses(result.expenses.recurrent)
       setNonRecurrentExpenses(result.expenses.nonRecurrent)
 
       // Fetch attachment counts if we have transactions
-      if (result.transactions && result.transactions.length > 0) {
-        const transactionIds = result.transactions.map((t: Transaction) => t.id)
+      if (transactions && transactions.length > 0) {
+        const transactionIds = transactions.map((t: Transaction) => t.id)
         const attachmentCountsData = await fetchAttachmentCounts(user, transactionIds)
         setAttachmentCounts(attachmentCountsData)
       }
@@ -312,15 +318,20 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
       // Reset last fetched on error to allow retry
       lastFetchedRef.current = null
-    } finally {
-      setLoading(false)
     }
-  }, [user, selectedMonth, selectedYear])
+  }, [user, selectedMonth, selectedYear, fetchTransactions, transactions])
 
   // Initial data fetch
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  // Development logging for Zustand transactions
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] DashboardView: loaded', transactions.length, 'transactions from Zustand store')
+    }
+  }, [transactions])
 
   // Use the new data synchronization system - only depend on dataVersion and lastOperation
   useDataSyncEffect(() => {
@@ -1373,6 +1384,20 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     setShowDeleteIndividualConfirmation(false)
     setDeleteIndividualConfirmationData(null)
   }
+
+  // Compatibility functions for mutation operations (create, edit, delete)
+  const compatibleSetTransactions = (value: Transaction[] | ((prev: Transaction[]) => Transaction[])) => {
+    const currentTransactions = useTransactionStore.getState().transactions
+    if (typeof value === 'function') {
+      const newTransactions = value(currentTransactions)
+      useTransactionStore.getState().setTransactions(newTransactions)
+    } else {
+      useTransactionStore.getState().setTransactions(value)
+    }
+  }
+  const setTransactions = compatibleSetTransactions
+  const setLoading = useTransactionStore.getState().setLoading
+  const loading = isLoading
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
