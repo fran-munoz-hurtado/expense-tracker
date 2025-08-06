@@ -11,6 +11,18 @@ type MovementType =
   | 'GOAL'
   | 'SAVINGS'
 
+type RecurrentFormData = {
+  description: string
+  month_from: number
+  month_to: number
+  year_from: number
+  year_to: number
+  value: number
+  payment_day_deadline?: number | null
+  isgoal?: boolean
+  category?: string
+}
+
 type TransactionStore = {
   transactions: Transaction[]
   isLoading: boolean
@@ -28,6 +40,18 @@ type TransactionStore = {
     transactionId: number
     newStatus: 'paid' | 'pending'
     userId: number
+  }) => Promise<void>
+  updateTransaction: (params: {
+    id: number
+    userId: number
+    description?: string
+    value?: number
+    deadline?: string | null
+  }) => Promise<void>
+  updateRecurrentTransactionSeries: (params: {
+    userId: number
+    recurrentId: number
+    updatedData: RecurrentFormData
   }) => Promise<void>
   createTransaction: (params: {
     userId: number
@@ -133,6 +157,144 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       if (process.env.NODE_ENV === 'development') {
         console.log('[zustand] markTransactionStatus: updated transaction', transactionId, 'to', newStatus)
       }
+    }
+  },
+  updateTransaction: async ({
+    id,
+    userId,
+    description,
+    value,
+    deadline,
+  }) => {
+    const { transactions } = get()
+
+    const original = transactions.find(t => t.id === id)
+    if (!original) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[zustand] updateTransaction: transaction not found', id)
+      }
+      return
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] updateTransaction: editing transaction', id, 'with new values', { description, value, deadline })
+    }
+
+    // ✅ 1. Mutación optimista
+    const updatedTransaction = {
+      ...original,
+      ...(description !== undefined && { description }),
+      ...(value !== undefined && { value }),
+      ...(deadline !== undefined && { deadline }),
+    }
+
+    set({
+      transactions: transactions.map(t =>
+        t.id === id ? updatedTransaction : t
+      ),
+    })
+
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] updateTransaction: updated transaction', id, 'optimistically')
+    }
+
+    // ✅ 2. Persistir en Supabase
+    const updateData: any = {}
+    if (description !== undefined) updateData.description = description
+    if (value !== undefined) updateData.value = value
+    if (deadline !== undefined) updateData.deadline = deadline
+
+    const { error } = await supabase
+      .from('transactions')
+      .update(updateData)
+      .eq('id', id)
+      .eq('user_id', userId)
+
+    // ❌ 3. Revertir si hay error
+    if (error) {
+      set({
+        transactions: transactions.map(t =>
+          t.id === id ? original : t
+        ),
+      })
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] updateTransaction: rollback transaction', id, 'due to error')
+      }
+      console.error('[zustand] updateTransaction: failed to update', error)
+    } else {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] updateTransaction: Supabase update confirmed for transaction', id)
+      }
+
+      // ✅ 4. Sincronización global
+      try {
+        clearUserCache(userId)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[zustand] updateTransaction: cleared cache for user', userId)
+        }
+      } catch (cacheError) {
+        console.warn('[zustand] updateTransaction: error clearing cache', cacheError)
+      }
+    }
+  },
+  updateRecurrentTransactionSeries: async ({
+    userId,
+    recurrentId,
+    updatedData,
+  }) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] 🔄 updateRecurrentTransactionSeries: start', { 
+        userId, 
+        recurrentId, 
+        range: `${updatedData.month_from}/${updatedData.year_from} - ${updatedData.month_to}/${updatedData.year_to}`,
+        description: updatedData.description,
+        value: updatedData.value
+      })
+    }
+
+    try {
+      // ✅ 1. Actualizar recurrent_expenses (Supabase manejará los triggers)
+      const { error } = await supabase
+        .from('recurrent_expenses')
+        .update({
+          description: updatedData.description,
+          month_from: updatedData.month_from,
+          month_to: updatedData.month_to,
+          year_from: updatedData.year_from,
+          year_to: updatedData.year_to,
+          value: updatedData.value,
+          payment_day_deadline: updatedData.payment_day_deadline,
+          isgoal: updatedData.isgoal || false,
+          category: updatedData.category,
+        })
+        .eq('id', recurrentId)
+        .eq('user_id', userId)
+
+      if (error) {
+        console.error('[zustand] ❌ updateRecurrentTransactionSeries: error updating recurrent_expenses', error)
+        return
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] ✅ updateRecurrentTransactionSeries: recurrent_expenses updated successfully')
+        console.log('[zustand] 🔄 Supabase triggers will now DELETE old transactions and CREATE new ones for the updated range')
+      }
+
+      // ✅ 2. Esperar brevemente para dar tiempo a los triggers
+      await new Promise(resolve => setTimeout(resolve, 600))
+
+      // ✅ 3. Disparar sincronización global
+      try {
+        clearUserCache(userId)
+        if (process.env.NODE_ENV === 'development') {
+          console.log('[zustand] updateRecurrentTransactionSeries: cleared cache for user', userId, '- all views will refresh')
+        }
+      } catch (cacheError) {
+        console.warn('[zustand] updateRecurrentTransactionSeries: error clearing cache', cacheError)
+      }
+
+    } catch (err) {
+      console.error('[zustand] updateRecurrentTransactionSeries: unexpected error', err)
     }
   },
   createTransaction: async ({
