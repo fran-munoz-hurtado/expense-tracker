@@ -73,7 +73,7 @@ export class DataProtection {
       const encryptedBuffer = await crypto.subtle.encrypt(
         {
           name: this.algorithm,
-          iv: iv,
+          iv: iv as BufferSource,
           tagLength: this.tagLength
         },
         encryptionKey,
@@ -82,7 +82,7 @@ export class DataProtection {
 
       return {
         encrypted: this.arrayBufferToBase64(encryptedBuffer),
-        iv: this.arrayBufferToBase64(iv),
+        iv: this.arrayBufferToBase64(iv.buffer as ArrayBuffer),
         algorithm: this.algorithm
       }
     } catch (error) {
@@ -102,7 +102,7 @@ export class DataProtection {
       const decryptedBuffer = await crypto.subtle.decrypt(
         {
           name: this.algorithm,
-          iv: iv,
+          iv: iv as BufferSource,
           tagLength: this.tagLength
         },
         key,

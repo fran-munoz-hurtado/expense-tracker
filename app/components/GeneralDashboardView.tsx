@@ -135,16 +135,17 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
   // Use the new data synchronization system - only depend on dataVersion and lastOperation
   useDataSyncEffect(() => {
-    console.log('🔄 GeneralDashboardView: Data sync triggered, refetching data')
-    console.log('🔄 GeneralDashboardView: Current user:', user.id)
-    console.log('🔄 GeneralDashboardView: Current selectedYear:', selectedYear)
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`📊 GeneralDashboardView: Data sync triggered for year ${selectedYear}`)
+    }
     fetchMonthlyData()
   }, []) // Empty dependency array to avoid conflicts
 
   // Separate effect for user and selectedYear changes
   useEffect(() => {
-    console.log('🔄 GeneralDashboardView: User or selectedYear changed, refetching data')
-    fetchMonthlyData()
+    if (user && selectedYear) {
+      fetchMonthlyData()
+    }
   }, [user, selectedYear])
 
   const months = [
@@ -177,7 +178,6 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
   const fetchMonthlyData = async () => {
     try {
-      console.log('🔄 GeneralDashboardView: fetchMonthlyData started')
       setError(null)
       setLoading(true)
       
@@ -195,10 +195,10 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
         }
       )
 
-      console.log('🔄 GeneralDashboardView: Data fetched successfully')
-      console.log('🔄 GeneralDashboardView: Transactions count:', result.transactions.length)
-      console.log('🔄 GeneralDashboardView: Recurrent expenses count:', result.expenses.recurrent.length)
-      console.log('🔄 GeneralDashboardView: Non-recurrent expenses count:', result.expenses.nonRecurrent.length)
+      // Only log summary in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`✅ GeneralDashboardView: Loaded ${result.transactions.length} transactions for year ${selectedYear}`)
+      }
 
       setTransactions(result.transactions)
       setRecurrentExpenses(result.expenses.recurrent)
@@ -247,42 +247,8 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
       setMonthlyData(monthlyStats)
 
-      // Log detailed debugging information
-      console.log('🔄 GeneralDashboardView: Monthly data calculated')
-      console.log('🔄 GeneralDashboardView: Total transactions for year:', result.transactions.length)
-      console.log('🔄 GeneralDashboardView: Transactions by type:', {
-        expense: result.transactions.filter(t => t.type === 'expense').length,
-        income: result.transactions.filter(t => t.type === 'income').length
-      })
-      
-      Object.entries(monthlyStats).forEach(([month, data]) => {
-        if (data.total > 0) {
-          // Calculate how much of each type is paid
-          const recurrentPaid = data.transactions
-            .filter((t: Transaction) => t.source_type === 'recurrent' && t.status === 'paid')
-            .reduce((sum: number, t: Transaction) => sum + t.value, 0)
-          
-          const nonRecurrentPaid = data.transactions
-            .filter((t: Transaction) => t.source_type === 'non_recurrent' && t.status === 'paid')
-            .reduce((sum: number, t: Transaction) => sum + t.value, 0)
-          
-          const recurrentPercentage = getPercentage(recurrentPaid, data.recurrent)
-          const nonRecurrentPercentage = getPercentage(nonRecurrentPaid, data.nonRecurrent)
-          const totalPercentage = getPercentage(data.paid, data.total)
-          
-          console.log(`🔄 Month ${month}: ${data.transactions.length} transactions, Total: ${formatCurrency(data.total)}, Recurrent: ${formatCurrency(data.recurrent)} (${recurrentPercentage}%), NonRecurrent: ${formatCurrency(data.nonRecurrent)} (${nonRecurrentPercentage}%), Overall: ${totalPercentage}%`)
-        } else {
-          console.log(`🔄 Month ${month}: No transactions`)
-        }
-      })
-
-      // Log income statistics for debugging
-      Object.entries(monthlyStats).forEach(([month, data]) => {
-        if (data.income > 0) {
-          const incomePercentage = calculateIncomePercentage(data)
-          console.log(`🔄 Month ${month} Income: ${formatCurrency(data.income)} (${incomePercentage}% received)`)
-        }
-      })
+      // Remove verbose logging - calculations complete
+      setLoading(false)
 
     } catch (error) {
       console.error('❌ Error in fetchMonthlyData():', error)
@@ -360,7 +326,6 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       }
 
       // Trigger global data refresh using the new system
-      console.log('🔄 Triggering global data refresh after deletion')
       refreshData(user.id, 'delete_transaction')
       
     } catch (error) {
@@ -423,7 +388,6 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       if (error) throw error
 
       // Trigger global data refresh using the new system
-      console.log('🔄 Triggering global data refresh after series deletion')
       refreshData(user.id, 'delete_transaction')
       
     } catch (error) {
@@ -483,7 +447,6 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       if (error) throw error
 
       // Trigger global data refresh using the new system
-      console.log('🔄 Triggering global data refresh after individual deletion')
       refreshData(user.id, 'delete_transaction')
       
     } catch (error) {
@@ -680,7 +643,6 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       }
 
       // Trigger global data refresh using the new system
-      console.log('🔄 Triggering global data refresh after modification')
       refreshData(user.id, 'modify_transaction')
 
     } catch (error) {
@@ -734,12 +696,12 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       <div className="hidden lg:block bg-white rounded-lg shadow-sm border overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 table-fixed general-dashboard-table">
           <colgroup>
-            <col style={{ width: '110px' }} /> {/* Mes */}
-            <col style={{ width: '150px' }} /> {/* Ingresos */}
-            <col style={{ width: '150px' }} /> {/* Gastos Totales */}
-            <col style={{ width: '130px' }} /> {/* Gastos Mensuales */}
-            <col style={{ width: '130px' }} /> {/* Gastos Únicos */}
-            <col style={{ width: '170px' }} /> {/* Balance */}
+            <col style={{ width: '110px' }} />
+            <col style={{ width: '150px' }} />
+            <col style={{ width: '150px' }} />
+            <col style={{ width: '130px' }} />
+            <col style={{ width: '130px' }} />
+            <col style={{ width: '170px' }} />
           </colgroup>
           <thead>
             {/* Header principal simplificado */}
