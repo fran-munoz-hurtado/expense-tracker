@@ -9,6 +9,7 @@ import { getStatusColors } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { getTransactionIconType, getTransactionIconColor, getTransactionIconBackground } from '@/lib/utils/transactionIcons'
 import { renderCustomIcon } from '@/lib/utils/iconRenderer'
+import { useTransactionStore } from '@/lib/store/transactionStore'
 import ResumenMensual from './ResumenMensual'
 import TransactionIcon from './TransactionIcon'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
@@ -23,9 +24,18 @@ interface ComoVamosViewProps {
 }
 
 export default function ComoVamosView({ user, navigationParams }: ComoVamosViewProps) {
+  // Zustand store
+  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  
+  // Function to validate transaction integrity for debugging
+  function validateTransactionIntegrity(transactions: Transaction[], selectedYear: number, selectedMonth: number) {
+    const invalid = transactions.filter(tx => tx.year !== selectedYear || tx.month !== selectedMonth)
+    if (invalid.length > 0 && process.env.NODE_ENV === 'development') {
+      console.warn('[zustand] ComoVamosView: Warning – Found', invalid.length, 'transactions with mismatched month/year', invalid)
+    }
+  }
+  
   const [loading, setLoading] = useState(true)
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loadingTransactions, setLoadingTransactions] = useState(false)
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   const navigation = useAppNavigation()
@@ -66,37 +76,40 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
 
   // Fetch transactions and expenses for current month
   useEffect(() => {
-    const fetchData = async () => {
+    if (user) {
+      console.log('[zustand] ComoVamosView: fetching data from store for', currentMonth, currentYear)
+      fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
+      
+      // Validate transaction integrity
+      validateTransactionIntegrity(transactions, currentYear, currentMonth)
+    }
+  }, [user, currentMonth, currentYear, fetchTransactions])
+
+  // Fetch expenses separately (not yet moved to Zustand)
+  useEffect(() => {
+    const fetchExpenses = async () => {
       try {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`📍 ComoVamosView: loading started (instance #${instanceId.current})`)
-        }
-        setLoadingTransactions(true)
-        
-        const [monthTransactions, expenses] = await Promise.all([
-          fetchUserTransactions(user, currentMonth, currentYear),
-          fetchUserExpenses(user)
-        ])
-        
-        setTransactions(monthTransactions)
-        setRecurrentExpenses(expenses.recurrent)
-        setNonRecurrentExpenses(expenses.nonRecurrent)
-        
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`✅ ComoVamosView: loaded successfully with ${monthTransactions.length} transactions (instance #${instanceId.current})`)
+        if (user) {
+          const expenses = await fetchUserExpenses(user)
+          setRecurrentExpenses(expenses.recurrent)
+          setNonRecurrentExpenses(expenses.nonRecurrent)
         }
       } catch (err) {
-        console.error('Error fetching data:', err)
+        console.error('Error fetching expenses:', err)
       } finally {
-        setLoadingTransactions(false)
+        setLoading(false)
       }
     }
 
-    // Only fetch if we have a valid user
-    if (user) {
-      fetchData()
+    fetchExpenses()
+  }, [user])
+
+  // Development logging for Zustand transactions
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development' && !isLoading && transactions.length > 0) {
+      console.log('[zustand] ComoVamosView: loaded', transactions.length, 'transactions from Zustand store')
     }
-  }, [user, currentMonth, currentYear])
+  }, [isLoading, transactions])
 
   // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
@@ -220,7 +233,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     const goalsStatus = getGoalsStatus()
     const activeCategories = getActiveCategoriesWithStatus()
     
-    if (loadingTransactions) {
+    if (isLoading) { // Use isLoading from Zustand
       return (
         <div className="bg-white rounded-xl shadow-sm p-4 w-full">
           <div className="animate-pulse">
@@ -364,7 +377,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
 
   // EstadoAhorro component
   const EstadoAhorro = () => {
-    if (loadingTransactions) {
+    if (isLoading) { // Use isLoading from Zustand
       return (
         <div className="bg-green-50 border border-gray-200 rounded-lg p-6">
           <div className="animate-pulse">
@@ -457,7 +470,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
 
   // ProximosVencimientos component
   const ProximosVencimientos = () => {
-    if (loadingTransactions) {
+    if (isLoading) { // Use isLoading from Zustand
       return (
         <div className="bg-white rounded-xl shadow-sm p-4 w-full">
           <div className="animate-pulse">
@@ -566,7 +579,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     return () => clearTimeout(timer)
   }, [])
 
-  if (loading) {
+  if (loading) { // This loading state is now handled by Zustand's isLoading
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
         <div className="text-center">
