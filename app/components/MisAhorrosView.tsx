@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Trophy, AlertTriangle } from 'lucide-react'
 import { type User, type Transaction } from '@/lib/supabase'
-import { fetchUserTransactions } from '@/lib/dataUtils'
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import TransactionIcon from './TransactionIcon'
 import { cn } from '@/lib/utils'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
@@ -53,37 +53,36 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ]
 
-  // Fetch ALL transactions for historical savings data
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!user) return
+  // Fetch transactions data using pure Zustand pattern
+  const fetchData = useCallback(async () => {
+    if (!user) return
+    
+    try {
+      setError(null)
       
-      try {
-        setError(null)
-        console.log('[zustand] MisAhorrosView: fetching all transactions for user', user.id)
-        
-        // For historical savings, we need ALL transactions without month/year filter
-        // Using fetchUserTransactions directly for complete historical data
-        const { setTransactions, setLoading } = useTransactionStore.getState()
-        
-        setLoading(true)
-        const allTransactions = await fetchUserTransactions(user) // No month/year filters
-        setTransactions(allTransactions)
-        
-        // Validate savings data after fetch
-        validateSavingsData(allTransactions)
-        
-      } catch (err) {
-        console.error('Error fetching transactions:', err)
-        setError('Error al cargar datos')
-      } finally {
-        const { setLoading } = useTransactionStore.getState()
-        setLoading(false)
-      }
-    }
+      console.log('[zustand] MisAhorrosView: fetchTransactions triggered')
+      
+      // Use pure Zustand pattern with scope: 'all' for historical savings data
+      await fetchTransactions({ 
+        userId: user.id, 
+        scope: 'all' // Fetch all transactions without month/year filters
+      })
+      
+      console.log('[zustand] MisAhorrosView: transactions loaded:', transactions.length)
+      
+      // Validate savings data
+      validateSavingsData(transactions)
 
+    } catch (error) {
+      console.error('❌ Error in fetchData():', error)
+      setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    }
+  }, [user, fetchTransactions, transactions])
+
+  // Initial data fetch
+  useEffect(() => {
     fetchData()
-  }, [user])
+  }, [fetchData])
 
   // Development logging for Zustand transactions
   useEffect(() => {
@@ -94,6 +93,12 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
       }
     }
   }, [isLoading, transactions])
+
+  // Data sync effect using pure Zustand pattern
+  useDataSyncEffect(() => {
+    console.log('[zustand] MisAhorrosView: useDataSyncEffect triggered')
+    fetchData()
+  }, [fetchData])
 
   // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
