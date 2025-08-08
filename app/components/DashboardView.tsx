@@ -1405,6 +1405,28 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const setLoading = useTransactionStore.getState().setLoading
   const loading = isLoading
 
+  // Debugging logs for transaction filtering
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[zustand] Filtro activo:', selectedMonth, selectedYear)
+    console.log('[zustand] Todas las transacciones:', transactions)
+    console.log('[zustand] Transacciones visibles:', transactions.filter(t => t.month === selectedMonth && t.year === selectedYear))
+  }
+
+  // Protection: Don't render until we have consistent data
+  if (!user || !selectedMonth || !selectedYear || isLoading) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] DashboardView: Esperando datos... no renderiza aún', { user: !!user, selectedMonth, selectedYear, isLoading })
+    }
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-primary mx-auto"></div>
+          <p className="mt-4 text-sm text-gray-600 font-sans">{texts.loading}</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
       {/* Header */}
