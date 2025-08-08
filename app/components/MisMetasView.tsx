@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Target, TrendingUp, DollarSign, Calendar, CheckCircle, AlertCircle, Clock, ChevronDown, ChevronUp, X, Paperclip, Repeat } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
-import { fetchUserTransactions, fetchUserExpenses, measureQueryPerformance, fetchAttachmentCounts } from '@/lib/dataUtils'
+import { fetchUserExpenses, measureQueryPerformance, fetchAttachmentCounts } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { useSearchParams } from 'next/navigation'
@@ -60,9 +60,6 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     }
   }
   
-  // Ref to prevent duplicate fetch calls with same parameters
-  const lastFetchedRef = useRef<{ userId: number } | null>(null)
-  
   // Direct attachment functionality implementation (without external hook)
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
   const [showAttachmentModal, setShowAttachmentModal] = useState(false)
@@ -99,123 +96,30 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     if (process.env.NODE_ENV === 'development') {
       console.log('Attachment deleted:', attachmentId)
     }
-    // Refresh data to update attachment counts
-    fetchGoalData()
   }
 
-  // Attachment modals component  
-  const AttachmentModals = () => {
-    return (
-      <>
-        {/* File Upload Modal */}
-        {showAttachmentModal && selectedTransactionForAttachments && (
-          <FileUploadModal
-            isOpen={showAttachmentModal}
-            onClose={() => {
-              setShowAttachmentModal(false)
-              setSelectedTransactionForAttachments(null)
-            }}
-            transactionId={selectedTransactionForAttachments.id}
-            userId={user.id}
-            onUploadComplete={handleAttachmentUploadComplete}
-          />
-        )}
-
-        {/* Attachments List Modal */}
-        {showTransactionAttachments && selectedTransactionForAttachments && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-            <section className="relative bg-white rounded-xl p-0 w-full max-w-md shadow-sm border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
-              <button
-                onClick={() => {
-                  setShowTransactionAttachments(false)
-                  setSelectedTransactionForAttachments(null)
-                }}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
-                aria-label="Cerrar"
-              >
-                <X className="h-4 w-4" />
-              </button>
-              
-              <div className="px-4 py-3 flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full">
-                    <Paperclip className="h-4 w-4 text-green-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-medium text-gray-900">Archivos Adjuntos</h2>
-                    <p className="text-sm text-gray-500">Para: {selectedTransactionForAttachments.description}</p>
-                  </div>
-                </div>
-                
-                <div className="border-t border-gray-200 pt-3">
-                  <TransactionAttachments
-                    transactionId={selectedTransactionForAttachments.id}
-                    userId={user.id}
-                    onAttachmentDeleted={handleAttachmentDeleted}
-                    onAddAttachment={() => handleAttachmentUpload(selectedTransactionForAttachments)}
-                  />
-                </div>
-              </div>
-            </section>
-          </div>
-        )}
-      </>
-    )
-  }
-
+  // Function to handle attachment upload completion
   const handleAttachmentUploadComplete = (attachment: TransactionAttachment) => {
+    setAttachmentCounts(prev => ({
+      ...prev,
+      [attachment.transaction_id]: (prev[attachment.transaction_id] || 0) + 1
+    }))
+    
+    if (selectedTransactionForAttachments) {
+      setSelectedTransactionForAttachments(selectedTransactionForAttachments)
+      setShowTransactionAttachments(true)
+    }
+    
     if (process.env.NODE_ENV === 'development') {
       console.log('Attachment uploaded:', attachment)
     }
-    // Refresh data to update attachment counts
-    fetchGoalData()
   }
 
-  const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
-  const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
-  
-  // Create recurrentGoalMap for parametrized icon system
-  const recurrentGoalMap = useMemo(() => {
-    const map: Record<number, boolean> = {}
-    recurrentExpenses.forEach(expense => {
-      map[expense.id] = expense.isgoal || false
-    })
-    return map
-  }, [recurrentExpenses])
-  
-  const [loading, setLoading] = useState(true)
-  const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
-  const [error, setError] = useState<string | null>(null)
-  
-  // Filter state for goals
-  const [goalFilter, setGoalFilter] = useState<'all' | 'active' | 'completed'>('all')
-
-  // Available years for selection
-  const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
-
-  // Current date for highlighting
-  const currentDate = new Date()
-  const currentMonth = currentDate.getMonth() + 1
-  const currentYear = currentDate.getFullYear()
-
-  const months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ]
-
-  // AttachmentClip component - EXACT structure from DashboardView
+  // Attachment clip component
   const AttachmentClip = ({ transaction, className = "" }: { transaction: Transaction, className?: string }) => {
     return (
       <button
-        onClick={(e) => {
-          e.stopPropagation()
-          if (attachmentCounts[transaction.id] > 0) {
-            handleAttachmentList(transaction)
-          } else {
-            handleAttachmentUpload(transaction)
-          }
-        }}
+        onClick={() => handleAttachmentList(transaction)}
         className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-1 rounded-md transition-all duration-200 hover:scale-105"
         title="View attachments"
       >
@@ -229,106 +133,52 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     )
   }
 
-  // Fetch goal data and computation logic
-  const fetchGoalData = useCallback(async () => {
-    if (!user) return
-    
-    // Prevent duplicate fetch calls with same parameters
-    if (lastFetchedRef.current?.userId === user.id) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔄 MisMetasView: Skipping duplicate fetch for user ${user.id}`)
-      }
-      return
-    }
-    
-    try {
-      setLoading(true)
-      setError(null)
-      
-      // Update last fetched parameters
-      lastFetchedRef.current = { userId: user.id }
+  // State for recurrent expenses (needed for recurrentGoalMap)
+  const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
+  const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
+  const [error, setError] = useState<string | null>(null)
+  
+  // Create recurrentGoalMap like in other views (needs recurrentExpenses)
+  const recurrentGoalMap = useMemo(() => {
+    const map: Record<number, boolean> = {}
+    recurrentExpenses.forEach(expense => {
+      map[expense.id] = expense.isgoal || false
+    })
+    return map
+  }, [recurrentExpenses])
+  
+  const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
+  
+  // Filter state for goals
+  const [goalFilter, setGoalFilter] = useState<'all' | 'active' | 'completed'>('all')
 
-      // Use hybrid approach: fetchUserTransactions directly + Zustand state management
-      console.log('[zustand] MisMetasView: fetching all transactions for user', user.id)
-      
-      const { setTransactions, setLoading: setZustandLoading } = useTransactionStore.getState()
-      
-      setZustandLoading(true)
-      const [allTransactions, expenses] = await Promise.all([
-        fetchUserTransactions(user, undefined, undefined), // Fetch all transactions
-        fetchUserExpenses(user)
-      ])
+  // Available years for selection
+  const availableYears = Array.from({ length: 16 }, (_, i) => 2025 + i)
 
-      // Store in Zustand
-      setTransactions(allTransactions)
+  // Current date for highlighting
+  const currentDate = new Date()
+  const currentMonth = currentDate.getMonth() + 1
+  const currentYear = currentDate.getFullYear()
 
-      // Load attachment counts
-      await loadAttachmentCounts(allTransactions)
+  // Month names for display
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
 
-      // Filter recurrent expenses that are goals
-      const goalRecurrentExpenses = expenses.recurrent.filter(re => re.isgoal)
-
-      // Filter non-recurrent expenses that are goals
-      const goalNonRecurrentExpenses = expenses.nonRecurrent.filter(nre => nre.isgoal)
-
-      // Validate goal transactions
-      validateGoalTransactions(allTransactions)
-
-      if (process.env.NODE_ENV === 'development') {
-        const goalTransactions = allTransactions.filter(t => 
-          t.type === 'expense' && (
-            (t.source_type === 'recurrent' && goalRecurrentExpenses.some(re => re.id === t.source_id)) ||
-            (t.source_type === 'non_recurrent' && goalNonRecurrentExpenses.some(nre => nre.id === t.source_id))
-          )
-        )
-        console.log(`🎯 MisMetasView: Fetched ${goalTransactions.length} goal transactions from ${goalRecurrentExpenses.length} recurrent + ${goalNonRecurrentExpenses.length} one-time goals`)
-      }
-
-      setRecurrentExpenses(expenses.recurrent)
-      setNonRecurrentExpenses(expenses.nonRecurrent)
-
-    } catch (error) {
-      console.error('❌ MisMetasView: Error fetching goal data:', error)
-      setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
-      // Reset last fetched on error to allow retry
-      lastFetchedRef.current = null
-    } finally {
-      setLoading(false)
-      useTransactionStore.getState().setLoading(false)
-    }
-  }, [user]) // Dependencies for useCallback
-
-  // Sync with URL parameters
-  useEffect(() => {
-    const yearFromUrl = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
-    if (yearFromUrl && yearFromUrl !== selectedYear) {
-      setSelectedYear(yearFromUrl)
-    }
-  }, [searchParams])
-
-  // Data sync effect - only depend on fetchGoalData
-  useDataSyncEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 MisMetasView: Data sync triggered, refetching data')
-    }
-    fetchGoalData()
-  }, [fetchGoalData]) // Now depends on fetchGoalData
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchGoalData()
-  }, [fetchGoalData]) // Now depends on fetchGoalData
-
-  // Helper function to check if a date is overdue
+  // Helper function to determine if a date is overdue
   const isDateOverdue = (deadline: string): boolean => {
-    const [year, month, day] = deadline.split('-').map(Number)
-    const deadlineDate = new Date(year, month - 1, day)
-    const today = new Date()
-    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    return deadlineDate < todayDate
+    const [year, month, day] = deadline.split('-').map(Number);
+    const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
+    
+    // Create today's date without time
+    const today = new Date();
+    const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    
+    return deadlineDate < todayDate;
   }
 
-  // Format currency
+  // Helper function to format currency for display
   const formatCurrency = (value: number): string => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -336,6 +186,17 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(Math.round(value))
+  }
+
+  // Navigation handler to go to Mis cuentas with specific month/year filters
+  const handleNavigateToMonth = async (month: number, year: number) => {
+    try {
+      console.log(`🔄 MisMetasView: Navigating to Mis cuentas - ${month}/${year}`)
+      await navigation.navigateToDashboard(month, year)
+      console.log('✅ Navigation completed')
+    } catch (error) {
+      console.error('❌ Navigation error:', error)
+    }
   }
 
   // Get status color for transactions
@@ -359,6 +220,59 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       return texts.pending
     }
   }
+
+  // Fetch goal data using pure Zustand pattern
+  const fetchGoalData = useCallback(async () => {
+    if (!user) return
+    
+    try {
+      setError(null)
+      
+      console.log('[zustand] MisMetasView: fetchTransactions triggered')
+      
+      // Use pure Zustand pattern with scope: 'all' for historical goal data
+      await fetchTransactions({ 
+        userId: user.id, 
+        scope: 'all' // Fetch all transactions without month/year filters
+      })
+      
+      console.log('[zustand] MisMetasView: transactions loaded:', transactions.length)
+      
+      // Also fetch expenses to build recurrentGoalMap (this is legitimate)
+      const expenses = await fetchUserExpenses(user)
+      setRecurrentExpenses(expenses.recurrent)
+      setNonRecurrentExpenses(expenses.nonRecurrent)
+
+      // Load attachment counts for all transactions
+      await loadAttachmentCounts(transactions)
+
+      // Validate goal data
+      validateGoalTransactions(transactions)
+
+    } catch (error) {
+      console.error('❌ Error in fetchGoalData():', error)
+      setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+    }
+  }, [user, fetchTransactions, transactions])
+
+  // Initial data fetch
+  useEffect(() => {
+    fetchGoalData()
+  }, [fetchGoalData])
+
+  // Sync with URL parameters
+  useEffect(() => {
+    const yearFromUrl = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
+    if (yearFromUrl && yearFromUrl !== selectedYear) {
+      setSelectedYear(yearFromUrl)
+    }
+  }, [searchParams])
+
+  // Data sync effect using pure Zustand pattern
+  useDataSyncEffect(() => {
+    console.log('[zustand] MisMetasView: useDataSyncEffect triggered')
+    fetchGoalData()
+  }, [fetchGoalData])
 
   // Group objective transactions by unique goal (not individual transactions)
   interface ObjectiveGroup {
@@ -454,16 +368,65 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
     return { totalGoals, totalValue, completed }
   }, [objectiveGroups])
 
-  // Navigation function to redirect to Mis cuentas
-  const handleNavigateToMonth = async (month: number, year: number) => {
-    try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🎯 MisMetasView: Navigating to Mis cuentas - Month: ${month}, Year: ${year}`)
-      }
-      await navigation.navigateToDashboard(month, year)
-    } catch (error) {
-      console.error('❌ MisMetasView: Navigation error:', error)
-    }
+  // Attachment Modals component  
+  const AttachmentModals = () => {
+    return (
+      <>
+        {/* File Upload Modal */}
+        {showAttachmentModal && selectedTransactionForAttachments && (
+          <FileUploadModal
+            isOpen={showAttachmentModal}
+            onClose={() => {
+              setShowAttachmentModal(false)
+              setSelectedTransactionForAttachments(null)
+            }}
+            transactionId={selectedTransactionForAttachments.id}
+            userId={user.id}
+            onUploadComplete={handleAttachmentUploadComplete}
+          />
+        )}
+
+        {/* Attachments List Modal */}
+        {showTransactionAttachments && selectedTransactionForAttachments && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+            <section className="relative bg-white rounded-xl p-0 w-full max-w-md shadow-sm border border-gray-200 flex flex-col items-stretch max-h-[90vh] overflow-y-auto">
+              <button
+                onClick={() => {
+                  setShowTransactionAttachments(false)
+                  setSelectedTransactionForAttachments(null)
+                }}
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                aria-label="Cerrar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              
+              <div className="px-4 py-3 flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full">
+                    <Paperclip className="h-4 w-4 text-green-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-medium text-gray-900">Archivos Adjuntos</h2>
+                    <p className="text-sm text-gray-500">Para: {selectedTransactionForAttachments.description}</p>
+                  </div>
+                </div>
+                
+                <div className="border-t border-gray-200 pt-3">
+                  <TransactionAttachments
+                    transactionId={selectedTransactionForAttachments.id}
+                    userId={user.id}
+                    onAttachmentDeleted={handleAttachmentDeleted}
+                    onAddAttachment={() => handleAttachmentUpload(selectedTransactionForAttachments)}
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
+        )}
+      </>
+    )
   }
 
   // Development logging for Zustand transactions
