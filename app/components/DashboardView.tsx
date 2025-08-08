@@ -544,40 +544,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       
       console.log(`🔄 Updating status from '${transaction.status}' to '${newStatus}'`)
 
-      // Optimistically update the local state first for immediate UI feedback
-      setTransactions(prevTransactions => 
-        prevTransactions.map(t => 
-          t.id === paymentConfirmationData.transactionId 
-            ? { ...t, status: newStatus }
-            : t
-        )
-      )
-
-      const { data, error } = await supabase
-        .from('transactions')
-        .update({ status: newStatus })
-        .eq('id', paymentConfirmationData.transactionId)
-        .eq('user_id', user.id)
-
-      if (error) {
-        console.error('❌ Supabase error (status update):', error)
-        setError(`Error al actualizar estado: ${error.message}`)
-        
-        // Revert the optimistic update on error
-        setTransactions(prevTransactions => 
-          prevTransactions.map(t => 
-            t.id === paymentConfirmationData.transactionId 
-              ? { ...t, status: transaction.status }
-              : t
-          )
-        )
-        throw error
-      }
-
-      console.log('✅ Status update successful:', data)
+      // Use Zustand store action for optimistic updates and persistence
+      await markTransactionStatus({
+        transactionId: paymentConfirmationData.transactionId,
+        newStatus: newStatus,
+        userId: user.id
+      })
       
-      // Trigger global data refresh to synchronize all views
-      console.log('🔄 Triggering global data refresh after status update')
+      console.log('✅ Status update completed via Zustand store')
       refreshData(user.id, 'update_status')
       
       console.log('✅ Status update completed - optimistic update maintained and global sync triggered')
@@ -618,7 +592,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const { transactionId, transaction } = deleteModalData
 
     try {
-      setLoading(true)
       setError(null)
 
       if (transaction.source_type === 'recurrent' && deleteSeries) {
@@ -649,7 +622,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.error('Error deleting:', error)
       setError(`Error al eliminar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
-      setLoading(false)
       setShowDeleteModal(false)
       setDeleteModalData(null)
     }
@@ -687,7 +659,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const { transactionId, transaction } = deleteSeriesConfirmationData
 
     try {
-      setLoading(true)
       setError(null)
 
       // Delete the entire recurrent series
@@ -707,7 +678,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.error('Error deleting series:', error)
       setError(`Error al eliminar serie: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
-      setLoading(false)
       setShowDeleteSeriesConfirmation(false)
       setDeleteSeriesConfirmationData(null)
     }
@@ -887,7 +857,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     if (!modifyConfirmationData || !modifyFormData) return
 
     setError(null)
-    setLoading(true)
 
     try {
       if (modifyFormData.type === 'recurrent') {
@@ -973,7 +942,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.error('Error modifying:', error)
       setError(`Error al modificar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
-      setLoading(false)
       setShowModifyConfirmation(false)
       setModifyConfirmationData(null)
       setShowModifyForm(false)
@@ -1080,7 +1048,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const finalCategory = selectedCategory === 'Sin categoría' ? 'sin categoría' : (selectedCategory || 'sin categoría')
 
     try {
-      setLoading(true)
       setError(null)
 
       if (selectedTransactionForCategory.source_type === 'recurrent') {
@@ -1129,23 +1096,23 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         if (transactionError) throw transactionError
       }
 
-      // Update local state optimistically to preserve the status while updating category
-      setTransactions(prevTransactions => 
-        prevTransactions.map(t => {
-          if (selectedTransactionForCategory.source_type === 'recurrent') {
-            // For recurrent transactions, update all transactions in the series
-            return t.source_id === selectedTransactionForCategory.source_id && 
-                   t.source_type === 'recurrent' 
-              ? { ...t, category: finalCategory } 
-              : t
-          } else {
-            // For non-recurrent transactions, update only the specific transaction
-            return t.id === selectedTransactionForCategory.id 
-              ? { ...t, category: finalCategory } 
-              : t
-          }
-        })
-      )
+//       // Update local state optimistically to preserve the status while updating category
+//       setTransactions(prevTransactions => 
+//         prevTransactions.map(t => {
+//           if (selectedTransactionForCategory.source_type === 'recurrent') {
+//             // For recurrent transactions, update all transactions in the series
+//             return t.source_id === selectedTransactionForCategory.source_id && 
+//                    t.source_type === 'recurrent' 
+//               ? { ...t, category: finalCategory } 
+//               : t
+//           } else {
+//             // For non-recurrent transactions, update only the specific transaction
+//             return t.id === selectedTransactionForCategory.id 
+//               ? { ...t, category: finalCategory } 
+//               : t
+//           }
+//         })
+//       )
 
       // Close modal and reset state
       setShowCategoryModal(false)
@@ -1171,7 +1138,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.log('🔄 Triggering global data refresh after category update error')
       refreshData(user.id, 'update_category_error')
     } finally {
-      setLoading(false)
     }
   }
 
@@ -1333,7 +1299,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const { transactionId, transaction } = deleteIndividualConfirmationData
 
     try {
-      setLoading(true)
       setError(null)
 
       // Delete only this transaction
@@ -1353,7 +1318,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.error('Error deleting individual transaction:', error)
       setError(`Error al eliminar transacción: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
-      setLoading(false)
       setShowDeleteIndividualConfirmation(false)
       setDeleteIndividualConfirmationData(null)
     }
@@ -1364,19 +1328,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     setDeleteIndividualConfirmationData(null)
   }
 
-  // Compatibility functions for mutation operations (create, edit, delete)
-  const compatibleSetTransactions = (value: Transaction[] | ((prev: Transaction[]) => Transaction[])) => {
-    const currentTransactions = useTransactionStore.getState().transactions
-    if (typeof value === 'function') {
-      const newTransactions = value(currentTransactions)
-      useTransactionStore.getState().setTransactions(newTransactions)
-    } else {
-      useTransactionStore.getState().setTransactions(value)
-    }
-  }
-  const setTransactions = compatibleSetTransactions
-  const setLoading = useTransactionStore.getState().setLoading
-  const loading = isLoading
 
   // Debugging logs for transaction filtering
   if (process.env.NODE_ENV === 'development') {
@@ -1609,7 +1560,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               )}
             </div>
 
-            {loading ? (
+            {isLoading ? (
               <div className="p-6 text-center text-green-dark font-sans">{texts.loading}</div>
             ) : finalSortedTransactions.length === 0 ? (
               <div className="text-center px-4 py-8">
@@ -2679,10 +2630,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   <div className="w-full space-y-2">
                     <button
                       onClick={handleConfirmModifySubmit}
-                      disabled={loading}
+                      disabled={isLoading}
                       className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? (
+                      {isLoading ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           Guardando...
@@ -2973,10 +2924,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     </button>
                     <button
                       onClick={() => handleUpdateCategory()}
-                      disabled={loading || !selectedCategory}
+                      disabled={isLoading || !selectedCategory}
                       className="flex-1 bg-green-primary text-white py-2 px-3 rounded-md hover:bg-[#77b16e] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                     >
-                      {loading ? 'Guardando...' : 'Actualizar'}
+                      {isLoading ? 'Guardando...' : 'Actualizar'}
                     </button>
                   </div>
                 </div>
@@ -3091,10 +3042,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   <div className="w-full space-y-2">
                     <button
                       onClick={handleConfirmDeleteSeries}
-                      disabled={loading}
+                      disabled={isLoading}
                       className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? (
+                      {isLoading ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
                           Eliminando...
@@ -3171,10 +3122,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   <div className="w-full space-y-2">
                     <button
                       onClick={handleConfirmDeleteIndividual}
-                      disabled={loading}
+                      disabled={isLoading}
                       className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? (
+                      {isLoading ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
                           Eliminando...
