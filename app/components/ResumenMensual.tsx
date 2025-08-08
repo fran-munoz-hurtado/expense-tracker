@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { CheckCircle, AlertTriangle, PiggyBank, CreditCard } from 'lucide-react'
 import { type Transaction, type User } from '@/lib/supabase'
 import { useTransactionStore } from '@/lib/store/transactionStore'
-import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import { texts } from '@/lib/translations'
 
 interface ResumenMensualProps {
@@ -20,9 +19,6 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
   const currentMonth = currentDate.getMonth() + 1
   const currentYear = currentDate.getFullYear()
 
-  // Ref to prevent infinite sync loops
-  const hasSyncedRef = useRef(false)
-
   // Initial data fetch using pure Zustand pattern
   useEffect(() => {
     if (user) {
@@ -30,20 +26,6 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
       fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
     }
   }, [user, currentYear, currentMonth, fetchTransactions])
-
-  // Data sync effect using pure Zustand pattern with infinite loop protection
-  useDataSyncEffect(() => {
-    if (hasSyncedRef.current) return
-    hasSyncedRef.current = true
-
-    console.log('[zustand] ResumenMensual: useDataSyncEffect triggered')
-
-    fetchTransactions({
-      userId: user.id,
-      year: currentYear,
-      month: currentMonth,
-    })
-  }, [user.id, currentYear, currentMonth])
 
   // Filter transactions for current month from Zustand store
   const currentMonthTransactions = transactions.filter(t =>
