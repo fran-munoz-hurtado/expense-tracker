@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
-import { fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
+import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -32,20 +32,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const navigation = useAppNavigation()
   
   // Zustand store
-  const { transactions, isLoading, fetchTransactions, markTransactionStatus } = useTransactionStore()
- 
-  // Loading state handling
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-primary mx-auto"></div>
-          <p className="mt-4 text-sm text-gray-600 font-sans">{texts.loading}</p>
-        </div>
-      </div>
-    )
-  }  
+  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  
   // Ref to prevent duplicate fetch calls with same parameters
+  const lastFetchedRef = useRef<{ userId: number; month: number; year: number } | null>(null)
   
   // Navigation function to redirect to Mis Metas with goal expansion
   const handleNavigateToGoal = async (transaction: Transaction) => {
@@ -278,16 +268,41 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const fetchData = useCallback(async (isRetry = false) => {
     if (!user) return
     
+    // Prevent duplicate fetch calls with same parameters (unless it's a retry)
+    if (!isRetry && lastFetchedRef.current?.userId === user.id &&
+        lastFetchedRef.current?.month === selectedMonth &&
+        lastFetchedRef.current?.year === selectedYear) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🔄 DashboardView: Skipping duplicate fetch for ${selectedYear}/${selectedMonth}`)
+      }
+      return
+    }
+    
     try {
       setError(null)
       
-      if (process.env.NODE_ENV === "development") {
-        console.log("[zustand] DashboardView: fetching additional data (expenses, attachments)", selectedMonth, selectedYear, isRetry ? "(retry)" : "")
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear, isRetry ? '(retry)' : '')
       }
+      
+      // Update last fetched parameters
+      lastFetchedRef.current = { userId: user.id, month: selectedMonth, year: selectedYear }
+      
+      // Fetch transactions from Zustand store (force refetch if it's a retry)
+      await fetchTransactions({ 
+        userId: user.id, 
+        year: selectedYear, 
+        month: selectedMonth, 
+        syncVersion: dataVersion,
+        force: isRetry 
+      })
+      
+      // Validate transaction integrity
+      validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
       
       // Use optimized data fetching for expenses only
       const result = await measureQueryPerformance(
-        "fetchDashboardExpenses",
+        'fetchDashboardExpenses',
         async () => {
           const expenses = await fetchUserExpenses(user)
           return { expenses }
@@ -305,19 +320,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       }
 
     } catch (error) {
-      console.error("❌ Error in fetchData():", error)
-      setError(`Error al cargar datos: ${error instanceof Error ? error.message : "Error desconocido"}`)
+      console.error('❌ Error in fetchData():', error)
+      setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      // Reset last fetched on error to allow retry
+      lastFetchedRef.current = null
     }
-  }, [user, selectedMonth, selectedYear, transactions])
+  }, [user, selectedMonth, selectedYear, fetchTransactions, transactions, dataVersion])
 
-  // Initial transactions fetch using pure Zustand pattern
-  useEffect(() => {
-    if (user) {
-      console.log("[zustand] DashboardView: fetching data from store for", selectedMonth, selectedYear)
-      fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
-      validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
-    }
-  }, [user, selectedMonth, selectedYear, fetchTransactions])  // Initial data fetch
+  // Initial data fetch
   useEffect(() => {
     fetchData(false)
   }, [fetchData])
@@ -330,13 +340,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   }, [isLoading, transactions])
 
   // Use the new data synchronization system - only depend on dataVersion and lastOperation
-  // Data sync effect using pure Zustand pattern
-  useDataSyncEffect(() => {
-    if (user) {
-      console.log("[zustand] DashboardView: useDataSyncEffect triggered")
-      fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
+  useDataSyncEffect((isRetry) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 DashboardView: Data sync triggered, refetching data')
     }
-  }, [user, selectedMonth, selectedYear, fetchTransactions])
+    fetchData(isRetry)
+  }, [fetchData]) // Include fetchData in dependencies
+
   // Separate effect for user, selectedMonth, and selectedYear changes
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -554,21 +564,48 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         // If unchecked, check if it's overdue
         if (transaction.deadline && isDateOverdue(transaction.deadline)) {
           newStatus = 'pending' // Will show as overdue in UI
-        newStatus = "pending"
+        } else {
+          newStatus = 'pending'
+        }
       }
       
-      console.log(`🔄 Updating status from "${transaction.status}" to "${newStatus}"`)
+      console.log(`🔄 Updating status from '${transaction.status}' to '${newStatus}'`)
 
-      try {
-        // Use Zustand store action for status update
-        await markTransactionStatus({
-          transactionId: paymentConfirmationData.transactionId,
-          newStatus: newStatus,
-          userId: user.id
-        })
+      // Optimistically update the local state first for immediate UI feedback
+      setTransactions(prevTransactions => 
+        prevTransactions.map(t => 
+          t.id === paymentConfirmationData.transactionId 
+            ? { ...t, status: newStatus }
+            : t
+        )
+      )
 
-        console.log("✅ Status update successful via markTransactionStatus")
-        refreshData(user.id, 'update_status')
+      const { data, error } = await supabase
+        .from('transactions')
+        .update({ status: newStatus })
+        .eq('id', paymentConfirmationData.transactionId)
+        .eq('user_id', user.id)
+
+      if (error) {
+        console.error('❌ Supabase error (status update):', error)
+        setError(`Error al actualizar estado: ${error.message}`)
+        
+        // Revert the optimistic update on error
+        setTransactions(prevTransactions => 
+          prevTransactions.map(t => 
+            t.id === paymentConfirmationData.transactionId 
+              ? { ...t, status: transaction.status }
+              : t
+          )
+        )
+        throw error
+      }
+
+      console.log('✅ Status update successful:', data)
+      
+      // Trigger global data refresh to synchronize all views
+      console.log('🔄 Triggering global data refresh after status update')
+      refreshData(user.id, 'update_status')
       
       console.log('✅ Status update completed - optimistic update maintained and global sync triggered')
       
@@ -1355,6 +1392,20 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   }
 
   // Compatibility functions for mutation operations (create, edit, delete)
+  const compatibleSetTransactions = (value: Transaction[] | ((prev: Transaction[]) => Transaction[])) => {
+    const currentTransactions = useTransactionStore.getState().transactions
+    if (typeof value === 'function') {
+      const newTransactions = value(currentTransactions)
+      useTransactionStore.getState().setTransactions(newTransactions)
+    } else {
+      useTransactionStore.getState().setTransactions(value)
+    }
+  }
+  const setTransactions = compatibleSetTransactions
+  const setLoading = useTransactionStore.getState().setLoading
+  const loading = isLoading
+
+  return (
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
       {/* Header */}
       <div className="p-6 lg:p-8 pb-4">
