@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
@@ -32,10 +32,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const navigation = useAppNavigation()
   
   // Zustand store
-  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  const { transactions, isLoading, fetchTransactions, markTransactionStatus } = useTransactionStore()
   
-  // Ref to prevent duplicate fetch calls with same parameters
-  const lastFetchedRef = useRef<{ userId: number; month: number; year: number } | null>(null)
+  // State management
+  const [selectedMonth, setSelectedMonth] = useState<number>(navigationParams?.month || new Date().getMonth() + 1)
   
   // Navigation function to redirect to Mis Metas with goal expansion
   const handleNavigateToGoal = async (transaction: Transaction) => {
@@ -77,7 +77,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(navigationParams?.month || new Date().getMonth() + 1)
   const [error, setError] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
@@ -268,39 +267,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const fetchData = useCallback(async (isRetry = false) => {
     if (!user) return
     
-    // Prevent duplicate fetch calls with same parameters (unless it's a retry)
-    if (!isRetry && lastFetchedRef.current?.userId === user.id &&
-        lastFetchedRef.current?.month === selectedMonth &&
-        lastFetchedRef.current?.year === selectedYear) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔄 DashboardView: Skipping duplicate fetch for ${selectedYear}/${selectedMonth}`)
-      }
-      return
-    }
-    
     try {
       setError(null)
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear, isRetry ? '(retry)' : '')
+        console.log('[zustand] DashboardView: fetching additional data (expenses, attachments)', selectedMonth, selectedYear, isRetry ? '(retry)' : '')
       }
       
-      // Update last fetched parameters
-      lastFetchedRef.current = { userId: user.id, month: selectedMonth, year: selectedYear }
-      
-      // Fetch transactions from Zustand store (force refetch if it's a retry)
-      await fetchTransactions({ 
-        userId: user.id, 
-        year: selectedYear, 
-        month: selectedMonth, 
-        syncVersion: dataVersion,
-        force: isRetry 
-      })
-      
-      // Validate transaction integrity
-      validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
-      
-      // Use optimized data fetching for expenses only
+      // Fetch expenses and other auxiliary data
       const result = await measureQueryPerformance(
         'fetchDashboardExpenses',
         async () => {
@@ -322,10 +296,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     } catch (error) {
       console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
-      // Reset last fetched on error to allow retry
-      lastFetchedRef.current = null
     }
-  }, [user, selectedMonth, selectedYear, fetchTransactions, transactions, dataVersion])
+  }, [user, selectedMonth, selectedYear, transactions])
+
+  // Direct transaction fetching from Zustand store
+  useEffect(() => {
+    if (user) {
+      console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear)
+      fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
+      validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
+    }
+  }, [user, selectedMonth, selectedYear, fetchTransactions])
 
   // Initial data fetch
   useEffect(() => {
@@ -339,21 +320,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     }
   }, [isLoading, transactions])
 
-  // Use the new data synchronization system - only depend on dataVersion and lastOperation
-  useDataSyncEffect((isRetry) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 DashboardView: Data sync triggered, refetching data')
+  // Use the new data synchronization system - call fetchTransactions directly
+  useDataSyncEffect(() => {
+    if (user) {
+      console.log('[zustand] DashboardView: useDataSyncEffect triggered')
+      fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
     }
-    fetchData(isRetry)
-  }, [fetchData]) // Include fetchData in dependencies
-
-  // Separate effect for user, selectedMonth, and selectedYear changes
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 DashboardView: User, selectedMonth, or selectedYear changed, refetching data')
-    }
-    fetchData(false)
-  }, [fetchData]) // fetchData already includes these dependencies
+  }, [user, selectedMonth, selectedYear, fetchTransactions])
 
   // Filter transactions for selected month/year
   const filteredTransactions = transactions.filter(transaction => 
@@ -571,40 +544,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       
       console.log(`🔄 Updating status from '${transaction.status}' to '${newStatus}'`)
 
-      // Optimistically update the local state first for immediate UI feedback
-      setTransactions(prevTransactions => 
-        prevTransactions.map(t => 
-          t.id === paymentConfirmationData.transactionId 
-            ? { ...t, status: newStatus }
-            : t
-        )
-      )
-
-      const { data, error } = await supabase
-        .from('transactions')
-        .update({ status: newStatus })
-        .eq('id', paymentConfirmationData.transactionId)
-        .eq('user_id', user.id)
-
-      if (error) {
-        console.error('❌ Supabase error (status update):', error)
-        setError(`Error al actualizar estado: ${error.message}`)
-        
-        // Revert the optimistic update on error
-        setTransactions(prevTransactions => 
-          prevTransactions.map(t => 
-            t.id === paymentConfirmationData.transactionId 
-              ? { ...t, status: transaction.status }
-              : t
-          )
-        )
-        throw error
-      }
-
-      console.log('✅ Status update successful:', data)
+      // Use Zustand store action for optimistic updates and persistence
+      await markTransactionStatus({
+        transactionId: paymentConfirmationData.transactionId,
+        newStatus: newStatus,
+        userId: user.id
+      })
       
-      // Trigger global data refresh to synchronize all views
-      console.log('🔄 Triggering global data refresh after status update')
+      console.log('✅ Status update completed via Zustand store')
       refreshData(user.id, 'update_status')
       
       console.log('✅ Status update completed - optimistic update maintained and global sync triggered')
@@ -645,7 +592,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const { transactionId, transaction } = deleteModalData
 
     try {
-      setLoading(true)
       setError(null)
 
       if (transaction.source_type === 'recurrent' && deleteSeries) {
@@ -676,7 +622,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.error('Error deleting:', error)
       setError(`Error al eliminar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
-      setLoading(false)
       setShowDeleteModal(false)
       setDeleteModalData(null)
     }
@@ -714,7 +659,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const { transactionId, transaction } = deleteSeriesConfirmationData
 
     try {
-      setLoading(true)
       setError(null)
 
       // Delete the entire recurrent series
@@ -734,7 +678,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.error('Error deleting series:', error)
       setError(`Error al eliminar serie: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
-      setLoading(false)
       setShowDeleteSeriesConfirmation(false)
       setDeleteSeriesConfirmationData(null)
     }
@@ -914,7 +857,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     if (!modifyConfirmationData || !modifyFormData) return
 
     setError(null)
-    setLoading(true)
 
     try {
       if (modifyFormData.type === 'recurrent') {
@@ -1000,7 +942,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.error('Error modifying:', error)
       setError(`Error al modificar: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
-      setLoading(false)
       setShowModifyConfirmation(false)
       setModifyConfirmationData(null)
       setShowModifyForm(false)
@@ -1107,7 +1048,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const finalCategory = selectedCategory === 'Sin categoría' ? 'sin categoría' : (selectedCategory || 'sin categoría')
 
     try {
-      setLoading(true)
       setError(null)
 
       if (selectedTransactionForCategory.source_type === 'recurrent') {
@@ -1156,23 +1096,23 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
         if (transactionError) throw transactionError
       }
 
-      // Update local state optimistically to preserve the status while updating category
-      setTransactions(prevTransactions => 
-        prevTransactions.map(t => {
-          if (selectedTransactionForCategory.source_type === 'recurrent') {
-            // For recurrent transactions, update all transactions in the series
-            return t.source_id === selectedTransactionForCategory.source_id && 
-                   t.source_type === 'recurrent' 
-              ? { ...t, category: finalCategory } 
-              : t
-          } else {
-            // For non-recurrent transactions, update only the specific transaction
-            return t.id === selectedTransactionForCategory.id 
-              ? { ...t, category: finalCategory } 
-              : t
-          }
-        })
-      )
+//       // Update local state optimistically to preserve the status while updating category
+//       setTransactions(prevTransactions => 
+//         prevTransactions.map(t => {
+//           if (selectedTransactionForCategory.source_type === 'recurrent') {
+//             // For recurrent transactions, update all transactions in the series
+//             return t.source_id === selectedTransactionForCategory.source_id && 
+//                    t.source_type === 'recurrent' 
+//               ? { ...t, category: finalCategory } 
+//               : t
+//           } else {
+//             // For non-recurrent transactions, update only the specific transaction
+//             return t.id === selectedTransactionForCategory.id 
+//               ? { ...t, category: finalCategory } 
+//               : t
+//           }
+//         })
+//       )
 
       // Close modal and reset state
       setShowCategoryModal(false)
@@ -1198,7 +1138,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.log('🔄 Triggering global data refresh after category update error')
       refreshData(user.id, 'update_category_error')
     } finally {
-      setLoading(false)
     }
   }
 
@@ -1360,7 +1299,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     const { transactionId, transaction } = deleteIndividualConfirmationData
 
     try {
-      setLoading(true)
       setError(null)
 
       // Delete only this transaction
@@ -1380,7 +1318,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       console.error('Error deleting individual transaction:', error)
       setError(`Error al eliminar transacción: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     } finally {
-      setLoading(false)
       setShowDeleteIndividualConfirmation(false)
       setDeleteIndividualConfirmationData(null)
     }
@@ -1391,19 +1328,28 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     setDeleteIndividualConfirmationData(null)
   }
 
-  // Compatibility functions for mutation operations (create, edit, delete)
-  const compatibleSetTransactions = (value: Transaction[] | ((prev: Transaction[]) => Transaction[])) => {
-    const currentTransactions = useTransactionStore.getState().transactions
-    if (typeof value === 'function') {
-      const newTransactions = value(currentTransactions)
-      useTransactionStore.getState().setTransactions(newTransactions)
-    } else {
-      useTransactionStore.getState().setTransactions(value)
-    }
+
+  // Debugging logs for transaction filtering
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[zustand] Filtro activo:', selectedMonth, selectedYear)
+    console.log('[zustand] Todas las transacciones:', transactions)
+    console.log('[zustand] Transacciones visibles:', transactions.filter(t => t.month === selectedMonth && t.year === selectedYear))
   }
-  const setTransactions = compatibleSetTransactions
-  const setLoading = useTransactionStore.getState().setLoading
-  const loading = isLoading
+
+  // Protection: Don't render until we have consistent data
+  if (!user || !selectedMonth || !selectedYear || isLoading) {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[zustand] DashboardView: Esperando datos... no renderiza aún', { user: !!user, selectedMonth, selectedYear, isLoading })
+    }
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-primary mx-auto"></div>
+          <p className="mt-4 text-sm text-gray-600 font-sans">{texts.loading}</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
@@ -1614,7 +1560,7 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
               )}
             </div>
 
-            {loading ? (
+            {isLoading ? (
               <div className="p-6 text-center text-green-dark font-sans">{texts.loading}</div>
             ) : finalSortedTransactions.length === 0 ? (
               <div className="text-center px-4 py-8">
@@ -2684,10 +2630,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   <div className="w-full space-y-2">
                     <button
                       onClick={handleConfirmModifySubmit}
-                      disabled={loading}
+                      disabled={isLoading}
                       className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? (
+                      {isLoading ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                           Guardando...
@@ -2978,10 +2924,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     </button>
                     <button
                       onClick={() => handleUpdateCategory()}
-                      disabled={loading || !selectedCategory}
+                      disabled={isLoading || !selectedCategory}
                       className="flex-1 bg-green-primary text-white py-2 px-3 rounded-md hover:bg-[#77b16e] disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm font-medium"
                     >
-                      {loading ? 'Guardando...' : 'Actualizar'}
+                      {isLoading ? 'Guardando...' : 'Actualizar'}
                     </button>
                   </div>
                 </div>
@@ -3096,10 +3042,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   <div className="w-full space-y-2">
                     <button
                       onClick={handleConfirmDeleteSeries}
-                      disabled={loading}
+                      disabled={isLoading}
                       className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? (
+                      {isLoading ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
                           Eliminando...
@@ -3176,10 +3122,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   <div className="w-full space-y-2">
                     <button
                       onClick={handleConfirmDeleteIndividual}
-                      disabled={loading}
+                      disabled={isLoading}
                       className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? (
+                      {isLoading ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
                           Eliminando...
