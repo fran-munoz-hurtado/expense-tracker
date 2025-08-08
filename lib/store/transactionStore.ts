@@ -81,14 +81,22 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     set({ isLoading: loading })
   },
   fetchTransactions: async ({ userId, year, month, syncVersion, force, scope }) => {
-    // Validate parameters: either month/year OR scope:'all' must be provided
-    if (!scope && (!month || !year)) {
+    // Detect year-only case
+    const isYearOnly = !month && year && !scope
+    
+    // Validate parameters: either month/year OR scope:'all' OR year-only must be provided
+    if (!scope && !isYearOnly && (!month || !year)) {
       console.warn('[zustand] fetchTransactions: missing month/year and no scope:all — aborting')
       return
     }
     
     // Generate scope key based on parameters
-    const scopeKey = scope === 'all' ? `${userId}:all` : `${userId}:${year}:${month}`
+    const scopeKey = scope === 'all' 
+      ? `${userId}:all` 
+      : isYearOnly 
+        ? `${userId}:year:${year}`
+        : `${userId}:${year}:${month}`
+        
     const fetchedVersion = get().lastFetchedScopes?.[scopeKey]
     
     // Skip deduplication check if force is enabled
@@ -106,6 +114,8 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       
       if (scope === 'all') {
         console.log('[zustand] fetchTransactions: loading all transactions for user', userId, syncVersion ? `(version ${syncVersion})` : '(no version)')
+      } else if (isYearOnly) {
+        console.log('[zustand] fetchTransactions: loading transactions for user', userId, 'year', year, syncVersion ? `(version ${syncVersion})` : '(no version)')
       } else {
         console.log('[zustand] fetchTransactions: loading transactions for user', userId, 'month', month, 'year', year, syncVersion ? `(version ${syncVersion})` : '(no version)')
       }
@@ -121,7 +131,9 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       // Call fetchUserTransactions with appropriate parameters
       const transactions = scope === 'all' 
         ? await fetchUserTransactions(user) // No month/year filters for 'all' scope
-        : await fetchUserTransactions(user, month, year) // Specific month/year
+        : isYearOnly
+          ? await fetchUserTransactions(user, undefined, year) // Year-only filtering
+          : await fetchUserTransactions(user, month, year) // Specific month/year
       
       if (process.env.NODE_ENV === 'development') {
         console.log('[zustand] fetchTransactions: loaded', transactions.length, 'transactions')
