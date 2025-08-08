@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
@@ -32,10 +32,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const navigation = useAppNavigation()
   
   // Zustand store
-  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  const { transactions, isLoading, fetchTransactions, markTransactionStatus } = useTransactionStore()
   
-  // Ref to prevent duplicate fetch calls with same parameters
-  const lastFetchedRef = useRef<{ userId: number; month: number; year: number } | null>(null)
+  // State management
+  const [selectedMonth, setSelectedMonth] = useState<number>(navigationParams?.month || new Date().getMonth() + 1)
   
   // Navigation function to redirect to Mis Metas with goal expansion
   const handleNavigateToGoal = async (transaction: Transaction) => {
@@ -77,7 +77,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(navigationParams?.month || new Date().getMonth() + 1)
   const [error, setError] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
@@ -268,39 +267,14 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   const fetchData = useCallback(async (isRetry = false) => {
     if (!user) return
     
-    // Prevent duplicate fetch calls with same parameters (unless it's a retry)
-    if (!isRetry && lastFetchedRef.current?.userId === user.id &&
-        lastFetchedRef.current?.month === selectedMonth &&
-        lastFetchedRef.current?.year === selectedYear) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔄 DashboardView: Skipping duplicate fetch for ${selectedYear}/${selectedMonth}`)
-      }
-      return
-    }
-    
     try {
       setError(null)
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear, isRetry ? '(retry)' : '')
+        console.log('[zustand] DashboardView: fetching additional data (expenses, attachments)', selectedMonth, selectedYear, isRetry ? '(retry)' : '')
       }
       
-      // Update last fetched parameters
-      lastFetchedRef.current = { userId: user.id, month: selectedMonth, year: selectedYear }
-      
-      // Fetch transactions from Zustand store (force refetch if it's a retry)
-      await fetchTransactions({ 
-        userId: user.id, 
-        year: selectedYear, 
-        month: selectedMonth, 
-        syncVersion: dataVersion,
-        force: isRetry 
-      })
-      
-      // Validate transaction integrity
-      validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
-      
-      // Use optimized data fetching for expenses only
+      // Fetch expenses and other auxiliary data
       const result = await measureQueryPerformance(
         'fetchDashboardExpenses',
         async () => {
@@ -322,10 +296,17 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     } catch (error) {
       console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
-      // Reset last fetched on error to allow retry
-      lastFetchedRef.current = null
     }
-  }, [user, selectedMonth, selectedYear, fetchTransactions, transactions, dataVersion])
+  }, [user, selectedMonth, selectedYear, transactions])
+
+  // Direct transaction fetching from Zustand store
+  useEffect(() => {
+    if (user) {
+      console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear)
+      fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
+      validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
+    }
+  }, [user, selectedMonth, selectedYear, fetchTransactions])
 
   // Initial data fetch
   useEffect(() => {
@@ -339,21 +320,13 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     }
   }, [isLoading, transactions])
 
-  // Use the new data synchronization system - only depend on dataVersion and lastOperation
-  useDataSyncEffect((isRetry) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 DashboardView: Data sync triggered, refetching data')
+  // Use the new data synchronization system - call fetchTransactions directly
+  useDataSyncEffect(() => {
+    if (user) {
+      console.log('[zustand] DashboardView: useDataSyncEffect triggered')
+      fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
     }
-    fetchData(isRetry)
-  }, [fetchData]) // Include fetchData in dependencies
-
-  // Separate effect for user, selectedMonth, and selectedYear changes
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 DashboardView: User, selectedMonth, or selectedYear changed, refetching data')
-    }
-    fetchData(false)
-  }, [fetchData]) // fetchData already includes these dependencies
+  }, [user, selectedMonth, selectedYear, fetchTransactions])
 
   // Filter transactions for selected month/year
   const filteredTransactions = transactions.filter(transaction => 
