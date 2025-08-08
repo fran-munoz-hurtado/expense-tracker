@@ -12,20 +12,29 @@ interface ResumenMensualProps {
 
 export default function ResumenMensual({ user }: ResumenMensualProps) {
   // Zustand store
-  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  const { transactions, isLoading, fetchTransactions, lastFetchedScopes } = useTransactionStore()
 
   // Get current month and year
   const currentDate = new Date()
   const currentMonth = currentDate.getMonth() + 1
   const currentYear = currentDate.getFullYear()
 
-  // Initial data fetch using pure Zustand pattern
+  // Initial data fetch using pure Zustand pattern with loop protection
   useEffect(() => {
     if (user) {
-      console.log('[zustand] ResumenMensual: fetchTransactions triggered for', currentMonth, currentYear)
-      fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
+      // Build scope key the same way the store does
+      const scopeKey = `${user.id}:${currentYear}:${currentMonth}`
+      const alreadyFetched = lastFetchedScopes && lastFetchedScopes[scopeKey] !== undefined
+      
+      if (!alreadyFetched) {
+        console.log('[zustand] ResumenMensual: will fetch?', true, `(scope: ${scopeKey})`)
+        console.log('[zustand] ResumenMensual: fetchTransactions triggered for', currentMonth, currentYear)
+        fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
+      } else {
+        console.log('[zustand] ResumenMensual: will fetch?', false, `(scope: ${scopeKey} already fetched)`)
+      }
     }
-  }, [user, currentYear, currentMonth, fetchTransactions])
+  }, [user?.id, currentYear, currentMonth, fetchTransactions, lastFetchedScopes])
 
   // Filter transactions for current month from Zustand store
   const currentMonthTransactions = transactions.filter(t =>
