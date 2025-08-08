@@ -1283,7 +1283,6 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                               {getStatusText(transaction)}
                                             </span>
                                             <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(transaction.value)}</div>
-                                            <AttachmentClip transaction={transaction} />
                                           </div>
                                         </div>
                                       </button>
