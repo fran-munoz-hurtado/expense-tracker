@@ -31,10 +31,11 @@ type TransactionStore = {
   setLoading: (loading: boolean) => void
   fetchTransactions: (params: {
     userId: number
-    year: number
-    month: number
+    year?: number
+    month?: number
     syncVersion?: number
     force?: boolean
+    scope?: 'all'
   }) => Promise<void>
   markTransactionStatus: (params: {
     transactionId: number
@@ -79,8 +80,15 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
   setLoading: (loading) => {
     set({ isLoading: loading })
   },
-  fetchTransactions: async ({ userId, year, month, syncVersion, force }) => {
-    const scopeKey = `${userId}:${year}:${month}`
+  fetchTransactions: async ({ userId, year, month, syncVersion, force, scope }) => {
+    // Validate parameters: either month/year OR scope:'all' must be provided
+    if (!scope && (!month || !year)) {
+      console.warn('[zustand] fetchTransactions: missing month/year and no scope:all — aborting')
+      return
+    }
+    
+    // Generate scope key based on parameters
+    const scopeKey = scope === 'all' ? `${userId}:all` : `${userId}:${year}:${month}`
     const fetchedVersion = get().lastFetchedScopes?.[scopeKey]
     
     // Skip deduplication check if force is enabled
@@ -95,7 +103,12 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       if (force) {
         console.log('[zustand] fetchTransactions: force enabled → refetching from Supabase for', scopeKey)
       }
-      console.log('[zustand] fetchTransactions: loading transactions for user', userId, 'month', month, 'year', year, syncVersion ? `(version ${syncVersion})` : '(no version)')
+      
+      if (scope === 'all') {
+        console.log('[zustand] fetchTransactions: loading all transactions for user', userId, syncVersion ? `(version ${syncVersion})` : '(no version)')
+      } else {
+        console.log('[zustand] fetchTransactions: loading transactions for user', userId, 'month', month, 'year', year, syncVersion ? `(version ${syncVersion})` : '(no version)')
+      }
     }
     
     const { setLoading } = get()
@@ -104,7 +117,11 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       setLoading(true)
       // Create a mock user object for fetchUserTransactions
       const user = { id: userId } as User
-      const transactions = await fetchUserTransactions(user, month, year)
+      
+      // Call fetchUserTransactions with appropriate parameters
+      const transactions = scope === 'all' 
+        ? await fetchUserTransactions(user) // No month/year filters for 'all' scope
+        : await fetchUserTransactions(user, month, year) // Specific month/year
       
       if (process.env.NODE_ENV === 'development') {
         console.log('[zustand] fetchTransactions: loaded', transactions.length, 'transactions')

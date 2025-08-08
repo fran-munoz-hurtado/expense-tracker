@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { ChevronDown, ChevronUp, Calendar, DollarSign, FileText, Repeat, CheckCircle, AlertCircle, TrendingUp, X, Paperclip, Settings, Trash2, Edit2, Tag, Plus } from 'lucide-react'
 import { type Transaction, type User, type TransactionAttachment, type RecurrentExpense } from '@/lib/supabase'
-import { fetchUserTransactions, fetchAttachmentCounts, fetchUserExpenses } from '@/lib/dataUtils'
+import { fetchAttachmentCounts, fetchUserExpenses } from '@/lib/dataUtils'
 import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import { cn } from '@/lib/utils'
@@ -71,11 +71,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     }
   }
   
-  // Ref to prevent duplicate fetch calls with same parameters
-  const lastFetchedRef = useRef<{ userId: number } | null>(null)
-  
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
@@ -91,21 +87,17 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
 
   // Delete category state
-  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false)
-  const [categoryToDelete, setCategoryToDelete] = useState<CategoryInfo | null>(null)
-  const [affectedTransactionsCount, setAffectedTransactionsCount] = useState<number>(0)
+  const [showDeleteCategoryConfirmation, setShowDeleteCategoryConfirmation] = useState(false)
+  const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null)
   const [deletingCategory, setDeletingCategory] = useState(false)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [affectedTransactionsCount, setAffectedTransactionsCount] = useState<number>(0)
 
-  // Edit category state
+  // Edit category state 
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState<CategoryInfo | null>(null)
-  const [editCategoryInput, setEditCategoryInput] = useState('')
+  const [editCategoryName, setEditCategoryName] = useState('')
+  const [editingCategoryState, setEditingCategoryState] = useState(false)
   const [editCategoryError, setEditCategoryError] = useState<string | null>(null)
-  const [showEditConfirmModal, setShowEditConfirmModal] = useState(false)
-  const [categoryToEdit, setCategoryToEdit] = useState<{ old: CategoryInfo; new: string } | null>(null)
-  const [editAffectedTransactionsCount, setEditAffectedTransactionsCount] = useState<number>(0)
-  const [updatingCategory, setUpdatingCategory] = useState(false)
-  const [editError, setEditError] = useState<string | null>(null)
 
   // Create recurrentGoalMap like in DashboardView
   const recurrentGoalMap = useMemo(() => {
@@ -350,65 +342,43 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     return 'bg-warning-bg text-warning-yellow'
   }
 
-  // Fetch transactions data
+  // Fetch transactions data using pure Zustand pattern
   const fetchData = useCallback(async () => {
     if (!user) return
     
-    // Prevent duplicate fetch calls with same parameters
-    if (lastFetchedRef.current?.userId === user.id) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔄 CategoriesView: Skipping duplicate fetch for user ${user.id}`)
-      }
-      return
-    }
-    
     try {
-      setLoading(true)
       setError(null)
       
-      // Update last fetched parameters
-      lastFetchedRef.current = { userId: user.id }
+      console.log('[zustand] CategoriesView: fetchTransactions triggered')
       
-      // Use hybrid approach: fetchUserTransactions directly + Zustand state management
-      console.log('[zustand] CategoriesView: fetching all transactions for user', user.id)
+      // Use pure Zustand pattern with scope: 'all' for historical data
+      await fetchTransactions({ 
+        userId: user.id, 
+        scope: 'all' // Fetch all transactions without month/year filters
+      })
       
-      const { setTransactions, setLoading: setZustandLoading } = useTransactionStore.getState()
+      console.log('[zustand] CategoriesView: transactions loaded:', transactions.length)
       
-      setZustandLoading(true)
-      const allTransactions = await fetchUserTransactions(user, undefined, undefined)
-
-      // Fetch recurrent expenses to build recurrentGoalMap
+      // Also fetch expenses to build recurrentGoalMap
       const expenses = await fetchUserExpenses(user)
-
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`📊 CategoriesView: Fetched ${allTransactions.length} transactions`)
-      }
-
-      // Store in Zustand
-      setTransactions(allTransactions)
       setRecurrentExpenses(expenses.recurrent)
-
+      
       // Validate categories data
-      validateCategoriesData(allTransactions)
+      validateCategoriesData(transactions)
 
       // Load attachment counts
-      await loadAttachmentCounts(allTransactions)
+      await loadAttachmentCounts(transactions)
 
     } catch (error) {
       console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
-      // Reset last fetched on error to allow retry
-      lastFetchedRef.current = null
-    } finally {
-      setLoading(false)
-      useTransactionStore.getState().setLoading(false)
     }
-  }, [user]) // Dependencies for useCallback
+  }, [user, fetchTransactions, transactions]) // Dependencies for useCallback
 
   // Initial data fetch
   useEffect(() => {
     fetchData()
-  }, [fetchData]) // Now depends on fetchData
+  }, [fetchData])
 
   // Development logging for Zustand transactions
   useEffect(() => {
@@ -421,13 +391,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     }
   }, [isLoading, transactions])
 
-  // Data sync effect
+  // Data sync effect using pure Zustand pattern
   useDataSyncEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 CategoriesView: Data sync triggered, refetching data')
-    }
+    console.log('[zustand] CategoriesView: useDataSyncEffect triggered')
     fetchData()
-  }, [fetchData]) // Now depends on fetchData
+  }, [fetchData])
 
   // Load categories for management modal
   const loadManagementCategories = async () => {
@@ -461,15 +429,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     setShowAddCategoryInput(false)
     setNewCategoryInput('')
     setAddCategoryError(null)
-    setShowDeleteConfirmModal(false)
+    setShowDeleteCategoryConfirmation(false)
     setCategoryToDelete(null)
-    setDeleteError(null)
-    setEditingCategory(null)
-    setEditCategoryInput('')
+    setDeletingCategory(false)
+    setShowEditCategoryModal(false)
+    setEditCategoryName('')
+    setEditingCategoryState(false)
     setEditCategoryError(null)
-    setShowEditConfirmModal(false)
-    setCategoryToEdit(null)
-    setEditError(null)
     loadManagementCategories()
   }
 
@@ -524,13 +490,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     try {
       // Count affected transactions (only from transactions table for user display)
       const count = await countAffectedTransactions(user.id, category.name, true)
+      setCategoryToDelete(category.name)
+      setShowDeleteCategoryConfirmation(true)
+      setDeletingCategory(false)
       setAffectedTransactionsCount(count)
-      setCategoryToDelete(category)
-      setShowDeleteConfirmModal(true)
-      setDeleteError(null)
     } catch (error) {
       console.error('Error counting affected transactions:', error)
-      setDeleteError('Error al verificar las transacciones afectadas')
+      setAddCategoryError('Error al verificar las transacciones afectadas')
     }
   }
 
@@ -539,14 +505,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     if (!categoryToDelete) return
 
     setDeletingCategory(true)
-    setDeleteError(null)
 
     try {
-      const result = await deleteUserCategory(user.id, categoryToDelete.name, categoryToDelete.isDefault)
+      const result = await deleteUserCategory(user.id, categoryToDelete, true)
       
       if (result.success) {
         // Close modal and reload categories
-        setShowDeleteConfirmModal(false)
+        setShowDeleteCategoryConfirmation(false)
         setCategoryToDelete(null)
         await loadManagementCategories()
         
@@ -556,11 +521,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         // Notify other views that data has changed
         refreshData(user.id, 'delete_category')
       } else {
-        setDeleteError(result.error || 'Error al eliminar la categoría')
+        setAddCategoryError(result.error || 'Error al eliminar la categoría')
       }
     } catch (error) {
       console.error('Error deleting category:', error)
-      setDeleteError('Error interno del servidor')
+      setAddCategoryError('Error interno del servidor')
     } finally {
       setDeletingCategory(false)
     }
@@ -568,28 +533,28 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
   // Handle cancel delete category
   const handleCancelDeleteCategory = () => {
-    setShowDeleteConfirmModal(false)
+    setShowDeleteCategoryConfirmation(false)
     setCategoryToDelete(null)
-    setDeleteError(null)
-    setAffectedTransactionsCount(0)
+    setAddCategoryError(null)
   }
 
   // Handle edit category click
   const handleEditCategoryClick = (category: CategoryInfo) => {
     setEditingCategory(category)
-    setEditCategoryInput(category.name)
+    setEditCategoryName(category.name)
+    setEditingCategoryState(false)
     setEditCategoryError(null)
   }
 
   // Handle edit category save
   const handleEditCategorySave = async () => {
-    if (!editingCategory || !editCategoryInput.trim()) {
+    if (!editingCategory || !editCategoryName.trim()) {
       setEditCategoryError('El nombre de la categoría no puede estar vacío')
       return
     }
 
     // Validate the new name
-    const validation = await validateCategoryForEdit(user.id, editCategoryInput.trim(), editingCategory.name)
+    const validation = await validateCategoryForEdit(user.id, editCategoryName.trim(), editingCategory.name)
     
     if (!validation.valid) {
       setEditCategoryError(validation.error || 'Error en la validación')
@@ -597,9 +562,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     }
 
     // If name hasn't changed, just cancel editing
-    if (editCategoryInput.trim().toLowerCase() === editingCategory.name.toLowerCase()) {
+    if (editCategoryName.trim().toLowerCase() === editingCategory.name.toLowerCase()) {
       setEditingCategory(null)
-      setEditCategoryInput('')
+      setEditCategoryName('')
       setEditCategoryError(null)
       return
     }
@@ -607,10 +572,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     try {
       // Count affected transactions (only from transactions table for user display)
       const count = await countAffectedTransactions(user.id, editingCategory.name, true)
-      setEditAffectedTransactionsCount(count)
-      setCategoryToEdit({ old: editingCategory, new: editCategoryInput.trim() })
-      setShowEditConfirmModal(true)
-      setEditError(null)
+      setCategoryToDelete(editingCategory.name)
+      setShowEditCategoryModal(true)
+      setEditCategoryError(null)
     } catch (error) {
       console.error('Error counting affected transactions:', error)
       setEditCategoryError('Error al verificar las transacciones afectadas')
@@ -620,26 +584,25 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   // Handle edit category cancel
   const handleEditCategoryCancel = () => {
     setEditingCategory(null)
-    setEditCategoryInput('')
+    setEditCategoryName('')
     setEditCategoryError(null)
   }
 
   // Handle confirm edit category
   const handleConfirmEditCategory = async () => {
-    if (!categoryToEdit) return
+    if (!editingCategory) return
 
-    setUpdatingCategory(true)
-    setEditError(null)
+    setEditingCategoryState(true)
+    setEditCategoryError(null)
 
     try {
-      const result = await updateUserCategory(user.id, categoryToEdit.old.name, categoryToEdit.new)
+      const result = await updateUserCategory(user.id, editingCategory.name, editCategoryName.trim())
       
       if (result.success) {
         // Close modals and reset state
-        setShowEditConfirmModal(false)
-        setCategoryToEdit(null)
+        setShowEditCategoryModal(false)
         setEditingCategory(null)
-        setEditCategoryInput('')
+        setEditCategoryName('')
         setEditCategoryError(null)
         
         // Reload categories
@@ -651,22 +614,21 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         // Notify other views that data has changed
         refreshData(user.id, 'edit_category')
       } else {
-        setEditError(result.error || 'Error al actualizar la categoría')
+        setEditCategoryError(result.error || 'Error al actualizar la categoría')
       }
     } catch (error) {
       console.error('Error updating category:', error)
-      setEditError('Error interno del servidor')
+      setEditCategoryError('Error interno del servidor')
     } finally {
-      setUpdatingCategory(false)
+      setEditingCategoryState(false)
     }
   }
 
   // Handle cancel edit category
   const handleCancelEditCategory = () => {
-    setShowEditConfirmModal(false)
-    setCategoryToEdit(null)
-    setEditError(null)
-    setEditAffectedTransactionsCount(0)
+    setShowEditCategoryModal(false)
+    setEditingCategory(null)
+    setEditCategoryError(null)
   }
 
   // Group transactions by category with recurrent and year grouping
@@ -1557,8 +1519,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                             <div className="flex-1">
                               <input
                                 type="text"
-                                value={editCategoryInput}
-                                onChange={(e) => setEditCategoryInput(e.target.value)}
+                                value={editCategoryName}
+                                onChange={(e) => setEditCategoryName(e.target.value)}
                                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 maxLength={50}
                                 onKeyPress={(e) => {
@@ -1705,7 +1667,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       )}
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirmModal && categoryToDelete && (
+      {showDeleteCategoryConfirmation && categoryToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
             <div className="flex items-center justify-between p-4 border-b">
@@ -1722,12 +1684,12 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    categoryToDelete.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
+                    editingCategory && editingCategory.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
                   }`}>
                     <Tag className="h-4 w-4" fill="currentColor" />
                   </div>
                   <span className="text-lg font-medium text-gray-900">
-                    {categoryToDelete.name}
+                    {categoryToDelete}
                   </span>
                 </div>
                 
@@ -1750,9 +1712,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   </div>
                 )}
                 
-                {deleteError && (
+                {addCategoryError && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
-                    <p className="text-sm text-red-700">{deleteError}</p>
+                    <p className="text-sm text-red-700">{addCategoryError}</p>
                   </div>
                 )}
               </div>
@@ -1779,7 +1741,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       )}
 
       {/* Edit Confirmation Modal */}
-      {showEditConfirmModal && categoryToEdit && (
+      {showEditCategoryModal && editingCategory && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
@@ -1798,17 +1760,17 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   <div>
                     <span className="text-sm text-gray-500">Cambiar nombre de:</span>
                     <div className="font-medium text-gray-900">
-                      <span className="text-sm text-gray-400 line-through">{categoryToEdit.old.name}</span>
+                      <span className="text-sm text-gray-400 line-through">{editingCategory.name}</span>
                       <span className="mx-2">→</span>
-                      <span className="text-sm text-green-dark font-medium">{categoryToEdit.new}</span>
+                      <span className="text-sm text-green-dark font-medium">{editCategoryName}</span>
                     </div>
                     <div className="mt-1">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        categoryToEdit.old.isDefault 
+                        editingCategory.isDefault 
                           ? 'bg-gray-100 text-gray-600' 
                           : 'bg-green-100 text-green-700'
                       }`}>
-                        {categoryToEdit.old.isDefault ? 'Predeterminada' : 'Creada por ti'}
+                        {editingCategory.isDefault ? 'Predeterminada' : 'Creada por ti'}
                       </span>
                     </div>
                   </div>
@@ -1818,16 +1780,16 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   ¿Estás seguro que deseas cambiar el nombre de esta categoría?
                 </p>
                 
-                {editAffectedTransactionsCount > 0 && (
+                {affectedTransactionsCount > 0 && (
                   <div className="bg-[#e0f6e8] text-green-primary border border-[#d7eaff] rounded-md px-4 py-2 text-sm mb-3">
                     <strong className="font-medium">ℹ️ Transacciones afectadas</strong><br />
-                    Cambiar el nombre de esta categoría va a actualizar <strong>{editAffectedTransactionsCount}</strong> transacciones.
+                    Cambiar el nombre de esta categoría va a actualizar <strong>{affectedTransactionsCount}</strong> transacciones.
                   </div>
                 )}
                 
-                {editError && (
+                {editCategoryError && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
-                    <p className="text-sm text-red-700">{editError}</p>
+                    <p className="text-sm text-red-700">{editCategoryError}</p>
                   </div>
                 )}
               </div>
@@ -1835,17 +1797,17 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="flex justify-end gap-2 mt-4">
                 <button
                   onClick={handleCancelEditCategory}
-                  disabled={updatingCategory}
+                  disabled={editingCategoryState}
                   className="bg-border-light text-gray-dark hover:bg-[#e3e4db] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={handleConfirmEditCategory}
-                  disabled={updatingCategory}
+                  disabled={editingCategoryState}
                   className="bg-green-primary text-white hover:bg-[#77b16e] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {updatingCategory ? 'Actualizando...' : 'Actualizar'}
+                  {editingCategoryState ? 'Actualizando...' : 'Actualizar'}
                 </button>
               </div>
             </div>
