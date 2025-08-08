@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { CheckCircle, AlertTriangle, PiggyBank, CreditCard } from 'lucide-react'
 import { type Transaction, type User } from '@/lib/supabase'
-import { fetchUserTransactions } from '@/lib/dataUtils'
+import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import { texts } from '@/lib/translations'
 
 interface ResumenMensualProps {
@@ -11,45 +12,50 @@ interface ResumenMensualProps {
 }
 
 export default function ResumenMensual({ user }: ResumenMensualProps) {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // Zustand store
+  const { transactions, isLoading, fetchTransactions } = useTransactionStore()
 
   // Get current month and year
   const currentDate = new Date()
   const currentMonth = currentDate.getMonth() + 1
   const currentYear = currentDate.getFullYear()
 
-  // Fetch transactions for current month
+  // Initial data fetch using pure Zustand pattern
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        
-        const monthTransactions = await fetchUserTransactions(user, currentMonth, currentYear)
-        setTransactions(monthTransactions)
-      } catch (err) {
-        console.error('Error fetching transactions:', err)
-        setError('Error al cargar datos')
-      } finally {
-        setLoading(false)
-      }
+    if (user) {
+      console.log('[zustand] ResumenMensual: fetchTransactions triggered for', currentMonth, currentYear)
+      fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
     }
+  }, [user, currentYear, currentMonth, fetchTransactions])
 
-    fetchData()
-  }, [user, currentMonth, currentYear])
+  // Data sync effect using pure Zustand pattern
+  useDataSyncEffect(() => {
+    if (user) {
+      console.log('[zustand] ResumenMensual: useDataSyncEffect triggered')
+      fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
+    }
+  }, [user, currentYear, currentMonth, fetchTransactions])
 
-  // Calculate financial metrics
-  const totalIngresos = transactions
+  // Filter transactions for current month from Zustand store
+  const currentMonthTransactions = transactions.filter(t =>
+    t.year === currentYear && t.month === currentMonth
+  )
+
+  // Development logging for Zustand transactions
+  if (process.env.NODE_ENV === 'development' && !isLoading) {
+    console.log('[zustand] ResumenMensual: loaded', currentMonthTransactions.length, 'transactions from Zustand')
+  }
+
+  // Calculate financial metrics using filtered transactions
+  const totalIngresos = currentMonthTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.value, 0)
 
-  const totalGastos = transactions
+  const totalGastos = currentMonthTransactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.value, 0)
 
-  const totalPagado = transactions
+  const totalPagado = currentMonthTransactions
     .filter(t => t.type === 'expense' && t.status === 'paid')
     .reduce((sum, t) => sum + t.value, 0)
 
@@ -57,7 +63,7 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
   const porcentajePagado = totalGastos > 0 ? Math.round((totalPagado / totalGastos) * 100) : 0
   const cuantoQueda = totalIngresos - totalGastos
 
-  // Helper function to compare dates without time - Same logic as DashboardView
+  // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
     const [year, month, day] = deadline.split('-').map(Number);
     const deadlineDate = new Date(year, month - 1, day); // month is 0-indexed
@@ -69,8 +75,8 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
     return deadlineDate < todayDate;
   }
 
-  // Calculate overdue payments (new logic)
-  const pagosVencidos = transactions.filter(t => 
+  // Calculate overdue payments
+  const pagosVencidos = currentMonthTransactions.filter(t => 
     t.type === 'expense' && 
     t.status === 'pending' && 
     t.deadline && 
@@ -81,6 +87,18 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
   const progresoEsperado = totalGastos > 0 ? Math.round(((totalPagado + montoVencido) / totalGastos) * 100) : 0
   const porcentajeVencido = totalGastos > 0 ? Math.round((montoVencido / totalGastos) * 100) : 0
   const tieneVencimientos = pagosVencidos.length > 0
+
+  // Development logging for calculations
+  if (process.env.NODE_ENV === 'development' && !isLoading) {
+    console.log('[zustand] ResumenMensual: Calculated totalIngresos, totalGastos, totalPagado, cuantoQueda...', {
+      totalIngresos,
+      totalGastos, 
+      totalPagado,
+      cuantoQueda,
+      porcentajePagado,
+      tieneVencimientos
+    })
+  }
 
   // Format currency
   const formatCurrency = (value: number): string => {
@@ -96,7 +114,7 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
   const monthName = new Date(currentYear, currentMonth - 1).toLocaleString('es-ES', { month: 'long' })
   const capitalizedMonth = monthName.charAt(0).toUpperCase() + monthName.slice(1)
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="rounded-xl bg-white shadow-soft p-4">
         <div className="animate-pulse">
@@ -113,17 +131,6 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
             <div className="h-3 bg-gray-200 rounded w-full"></div>
             <div className="h-4 bg-gray-200 rounded w-1/4"></div>
           </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-xl bg-white shadow-soft p-4">
-        <div className="text-center text-error-red font-sans">
-          <AlertTriangle className="h-6 w-6 mx-auto mb-2" />
-          <p className="text-sm">{error}</p>
         </div>
       </div>
     )
