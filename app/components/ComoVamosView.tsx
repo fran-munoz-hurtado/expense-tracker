@@ -4,12 +4,13 @@ import { useState, useEffect } from 'react'
 import { TrendingUp, DollarSign, Calendar, Target, AlertCircle, CheckCircle, Info, Repeat, Tag } from 'lucide-react'
 import { type User, type Transaction, type RecurrentExpense, type NonRecurrentExpense } from '@/lib/supabase'
 import { texts } from '@/lib/translations'
-import { fetchUserTransactions, fetchUserExpenses } from '@/lib/dataUtils'
+import { fetchUserExpenses } from '@/lib/dataUtils'
 import { getStatusColors } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { getTransactionIconType, getTransactionIconColor, getTransactionIconBackground } from '@/lib/utils/transactionIcons'
 import { renderCustomIcon } from '@/lib/utils/iconRenderer'
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import ResumenMensual from './ResumenMensual'
 import TransactionIcon from './TransactionIcon'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
@@ -35,7 +36,6 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     }
   }
   
-  const [loading, setLoading] = useState(true)
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
   const navigation = useAppNavigation()
@@ -85,6 +85,14 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     }
   }, [user, currentMonth, currentYear, fetchTransactions])
 
+  // Data sync effect using pure Zustand pattern
+  useDataSyncEffect(() => {
+    if (user) {
+      console.log('[zustand] ComoVamosView: useDataSyncEffect triggered')
+      fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
+    }
+  }, [user, currentYear, currentMonth, fetchTransactions])
+
   // Fetch expenses separately (not yet moved to Zustand)
   useEffect(() => {
     const fetchExpenses = async () => {
@@ -96,8 +104,6 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
         }
       } catch (err) {
         console.error('Error fetching expenses:', err)
-      } finally {
-        setLoading(false)
       }
     }
 
@@ -571,15 +577,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     )
   }
 
-  // Simulate loading state
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [])
-
-  if (loading) { // This loading state is now handled by Zustand's isLoading
+  if (isLoading) { // This loading state is now handled by Zustand's isLoading
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
         <div className="text-center">
