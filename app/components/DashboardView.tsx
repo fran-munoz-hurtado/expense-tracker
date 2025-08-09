@@ -2752,7 +2752,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {/* First option: Sin categoría (red styling) */}
                       <div
-                        className="flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer"
+                        className={`flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer ${
+                          selectedCategory === 'Sin categoría' ? 'bg-green-light' : ''
+                        }`}
                         onClick={() => handleCategorySelection('Sin categoría')}
                       >
                         <div className="flex items-center gap-1 text-sm text-gray-900 font-medium">
@@ -2760,8 +2762,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           <span className="text-xs text-gray-400">
                             · Predeterminada
                           </span>
-                          {selectedCategory === 'Sin categoría' && (
-                            <span className="text-xs text-gray-400">· Seleccionada</span>
+                          {selectedTransactionForCategory.category === 'Sin categoría' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                              Actual
+                            </span>
                           )}
                         </div>
                       </div>
@@ -2769,7 +2773,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       {/* Current category (if not "Sin categoría") */}
                       {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'Sin categoría' && (
                         <div
-                          className="flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer"
+                          className={`flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer ${
+                            selectedCategory === selectedTransactionForCategory.category ? 'bg-green-light' : ''
+                          }`}
                           onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
                         >
                           <div className="flex items-center gap-1 text-sm text-gray-900 font-medium">
@@ -2777,9 +2783,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                             <span className="text-xs text-gray-400">
                               · {Object.values(CATEGORIES.EXPENSE).includes(selectedTransactionForCategory.category as any) ? 'Predeterminada' : 'Creada por ti'}
                             </span>
-                            {selectedCategory === selectedTransactionForCategory.category && (
-                              <span className="text-xs text-gray-400">· Seleccionada</span>
-                            )}
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                              Actual
+                            </span>
                           </div>
                         </div>
                       )}
@@ -2794,7 +2800,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           return (
                             <div
                               key={category}
-                              className="flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer"
+                              className={`flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer ${
+                                selectedCategory === category ? 'bg-green-light' : ''
+                              }`}
                               onClick={() => handleCategorySelection(category)}
                             >
                               <div className="flex items-center gap-1 text-sm text-gray-900 font-medium">
@@ -2802,9 +2810,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 <span className="text-xs text-gray-400">
                                   · {isDefault ? 'Predeterminada' : 'Creada por ti'}
                                 </span>
-                                {selectedCategory === category && (
-                                  <span className="text-xs text-gray-400">· Seleccionada</span>
-                                )}
                               </div>
                             </div>
                           )

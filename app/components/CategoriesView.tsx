@@ -1687,7 +1687,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   onClick={handleResetCategoriesClick}
                   className="bg-error-bg text-error-red hover:bg-red-100 rounded-md px-4 py-2 text-sm font-medium transition-colors"
                 >
-                  🔄 Restaurar categorías predeterminadas
+                  Restaurar categorías predeterminadas
                 </button>
                 <button
                   onClick={() => setShowCategoryManagementModal(false)}
