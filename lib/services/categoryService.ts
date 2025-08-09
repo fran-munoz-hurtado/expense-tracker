@@ -412,48 +412,97 @@ export async function updateUserCategory(userId: number, oldCategoryName: string
 
 /**
  * Reset user categories to default predefined categories only
- * This will deactivate all existing categories and ensure only the 7 default categories are active
+ * This will restore default categories to their original state while preserving custom user categories
  */
 export async function resetUserCategoriesToDefaults(userId: number): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log(`🔄 Starting category reset for user ${userId}`)
+    console.log(`🔄 Starting selective category reset for user ${userId}`)
 
-    // Step 1: Deactivate ALL existing categories for the user
-    const { error: deactivateError } = await supabase
-      .from('user_categories')
-      .update({ is_active: false })
-      .eq('user_id', userId)
+    // Step 1: For each default category, ensure it exists and has the correct name
+    for (const originalCategoryName of DEFAULT_CATEGORY_NAMES) {
+      // Check if this default category exists (might be with a different name if edited)
+      const { data: existingDefaults, error: fetchError } = await supabase
+        .from('user_categories')
+        .select('category_name, is_active')
+        .eq('user_id', userId)
+        .eq('is_default', true)
 
-    if (deactivateError) {
-      console.error('Error deactivating existing categories:', deactivateError)
-      return { success: false, error: 'Error al desactivar categorías existentes' }
+      if (fetchError) {
+        console.error('Error fetching existing default categories:', fetchError)
+        return { success: false, error: 'Error al verificar categorías existentes' }
+      }
+
+      // Check if we already have this exact default category active
+      const exactMatch = existingDefaults?.find(cat => 
+        cat.category_name === originalCategoryName && cat.is_active
+      )
+
+      if (exactMatch) {
+        // This default category already exists with correct name and is active
+        console.log(`✅ Default category "${originalCategoryName}" already correct`)
+        continue
+      }
+
+      // Check if we have an inactive default category with this name
+      const inactiveMatch = existingDefaults?.find(cat => 
+        cat.category_name === originalCategoryName && !cat.is_active
+      )
+
+      if (inactiveMatch) {
+        // Reactivate the correct default category
+        const { error: activateError } = await supabase
+          .from('user_categories')
+          .update({ is_active: true })
+          .eq('user_id', userId)
+          .eq('category_name', originalCategoryName)
+          .eq('is_default', true)
+
+        if (activateError) {
+          console.error(`Error reactivating category "${originalCategoryName}":`, activateError)
+          return { success: false, error: `Error al reactivar categoría "${originalCategoryName}"` }
+        }
+
+        console.log(`✅ Reactivated default category "${originalCategoryName}"`)
+        continue
+      }
+
+      // If we get here, we need to insert the default category (or it was renamed)
+      // First, deactivate any other default categories that might conflict
+      const { error: deactivateError } = await supabase
+        .from('user_categories')
+        .update({ is_active: false })
+        .eq('user_id', userId)
+        .eq('is_default', true)
+        .neq('category_name', originalCategoryName)
+
+      if (deactivateError) {
+        console.error('Error deactivating conflicting default categories:', deactivateError)
+      }
+
+      // Insert/upsert the correct default category
+      const { error: upsertError } = await supabase
+        .from('user_categories')
+        .upsert({
+          user_id: userId,
+          category_name: originalCategoryName,
+          is_active: true,
+          is_default: true
+        }, {
+          onConflict: 'user_id,category_name',
+          ignoreDuplicates: false
+        })
+
+      if (upsertError) {
+        console.error(`Error upserting default category "${originalCategoryName}":`, upsertError)
+        return { success: false, error: `Error al restaurar categoría "${originalCategoryName}"` }
+      }
+
+      console.log(`✅ Restored default category "${originalCategoryName}"`)
     }
 
-    console.log(`✅ Deactivated all existing categories for user ${userId}`)
-
-    // Step 2: Insert/reactivate the 7 default categories
-    const defaultCategories = DEFAULT_CATEGORY_NAMES.map(categoryName => ({
-      user_id: userId,
-      category_name: categoryName,
-      is_active: true,
-      is_default: true
-    }))
-
-    // Use upsert to handle cases where categories might already exist
-    const { error: upsertError } = await supabase
-      .from('user_categories')
-      .upsert(defaultCategories, {
-        onConflict: 'user_id,category_name',
-        ignoreDuplicates: false
-      })
-
-    if (upsertError) {
-      console.error('Error upserting default categories:', upsertError)
-      return { success: false, error: 'Error al restablecer categorías predeterminadas' }
-    }
-
-    console.log(`✅ Successfully reset categories to defaults for user ${userId}`)
-    console.log(`📊 Active categories: ${DEFAULT_CATEGORY_NAMES.join(', ')}`)
+    console.log(`✅ Successfully reset default categories for user ${userId}`)
+    console.log(`📊 Default categories restored: ${DEFAULT_CATEGORY_NAMES.join(', ')}`)
+    console.log(`🔒 Custom user categories preserved untouched`)
 
     return { success: true }
   } catch (error) {

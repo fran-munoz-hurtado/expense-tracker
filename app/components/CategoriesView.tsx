@@ -545,6 +545,9 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
   // Handle edit category click
   const handleEditCategoryClick = (category: CategoryInfo) => {
+    // Guard clause: prevent editing default categories
+    if (category.isDefault) return
+    
     setEditingCategory(category)
     setEditCategoryName(category.name)
     setEditingCategoryState(false)
@@ -1597,13 +1600,15 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               </span>
                             </div>
                             <div className="flex gap-2">
-                              <button
-                                onClick={() => handleEditCategoryClick(category)}
-                                className="w-4 h-4 text-green-dark opacity-70 hover:opacity-100 transition-all"
-                                title="Editar categoría"
-                              >
-                                <Edit2 className="h-4 w-4" />
-                              </button>
+                              {!category.isDefault && (
+                                <button
+                                  onClick={() => handleEditCategoryClick(category)}
+                                  className="w-4 h-4 text-green-dark opacity-70 hover:opacity-100 transition-all"
+                                  title="Editar categoría"
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleDeleteCategoryClick(category)}
                                 className="w-4 h-4 text-green-dark opacity-70 hover:opacity-100 transition-all"
@@ -1682,7 +1687,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   onClick={handleResetCategoriesClick}
                   className="bg-error-bg text-error-red hover:bg-red-100 rounded-md px-4 py-2 text-sm font-medium transition-colors"
                 >
-                  🔄 Restablecer a valores por defecto
+                  🔄 Restaurar categorías predeterminadas
                 </button>
                 <button
                   onClick={() => setShowCategoryManagementModal(false)}
@@ -1851,7 +1856,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
-              <h2 className="text-lg font-semibold text-gray-dark">Confirmar restablecimiento</h2>
+              <h2 className="text-lg font-semibold text-gray-dark">Restaurar categorías predeterminadas</h2>
               <button
                 onClick={handleCancelResetCategories}
                 className="text-gray-400 hover:text-gray-500"
@@ -1863,8 +1868,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
             <div className="px-5 py-4">
               <div className="mb-4">
                 <p className="text-sm text-gray-dark mb-3">
-                  ¿Estás seguro que deseas restablecer todas las categorías a sus valores por defecto?
-                  Esto eliminará todas las categorías personalizadas que hayas creado.
+                  ¿Estás seguro que deseas restablecer las categorías predeterminadas a sus valores originales?
+                  Esto solo afectará las categorías del sistema, tus categorías personalizadas se mantendrán intactas.
                 </p>
                 
                 {addCategoryError && (
@@ -1887,7 +1892,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   disabled={resettingCategories}
                   className="flex-1 bg-error-bg text-error-red hover:bg-red-100 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {resettingCategories ? 'Restableciendo...' : 'Restablecer'}
+                  {resettingCategories ? 'Restaurando...' : 'Restaurar'}
                 </button>
               </div>
             </div>
