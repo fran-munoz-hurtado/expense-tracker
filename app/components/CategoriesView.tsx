@@ -14,7 +14,7 @@ import { renderCustomIcon } from '@/lib/utils/iconRenderer'
 import { getTransactionIconType, getTransactionIconColor, getTransactionIconBackground } from '@/lib/utils/transactionIcons'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
-import { getUserActiveCategories, addUserCategory, getUserActiveCategoriesWithInfo, CategoryInfo, countAffectedTransactions, deleteUserCategory, validateCategoryForEdit, updateUserCategory } from '@/lib/services/categoryService'
+import { getUserActiveCategories, addUserCategory, getUserActiveCategoriesWithInfo, CategoryInfo, countAffectedTransactions, deleteUserCategory, validateCategoryForEdit, updateUserCategory, resetUserCategoriesToDefaults } from '@/lib/services/categoryService'
 import TransactionIcon from './TransactionIcon'
 import CategoryOriginLabel from './CategoryOriginLabel'
 import { useTransactionStore } from '@/lib/store/transactionStore'
@@ -99,6 +99,10 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const [editCategoryName, setEditCategoryName] = useState('')
   const [editingCategoryState, setEditingCategoryState] = useState(false)
   const [editCategoryError, setEditCategoryError] = useState<string | null>(null)
+
+  // Reset categories state
+  const [showResetCategoriesConfirmation, setShowResetCategoriesConfirmation] = useState(false)
+  const [resettingCategories, setResettingCategories] = useState(false)
 
   // Create recurrentGoalMap like in DashboardView
   const recurrentGoalMap = useMemo(() => {
@@ -630,6 +634,45 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
     setShowEditCategoryModal(false)
     setEditingCategory(null)
     setEditCategoryError(null)
+  }
+
+  // Handle reset categories click
+  const handleResetCategoriesClick = () => {
+    setShowResetCategoriesConfirmation(true)
+  }
+
+  // Handle confirm reset categories
+  const handleConfirmResetCategories = async () => {
+    setResettingCategories(true)
+    setAddCategoryError(null)
+
+    try {
+      const result = await resetUserCategoriesToDefaults(user.id)
+      
+      if (result.success) {
+        // Close modal and reload categories
+        setShowResetCategoriesConfirmation(false)
+        await loadManagementCategories()
+        
+        // Refresh local data to reflect changes in this view
+        await fetchData()
+        
+        // Notify other views that data has changed
+        refreshData(user.id, 'reset_categories')
+      } else {
+        setAddCategoryError(result.error || 'Error al restablecer categorías')
+      }
+    } catch (error) {
+      console.error('Error resetting categories:', error)
+      setAddCategoryError('Error interno del servidor')
+    } finally {
+      setResettingCategories(false)
+    }
+  }
+
+  // Handle cancel reset categories
+  const handleCancelResetCategories = () => {
+    setShowResetCategoriesConfirmation(false)
   }
 
   // Group transactions by category with recurrent and year grouping
@@ -1634,7 +1677,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 </div>
               )}
               
-              <div className="flex justify-end pt-4 border-t">
+              <div className="flex justify-between items-center pt-4 border-t">
+                <button
+                  onClick={handleResetCategoriesClick}
+                  className="bg-error-bg text-error-red hover:bg-red-100 rounded-md px-4 py-2 text-sm font-medium transition-colors"
+                >
+                  🔄 Restablecer a valores por defecto
+                </button>
                 <button
                   onClick={() => setShowCategoryManagementModal(false)}
                   className="bg-border-light text-gray-dark hover:bg-[#e3e4db] rounded-md px-4 py-2 text-sm font-medium transition-colors"
@@ -1790,6 +1839,55 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                   className="bg-green-primary text-white hover:bg-[#77b16e] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {editingCategoryState ? 'Actualizando...' : 'Actualizar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Categories Confirmation Modal */}
+      {showResetCategoriesConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
+              <h2 className="text-lg font-semibold text-gray-dark">Confirmar restablecimiento</h2>
+              <button
+                onClick={handleCancelResetCategories}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="px-5 py-4">
+              <div className="mb-4">
+                <p className="text-sm text-gray-dark mb-3">
+                  ¿Estás seguro que deseas restablecer todas las categorías a sus valores por defecto?
+                  Esto eliminará todas las categorías personalizadas que hayas creado.
+                </p>
+                
+                {addCategoryError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                    <p className="text-sm text-red-700">{addCategoryError}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleCancelResetCategories}
+                  disabled={resettingCategories}
+                  className="flex-1 bg-border-light text-gray-dark hover:bg-[#e3e4db] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmResetCategories}
+                  disabled={resettingCategories}
+                  className="flex-1 bg-error-bg text-error-red hover:bg-red-100 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {resettingCategories ? 'Restableciendo...' : 'Restablecer'}
                 </button>
               </div>
             </div>

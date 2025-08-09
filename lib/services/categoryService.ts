@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 
 // Reference list of original default category names
 export const DEFAULT_CATEGORY_NAMES = [
+  'Sin categoría',
   'Mercado y comida',
   'Casa y servicios',
   'Transporte',
@@ -406,5 +407,57 @@ export async function updateUserCategory(userId: number, oldCategoryName: string
   } catch (error) {
     console.error('Error in updateUserCategory:', error)
     return { success: false, error: 'Error interno del servidor' }
+  }
+} 
+
+/**
+ * Reset user categories to default predefined categories only
+ * This will deactivate all existing categories and ensure only the 7 default categories are active
+ */
+export async function resetUserCategoriesToDefaults(userId: number): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log(`🔄 Starting category reset for user ${userId}`)
+
+    // Step 1: Deactivate ALL existing categories for the user
+    const { error: deactivateError } = await supabase
+      .from('user_categories')
+      .update({ is_active: false })
+      .eq('user_id', userId)
+
+    if (deactivateError) {
+      console.error('Error deactivating existing categories:', deactivateError)
+      return { success: false, error: 'Error al desactivar categorías existentes' }
+    }
+
+    console.log(`✅ Deactivated all existing categories for user ${userId}`)
+
+    // Step 2: Insert/reactivate the 7 default categories
+    const defaultCategories = DEFAULT_CATEGORY_NAMES.map(categoryName => ({
+      user_id: userId,
+      category_name: categoryName,
+      is_active: true,
+      is_default: true
+    }))
+
+    // Use upsert to handle cases where categories might already exist
+    const { error: upsertError } = await supabase
+      .from('user_categories')
+      .upsert(defaultCategories, {
+        onConflict: 'user_id,category_name',
+        ignoreDuplicates: false
+      })
+
+    if (upsertError) {
+      console.error('Error upserting default categories:', upsertError)
+      return { success: false, error: 'Error al restablecer categorías predeterminadas' }
+    }
+
+    console.log(`✅ Successfully reset categories to defaults for user ${userId}`)
+    console.log(`📊 Active categories: ${DEFAULT_CATEGORY_NAMES.join(', ')}`)
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error in resetUserCategoriesToDefaults:', error)
+    return { success: false, error: 'Error interno del servidor durante el reset' }
   }
 } 
