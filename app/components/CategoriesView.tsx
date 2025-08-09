@@ -16,6 +16,7 @@ import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import { getUserActiveCategories, addUserCategory, getUserActiveCategoriesWithInfo, CategoryInfo, countAffectedTransactions, deleteUserCategory, validateCategoryForEdit, updateUserCategory } from '@/lib/services/categoryService'
 import TransactionIcon from './TransactionIcon'
+import CategoryOriginLabel from './CategoryOriginLabel'
 import { useTransactionStore } from '@/lib/store/transactionStore'
 
 interface CategoriesViewProps {
@@ -1002,57 +1003,48 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                       const isSelected = selectedCategory === group.categoryName
                       
                       return (
-                        <button
+                        <div
                           key={group.categoryName}
-                          onClick={() => {
-                            if (process.env.NODE_ENV === 'development') {
-                              console.log('🖱️ CategoriesView: Category clicked', {
-                                categoryName: group.categoryName,
-                                previousSelection: selectedCategory,
-                                group: {
-                                  count: group.count,
-                                  total: group.total,
-                                  recurrentGroups: group.recurrentGroups.length,
-                                  nonRecurrentTransactions: group.nonRecurrentTransactions.length
-                                }
-                              })
-                            }
-                            setSelectedCategory(group.categoryName)
-                          }}
-                          className={`w-full p-4 text-left border-b border-gray-100 transition-colors ${
-                            isSelected ? 'bg-gray-50' : 'hover:bg-gray-50'
+                          className={`rounded-md px-3 py-2 mb-2 ${
+                            isSelected 
+                              ? 'border-l-4 border-green-primary bg-green-light' 
+                              : 'border border-gray-200'
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="text-sm font-medium text-gray-dark truncate font-sans">
-                                  {displayName}
-                                </h3>
-                                <div className="mt-1 mb-1">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    (() => {
-                                      const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
-                                      return isDefaultCategory 
-                                        ? 'bg-gray-100 text-gray-600' 
-                                        : 'bg-green-100 text-green-700'
-                                    })()
-                                  }`}>
-                                    {(() => {
-                                      const isDefaultCategory = Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any)
-                                      return isDefaultCategory ? 'Predeterminada' : 'Creada por ti'
-                                    })()}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-gray-500 font-sans">{group.count} transacciones</p>
-                              </div>
+                          <button
+                            onClick={() => {
+                              if (process.env.NODE_ENV === 'development') {
+                                console.log('🖱️ CategoriesView: Category clicked', {
+                                  categoryName: group.categoryName,
+                                  previousSelection: selectedCategory,
+                                  group: {
+                                    count: group.count,
+                                    total: group.total,
+                                    recurrentGroups: group.recurrentGroups.length,
+                                    nonRecurrentTransactions: group.nonRecurrentTransactions.length
+                                  }
+                                })
+                              }
+                              setSelectedCategory(group.categoryName)
+                            }}
+                            className="w-full text-sm text-left transition-colors hover:opacity-80"
+                          >
+                            <div className="flex items-center gap-1 text-sm text-gray-900 font-medium leading-tight">
+                              <span>{displayName}</span>
+                              <span className="text-xs text-gray-400 font-normal">
+                                · {Object.values(CATEGORIES.EXPENSE).includes(group.categoryName as any) ? 'Predeterminada' : 'Creada por ti'}
+                              </span>
                             </div>
-                            
-                            <div className="text-right flex-shrink-0">
-                              <p className="text-sm font-medium text-gray-dark font-sans">
+
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {group.count} transacciones
+                            </p>
+
+                            <div className="flex items-center justify-between mt-1">
+                              <p className="text-sm font-medium text-gray-900">
                                 {formatCurrency(group.total)}
                               </p>
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                                 getCategoryStatus(group.categoryName) === 'overdue' 
                                   ? 'bg-error-bg text-error-red' 
                                   : 'bg-green-light text-green-primary'
@@ -1060,8 +1052,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                 {getCategoryStatus(group.categoryName) === 'overdue' ? 'Vencido' : 'Al día'}
                               </span>
                             </div>
-                          </div>
-                        </button>
+                          </button>
+                        </div>
                       )
                     })}
                   </div>
@@ -1510,7 +1502,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                     {managementCategories.map((category, index) => (
                       <div
                         key={index}
-                        className="flex items-center justify-between gap-3 px-4 py-2 rounded-md bg-neutral-bg hover:bg-[#f5f6f4] transition-all"
+                        className="flex items-center justify-between gap-3 px-4 py-2 rounded-md hover:bg-gray-50 transition-all"
                       >
                         {editingCategory && editingCategory.name === category.name ? (
                           // Edit mode
@@ -1555,21 +1547,11 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                         ) : (
                           // View mode
                           <>
-                            <div className="flex items-center space-x-3">
-                              <div className="flex-1">
-                                <span className="text-sm text-gray-dark font-medium">
-                                  {category.name}
-                                </span>
-                                <div className="mt-1">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                    category.isDefault 
-                                      ? 'bg-gray-100 text-gray-600' 
-                                      : 'bg-green-100 text-green-700'
-                                  }`}>
-                                    {category.isDefault ? 'Predeterminada' : 'Creada por ti'}
-                                  </span>
-                                </div>
-                              </div>
+                            <div className="flex items-center gap-1 text-sm text-gray-900 font-medium">
+                              <span>{category.name}</span>
+                              <span className="text-xs text-gray-400">
+                                · {category.isDefault ? 'Predeterminada' : 'Creada por ti'}
+                              </span>
                             </div>
                             <div className="flex gap-2">
                               <button
@@ -1668,8 +1650,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       {/* Delete Confirmation Modal */}
       {showDeleteCategoryConfirmation && categoryToDelete && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b">
+          <div className="bg-white rounded-xl shadow-lg max-w-md w-full p-0 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border-light bg-neutral-bg rounded-t-xl">
               <h2 className="text-lg font-semibold text-gray-dark">Confirmar eliminación</h2>
               <button
                 onClick={handleCancelDeleteCategory}
@@ -1679,20 +1661,25 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               </button>
             </div>
             
-            <div className="p-4">
+            <div className="px-5 py-4">
               <div className="mb-4">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    editingCategory && editingCategory.isDefault ? 'bg-[#e3e4db] text-green-dark' : 'bg-[#e0f6e8] text-green-primary'
+                    editingCategory && editingCategory.isDefault ? 'bg-neutral-bg text-green-dark' : 'bg-green-light text-green-primary'
                   }`}>
                     <Tag className="h-4 w-4" fill="currentColor" />
                   </div>
-                  <span className="text-lg font-medium text-gray-900">
-                    {categoryToDelete}
-                  </span>
+                  <div className="flex items-center gap-1 text-sm text-gray-dark font-medium">
+                    <span>{categoryToDelete}</span>
+                    {editingCategory && (
+                      <span className="text-xs text-gray-400">
+                        · {editingCategory.isDefault ? 'Predeterminada' : 'Creada por ti'}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
-                <p className="text-gray-700 mb-3">
+                <p className="text-sm text-gray-dark mb-3">
                   ¿Estás seguro?
                 </p>
                 
@@ -1729,7 +1716,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 <button
                   onClick={handleConfirmDeleteCategory}
                   disabled={deletingCategory}
-                  className="flex-1 bg-[#f2dede] text-[#d9534f] hover:bg-[#eebebe] rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 bg-error-bg text-error-red hover:bg-red-100 rounded-md px-4 py-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {deletingCategory ? 'Eliminando...' : 'Eliminar'}
                 </button>
@@ -1764,12 +1751,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                       <span className="text-sm text-green-dark font-medium">{editCategoryName}</span>
                     </div>
                     <div className="mt-1">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        editingCategory.isDefault 
-                          ? 'bg-gray-100 text-gray-600' 
-                          : 'bg-green-100 text-green-700'
-                      }`}>
-                        {editingCategory.isDefault ? 'Predeterminada' : 'Creada por ti'}
+                      <span className="text-xs text-gray-400">
+                        · {editingCategory.isDefault ? 'Predeterminada' : 'Creada por ti'}
                       </span>
                     </div>
                   </div>
@@ -1780,7 +1763,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 </p>
                 
                 {affectedTransactionsCount > 0 && (
-                  <div className="bg-[#e0f6e8] text-green-primary border border-[#d7eaff] rounded-md px-4 py-2 text-sm mb-3">
+                  <div className="bg-green-50 text-green-800 border border-green-200 rounded-md px-4 py-2 text-sm mb-3">
                     <strong className="font-medium">ℹ️ Transacciones afectadas</strong><br />
                     Cambiar el nombre de esta categoría va a actualizar <strong>{affectedTransactionsCount}</strong> transacciones.
                   </div>
