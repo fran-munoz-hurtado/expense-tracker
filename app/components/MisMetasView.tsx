@@ -612,7 +612,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                       <div className="bg-neutral-bg border-b border-neutral-200 py-2 px-4 rounded-t-md">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
-                            Objetivos activos
+                            OBJETIVOS
                           </span>
                         </div>
                       </div>
@@ -676,7 +676,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                       <div className="bg-neutral-bg border-b border-neutral-200 py-2 px-4 rounded-t-md">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
-                            Objetivos completados
+                            OBJETIVOS
                           </span>
                         </div>
                       </div>
@@ -738,7 +738,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                       <div className="bg-neutral-bg border-b border-neutral-200 py-2 px-4 rounded-t-md">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
-                            Objetivos vencidos
+                            OBJETIVOS
                           </span>
                         </div>
                       </div>

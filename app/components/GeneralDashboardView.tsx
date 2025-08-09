@@ -253,11 +253,16 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   }
 
   return (
-    <div className="flex-1 p-6 lg:p-8">
-      {/* 1. Header con filtro de año rediseñado */}
-      <div className="mb-8">
+    <div className="flex-1 flex flex-col h-screen bg-gray-50">
+      {/* Header */}
+      <div className="p-6 lg:p-8 pb-4">
+        <div className="mb-4">
+          <h2 className="text-xl font-semibold text-gray-dark font-sans">Balance general</h2>
+          <p className="text-sm text-green-dark font-sans">Resumen financiero por mes</p>
+        </div>
+        
+        {/* Filtro de año */}
         <div className="flex items-center">
-          {/* Filtro de año rediseñado */}
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-mdplus bg-white border border-border-light text-gray-dark text-sm font-medium hover:shadow-soft transition-all">
             <svg className="w-4 h-4 text-green-primary" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -283,210 +288,161 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
             </div>
           </div>
         </div>
+        
+        {error && <div className="mt-4 text-red-600">{error}</div>}
       </div>
-      {/* 2. Filtro de año más sofisticado */}
-      {error && <div className="mb-4 text-red-600">{error}</div>}
-      
-      {/* 3. Fancy tabla con tooltips en porcentajes */}
-      <div className="hidden lg:block bg-white rounded-lg shadow-sm border overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200 table-fixed general-dashboard-table">
-          <colgroup>
-            <col style={{ width: '110px' }} />
-            <col style={{ width: '150px' }} />
-            <col style={{ width: '150px' }} />
-            <col style={{ width: '130px' }} />
-            <col style={{ width: '130px' }} />
-            <col style={{ width: '170px' }} />
-          </colgroup>
-          <thead>
-            {/* Header principal simplificado */}
-            <tr>
-              <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
-                {texts.month}
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
-                Ingresos
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
-                Gastos Totales
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
-                Gastos Mensuales
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
-                Gastos Únicos
-              </th>
-              <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
-                Balance (CuantoQueda)
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr><td colSpan={6} className="px-3 py-2 text-center text-gray-400 animate-pulse">{texts.loading}</td></tr>
-            ) :
-              Object.entries(monthlyData).map(([monthStr, data], idx) => {
-                const month = parseInt(monthStr)
-                const totalAmount = data.totalExpenses
-                const balance = data.balance
-                const balanceColor = balance >= 0 ? 'text-[#3f70ad]' : 'text-[#d9534f]'
-                
-                return (
-                  <tr key={month} className="bg-white">
-                    <td className="px-3 py-2 text-sm text-gray-dark font-medium">
-                      <button
-                        onClick={() => onNavigateToMonth(month, selectedYear)}
-                        className="text-gray-dark font-medium transition-colors duration-200 cursor-pointer group flex items-center gap-2"
-                      >
-                        {months[month - 1]}
-                        {selectedYear === currentYear && month === currentMonth && (
-                          <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                            Actual
-                          </span>
-                        )}
-                        {/* Ícono de enlace */}
-                        <svg 
-                          className="w-3 h-3 text-green-dark opacity-60" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                        </svg>
-                      </button>
-                    </td>
-                    <td className="px-3 py-2 text-sm text-[#3f70ad] font-medium">
-                      {formatCurrency(data.totalIncome)}
-                    </td>
-                    <td className="px-3 py-2 text-sm text-[#a07b00]">
-                      {formatCurrency(totalAmount)}
-                    </td>
-                    <td className="px-3 py-2 text-sm text-[#a07b00]">
-                      {formatCurrency(data.recurrent)}
-                    </td>
-                    <td className="px-3 py-2 text-sm text-[#a07b00]">
-                      {formatCurrency(data.nonRecurrent)}
-                    </td>
-                    <td className={`px-3 py-2 text-sm font-medium ${balanceColor}`}>
-                      {formatCurrency(balance)}
-                    </td>
+
+      {/* Main Content - Encapsulated in white section */}
+      <div className="flex-1 px-6 lg:px-8 pb-6 lg:pb-8">
+        <div className="max-w-5xl mx-auto">
+          <section className="bg-white rounded-xl shadow-sm px-6 py-4">
+            {/* Desktop Table */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 table-fixed general-dashboard-table">
+                <colgroup>
+                  <col style={{ width: '110px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col style={{ width: '150px' }} />
+                  <col style={{ width: '170px' }} />
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
+                      {texts.month}
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
+                      Ingresos
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
+                      Gastos Totales
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
+                      Balance (CuantoQueda)
+                    </th>
                   </tr>
-                )
-              })
-            }
-          </tbody>
-        </table>
-      </div>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr><td colSpan={4} className="px-3 py-2 text-center text-gray-400 animate-pulse">{texts.loading}</td></tr>
+                  ) :
+                    Object.entries(monthlyData).map(([monthStr, data], idx) => {
+                      const month = parseInt(monthStr)
+                      const totalAmount = data.totalExpenses
+                      const balance = data.balance
+                      const balanceColor = balance >= 0 ? 'text-[#3f70ad]' : 'text-[#d9534f]'
+                      
+                      return (
+                        <tr key={month} className="bg-white">
+                          <td className="px-3 py-2 text-sm text-gray-dark font-medium">
+                            <button
+                              onClick={() => onNavigateToMonth(month, selectedYear)}
+                              className="text-gray-dark font-medium transition-colors duration-200 cursor-pointer group flex items-center gap-2"
+                            >
+                              {months[month - 1]}
+                              {selectedYear === currentYear && month === currentMonth && (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                                  Actual
+                                </span>
+                              )}
+                              {/* Ícono de enlace */}
+                              <svg 
+                                className="w-3 h-3 text-green-dark opacity-60" 
+                                fill="none" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                            </button>
+                          </td>
+                          <td className="px-3 py-2 text-sm text-[#3f70ad] font-medium">
+                            {formatCurrency(data.totalIncome)}
+                          </td>
+                          <td className="px-3 py-2 text-sm text-[#a07b00]">
+                            {formatCurrency(totalAmount)}
+                          </td>
+                          <td className={`px-3 py-2 text-sm font-medium ${balanceColor}`}>
+                            {formatCurrency(balance)}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  }
+                </tbody>
+              </table>
+            </div>
 
-      {/* Mobile Card View */}
-      <div className="lg:hidden space-y-4">
-        {isLoading ? (
-          <div className="text-center text-gray-400 py-8">{texts.loading}</div>
-        ) : (
-          Object.entries(monthlyData).map(([monthStr, data]) => {
-            const month = parseInt(monthStr)
-            const totalAmount = data.totalExpenses
-            const balance = data.balance
-            const balanceColor = balance >= 0 ? 'text-[#3f70ad]' : 'text-[#d9534f]'
-            
-            return (
-              <div key={month} className="bg-white rounded-lg shadow-sm border p-4 mobile-card">
-                <div className="flex justify-between items-center mb-3">
-                  <button
-                    onClick={() => onNavigateToMonth(month, selectedYear)}
-                    className="text-gray-dark font-medium text-lg cursor-pointer transition-colors duration-200 group flex items-center gap-2"
-                  >
-                    {months[month - 1]}
-                    {selectedYear === currentYear && month === currentMonth && (
-                      <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                        Actual
-                      </span>
-                    )}
-                    {/* Ícono de enlace */}
-                    <svg 
-                      className="w-3 h-3 text-green-dark opacity-60" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      strokeWidth="2" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </button>
-                </div>
-                
-                <div className="space-y-3">
-                  {/* Sección de Ingresos */}
-                  <div className="bg-neutral-bg rounded-lg p-3 border border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-dark font-medium">Ingresos:</span>
-                      <div className="text-sm text-[#3f70ad] font-medium">{formatCurrency(data.totalIncome)}</div>
-                    </div>
-                  </div>
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4">
+              {isLoading ? (
+                <div className="text-center text-gray-400 py-8">{texts.loading}</div>
+              ) : (
+                Object.entries(monthlyData).map(([monthStr, data]) => {
+                  const month = parseInt(monthStr)
+                  const totalAmount = data.totalExpenses
+                  const balance = data.balance
+                  const balanceColor = balance >= 0 ? 'text-[#3f70ad]' : 'text-[#d9534f]'
                   
-                  {/* Sección de Gastos */}
-                  <div className="bg-neutral-bg rounded-lg p-3 border border-gray-200">
-                    <div className="mb-2">
-                      <span className="text-sm text-gray-dark font-medium">Gastos:</span>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Total:</span>
-                        <div className="text-sm text-[#a07b00]">{formatCurrency(data.totalExpenses)}</div>
+                  return (
+                    <div key={month} className="bg-neutral-bg rounded-lg border p-4 mobile-card">
+                      <div className="flex justify-between items-center mb-3">
+                        <button
+                          onClick={() => onNavigateToMonth(month, selectedYear)}
+                          className="text-gray-dark font-medium text-lg cursor-pointer transition-colors duration-200 group flex items-center gap-2"
+                        >
+                          {months[month - 1]}
+                          {selectedYear === currentYear && month === currentMonth && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                              Actual
+                            </span>
+                          )}
+                          {/* Ícono de enlace */}
+                          <svg 
+                            className="w-3 h-3 text-green-dark opacity-60" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </button>
                       </div>
                       
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Mensuales:</span>
-                        <div className="text-sm text-[#a07b00]">{formatCurrency(data.recurrent)}</div>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Únicos:</span>
-                        <div className="text-sm text-[#a07b00]">{formatCurrency(data.nonRecurrent)}</div>
+                      <div className="space-y-3">
+                        {/* Ingresos */}
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Ingresos</span>
+                          <span className="text-sm text-[#3f70ad] font-medium">
+                            {formatCurrency(data.totalIncome)}
+                          </span>
+                        </div>
+                        
+                        {/* Gastos Totales */}
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Gastos Totales</span>
+                          <span className="text-sm text-[#a07b00] font-medium">
+                            {formatCurrency(totalAmount)}
+                          </span>
+                        </div>
+                        
+                        {/* Balance */}
+                        <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                          <span className="text-sm font-medium text-gray-700">Balance</span>
+                          <span className={`text-sm font-medium ${balanceColor}`}>
+                            {formatCurrency(balance)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  {/* Sección de Balance */}
-                  <div className="bg-neutral-bg rounded-lg p-3 border border-gray-200">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-dark font-medium">Balance (CuantoQueda):</span>
-                      <div className={`text-sm font-medium ${balanceColor}`}>
-                        {formatCurrency(balance)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-          })
-        )}
+                  )
+                })
+              )}
+            </div>
+          </section>
+        </div>
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {/* This modal is no longer needed as Supabase calls are removed */}
-      {/* The confirmation modals will handle deletion logic */}
-
-      {/* Modify Modal */}
-      {/* This modal is no longer needed as Supabase calls are removed */}
-      {/* The confirmation modals will handle modification logic */}
-
-      {/* Modify Confirmation Modal */}
-      {/* This modal is no longer needed as Supabase calls are removed */}
-      {/* The confirmation modals will handle modification logic */}
-
-      {/* Modify Form Modal */}
-      {/* This modal is no longer needed as Supabase calls are removed */}
-      {/* The confirmation modals will handle modification logic */}
-
-      {/* Delete Series Confirmation Modal */}
-      {/* This modal is no longer needed as Supabase calls are removed */}
-      {/* The confirmation modals will handle deletion logic */}
-
-      {/* Delete Individual Confirmation Modal */}
-      {/* This modal is no longer needed as Supabase calls are removed */}
-      {/* The confirmation modals will handle deletion logic */}
     </div>
   )
 } 

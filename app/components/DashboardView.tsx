@@ -2752,56 +2752,40 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                     <div className="space-y-2 max-h-64 overflow-y-auto">
                       {/* First option: Sin categoría (red styling) */}
                       <div
-                        className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
-                          selectedCategory === 'Sin categoría'
-                            ? 'bg-green-50'
-                            : 'bg-neutral-bg hover:bg-[#f5f6f4]'
+                        className={`flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer ${
+                          selectedCategory === 'Sin categoría' ? 'bg-green-light' : ''
                         }`}
                         onClick={() => handleCategorySelection('Sin categoría')}
                       >
-                        <div className="flex items-center space-x-3">
-                          <div className="flex-1">
-                            <span className="text-sm text-neutral-700 font-medium">
-                              Sin categoría
+                        <div className="flex items-center gap-1 text-sm text-gray-900 font-medium">
+                          <span>Sin categoría</span>
+                          <span className="text-xs text-gray-400">
+                            · Predeterminada
+                          </span>
+                          {selectedTransactionForCategory.category === 'Sin categoría' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                              Actual
                             </span>
-                            <div className="mt-1">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                Predeterminada
-                              </span>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
 
                       {/* Current category (if not "Sin categoría") */}
                       {selectedTransactionForCategory.category && selectedTransactionForCategory.category !== 'Sin categoría' && (
                         <div
-                          className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
-                            selectedCategory === selectedTransactionForCategory.category
-                              ? 'bg-green-50'
-                              : 'bg-neutral-bg hover:bg-[#f5f6f4]'
+                          className={`flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer ${
+                            selectedCategory === selectedTransactionForCategory.category ? 'bg-green-light' : ''
                           }`}
                           onClick={() => handleCategorySelection(selectedTransactionForCategory.category!)}
                         >
-                          <div className="flex items-center space-x-3">
-                            <div className="flex-1">
-                              <span className="text-sm text-neutral-700 font-medium">
-                                {selectedTransactionForCategory.category}
-                              </span>
-                              <div className="mt-1">
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                  (() => {
-                                    const isDefault = Object.values(CATEGORIES.EXPENSE).includes(selectedTransactionForCategory.category as any)
-                                    return isDefault ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'
-                                  })()
-                                }`}>
-                                  {(() => {
-                                    const isDefault = Object.values(CATEGORIES.EXPENSE).includes(selectedTransactionForCategory.category as any)
-                                    return isDefault ? 'Predeterminada' : 'Creada por ti'
-                                  })()}
-                                </span>
-                              </div>
-                            </div>
+                          <div className="flex items-center gap-1 text-sm text-gray-900 font-medium">
+                            <span>{selectedTransactionForCategory.category}</span>
+                            <span className="text-xs text-gray-400">
+                              · {Object.values(CATEGORIES.EXPENSE).includes(selectedTransactionForCategory.category as any) ? 'Predeterminada' : 'Creada por ti'}
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                              Actual
+                            </span>
                           </div>
                         </div>
                       )}
@@ -2816,26 +2800,16 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                           return (
                             <div
                               key={category}
-                              className={`flex items-center justify-between gap-3 px-4 py-2 rounded-md cursor-pointer transition-all ${
-                                selectedCategory === category
-                                  ? 'bg-green-50'
-                                  : 'bg-neutral-bg hover:bg-[#f5f6f4]'
+                              className={`flex items-center justify-between px-4 py-2 rounded-md hover:bg-gray-50 transition cursor-pointer ${
+                                selectedCategory === category ? 'bg-green-light' : ''
                               }`}
                               onClick={() => handleCategorySelection(category)}
                             >
-                              <div className="flex items-center space-x-3">
-                                <div className="flex-1">
-                                  <span className="text-sm text-neutral-700 font-medium">
-                                    {category}
-                                  </span>
-                                  <div className="mt-1">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                                      isDefault ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'
-                                    }`}>
-                                      {isDefault ? 'Predeterminada' : 'Creada por ti'}
-                                    </span>
-                                  </div>
-                                </div>
+                              <div className="flex items-center gap-1 text-sm text-gray-900 font-medium">
+                                <span>{category}</span>
+                                <span className="text-xs text-gray-400">
+                                  · {isDefault ? 'Predeterminada' : 'Creada por ti'}
+                                </span>
                               </div>
                             </div>
                           )
