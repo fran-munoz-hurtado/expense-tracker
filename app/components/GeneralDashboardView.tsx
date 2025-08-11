@@ -68,6 +68,11 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
   ]
 
+  const monthsShort = [
+    'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+    'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+  ]
+
   // Format currency for display
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('es-CO', {
@@ -297,7 +302,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
         <div className="max-w-5xl mx-auto">
           <section className="bg-white rounded-xl shadow-sm px-6 py-4">
             {/* Desktop Table */}
-            <div className="hidden lg:block overflow-x-auto">
+            <div className="hidden sm:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 table-fixed general-dashboard-table">
                 <colgroup>
                   <col style={{ width: '110px' }} />
@@ -352,7 +357,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                                 strokeWidth="2" 
                                 viewBox="0 0 24 24"
                               >
-                                <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                               </svg>
                             </button>
                           </td>
@@ -373,72 +378,67 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
               </table>
             </div>
 
-            {/* Mobile Card View */}
-            <div className="lg:hidden space-y-4">
-              {isLoading ? (
-                <div className="text-center text-gray-400 py-8">{texts.loading}</div>
-              ) : (
-                Object.entries(monthlyData).map(([monthStr, data]) => {
-                  const month = parseInt(monthStr)
-                  const totalAmount = data.totalExpenses
-                  const balance = data.balance
-                  const balanceColor = balance >= 0 ? 'text-[#3f70ad]' : 'text-[#d9534f]'
-                  
-                  return (
-                    <div key={month} className="bg-neutral-bg rounded-lg border p-4 mobile-card">
-                      <div className="flex justify-between items-center mb-3">
-                        <button
-                          onClick={() => onNavigateToMonth(month, selectedYear)}
-                          className="text-gray-dark font-medium text-lg cursor-pointer transition-colors duration-200 group flex items-center gap-2"
-                        >
-                          {months[month - 1]}
-                          {selectedYear === currentYear && month === currentMonth && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
-                              Actual
-                            </span>
-                          )}
-                          {/* Ícono de enlace */}
-                          <svg 
-                            className="w-3 h-3 text-green-dark opacity-60" 
-                            fill="none" 
-                            stroke="currentColor" 
-                            strokeWidth="2" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
-                        </button>
-                      </div>
+            {/* Mobile Table - Optimized with horizontal scroll */}
+            <div className="sm:hidden overflow-x-auto overflow-y-visible -mx-4">
+              <table className="min-w-full text-xs divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th className="sticky left-0 top-0 z-20 bg-neutral-bg px-2 py-2 text-left font-medium text-green-dark uppercase tracking-wide whitespace-nowrap">
+                      Mes
+                    </th>
+                    <th className="sticky top-0 z-10 bg-neutral-bg px-2 py-2 text-right font-medium text-green-dark uppercase tracking-wide whitespace-nowrap">
+                      Ingresos
+                    </th>
+                    <th className="sticky top-0 z-10 bg-neutral-bg px-2 py-2 text-right font-medium text-green-dark uppercase tracking-wide whitespace-nowrap">
+                      Gastos
+                    </th>
+                    <th className="sticky top-0 z-10 bg-neutral-bg px-2 py-2 text-right font-medium text-green-dark uppercase tracking-wide whitespace-nowrap">
+                      Balance
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr><td colSpan={4} className="px-2 py-2 text-center text-gray-400 animate-pulse">Cargando...</td></tr>
+                  ) :
+                    Object.entries(monthlyData).map(([monthStr, data], idx) => {
+                      const month = parseInt(monthStr)
+                      const totalAmount = data.totalExpenses
+                      const balance = data.balance
+                      const balanceColor = balance >= 0 ? 'text-[#3f70ad]' : 'text-[#d9534f]'
                       
-                      <div className="space-y-3">
-                        {/* Ingresos */}
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Ingresos</span>
-                          <span className="text-sm text-[#3f70ad] font-medium">
+                      return (
+                        <tr key={month} className="bg-white">
+                          <td className="sticky left-0 z-10 bg-white px-2 py-2 text-gray-dark font-medium whitespace-nowrap">
+                            <button
+                              onClick={() => onNavigateToMonth(month, selectedYear)}
+                              className="text-gray-dark font-medium transition-colors duration-200 cursor-pointer group"
+                            >
+                              <div className="flex flex-col items-start text-xs">
+                                <span className="text-blue-600 underline font-medium">{monthsShort[month - 1]}</span>
+                                {selectedYear === currentYear && month === currentMonth && (
+                                  <span className="inline-flex items-center px-1 py-0.5 rounded-full text-[10px] font-medium font-sans bg-[#e4effa] text-[#3f70ad] mt-0.5">
+                                    Actual
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          </td>
+                          <td className="px-2 py-2 text-[#3f70ad] font-medium text-right whitespace-nowrap">
                             {formatCurrency(data.totalIncome)}
-                          </span>
-                        </div>
-                        
-                        {/* Gastos Totales */}
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Gastos Totales</span>
-                          <span className="text-sm text-[#a07b00] font-medium">
+                          </td>
+                          <td className="px-2 py-2 text-[#a07b00] text-right whitespace-nowrap">
                             {formatCurrency(totalAmount)}
-                          </span>
-                        </div>
-                        
-                        {/* Balance */}
-                        <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                          <span className="text-sm font-medium text-gray-700">Balance</span>
-                          <span className={`text-sm font-medium ${balanceColor}`}>
+                          </td>
+                          <td className={`px-2 py-2 font-medium text-right whitespace-nowrap ${balanceColor}`}>
                             {formatCurrency(balance)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })
-              )}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  }
+                </tbody>
+              </table>
             </div>
           </section>
         </div>

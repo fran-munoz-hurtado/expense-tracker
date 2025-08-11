@@ -530,7 +530,8 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
                 
                 return (
                   <div key={transaction.id} className={`py-3 ${index === 0 ? 'pt-0' : ''}`}>
-                    <div className="flex items-center justify-between">
+                    {/* Desktop layout - unchanged */}
+                    <div className="hidden sm:flex items-center justify-between">
                       <div className="flex items-center space-x-3 flex-1">
                         <TransactionIcon
                           transaction={transaction}
@@ -555,6 +556,39 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
                         <span className="text-sm font-medium text-gray-800 font-sans">
                           {formatCurrency(transaction.value)}
                         </span>
+                      </div>
+                    </div>
+
+                    {/* Mobile layout - badge below name */}
+                    <div className="sm:hidden">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3 flex-1 min-w-0">
+                          <TransactionIcon
+                            transaction={transaction}
+                            recurrentGoalMap={{}}
+                            size="w-4 h-4"
+                            containerSize="w-6 h-6"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-dark font-sans truncate mb-1">
+                              {transaction.description}
+                            </p>
+                            <div className="mb-1">
+                              <span className={daysUntilText.className}>
+                                {daysUntilText.text}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 font-sans leading-none">
+                              Vence: {formatDate(transaction.deadline!)}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="ml-3">
+                          <span className="text-sm font-medium text-gray-800 font-sans">
+                            {formatCurrency(transaction.value)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
