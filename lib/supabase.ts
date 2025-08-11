@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Environment validation for security
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Please check your .env.local file.')
@@ -37,8 +37,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 })
 
 // Performance-optimized query helpers with error handling
-export const createOptimizedQuery = (table: string, userId: number) => {
-  if (!userId || userId <= 0) {
+export const createOptimizedQuery = (table: string, userId: string) => {
+  if (!userId || userId.trim() === '') {
     throw new Error('Invalid user ID provided to createOptimizedQuery')
   }
   
@@ -50,11 +50,21 @@ export const createOptimizedQuery = (table: string, userId: number) => {
 
 // Batch query helper for multiple operations with error handling
 export const batchQuery = async (queries: Promise<any>[]) => {
-  if (!Array.isArray(queries) || queries.length === 0) {
-    throw new Error('Invalid queries array provided to batchQuery')
+  try {
+    const results = await Promise.all(queries)
+    return {
+      success: true,
+      data: results,
+      error: null
+    }
+  } catch (error) {
+    console.error('Batch query error:', error)
+    return {
+      success: false,
+      data: null,
+      error: error instanceof Error ? error.message : 'Unknown batch query error'
+    }
   }
-  
-  return Promise.all(queries)
 }
 
 // Cache configuration for better performance
@@ -66,63 +76,26 @@ export const CACHE_CONFIG = {
   ATTACHMENTS_CACHE_DURATION: 15 * 60 * 1000, // 15 minutes
 } as const
 
-// User type
+// Updated TypeScript types for UUID user_id
 export type User = {
-  id: number
+  id: string // UUID from auth.users
   first_name: string
   last_name: string
-  username: string
-  email: string
-  password_hash: string
-  status: 'active' | 'inactive'
+  status: 'active' | 'inactive' | 'banned'
+  role: 'user' | 'admin'
+  subscription_tier: 'free' | 'trial' | 'pro' | 'enterprise'
+  is_on_trial: boolean
+  trial_started_at?: string
+  trial_expires_at?: string
   created_at: string
   updated_at: string
 }
 
 export type UserInput = Omit<User, 'id' | 'created_at' | 'updated_at'>
 
-// Recurrent Expenses (creates multiple transactions)
-export type RecurrentExpense = {
-  id: number
-  user_id: number
-  description: string
-  month_from: number
-  month_to: number
-  year_from: number
-  year_to: number
-  value: number
-  payment_day_deadline: number | null
-  type: 'expense' | 'income'
-  category: string
-  isgoal: boolean
-  created_at: string
-  updated_at: string
-}
-
-export type RecurrentExpenseInput = Omit<RecurrentExpense, 'id' | 'created_at' | 'updated_at'>
-
-// Non-Recurrent Expenses (creates single transaction)
-export type NonRecurrentExpense = {
-  id: number
-  user_id: number
-  description: string
-  year: number
-  month: number
-  value: number
-  payment_deadline: string | null
-  type: 'expense' | 'income'
-  category: string
-  isgoal: boolean
-  created_at: string
-  updated_at: string
-}
-
-export type NonRecurrentExpenseInput = Omit<NonRecurrentExpense, 'id' | 'created_at' | 'updated_at'>
-
-// Transactions (individual expense records)
 export type Transaction = {
   id: number
-  user_id: number
+  user_id: string // UUID
   year: number
   month: number
   description: string
@@ -130,32 +103,67 @@ export type Transaction = {
   source_type: 'recurrent' | 'non_recurrent'
   value: number
   status: 'paid' | 'pending'
-  deadline: string | null
+  deadline?: string
   type: 'expense' | 'income'
   category: string
   created_at: string
   updated_at: string
 }
 
-export type TransactionInput = Omit<Transaction, 'id' | 'created_at' | 'updated_at'>
+export type RecurrentExpense = {
+  id: number
+  user_id: string // UUID
+  description: string
+  month_from: number
+  month_to: number
+  year_from: number
+  year_to: number
+  value: number
+  payment_day_deadline?: number
+  type: 'expense' | 'income'
+  category: string
+  created_at: string
+  updated_at: string
+}
 
-// Transaction Attachments (files uploaded for transactions)
+export type NonRecurrentExpense = {
+  id: number
+  user_id: string // UUID
+  description: string
+  year: number
+  month: number
+  value: number
+  payment_deadline?: string
+  type: 'expense' | 'income'
+  category: string
+  created_at: string
+  updated_at: string
+}
+
+export type UserCategory = {
+  id: number
+  user_id: string // UUID
+  category_name: string
+  is_active: boolean
+  is_default: boolean
+  created_at: string
+  updated_at: string
+}
+
 export type TransactionAttachment = {
   id: number
   transaction_id: number
-  user_id: number
+  user_id: string // UUID
   file_name: string
   file_path: string
   file_size: number
   file_type: string
   mime_type: string
-  description: string | null
+  description?: string
   uploaded_at: string
   created_at: string
   updated_at: string
 }
-
-export type TransactionAttachmentInput = Omit<TransactionAttachment, 'id' | 'uploaded_at' | 'created_at' | 'updated_at'>
 
 // File upload response type
 export type FileUploadResponse = {
@@ -166,5 +174,4 @@ export type FileUploadResponse = {
 }
 
 // Legacy types for backward compatibility (will be removed later)
-export type Expense = Transaction
-export type ExpenseInput = TransactionInput 
+export type Expense = Transaction 
