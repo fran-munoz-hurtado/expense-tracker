@@ -103,7 +103,7 @@ export type Transaction = {
   source_type: 'recurrent' | 'non_recurrent'
   value: number
   status: 'paid' | 'pending'
-  deadline?: string
+  deadline?: string | null // Allow null from database
   type: 'expense' | 'income'
   category: string
   created_at: string

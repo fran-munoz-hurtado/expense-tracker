@@ -183,7 +183,12 @@ export class CacheManager {
   }
 
   // Clear cache by user ID
-  clearUserCache(userId: number): void {
+  clearUserCache(userId: string): void {
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.warn('[CacheManager] Invalid userId provided:', userId)
+      return
+    }
+
     const userPattern = new RegExp(`.*${userId}.*`)
     
     Object.values(globalCaches).forEach(cache => {
@@ -191,6 +196,8 @@ export class CacheManager {
       // you'd need to track keys or implement a more sophisticated clearing mechanism
       cache.clear()
     })
+    
+    console.log(`🗑️ [CacheManager] Cleared caches for user: ${userId}`)
   }
 
   // Get cache statistics
@@ -204,9 +211,14 @@ export class CacheManager {
   }
 
   // Preload data for better performance
-  async preloadUserData(userId: number): Promise<void> {
+  async preloadUserData(userId: string): Promise<void> {
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.warn('[CacheManager] Invalid userId for preload:', userId)
+      return
+    }
     // This would preload common user data
     // Implementation depends on your specific needs
+    console.log(`📋 [CacheManager] Preloading data for user: ${userId}`)
   }
 
   // Warm up cache with frequently accessed data

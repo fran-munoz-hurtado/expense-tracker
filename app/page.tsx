@@ -289,7 +289,7 @@ function Home() {
     // Create a mock transaction to use with TransactionIcon
     const mockTransaction = {
       id: 0,
-      user_id: typeof user?.id === 'string' ? parseInt(user.id) : (user?.id || 0),
+      user_id: user?.id || '', // Keep as string UUID
       description: '',
       value: 0,
       month: 1,
@@ -325,7 +325,7 @@ function Home() {
   const getMovementTypeContainer = (movementType: MovementType) => {
     const mockTransaction = {
       id: 0,
-      user_id: typeof user?.id === 'string' ? parseInt(user.id) : (user?.id || 0),
+      user_id: user?.id || '', // Keep as string UUID
       description: '',
       value: 0,
       month: 1,
