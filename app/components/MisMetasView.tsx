@@ -463,21 +463,14 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       {/* Main Content - Same structure as DashboardView */}
       <div className="flex-1 px-6 lg:px-8 pb-6 lg:pb-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Filtros con ancho uniforme */}
-          <div className="bg-white rounded-xl shadow-sm p-6">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center justify-between">
-              {/* Bloque 1: Filtros */}
-              <div className="flex gap-2 flex-wrap items-center">
-                {/* Etiqueta "Filtros" */}
-                <span className="text-xs font-medium text-green-dark bg-[#f0f0ec] px-2 py-0.5 rounded-full">
-                  Filtros
-                </span>
-                
-                {/* Separador visual */}
-                <div className="w-px h-6 bg-border-light"></div>
+          {/* Filtros con ancho uniforme - Solo visible en desktop */}
+          <div className="hidden sm:block bg-white rounded-xl shadow-sm p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Bloque 1: Filtros + Resultados */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 
                 {/* Botones de Estado de Metas */}
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => setGoalFilter('all')}
                     className={`text-sm rounded-full px-3 py-1 transition-all duration-200 ${
@@ -510,8 +503,8 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                   </button>
                 </div>
                 
-                {/* Separador visual */}
-                <div className="w-px h-6 bg-border-light"></div>
+                {/* Separador visual - solo desktop */}
+                <div className="hidden sm:block w-px h-6 bg-border-light"></div>
                 
                 {/* Etiqueta de resultados */}
                 <span className="text-xs font-medium text-green-dark bg-[#f0f0ec] px-2 py-0.5 rounded-full">
@@ -535,41 +528,48 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
 
           {/* Cards de Resumen en contenedor blanco - estructura exacta de DashboardView */}
           <div className="rounded-xl bg-white shadow-soft p-4">
-            <div>
-              {/* Cards de resumen - diseño exacto de DashboardView */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                {/* Cantidad de metas */}
-                <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-                  <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
-                    <Target className="w-4 h-4 text-gray-400" />
-                    <span>Cantidad de metas</span>
-                  </div>
-                  <p className="text-lg font-medium text-gray-800 font-sans">
-                    {goalStats.totalGoals}
-                  </p>
-                </div>
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
+                Resumen de metas
+              </h3>
+              <p className="text-xs text-gray-500 font-sans">
+                Estadísticas generales de tus objetivos financieros
+              </p>
+            </div>
 
-                {/* Valor acumulado */}
-                <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-                  <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
-                    <DollarSign className="w-4 h-4 text-gray-400" />
-                    <span>Valor acumulado</span>
-                  </div>
-                  <p className="text-lg font-medium text-gray-800 font-sans">
-                    {formatCurrency(goalStats.totalValue)}
-                  </p>
+            {/* Cards de resumen - responsive design */}
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+              {/* Cantidad de metas */}
+              <div className="bg-gray-50 sm:bg-[#f8f9f9] border border-[#e0e0e0] rounded-md p-3 sm:px-4 sm:py-2 text-center sm:text-left">
+                <div className="flex items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm text-gray-500 sm:text-[#777] font-sans mb-1">
+                  <Target className="w-4 h-4 text-gray-400 hidden sm:block" />
+                  <span>Cantidad de metas</span>
                 </div>
+                <p className="text-base font-semibold sm:text-lg sm:font-medium text-gray-900 sm:text-gray-800 font-sans truncate">
+                  {goalStats.totalGoals}
+                </p>
+              </div>
 
-                {/* Completadas */}
-                <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-                  <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
-                    <CheckCircle className="w-4 h-4 text-gray-400" />
-                    <span>Completadas</span>
-                  </div>
-                  <p className="text-lg font-medium text-gray-800 font-sans">
-                    {goalStats.completed}
-                  </p>
+              {/* Valor acumulado */}
+              <div className="bg-gray-50 sm:bg-[#f8f9f9] border border-[#e0e0e0] rounded-md p-3 sm:px-4 sm:py-2 text-center sm:text-left">
+                <div className="flex items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm text-gray-500 sm:text-[#777] font-sans mb-1">
+                  <DollarSign className="w-4 h-4 text-gray-400 hidden sm:block" />
+                  <span>Valor acumulado</span>
                 </div>
+                <p className="text-base font-semibold sm:text-lg sm:font-medium text-gray-900 sm:text-gray-800 font-sans truncate">
+                  {formatCurrency(goalStats.totalValue)}
+                </p>
+              </div>
+
+              {/* Completadas */}
+              <div className="bg-gray-50 sm:bg-[#f8f9f9] border border-[#e0e0e0] rounded-md p-3 sm:px-4 sm:py-2 text-center sm:text-left col-span-2 sm:col-span-1">
+                <div className="flex items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm text-gray-500 sm:text-[#777] font-sans mb-1">
+                  <CheckCircle className="w-4 h-4 text-gray-400 hidden sm:block" />
+                  <span>Completadas</span>
+                </div>
+                <p className="text-base font-semibold sm:text-lg sm:font-medium text-gray-900 sm:text-gray-800 font-sans truncate">
+                  {goalStats.completed}
+                </p>
               </div>
             </div>
           </div>
@@ -630,35 +630,68 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                 }
                                 setSelectedObjective(firstTransaction)
                               }}
-                              className="w-full p-3 text-left border-b border-gray-100 transition-colors hover:bg-gray-50"
+                              className="w-full text-left border-b border-gray-100 transition-colors hover:bg-gray-50 sm:p-3 p-0"
                             >
-                              <div className="flex items-center justify-between">
-                                {/* Left section: Icon + Name + Date/Range - EXACT same as CategoriesView */}
-                                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                  <div className="flex-shrink-0">
-                                    <TransactionIcon 
-                                      transaction={firstTransaction}
-                                      recurrentGoalMap={recurrentGoalMap}
-                                      size="w-3 h-3"
-                                      containerSize="w-5 h-5"
-                                      showBackground={true}
-                                    />
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="text-sm font-medium text-gray-900 truncate font-sans">{objective.label}</div>
-                                      <div className="text-xs text-gray-500 font-sans flex-shrink-0">{objective.yearRange}</div>
+                              {/* Desktop Layout */}
+                              <div className="hidden sm:block p-3">
+                                <div className="flex items-center justify-between">
+                                  {/* Left section: Icon + Name + Date/Range */}
+                                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                    <div className="flex-shrink-0">
+                                      <TransactionIcon 
+                                        transaction={firstTransaction}
+                                        recurrentGoalMap={recurrentGoalMap}
+                                        size="w-3 h-3"
+                                        containerSize="w-5 h-5"
+                                        showBackground={true}
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="text-sm font-medium text-gray-900 truncate font-sans">{objective.label}</div>
+                                        <div className="text-xs text-gray-500 font-sans flex-shrink-0">{objective.yearRange}</div>
+                                      </div>
                                     </div>
                                   </div>
+                                  
+                                  {/* Right section: Status + Amount */}
+                                  <div className="flex items-center space-x-3 flex-shrink-0">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${
+                                      objective.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'
+                                    }`}>
+                                      {objective.overdue > 0 ? 'Vencido' : 'Al día'}
+                                    </span>
+                                    <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(objective.totalValue)}</div>
+                                  </div>
                                 </div>
-                                
-                                {/* Right section: Status + Amount - EXACT same as CategoriesView */}
-                                <div className="flex items-center space-x-3 flex-shrink-0">
+                              </div>
+
+                              {/* Mobile Layout - Vertical Card */}
+                              <div className="sm:hidden bg-white rounded-md p-3 space-y-1 shadow-sm w-full mb-2">
+                                {/* Line 1: Icon + Name + Status Badge */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                    <div className="flex-shrink-0">
+                                      <TransactionIcon 
+                                        transaction={firstTransaction}
+                                        recurrentGoalMap={recurrentGoalMap}
+                                        size="w-3 h-3"
+                                        containerSize="w-5 h-5"
+                                        showBackground={true}
+                                      />
+                                    </div>
+                                    <div className="text-sm font-medium text-gray-900 truncate font-sans flex-1">{objective.label}</div>
+                                  </div>
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${
                                     objective.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'
                                   }`}>
                                     {objective.overdue > 0 ? 'Vencido' : 'Al día'}
                                   </span>
+                                </div>
+                                
+                                {/* Line 2: Year Range + Amount */}
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xs text-gray-500 font-sans">{objective.yearRange}</div>
                                   <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(objective.totalValue)}</div>
                                 </div>
                               </div>
@@ -694,33 +727,64 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                 }
                                 setSelectedObjective(firstTransaction)
                               }}
-                              className="w-full p-3 border-b border-gray-100 transition-colors hover:bg-gray-50 text-left"
+                              className="w-full text-left border-b border-gray-100 transition-colors hover:bg-gray-50 sm:p-3 p-0"
                             >
-                              <div className="flex items-center justify-between">
-                                {/* Left section: Icon + Name + Date/Range - EXACT same as CategoriesView */}
-                                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                  <div className="flex-shrink-0">
-                                    <TransactionIcon 
-                                      transaction={firstTransaction}
-                                      recurrentGoalMap={recurrentGoalMap}
-                                      size="w-3 h-3"
-                                      containerSize="w-5 h-5"
-                                      showBackground={true}
-                                    />
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="text-sm font-medium text-gray-900 truncate font-sans">{objective.label}</div>
-                                      <div className="text-xs text-gray-500 font-sans flex-shrink-0">{objective.yearRange}</div>
+                              {/* Desktop Layout */}
+                              <div className="hidden sm:block p-3">
+                                <div className="flex items-center justify-between">
+                                  {/* Left section: Icon + Name + Date/Range */}
+                                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                    <div className="flex-shrink-0">
+                                      <TransactionIcon 
+                                        transaction={firstTransaction}
+                                        recurrentGoalMap={recurrentGoalMap}
+                                        size="w-3 h-3"
+                                        containerSize="w-5 h-5"
+                                        showBackground={true}
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="text-sm font-medium text-gray-900 truncate font-sans">{objective.label}</div>
+                                        <div className="text-xs text-gray-500 font-sans flex-shrink-0">{objective.yearRange}</div>
+                                      </div>
                                     </div>
                                   </div>
+                                  
+                                  {/* Right section: Status + Amount */}
+                                  <div className="flex items-center space-x-3 flex-shrink-0">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-green-light text-green-primary">
+                                      Completado
+                                    </span>
+                                    <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(objective.totalValue)}</div>
+                                  </div>
                                 </div>
-                                
-                                {/* Right section: Status + Amount - EXACT same as CategoriesView */}
-                                <div className="flex items-center space-x-3 flex-shrink-0">
+                              </div>
+
+                              {/* Mobile Layout - Vertical Card */}
+                              <div className="sm:hidden bg-white rounded-md p-3 space-y-1 shadow-sm w-full mb-2">
+                                {/* Line 1: Icon + Name + Status Badge */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                    <div className="flex-shrink-0">
+                                      <TransactionIcon 
+                                        transaction={firstTransaction}
+                                        recurrentGoalMap={recurrentGoalMap}
+                                        size="w-3 h-3"
+                                        containerSize="w-5 h-5"
+                                        showBackground={true}
+                                      />
+                                    </div>
+                                    <div className="text-sm font-medium text-gray-900 truncate font-sans flex-1">{objective.label}</div>
+                                  </div>
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-green-light text-green-primary">
                                     Completado
                                   </span>
+                                </div>
+
+                                {/* Line 2: Year Range + Amount */}
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xs text-gray-500 font-sans">{objective.yearRange}</div>
                                   <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(objective.totalValue)}</div>
                                 </div>
                               </div>
@@ -756,33 +820,64 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                 }
                                 setSelectedObjective(firstTransaction)
                               }}
-                              className="w-full p-3 border-b border-gray-100 transition-colors hover:bg-gray-50 text-left"
+                              className="w-full text-left border-b border-gray-100 transition-colors hover:bg-gray-50 sm:p-3 p-0"
                             >
-                              <div className="flex items-center justify-between">
-                                {/* Left section: Icon + Name + Date/Range - EXACT same as CategoriesView */}
-                                <div className="flex items-center space-x-3 flex-1 min-w-0">
-                                  <div className="flex-shrink-0">
-                                    <TransactionIcon 
-                                      transaction={firstTransaction}
-                                      recurrentGoalMap={recurrentGoalMap}
-                                      size="w-3 h-3"
-                                      containerSize="w-5 h-5"
-                                      showBackground={true}
-                                    />
-                                  </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="text-sm font-medium text-gray-900 truncate font-sans">{objective.label}</div>
-                                      <div className="text-xs text-gray-500 font-sans flex-shrink-0">{objective.yearRange}</div>
+                              {/* Desktop Layout */}
+                              <div className="hidden sm:block p-3">
+                                <div className="flex items-center justify-between">
+                                  {/* Left section: Icon + Name + Date/Range */}
+                                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                    <div className="flex-shrink-0">
+                                      <TransactionIcon 
+                                        transaction={firstTransaction}
+                                        recurrentGoalMap={recurrentGoalMap}
+                                        size="w-3 h-3"
+                                        containerSize="w-5 h-5"
+                                        showBackground={true}
+                                      />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex items-center space-x-2">
+                                        <div className="text-sm font-medium text-gray-900 truncate font-sans">{objective.label}</div>
+                                        <div className="text-xs text-gray-500 font-sans flex-shrink-0">{objective.yearRange}</div>
+                                      </div>
                                     </div>
                                   </div>
+                                  
+                                  {/* Right section: Status + Amount */}
+                                  <div className="flex items-center space-x-3 flex-shrink-0">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-error-bg text-error-red">
+                                      Vencido
+                                    </span>
+                                    <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(objective.totalValue)}</div>
+                                  </div>
                                 </div>
-                                
-                                {/* Right section: Status + Amount - EXACT same as CategoriesView */}
-                                <div className="flex items-center space-x-3 flex-shrink-0">
+                              </div>
+
+                              {/* Mobile Layout - Vertical Card */}
+                              <div className="sm:hidden bg-white rounded-md p-3 space-y-1 shadow-sm w-full mb-2">
+                                {/* Line 1: Icon + Name + Status Badge */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                    <div className="flex-shrink-0">
+                                      <TransactionIcon 
+                                        transaction={firstTransaction}
+                                        recurrentGoalMap={recurrentGoalMap}
+                                        size="w-3 h-3"
+                                        containerSize="w-5 h-5"
+                                        showBackground={true}
+                                      />
+                                    </div>
+                                    <div className="text-sm font-medium text-gray-900 truncate font-sans flex-1">{objective.label}</div>
+                                  </div>
                                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-error-bg text-error-red">
                                     Vencido
                                   </span>
+                                </div>
+
+                                {/* Line 2: Year Range + Amount */}
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xs text-gray-500 font-sans">{objective.yearRange}</div>
                                   <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(objective.totalValue)}</div>
                                 </div>
                               </div>
@@ -831,7 +926,8 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
 
                 {/* Table - Same as CategoriesView */}
                 <div className="overflow-x-auto">
-                  <table className="min-w-full">
+                  {/* Desktop Table */}
+                  <table className="hidden sm:table min-w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
@@ -969,6 +1065,133 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                       })()}
                     </tbody>
                   </table>
+
+                  {/* Mobile Card Layout - Exact same structure as CategoriesView */}
+                  <div className="sm:hidden space-y-4">
+                    {(() => {
+                      // Si es recurrente, filtrar todas las transacciones relacionadas
+                      // Si es única, solo mostrar esa transacción
+                      const goalTransactions = transactions.filter(t => 
+                        t.type === 'expense' && (
+                          (t.source_type === 'recurrent' && recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)) ||
+                          (t.source_type === 'non_recurrent' && nonRecurrentExpenses.filter(nre => nre.isgoal).some(nre => nre.id === t.source_id))
+                        )
+                      )
+                      
+                      const relatedTransactions = selectedObjective.source_type === 'recurrent'
+                        ? goalTransactions.filter(t => 
+                            t.source_type === 'recurrent' && 
+                            t.source_id === selectedObjective.source_id &&
+                            t.type === selectedObjective.type
+                          ).sort((a, b) => {
+                            // Ordenar por año y mes
+                            if (a.year !== b.year) return a.year - b.year
+                            return a.month - b.month
+                          })
+                        : [selectedObjective] // Para únicas, solo la transacción seleccionada
+
+                      // Agrupar por año
+                      const groupedByYear = relatedTransactions.reduce((groups, transaction) => {
+                        const year = transaction.year
+                        if (!groups[year]) {
+                          groups[year] = []
+                        }
+                        groups[year].push(transaction)
+                        return groups
+                      }, {} as Record<number, Transaction[]>)
+
+                      const sortedYears = Object.keys(groupedByYear)
+                        .map(year => parseInt(year))
+                        .sort((a, b) => a - b)
+
+                      return sortedYears.map((year) => (
+                        <div key={year}>
+                          {/* Year divider */}
+                          <div className="text-sm text-gray-500 font-sans font-medium border-b border-gray-200 pb-2 mb-3">
+                            {year}
+                          </div>
+                          
+                          {/* Transaction cards for this year */}
+                          <div className="space-y-3">
+                            {groupedByYear[year].map((transaction) => (
+                              <div key={transaction.id} className="bg-white rounded-md p-3 shadow-sm border border-gray-100">
+                                {/* Line 1: Icon + Period + Status Badge */}
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                    <TransactionIcon
+                                      transaction={transaction}
+                                      recurrentGoalMap={recurrentGoalMap}
+                                      size="w-4 h-4"
+                                      containerSize="w-6 h-6"
+                                    />
+                                    <div className="flex items-center space-x-2 flex-1 min-w-0">
+                                      <span className="text-sm font-medium text-gray-900 font-sans">
+                                        {months[transaction.month - 1]}
+                                      </span>
+                                      {transaction.year === currentYear && transaction.month === currentMonth && (
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-[#e4effa] text-[#3f70ad]">
+                                          Actual
+                                        </span>
+                                      )}
+                                      <button
+                                        onClick={() => handleNavigateToMonth(transaction.month, transaction.year)}
+                                        className="text-gray-400 hover:text-blue-600 transition-all duration-300 p-1 rounded-md hover:bg-blue-50"
+                                        title={`Ir a Mis cuentas - ${months[transaction.month - 1]} ${transaction.year}`}
+                                      >
+                                        <svg 
+                                          className="w-3 h-3" 
+                                          fill="none" 
+                                          stroke="currentColor" 
+                                          strokeWidth="2" 
+                                          viewBox="0 0 24 24"
+                                        >
+                                          <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                      </button>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Status Badge */}
+                                  <span className={cn(
+                                    "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans flex-shrink-0",
+                                    getStatusColor(transaction)
+                                  )}>
+                                    {getStatusText(transaction)}
+                                  </span>
+                                </div>
+
+                                {/* Line 2: Amount + Deadline + Attachments */}
+                                <div className="flex items-center justify-between">
+                                  <div className="text-sm font-medium text-gray-900 font-sans">
+                                    {formatCurrency(transaction.value)}
+                                  </div>
+                                  
+                                  <div className="flex items-center space-x-3">
+                                    {/* Deadline with icon */}
+                                    {transaction.deadline && (
+                                      <div className="flex items-center space-x-1 text-xs text-gray-500" title={`Vence: ${(() => {
+                                        const [year, month, day] = transaction.deadline.split('-').map(Number)
+                                        return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`
+                                      })()}`}>
+                                        <Calendar className="w-3 h-3" />
+                                        <span>{(() => {
+                                          const [year, month, day] = transaction.deadline.split('-').map(Number)
+                                          return `${day}/${month}`
+                                        })()}</span>
+                                      </div>
+                                    )}
+                                    
+                                    {/* Attachments */}
+                                    <AttachmentClip transaction={transaction} />
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    })()}
+                  </div>
                 </div>
               </div>
             )}

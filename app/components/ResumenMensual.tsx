@@ -149,40 +149,40 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
       </div>
 
       {/* Fila superior: Resumen de montos */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 mb-6">
         {/* Ingresos */}
-        <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-          <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
-            <PiggyBank className="w-4 h-4 text-gray-400" />
+        <div className="bg-gray-50 sm:bg-[#f8f9f9] border border-[#e0e0e0] rounded-md p-3 sm:px-4 sm:py-2 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm text-gray-500 sm:text-[#777] font-sans mb-1">
+            <PiggyBank className="w-4 h-4 text-gray-400 hidden sm:block" />
             <span>Ingresos</span>
           </div>
-          <p className="text-lg font-medium text-gray-800 font-sans">
+          <p className="text-lg font-semibold sm:font-medium text-gray-900 sm:text-gray-800 font-sans truncate">
             {formatCurrency(totalIngresos)}
           </p>
         </div>
 
         {/* Gastos Totales */}
-        <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-          <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
-            <CreditCard className="w-4 h-4 text-gray-400" />
+        <div className="bg-gray-50 sm:bg-[#f8f9f9] border border-[#e0e0e0] rounded-md p-3 sm:px-4 sm:py-2 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm text-gray-500 sm:text-[#777] font-sans mb-1">
+            <CreditCard className="w-4 h-4 text-gray-400 hidden sm:block" />
             <span>Gastos Totales</span>
           </div>
-          <p className="text-lg font-medium text-gray-800 font-sans">
+          <p className="text-lg font-semibold sm:font-medium text-gray-900 sm:text-gray-800 font-sans truncate">
             {formatCurrency(totalGastos)}
           </p>
         </div>
 
         {/* Estado de pagos */}
-        <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-          <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
+        <div className="bg-gray-50 sm:bg-[#f8f9f9] border border-[#e0e0e0] rounded-md p-3 sm:px-4 sm:py-2 text-center sm:text-left">
+          <div className="flex items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm text-gray-500 sm:text-[#777] font-sans mb-1">
             {faltaPagar > 0 ? (
-              <AlertTriangle className="w-4 h-4 text-gray-400" />
+              <AlertTriangle className="w-4 h-4 text-gray-400 hidden sm:block" />
             ) : (
-              <CheckCircle className="w-4 h-4 text-gray-400" />
+              <CheckCircle className="w-4 h-4 text-gray-400 hidden sm:block" />
             )}
             <span>Estado de pagos</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center sm:justify-start gap-2">
             {faltaPagar > 0 ? (
               <span className="bg-warning-yellow text-white px-2 py-1 rounded-md text-sm font-sans">
                 Falta pagar {formatCurrency(faltaPagar)}
@@ -207,7 +207,7 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
             </span>
           </div>
           
-          <div className="relative w-full h-3 bg-[#f0f0ec] rounded-full overflow-hidden">
+          <div className="relative w-full max-w-xs mx-auto sm:max-w-none sm:mx-0 h-3 bg-[#f0f0ec] rounded-full overflow-hidden">
             {/* Pagado (verde) */}
             <div 
               className="absolute left-0 top-0 h-3 bg-green-primary transition-all duration-300"
@@ -238,28 +238,21 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
 
           {/* Indicador de mora */}
           {tieneVencimientos && (
-            <p className="text-xs text-error-red mt-1 flex items-center gap-1 font-sans">
-              <AlertTriangle className="w-3 h-3" /> 
+            <p className="text-xs text-red-600 sm:text-error-red mt-1 flex items-center justify-center sm:justify-start gap-1 font-sans">
+              <AlertTriangle className="w-4 h-4 sm:w-3 sm:h-3" /> 
               Tienes pagos en mora ({formatCurrency(montoVencido)})
             </p>
           )}
         </div>
 
         {/* Estado de balance */}
-        <div className="flex items-center justify-end">
+        <div className="flex items-center justify-center sm:justify-end">
           <div className="flex items-center space-x-2">
-            {cuantoQueda >= 0 ? (
+            {cuantoQueda >= 0 && (
               <>
                 <CheckCircle className="w-3 h-3 text-green-primary" />
                 <span className="text-green-primary bg-green-light px-2 py-1 rounded-md text-xs font-sans">
                   Te quedan {formatCurrency(cuantoQueda)}
-                </span>
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="w-3 h-3 text-error-red" />
-                <span className="text-error-red bg-error-bg px-2 py-1 rounded-md text-xs font-sans">
-                  Te pasaste por {formatCurrency(Math.abs(cuantoQueda))}
                 </span>
               </>
             )}
