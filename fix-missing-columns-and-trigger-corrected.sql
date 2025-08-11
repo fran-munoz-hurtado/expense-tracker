@@ -1,5 +1,5 @@
 -- =====================================================
--- FIX MISSING COLUMNS AND ENABLE TRIGGER
+-- FIX MISSING COLUMNS AND ENABLE TRIGGER - CORRECTED
 -- =====================================================
 -- This script fixes missing columns and enables the disabled trigger
 -- Run this in your Supabase SQL Editor
@@ -18,7 +18,7 @@ BEGIN
     AND column_name = 'isgoal'
   ) THEN
     ALTER TABLE public.recurrent_expenses 
-    ADD COLUMN isgoal BOOLEAN DEFAULT false;
+    ADD COLUMN isgoal boolean DEFAULT false;
     
     RAISE NOTICE 'Added isgoal column to recurrent_expenses table';
   ELSE
@@ -29,7 +29,7 @@ END $$;
 -- Verify all required columns exist in recurrent_expenses
 DO $$
 DECLARE
-  missing_columns TEXT[] := ARRAY[]::TEXT[];
+  missing_columns text[] := ARRAY[]::text[];
 BEGIN
   -- Check for type column
   IF NOT EXISTS (
@@ -55,13 +55,13 @@ BEGIN
   IF array_length(missing_columns, 1) > 0 THEN
     IF 'type' = ANY(missing_columns) THEN
       ALTER TABLE public.recurrent_expenses 
-      ADD COLUMN type TEXT DEFAULT 'expense' CHECK (type IN ('expense', 'income'));
+      ADD COLUMN type text DEFAULT 'expense' CHECK (type IN ('expense', 'income'));
       RAISE NOTICE 'Added type column to recurrent_expenses table';
     END IF;
     
     IF 'category' = ANY(missing_columns) THEN
       ALTER TABLE public.recurrent_expenses 
-      ADD COLUMN category TEXT DEFAULT 'Sin categoría';
+      ADD COLUMN category text DEFAULT 'Sin categoría';
       RAISE NOTICE 'Added category column to recurrent_expenses table';
     END IF;
   ELSE
@@ -72,7 +72,7 @@ END $$;
 -- Verify all required columns exist in non_recurrent_expenses
 DO $$
 DECLARE
-  missing_columns TEXT[] := ARRAY[]::TEXT[];
+  missing_columns text[] := ARRAY[]::text[];
 BEGIN
   -- Check for type column
   IF NOT EXISTS (
@@ -98,13 +98,13 @@ BEGIN
   IF array_length(missing_columns, 1) > 0 THEN
     IF 'type' = ANY(missing_columns) THEN
       ALTER TABLE public.non_recurrent_expenses 
-      ADD COLUMN type TEXT DEFAULT 'expense' CHECK (type IN ('expense', 'income'));
+      ADD COLUMN type text DEFAULT 'expense' CHECK (type IN ('expense', 'income'));
       RAISE NOTICE 'Added type column to non_recurrent_expenses table';
     END IF;
     
     IF 'category' = ANY(missing_columns) THEN
       ALTER TABLE public.non_recurrent_expenses 
-      ADD COLUMN category TEXT DEFAULT 'Sin categoría';
+      ADD COLUMN category text DEFAULT 'Sin categoría';
       RAISE NOTICE 'Added category column to non_recurrent_expenses table';
     END IF;
   ELSE
@@ -115,7 +115,7 @@ END $$;
 -- Verify all required columns exist in transactions
 DO $$
 DECLARE
-  missing_columns TEXT[] := ARRAY[]::TEXT[];
+  missing_columns text[] := ARRAY[]::text[];
 BEGIN
   -- Check for type column
   IF NOT EXISTS (
@@ -141,13 +141,13 @@ BEGIN
   IF array_length(missing_columns, 1) > 0 THEN
     IF 'type' = ANY(missing_columns) THEN
       ALTER TABLE public.transactions 
-      ADD COLUMN type TEXT DEFAULT 'expense' CHECK (type IN ('expense', 'income'));
+      ADD COLUMN type text DEFAULT 'expense' CHECK (type IN ('expense', 'income'));
       RAISE NOTICE 'Added type column to transactions table';
     END IF;
     
     IF 'category' = ANY(missing_columns) THEN
       ALTER TABLE public.transactions 
-      ADD COLUMN category TEXT DEFAULT 'Sin categoría';
+      ADD COLUMN category text DEFAULT 'Sin categoría';
       RAISE NOTICE 'Added category column to transactions table';
     END IF;
   ELSE
@@ -159,13 +159,13 @@ END $$;
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS public.user_categories (
-  id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  category_name TEXT NOT NULL,
-  is_active BOOLEAN DEFAULT TRUE,
-  is_default BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  id bigserial PRIMARY KEY,
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category_name text NOT NULL,
+  is_active boolean DEFAULT true,
+  is_default boolean DEFAULT false,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
   
   -- Unique constraint to prevent duplicate categories per user
   UNIQUE(user_id, category_name)
@@ -183,20 +183,20 @@ BEGIN
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'first_name', 'Usuario'),
     COALESCE(NEW.raw_user_meta_data->>'last_name', 'Nuevo'),
-    NOW()
+    now()
   )
   ON CONFLICT (id) DO NOTHING;
   
   -- Initialize default categories for the new user
   INSERT INTO public.user_categories (user_id, category_name, is_active, is_default)
   VALUES 
-    (NEW.id, 'Sin categoría', TRUE, TRUE),
-    (NEW.id, 'Mercado y comida', TRUE, TRUE),
-    (NEW.id, 'Casa y servicios', TRUE, TRUE),
-    (NEW.id, 'Transporte', TRUE, TRUE),
-    (NEW.id, 'Salud', TRUE, TRUE),
-    (NEW.id, 'Diversión', TRUE, TRUE),
-    (NEW.id, 'Otros', TRUE, TRUE)
+    (NEW.id, 'Sin categoría', true, true),
+    (NEW.id, 'Mercado y comida', true, true),
+    (NEW.id, 'Casa y servicios', true, true),
+    (NEW.id, 'Transporte', true, true),
+    (NEW.id, 'Salud', true, true),
+    (NEW.id, 'Diversión', true, true),
+    (NEW.id, 'Otros', true, true)
   ON CONFLICT (user_id, category_name) DO NOTHING;
   
   RETURN NEW;
@@ -217,7 +217,7 @@ CREATE TRIGGER on_auth_user_created
 
 DO $$
 DECLARE
-  trigger_status BOOLEAN;
+  trigger_status boolean;
 BEGIN
   SELECT tgenabled INTO trigger_status
   FROM pg_trigger 
@@ -239,7 +239,7 @@ CREATE INDEX IF NOT EXISTS idx_user_categories_active ON user_categories(user_id
 CREATE INDEX IF NOT EXISTS idx_user_categories_default ON user_categories(user_id, is_default);
 
 -- Recurrent expenses indexes
-CREATE INDEX IF NOT EXISTS idx_recurrent_expenses_isgoal ON recurrent_expenses(user_id, isgoal) WHERE isgoal = TRUE;
+CREATE INDEX IF NOT EXISTS idx_recurrent_expenses_isgoal ON recurrent_expenses(user_id, isgoal) WHERE isgoal = true;
 CREATE INDEX IF NOT EXISTS idx_recurrent_expenses_category ON recurrent_expenses(user_id, category);
 CREATE INDEX IF NOT EXISTS idx_recurrent_expenses_type ON recurrent_expenses(user_id, type);
 
@@ -284,7 +284,7 @@ SELECT
   'Database is ready for Supabase Auth' as final_status;
 
 -- Summary of what was fixed:
--- 1. ✅ Added isgoal column to recurrent_expenses (BOOLEAN DEFAULT FALSE)
+-- 1. ✅ Added isgoal column to recurrent_expenses (boolean DEFAULT false)
 -- 2. ✅ Ensured type and category columns exist in all tables
 -- 3. ✅ Created user_categories table if missing
 -- 4. ✅ Recreated handle_new_user function with better error handling
