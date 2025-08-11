@@ -648,8 +648,9 @@ export const fetchGoalTransactions = asyncHandler(async (user: User, month?: num
 })
 
 // Cache management utilities
-export const clearUserCache = (userId: number): void => {
-  if (!userId || userId <= 0) {
+export const clearUserCache = (userId: string): void => {
+  if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+    console.warn('[clearUserCache] Invalid userId provided:', userId)
     return
   }
   
@@ -658,6 +659,8 @@ export const clearUserCache = (userId: number): void => {
   globalCaches.userData.clear()
   globalCaches.stats.clear()
   globalCaches.attachments.clear()
+  
+  console.log(`🗑️ [clearUserCache] Cleared all caches for user: ${userId}`)
 }
 
 export const getCacheStats = () => {

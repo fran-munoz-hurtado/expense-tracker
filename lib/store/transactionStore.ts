@@ -23,14 +23,14 @@ type RecurrentFormData = {
   category?: string
 }
 
-type TransactionStore = {
+interface TransactionStore {
   transactions: Transaction[]
   isLoading: boolean
   lastFetchedScopes: Record<string, number>
   setTransactions: (txs: Transaction[]) => void
   setLoading: (loading: boolean) => void
   fetchTransactions: (params: {
-    userId: number
+    userId: string // UUID
     year?: number
     month?: number
     syncVersion?: number
@@ -40,32 +40,32 @@ type TransactionStore = {
   markTransactionStatus: (params: {
     transactionId: number
     newStatus: 'paid' | 'pending'
-    userId: number
+    userId: string // UUID
   }) => Promise<void>
   updateTransaction: (params: {
     id: number
-    userId: number
+    userId: string // UUID
     description?: string
     value?: number
     deadline?: string | null
   }) => Promise<void>
   updateRecurrentTransactionSeries: (params: {
-    userId: number
+    userId: string // UUID
     recurrentId: number
     updatedData: RecurrentFormData
   }) => Promise<void>
   createTransaction: (params: {
-    userId: number
+    userId: string // UUID
     movementType: MovementType
     payload: any
   }) => Promise<void>
   deleteTransaction: (params: {
     transactionId: number
-    userId: number
+    userId: string // UUID
   }) => Promise<void>
   deleteRecurrentSeries: (params: {
     sourceId: number
-    userId: number
+    userId: string // UUID
   }) => Promise<void>
 }
 
@@ -81,6 +81,12 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     set({ isLoading: loading })
   },
   fetchTransactions: async ({ userId, year, month, syncVersion, force, scope }) => {
+    // Validate userId first - critical for UUID compatibility
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.error('[zustand] fetchTransactions: invalid userId provided:', userId)
+      return
+    }
+
     // Detect year-only case
     const isYearOnly = !month && year && !scope
     

@@ -277,7 +277,7 @@ export class TransactionValidator extends BaseValidator {
 
     // User ID validation
     const userIdError = this.required(data.user_id, 'User ID') ||
-      this.positiveNumber(data.user_id, 'User ID')
+      this.stringLength(data.user_id, 'User ID', 1, 50) // UUID validation
     if (userIdError) {
       errors.user_id = [userIdError]
     }
@@ -435,7 +435,7 @@ export class ExpenseValidator extends BaseValidator {
 
     // User ID validation
     const userIdError = this.required(data.user_id, 'User ID') ||
-      this.positiveNumber(data.user_id, 'User ID')
+      this.stringLength(data.user_id, 'User ID', 1, 50) // UUID validation
     if (userIdError) {
       errors.user_id = [userIdError]
     }
@@ -518,9 +518,16 @@ export class ExpenseValidator extends BaseValidator {
 
     // User ID validation
     const userIdError = this.required(data.user_id, 'User ID') ||
-      this.positiveNumber(data.user_id, 'User ID')
+      this.stringLength(data.user_id, 'User ID', 1, 50) // UUID validation
     if (userIdError) {
       errors.user_id = [userIdError]
+    }
+
+    // Amount validation
+    const valueError = this.required(data.value, 'Value') ||
+      this.positiveNumber(data.value, 'Value')
+    if (valueError) {
+      errors.value = [valueError]
     }
 
     // Description validation
@@ -532,47 +539,16 @@ export class ExpenseValidator extends BaseValidator {
 
     // Year validation
     const yearError = this.required(data.year, 'Year') ||
-      this.numericRange(data.year, 'Year', 1900, 2100)
+      this.positiveNumber(data.year, 'Year')
     if (yearError) {
       errors.year = [yearError]
     }
 
     // Month validation
     const monthError = this.required(data.month, 'Month') ||
-      this.numericRange(data.month, 'Month', 1, 12)
+      this.positiveNumber(data.month, 'Month')
     if (monthError) {
       errors.month = [monthError]
-    }
-
-    // Value validation
-    const valueError = this.required(data.value, 'Value') ||
-      this.positiveNumber(data.value, 'Value')
-    if (valueError) {
-      errors.value = [valueError]
-    }
-
-    // Payment deadline validation (optional)
-    if (data.payment_deadline !== undefined && data.payment_deadline !== null) {
-      const deadlineError = this.date(data.payment_deadline, 'Payment deadline')
-      if (deadlineError) {
-        errors.payment_deadline = [deadlineError]
-      }
-    }
-
-    // Type validation (optional)
-    if (data.type !== undefined) {
-      const typeError = this.enum(data.type, 'Type', Object.values(TRANSACTION_TYPES))
-      if (typeError) {
-        errors.type = [typeError]
-      }
-    }
-
-    // Category validation (optional)
-    if (data.category !== undefined) {
-      const categoryError = this.stringLength(data.category, 'Category', 1, 255)
-      if (categoryError) {
-        errors.category = [categoryError]
-      }
     }
 
     return {

@@ -4,7 +4,7 @@ import { clearUserCache } from '@/lib/dataUtils'
 // Data synchronization context interface
 interface DataSyncContextType {
   dataVersion: number
-  refreshData: (userId?: number, operation?: string) => void
+  refreshData: (userId?: string, operation?: string) => void // UUID
   isLoading: boolean
   setLoading: (loading: boolean) => void
   lastOperation: string | null
@@ -24,17 +24,19 @@ export const DataSyncProvider: React.FC<DataSyncProviderProps> = ({ children }) 
   const [isLoading, setIsLoading] = useState(false)
   const [lastOperation, setLastOperation] = useState<string | null>(null)
 
-  const refreshData = useCallback((userId?: number, operation?: string) => {
+  const refreshData = useCallback((userId?: string, operation?: string) => {
     console.log(`🔄 DataSync: Refreshing data${userId ? ` for user ${userId}` : ''}${operation ? ` after ${operation}` : ''}`)
     
     // Clear cache if userId is provided
-    if (userId) {
+    if (userId && typeof userId === 'string' && userId.trim() !== '') {
       try {
         clearUserCache(userId)
         console.log(`🗑️ DataSync: Cleared cache for user ${userId}`)
       } catch (error) {
         console.error('❌ DataSync: Error clearing cache:', error)
       }
+    } else if (userId) {
+      console.warn('⚠️ DataSync: Invalid userId provided:', userId)
     }
 
     // Increment data version to trigger re-fetches

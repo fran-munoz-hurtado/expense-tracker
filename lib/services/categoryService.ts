@@ -19,8 +19,14 @@ export interface CategoryInfo {
 /**
  * Get active categories for a user from user_categories table
  */
-export async function getUserActiveCategories(userId: number): Promise<string[]> {
+export async function getUserActiveCategories(userId: string): Promise<string[]> {
   try {
+    // Validate userId
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.warn('[getUserActiveCategories] Invalid userId provided:', userId)
+      return ['Sin categoría', 'Mercado y comida', 'Casa y servicios', 'Transporte', 'Salud', 'Diversión', 'Otros']
+    }
+
     const { data, error } = await supabase
       .from('user_categories')
       .select('category_name')
@@ -45,8 +51,22 @@ export async function getUserActiveCategories(userId: number): Promise<string[]>
 /**
  * Get active categories with default info for a user from user_categories table
  */
-export async function getUserActiveCategoriesWithInfo(userId: number): Promise<CategoryInfo[]> {
+export async function getUserActiveCategoriesWithInfo(userId: string): Promise<CategoryInfo[]> {
   try {
+    // Validate userId
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.warn('[getUserActiveCategoriesWithInfo] Invalid userId provided:', userId)
+      return [
+        { name: 'Sin categoría', isDefault: true },
+        { name: 'Mercado y comida', isDefault: true },
+        { name: 'Casa y servicios', isDefault: true },
+        { name: 'Transporte', isDefault: true },
+        { name: 'Salud', isDefault: true },
+        { name: 'Diversión', isDefault: true },
+        { name: 'Otros', isDefault: true }
+      ]
+    }
+
     const { data, error } = await supabase
       .from('user_categories')
       .select('category_name, is_default')
@@ -90,8 +110,14 @@ export async function getUserActiveCategoriesWithInfo(userId: number): Promise<C
 /**
  * Add a new category for a user
  */
-export async function addUserCategory(userId: number, categoryName: string): Promise<{ success: boolean; error?: string }> {
+export async function addUserCategory(userId: string, categoryName: string): Promise<{ success: boolean; error?: string }> {
   try {
+    // Validate userId
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.error('[addUserCategory] Invalid userId provided:', userId)
+      return { success: false, error: 'ID de usuario inválido' }
+    }
+
     // Trim and validate input
     const trimmedName = categoryName.trim()
     
@@ -163,7 +189,7 @@ export async function addUserCategory(userId: number, categoryName: string): Pro
 /**
  * Count affected transactions for a category
  */
-export async function countAffectedTransactions(userId: number, categoryName: string, onlyTransactionsTable: boolean = false): Promise<number> {
+export async function countAffectedTransactions(userId: string, categoryName: string, onlyTransactionsTable: boolean = false): Promise<number> {
   try {
     // Count in transactions table
     const { count: transactionsCount, error: transactionsError } = await supabase
@@ -216,7 +242,7 @@ export async function countAffectedTransactions(userId: number, categoryName: st
 /**
  * Delete or deactivate a category and update affected transactions
  */
-export async function deleteUserCategory(userId: number, categoryName: string, isDefault: boolean): Promise<{ success: boolean; error?: string }> {
+export async function deleteUserCategory(userId: string, categoryName: string, isDefault: boolean): Promise<{ success: boolean; error?: string }> {
   try {
     // First, update all affected transactions to "Sin categoría"
     const updatePromises = [
@@ -290,8 +316,14 @@ export async function deleteUserCategory(userId: number, categoryName: string, i
 /**
  * Validate category name for editing (without saving to database)
  */
-export async function validateCategoryForEdit(userId: number, newCategoryName: string, currentCategoryName: string): Promise<{ valid: boolean; error?: string }> {
+export async function validateCategoryForEdit(userId: string, newCategoryName: string, currentCategoryName: string): Promise<{ valid: boolean; error?: string }> {
   try {
+    // Validate userId
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.warn('[validateCategoryForEdit] Invalid userId provided:', userId)
+      return { valid: false, error: 'ID de usuario inválido' }
+    }
+
     // Trim and validate input
     const trimmedName = newCategoryName.trim()
     
@@ -328,8 +360,9 @@ export async function validateCategoryForEdit(userId: number, newCategoryName: s
 /**
  * Update a category name and all affected transactions
  */
-export async function updateUserCategory(userId: number, oldCategoryName: string, newCategoryName: string): Promise<{ success: boolean; error?: string }> {
+export async function updateUserCategory(userId: string, oldCategoryName: string, newCategoryName: string): Promise<{ success: boolean; error?: string }> {
   try {
+    // Validate userId
     // Trim the new name
     const trimmedNewName = newCategoryName.trim()
     
@@ -414,8 +447,14 @@ export async function updateUserCategory(userId: number, oldCategoryName: string
  * Reset user categories to default predefined categories only
  * This will restore default categories to their original state while preserving custom user categories
  */
-export async function resetUserCategoriesToDefaults(userId: number): Promise<{ success: boolean; error?: string }> {
+export async function resetUserCategoriesToDefaults(userId: string): Promise<{ success: boolean; error?: string }> {
   try {
+    // Validate userId
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      console.error('[resetUserCategoriesToDefaults] Invalid userId provided:', userId)
+      return { success: false, error: 'ID de usuario inválido' }
+    }
+
     console.log(`🔄 Starting selective category reset for user ${userId}`)
 
     // Step 1: For each default category, ensure it exists and has the correct name
