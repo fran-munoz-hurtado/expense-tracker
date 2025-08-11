@@ -10,7 +10,7 @@ interface CategorySelectorProps {
   selectedCategory: string | undefined
   onChange: (category: string) => void
   errors: ValidationError[]
-  userId: number
+  userId: string // UUID
   className?: string
 }
 

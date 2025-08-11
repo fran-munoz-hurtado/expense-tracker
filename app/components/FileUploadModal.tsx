@@ -9,8 +9,8 @@ interface FileUploadModalProps {
   isOpen: boolean
   onClose: () => void
   transactionId: number
-  userId: number
-  onUploadComplete: (attachment: TransactionAttachment) => void
+  userId: string // UUID
+  onUploadComplete?: (attachment: TransactionAttachment) => void
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
@@ -151,7 +151,7 @@ export default function FileUploadModal({
       }
       
       // Success
-      onUploadComplete(attachment)
+      onUploadComplete?.(attachment)
       handleClose()
       
     } catch (err) {

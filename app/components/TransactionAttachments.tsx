@@ -7,7 +7,8 @@ import { texts } from '@/lib/translations'
 
 interface TransactionAttachmentsProps {
   transactionId: number
-  userId: number
+  userId: string // UUID
+  onAttachmentChange?: () => void
   onAttachmentDeleted?: (attachmentId: number) => void
   onAddAttachment?: () => void
 }
