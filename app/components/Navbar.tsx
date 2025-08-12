@@ -102,37 +102,109 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
     setEditLoading(true)
 
     try {
-      // Update user data in the database
+      // Get current authenticated user from Supabase Auth
+      const {
+        data: { user: authUser },
+        error: authGetError
+      } = await supabase.auth.getUser()
+
+      if (authGetError || !authUser) {
+        throw new Error('No estás autenticado. Por favor, inicia sesión nuevamente.')
+      }
+
+      const { email, first_name, last_name, username } = editFormData
+
+      // Validate required fields
+      if (!email || !first_name || !last_name || !username) {
+        throw new Error('Todos los campos son obligatorios.')
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        throw new Error('Por favor, ingresa un email válido.')
+      }
+
+      // Check for duplicate email/username (excluding current user)
+      const { data: existingUser, error: duplicateError } = await supabase
+        .from('users')
+        .select('id, email, username')
+        .or(`email.eq.${email},username.eq.${username}`)
+        .neq('id', authUser.id)
+        .maybeSingle()
+
+      if (duplicateError) {
+        console.error('Error checking duplicates:', duplicateError)
+        throw new Error('Error al validar los datos. Inténtalo de nuevo.')
+      }
+
+      if (existingUser) {
+        if (existingUser.email === email) {
+          throw new Error('Este email ya está en uso por otro usuario.')
+        }
+        if (existingUser.username === username) {
+          throw new Error('Este nombre de usuario ya está en uso.')
+        }
+      }
+
+      // Update email in Supabase Auth (only if changed)
+      if (email !== authUser.email) {
+        const { error: authEmailError } = await supabase.auth.updateUser({ 
+          email: email 
+        })
+        
+        if (authEmailError) {
+          console.error('Error updating auth email:', authEmailError)
+          throw new Error(`Error al actualizar el email: ${authEmailError.message}`)
+        }
+      }
+
+      // Update user metadata in Supabase Auth
+      const { error: authMetadataError } = await supabase.auth.updateUser({
+        data: {
+          first_name: first_name,
+          last_name: last_name,
+          username: username
+        }
+      })
+
+      if (authMetadataError) {
+        console.error('Error updating auth metadata:', authMetadataError)
+        throw new Error(`Error al actualizar los datos de usuario: ${authMetadataError.message}`)
+      }
+
+      // Update user data in public.users table
       const { data, error } = await supabase
         .from('users')
         .update({
-          first_name: editFormData.first_name,
-          last_name: editFormData.last_name,
-          username: editFormData.username,
-          email: editFormData.email,
+          first_name: first_name,
+          last_name: last_name,
+          username: username,
+          email: email,
           updated_at: new Date().toISOString()
         })
-        .eq('id', user.id)
+        .eq('id', authUser.id)
         .select()
         .single()
 
       if (error) {
-        console.error('Error updating user:', error)
-        throw new Error(error.message)
+        console.error('Error updating public users table:', error)
+        throw new Error(`Error al actualizar el perfil: ${error.message}`)
       }
 
       if (data) {
         // Update the user state in the parent component
         onUserUpdate?.(data)
         
-        // Close modal
+        // Close modal and reset error state
         setShowEditModal(false)
+        setEditError(null)
         
-        console.log('User updated successfully:', data)
+        console.log('User profile updated successfully:', data)
       }
       
     } catch (error) {
-      console.error('Failed to update user:', error)
+      console.error('Failed to update user profile:', error)
       setEditError(error instanceof Error ? error.message : 'Error al actualizar el perfil. Inténtalo de nuevo.')
     } finally {
       setEditLoading(false)
@@ -279,17 +351,15 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
               </div>
 
               <div>
-                <label htmlFor="edit_email" className="block text-sm font-medium text-gray-dark font-sans">
+                <label className="block text-sm font-medium text-gray-dark font-sans">
                   {texts.email}
                 </label>
-                <input
-                  id="edit_email"
-                  type="email"
-                  value={editFormData.email}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="mt-1 block w-full px-3 py-2 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
-                  required
-                />
+                <div className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-mdplus text-gray-600 font-sans text-sm">
+                  {editFormData.email}
+                </div>
+                <p className="mt-1 text-xs text-gray-500 font-sans">
+                  El correo no se puede modificar desde aquí
+                </p>
               </div>
 
               <div className="flex justify-end space-x-3 pt-4">
