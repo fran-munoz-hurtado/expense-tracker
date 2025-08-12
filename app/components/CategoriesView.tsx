@@ -1041,7 +1041,17 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                 {isLoading ? (
                   <div className="p-6 text-center text-gray-500">{texts.loading}</div>
                 ) : categoryGroups.length === 0 ? (
-                  <div className="p-6 text-center text-gray-500">No hay categorías para mostrar</div>
+                  <div className="text-center px-4 py-8">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Tag className="h-6 w-6 text-gray-400" />
+                    </div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-2 font-sans">
+                      Sin categorías todavía
+                    </h3>
+                    <p className="text-xs text-gray-500 font-sans">
+                      Agrega un gasto para comenzar a organizarlos por tipo
+                    </p>
+                  </div>
                 ) : (
                   <div className="overflow-y-auto max-h-96 lg:max-h-none">
                     {categoryGroups.map((group) => {
