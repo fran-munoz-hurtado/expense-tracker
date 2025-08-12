@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Plus, X, Calendar, DollarSign, FileText, AlertCircle, Check, Edit2, Trash2, Trophy } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useDataSync, DataSyncProvider } from '@/lib/hooks/useDataSync'
@@ -32,6 +32,18 @@ import TransactionIcon from './components/TransactionIcon'
 const DEBUG_ENABLED = false
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
+
+// Loading fallback component
+function LoadingFallback() {
+  return (
+    <div className="flex h-screen items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">{texts.loading}</p>
+      </div>
+    </div>
+  )
+}
 
 function Home() {
   const navigation = useAppNavigation()
@@ -372,14 +384,7 @@ function Home() {
 
   // Show loading state while checking localStorage
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{texts.loading}</p>
-        </div>
-      </div>
-    )
+    return <LoadingFallback />
   }
 
   // Show login page if user is not authenticated
@@ -606,7 +611,9 @@ function Home() {
 export default function App() {
   return (
     <DataSyncProvider>
-      <Home />
+      <Suspense fallback={<LoadingFallback />}>
+        <Home />
+      </Suspense>
     </DataSyncProvider>
   )
 } 
