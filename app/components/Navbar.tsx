@@ -8,7 +8,7 @@ import { texts } from '@/lib/translations'
 interface NavbarProps {
   user: User
   onLogout: () => void
-  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros') => void
+  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros' | 'configuracion') => void
   onUserUpdate?: (updatedUser: User) => void
 }
 
@@ -93,6 +93,11 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
 
   const handleDebugSection = () => {
     onViewChange('debug')
+    setShowUserDropdown(false)
+  }
+
+  const handleConfiguracion = () => {
+    onViewChange('configuracion')
     setShowUserDropdown(false)
   }
 
@@ -253,6 +258,14 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                     <p className="text-sm font-medium text-gray-dark font-sans">{user.first_name} {user.last_name}</p>
                     <p className="text-xs text-green-dark font-sans">{user.email}</p>
                   </div>
+                  
+                  <button
+                    onClick={handleConfiguracion}
+                    className="w-full flex items-center px-4 py-2 text-sm text-gray-dark hover:bg-border-light font-sans"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Configuración
+                  </button>
                   
                   <button
                     onClick={handleEditProfile}

@@ -12,6 +12,7 @@ import MisMetasView from './components/MisMetasView'
 import CategoriesView from './components/CategoriesView'
 import ComoVamosView from './components/ComoVamosView'
 import MisAhorrosView from './components/MisAhorrosView'
+import ConfiguracionView from './components/ConfiguracionView'
 import Sidebar from './components/Sidebar'
 import Navbar from './components/Navbar'
 import LoginPage from './components/LoginPage'
@@ -84,7 +85,7 @@ function Home() {
     setUser(updatedUser)
   }
 
-  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros') => {
+  const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros' | 'configuracion') => {
     try {
       switch (view) {
         case 'dashboard':
@@ -110,6 +111,9 @@ function Home() {
           break
         case 'mis-ahorros':
           await navigation.navigateToMisAhorros()
+          break
+        case 'configuracion':
+          await navigation.navigateToConfiguracion()
           break
       }
     } catch (error) {
@@ -420,6 +424,8 @@ function Home() {
         return <ComoVamosView user={user} />
       case 'mis-ahorros':
         return <MisAhorrosView user={user} />
+      case 'configuracion':
+        return <ConfiguracionView user={user} />
       default:
         // Default to como-vamos for home route
         return <ComoVamosView user={user} />
