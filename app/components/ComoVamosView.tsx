@@ -277,7 +277,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
             <p className="text-xs text-gray-500 font-sans">Estado general de tus metas financieras</p>
             
             {goalsStatus === 'empty' ? (
-              <div className="py-2">
+              <div className="text-center py-3">
                 <p className="text-xs text-gray-500 font-sans">
                   Aún no has registrado metas financieras
                 </p>
