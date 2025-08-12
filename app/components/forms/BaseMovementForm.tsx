@@ -255,7 +255,7 @@ export default function BaseMovementForm({
     // Create a mock transaction to use with TransactionIcon
     const mockTransaction = {
       id: 0,
-      user_id: typeof user?.id === 'string' ? parseInt(user.id) : (user?.id || 0),
+      user_id: user?.id || '0',
       description: '',
       value: 0,
       month: 1,

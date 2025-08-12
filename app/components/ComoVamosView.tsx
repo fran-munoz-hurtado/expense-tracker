@@ -548,7 +548,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
                       <div className="flex items-center space-x-3 flex-1">
                         <TransactionIcon
                           transaction={transaction}
-                          recurrentGoalMap={{}}
+                          recurrentGoalMap={recurrentGoalMap}
                           size="w-4 h-4"
                           containerSize="w-6 h-6"
                         />
@@ -578,7 +578,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
                         <div className="flex items-center space-x-3 flex-1 min-w-0">
                           <TransactionIcon
                             transaction={transaction}
-                            recurrentGoalMap={{}}
+                            recurrentGoalMap={recurrentGoalMap}
                             size="w-4 h-4"
                             containerSize="w-6 h-6"
                           />

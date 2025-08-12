@@ -124,6 +124,7 @@ export type RecurrentExpense = {
   payment_day_deadline?: number
   type: 'expense' | 'income'
   category: string
+  isgoal?: boolean
   created_at: string
   updated_at: string
 }

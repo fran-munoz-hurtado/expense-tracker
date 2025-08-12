@@ -290,10 +290,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   const objectiveGroups: ObjectiveGroup[] = useMemo(() => {
     // Filter transactions that belong to goals - use transactions from Zustand
     const goalTransactions = transactions.filter(t => 
-      t.type === 'expense' && (
-        (t.source_type === 'recurrent' && recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)) ||
-        (t.source_type === 'non_recurrent' && nonRecurrentExpenses.filter(nre => nre.isgoal).some(nre => nre.id === t.source_id))
-      )
+      t.type === 'expense' && 
+      t.source_type === 'recurrent' && 
+      recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)
     )
     
     if (!goalTransactions.length) return []
@@ -954,10 +953,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                         // Si es recurrente, filtrar todas las transacciones relacionadas
                         // Si es única, solo mostrar esa transacción
                         const goalTransactions = transactions.filter(t => 
-                          t.type === 'expense' && (
-                            (t.source_type === 'recurrent' && recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)) ||
-                            (t.source_type === 'non_recurrent' && nonRecurrentExpenses.filter(nre => nre.isgoal).some(nre => nre.id === t.source_id))
-                          )
+                          t.type === 'expense' && 
+                          t.source_type === 'recurrent' && 
+                          recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)
                         )
                         
                         const relatedTransactions = selectedObjective.source_type === 'recurrent'
@@ -1074,10 +1072,9 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                       // Si es recurrente, filtrar todas las transacciones relacionadas
                       // Si es única, solo mostrar esa transacción
                       const goalTransactions = transactions.filter(t => 
-                        t.type === 'expense' && (
-                          (t.source_type === 'recurrent' && recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)) ||
-                          (t.source_type === 'non_recurrent' && nonRecurrentExpenses.filter(nre => nre.isgoal).some(nre => nre.id === t.source_id))
-                        )
+                        t.type === 'expense' && 
+                        t.source_type === 'recurrent' && 
+                        recurrentExpenses.filter(re => re.isgoal).some(re => re.id === t.source_id)
                       )
                       
                       const relatedTransactions = selectedObjective.source_type === 'recurrent'
