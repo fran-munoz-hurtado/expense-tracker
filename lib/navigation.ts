@@ -1,5 +1,8 @@
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 
+// Debug feature flag - set to true to enable debug section
+const DEBUG_ENABLED = false
+
 // Define all possible routes in the application
 export type AppRoute = 
   | { type: 'home' }
@@ -112,8 +115,14 @@ export class NavigationService {
         return `/?${params.toString()}`
         
       case 'debug':
-        params.set('view', 'debug')
-        return `/?${params.toString()}`
+        // Only allow debug navigation if explicitly enabled
+        if (DEBUG_ENABLED && process.env.NODE_ENV === 'development') {
+          params.set('view', 'debug')
+          return `/?${params.toString()}`
+        } else {
+          // If debug is disabled, redirect to home
+          return '/'
+        }
       
       case 'mis-metas':
         params.set('view', 'mis-metas')
@@ -169,9 +178,14 @@ export class NavigationService {
       }
     }
 
-    // Parse debug route
+    // Parse debug route - only if explicitly enabled
     if (view === 'debug') {
-      return { type: 'debug' }
+      if (DEBUG_ENABLED && process.env.NODE_ENV === 'development') {
+        return { type: 'debug' }
+      } else {
+        // If debug is disabled, treat debug attempts as home
+        return { type: 'home' }
+      }
     }
 
     // Parse como-vamos route
@@ -251,10 +265,15 @@ export class NavigationService {
   }
 
   /**
-   * Navigate to debug view
+   * Navigate to debug view - only available if explicitly enabled
    */
   async navigateToDebug(): Promise<void> {
-    await this.navigate({ type: 'debug' })
+    if (DEBUG_ENABLED && process.env.NODE_ENV === 'development') {
+      await this.navigate({ type: 'debug' })
+    } else {
+      // If debug is disabled, navigate to home instead
+      await this.navigate({ type: 'home' })
+    }
   }
 
   /**

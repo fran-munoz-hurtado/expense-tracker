@@ -28,6 +28,9 @@ import {
 import { createRecurrentExpense, createNonRecurrentExpense } from '@/lib/dataUtils'
 import TransactionIcon from './components/TransactionIcon'
 
+// Debug feature flag - set to true to enable debug section
+const DEBUG_ENABLED = false
+
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
 function Home() {
@@ -407,7 +410,13 @@ function Home() {
           />
         )
       case 'debug':
-        return <DebugTest user={user} />
+        // Only render debug view if explicitly enabled
+        if (DEBUG_ENABLED && process.env.NODE_ENV === 'development') {
+          return <DebugTest user={user} />
+        } else {
+          // If debug is disabled, redirect to home view
+          return <ComoVamosView user={user} />
+        }
       case 'mis-metas':
         return <MisMetasView user={user} navigationParams={{ year: navigation.currentRoute.year }} />
       case 'categories':

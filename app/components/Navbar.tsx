@@ -5,6 +5,9 @@ import { Bell, Settings, User as UserIcon, TrendingUp, DollarSign, Target, Chevr
 import { supabase, type User } from '@/lib/supabase'
 import { texts } from '@/lib/translations'
 
+// Debug feature flag - set to true to enable debug section
+const DEBUG_ENABLED = false
+
 interface NavbarProps {
   user: User
   onLogout: () => void
@@ -128,13 +131,16 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                     Configuración
                   </button>
                   
-                  <button
-                    onClick={handleDebugSection}
-                    className="w-full flex items-center px-4 py-2 text-sm text-gray-dark hover:bg-border-light font-sans"
-                  >
-                    <Bug className="h-4 w-4 mr-2" />
-                    {texts.profile.debugSection}
-                  </button>
+                  {/* Debug section - only show in development */}
+                  {process.env.NODE_ENV === 'development' && DEBUG_ENABLED && (
+                    <button
+                      onClick={handleDebugSection}
+                      className="w-full flex items-center px-4 py-2 text-sm text-gray-dark hover:bg-border-light font-sans"
+                    >
+                      <Bug className="h-4 w-4 mr-2" />
+                      {texts.profile.debugSection}
+                    </button>
+                  )}
                   
                   <div className="border-t border-border-light">
                     <button
