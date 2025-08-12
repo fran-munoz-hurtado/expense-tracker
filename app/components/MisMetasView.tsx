@@ -591,10 +591,12 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
               {isLoading ? (
                 <div className="p-6 text-center text-gray-500">{texts.loading}</div>
               ) : filteredObjectiveGroups.length === 0 ? (
-                <div className="p-6 text-center text-gray-500">
-                  <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-sm font-medium">No hay metas para mostrar</p>
-                  <p className="text-xs mt-2">
+                <div className="text-center px-4 py-8">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Target className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2 font-sans">No hay metas para mostrar</h3>
+                  <p className="text-xs text-gray-500 font-sans">
                     {goalFilter === 'all' 
                       ? 'Agrega metas marcando la opción "Es Meta" al crear gastos.' 
                       : goalFilter === 'active' 
@@ -895,11 +897,11 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
           {/* Detail Table for Selected Objective - Same structure as CategoriesView */}
           <div className="bg-white rounded-xl shadow-sm p-6">
             {!selectedObjective ? (
-              <div className="text-center py-8">
+              <div className="text-center px-4 py-8">
                 <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Calendar className="h-6 w-6 text-gray-400" />
                 </div>
-                <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
+                <h3 className="text-sm font-medium text-gray-700 mb-2 font-sans">
                   Detalle de transacción
                 </h3>
                 <p className="text-xs text-gray-500 font-sans">
