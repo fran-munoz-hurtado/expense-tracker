@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Settings, User, Shield, HelpCircle, AlertTriangle, X, Edit } from 'lucide-react'
+import { Settings, User, Shield, HelpCircle, AlertTriangle, X, Edit, Key, Eye, EyeOff } from 'lucide-react'
 import { type User as UserType } from '@/lib/supabase'
 import { supabase } from '@/lib/supabase'
 import { clearUserCache } from '@/lib/dataUtils'
@@ -33,6 +33,19 @@ export default function ConfiguracionView({ user, navigationParams, onUserUpdate
   const [editLoading, setEditLoading] = useState(false)
   const [editError, setEditError] = useState<string | null>(null)
 
+  // Estados para el modal de cambio de contraseña
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordFormData, setPasswordFormData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [passwordLoading, setPasswordLoading] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
   // Update edit form data when user changes
   useEffect(() => {
     setEditFormData({
@@ -45,6 +58,78 @@ export default function ConfiguracionView({ user, navigationParams, onUserUpdate
 
   const handleEditProfile = () => {
     setShowEditModal(true)
+  }
+
+  const handleChangePassword = () => {
+    setPasswordFormData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    })
+    setPasswordError(null)
+    setShowPasswordModal(true)
+  }
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordError(null)
+    setPasswordLoading(true)
+
+    try {
+      const { currentPassword, newPassword, confirmPassword } = passwordFormData
+
+      // Validar que todos los campos estén llenos
+      if (!currentPassword || !newPassword || !confirmPassword) {
+        throw new Error('Todos los campos son obligatorios.')
+      }
+
+      // Validar que las nuevas contraseñas coincidan
+      if (newPassword !== confirmPassword) {
+        throw new Error('Las nuevas contraseñas no coinciden.')
+      }
+
+      // Validar longitud mínima de nueva contraseña
+      if (newPassword.length < 6) {
+        throw new Error('La nueva contraseña debe tener al menos 6 caracteres.')
+      }
+
+      // 1. Validar contraseña actual
+      const { error: validationError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: currentPassword
+      })
+
+      if (validationError) {
+        if (validationError.message.includes('Invalid login credentials')) {
+          throw new Error('La contraseña actual no es correcta.')
+        }
+        throw new Error(`Error de validación: ${validationError.message}`)
+      }
+
+      // 2. Cambiar contraseña
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      })
+
+      if (updateError) {
+        throw new Error(`Error al actualizar contraseña: ${updateError.message}`)
+      }
+
+      // Éxito
+      setShowPasswordModal(false)
+      setPasswordFormData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
+      setSuccess('Contraseña actualizada correctamente.')
+
+    } catch (error) {
+      console.error('Error changing password:', error)
+      setPasswordError(error instanceof Error ? error.message : 'Error al cambiar la contraseña.')
+    } finally {
+      setPasswordLoading(false)
+    }
   }
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -326,20 +411,166 @@ export default function ConfiguracionView({ user, navigationParams, onUserUpdate
             </div>
           </div>
 
-          {/* Tercera sección */}
+          {/* Tercera sección - Cambiar contraseña */}
           <div className="bg-white rounded-xl shadow-sm p-4 w-full">
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                Título sección 3
+                Cambiar contraseña
               </h3>
-              <p className="text-xs text-gray-500 font-sans">
-                Contenido en desarrollo
+              <p className="text-xs text-gray-500 font-sans mb-4">
+                Actualiza tu contraseña de acceso de forma segura.
               </p>
+              
+              <button
+                onClick={handleChangePassword}
+                className="px-4 py-2 bg-[#77b16e] text-white rounded-xl font-medium shadow-sm font-sans text-sm"
+              >
+                <Key className="w-4 h-4 text-white mr-2 inline" />
+                Cambiar mi contraseña
+              </button>
             </div>
           </div>
           
         </div>
       </div>
+
+      {/* Modal de cambio de contraseña */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-soft">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-dark font-sans">Cambiar contraseña</h2>
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                disabled={passwordLoading}
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-50"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {passwordError && (
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                <p className="text-sm text-red-800 font-sans">{passwordError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              {/* Contraseña actual */}
+              <div>
+                <label htmlFor="current_password" className="block text-sm font-medium text-gray-dark font-sans">
+                  Contraseña actual
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    id="current_password"
+                    type={showCurrentPassword ? 'text' : 'password'}
+                    value={passwordFormData.currentPassword}
+                    onChange={(e) => setPasswordFormData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    className="block w-full px-3 py-2 pr-10 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
+                    required
+                    disabled={passwordLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={passwordLoading}
+                  >
+                    {showCurrentPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Nueva contraseña */}
+              <div>
+                <label htmlFor="new_password" className="block text-sm font-medium text-gray-dark font-sans">
+                  Nueva contraseña
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    id="new_password"
+                    type={showNewPassword ? 'text' : 'password'}
+                    value={passwordFormData.newPassword}
+                    onChange={(e) => setPasswordFormData(prev => ({ ...prev, newPassword: e.target.value }))}
+                    className="block w-full px-3 py-2 pr-10 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
+                    required
+                    disabled={passwordLoading}
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={passwordLoading}
+                  >
+                    {showNewPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-gray-500 font-sans">
+                  Mínimo 6 caracteres
+                </p>
+              </div>
+
+              {/* Confirmar nueva contraseña */}
+              <div>
+                <label htmlFor="confirm_password" className="block text-sm font-medium text-gray-dark font-sans">
+                  Confirmar nueva contraseña
+                </label>
+                <div className="relative mt-1">
+                  <input
+                    id="confirm_password"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={passwordFormData.confirmPassword}
+                    onChange={(e) => setPasswordFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                    className="block w-full px-3 py-2 pr-10 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
+                    required
+                    disabled={passwordLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={passwordLoading}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-400" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-400" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(false)}
+                  disabled={passwordLoading}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors disabled:opacity-50 font-sans"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={passwordLoading}
+                  className="flex-1 px-4 py-2 bg-green-primary text-white rounded-xl font-medium hover:bg-[#77b16e] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed font-sans"
+                >
+                  {passwordLoading ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal de edición de perfil */}
       {showEditModal && (
