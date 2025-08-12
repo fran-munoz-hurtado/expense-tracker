@@ -1677,10 +1677,10 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                 <div className="w-16 h-16 bg-green-light rounded-full flex items-center justify-center mx-auto mb-6">
                   <Plus className="h-8 w-8 text-green-primary" />
                 </div>
-                <h3 className="text-base font-medium text-gray-500 mb-2 font-sans opacity-80">
+                <h3 className="text-base font-medium text-gray-500 mb-2 font-sans opacity-80 break-words hyphens-none max-w-sm mx-auto">
                   No tienes transacciones registradas para este mes aún.
                 </h3>
-                <p className="text-sm text-gray-400 font-sans opacity-60">
+                <p className="text-sm text-gray-400 font-sans opacity-60 break-words hyphens-none max-w-md mx-auto">
                   Empieza agregando tus ingresos o gastos y toma el control de tu dinero.
                 </p>
               </div>
