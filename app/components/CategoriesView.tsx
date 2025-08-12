@@ -1120,11 +1120,13 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
               <div className="flex-1 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden sm:min-h-96">
                 {!selectedCategory ? (
                   <div className="flex items-center justify-center h-full">
-                    <div className="text-center py-6">
-                      <FileText className="h-8 w-8 text-gray-400 mx-auto mb-3" />
-                      <p className="text-sm font-medium text-gray-dark font-sans mb-1">
+                    <div className="text-center px-4 py-8">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FileText className="h-6 w-6 text-gray-400" />
+                      </div>
+                      <h3 className="text-sm font-medium text-gray-700 mb-2 font-sans">
                         Explora tus gastos por categoría
-                      </p>
+                      </h3>
                       <p className="text-xs text-gray-500 font-sans">
                         Haz clic en una categoría de la izquierda para ver sus transacciones asociadas
                       </p>
