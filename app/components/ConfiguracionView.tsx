@@ -318,15 +318,9 @@ export default function ConfiguracionView({ user, navigationParams, onUserUpdate
               
               <button
                 onClick={handleEditProfile}
-                className="flex items-center gap-2 px-4 py-2.5
-                  bg-[#77b16e] text-white font-medium text-sm
-                  rounded-mdplus shadow-soft
-                  hover:bg-[#6bab61] hover:scale-[1.02]
-                  active:bg-[#5d9f67] active:scale-95
-                  focus:outline-none focus:ring-2 focus:ring-green-primary
-                  transition-all duration-150"
+                className="px-4 py-2 bg-[#77b16e] text-white rounded-xl font-medium shadow-sm font-sans text-sm"
               >
-                <Edit className="w-4 h-4 text-white" />
+                <Edit className="w-4 h-4 text-white mr-2 inline" />
                 Actualizar perfil
               </button>
             </div>
