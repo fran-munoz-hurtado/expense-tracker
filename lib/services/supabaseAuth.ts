@@ -261,4 +261,31 @@ export async function getUserDataById(userId: string) {
     console.error('❌ Unexpected error fetching user data:', error)
     return null
   }
+}
+
+/**
+ * Send password reset email to user
+ */
+export async function resetPasswordForEmail(email: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('🔄 Sending password reset email...')
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`
+    })
+
+    if (error) {
+      console.error('❌ Error sending password reset email:', error)
+      return { success: false, error: error.message }
+    }
+
+    console.log('✅ Password reset email sent successfully')
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Unexpected error sending password reset email:', error)
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Error inesperado enviando el correo de recuperación' 
+    }
+  }
 } 
