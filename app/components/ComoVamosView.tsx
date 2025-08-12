@@ -176,6 +176,11 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
       recurrentGoalMap[t.source_id]
     )
     
+    // If no goals exist, return empty state
+    if (goalTransactions.length === 0) {
+      return 'empty'
+    }
+    
     const hasOverdueGoals = goalTransactions.some(t => 
       t.status === 'pending' && 
       t.deadline && 
@@ -271,25 +276,33 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
             <h4 className="text-sm font-semibold text-gray-dark font-sans">Metas</h4>
             <p className="text-xs text-gray-500 font-sans">Estado general de tus metas financieras</p>
             
-            <div className="flex items-center justify-between py-1">
-              <div className="flex items-center space-x-2">
-                <Target className="w-4 h-4 text-green-primary" />
-                <span className={`px-2 py-1 rounded-md text-xs font-medium font-sans ${
-                  goalsStatus === 'overdue' 
-                    ? 'bg-warning-bg text-warning-yellow' 
-                    : 'bg-green-light text-green-primary'
-                }`}>
-                  {goalsStatus === 'overdue' ? 'Pendiente' : 'Al día'}
-                </span>
+            {goalsStatus === 'empty' ? (
+              <div className="py-2">
+                <p className="text-xs text-gray-500 font-sans">
+                  Aún no has registrado metas financieras
+                </p>
               </div>
-              
-              <button
-                onClick={() => navigation.navigateToMisMetas(currentYear)}
-                className="text-sm text-green-primary hover:text-green-dark underline hover:opacity-80 transition-opacity font-sans"
-              >
-                → Ver metas en detalle
-              </button>
-            </div>
+            ) : (
+              <div className="flex items-center justify-between py-1">
+                <div className="flex items-center space-x-2">
+                  <Target className="w-4 h-4 text-green-primary" />
+                  <span className={`px-2 py-1 rounded-md text-xs font-medium font-sans ${
+                    goalsStatus === 'overdue' 
+                      ? 'bg-warning-bg text-warning-yellow' 
+                      : 'bg-green-light text-green-primary'
+                  }`}>
+                    {goalsStatus === 'overdue' ? 'Pendiente' : 'Al día'}
+                  </span>
+                </div>
+                
+                <button
+                  onClick={() => navigation.navigateToMisMetas(currentYear)}
+                  className="text-sm text-green-primary hover:text-green-dark underline hover:opacity-80 transition-opacity font-sans"
+                >
+                  → Ver metas en detalle
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Separator */}
