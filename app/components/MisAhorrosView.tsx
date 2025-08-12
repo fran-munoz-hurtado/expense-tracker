@@ -509,8 +509,8 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
           </div>
           
           <div className="text-center px-4 py-6">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Trophy className="h-6 w-6 text-green-600" />
+            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Trophy className="h-6 w-6 text-gray-400" />
             </div>
             <p className="text-xs text-gray-500 font-sans mb-4">
               Aún no has registrado ningún ahorro.<br />
