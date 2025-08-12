@@ -107,7 +107,7 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
                 className="flex items-center space-x-2 p-1.5 sm:p-2 text-green-dark hover:text-gray-dark hover:bg-border-light rounded-full transition-colors"
               >
-                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-green-primary rounded-full flex items-center justify-center border-2 border-white">
+                <div className="w-8 h-8 sm:w-8 sm:h-8 bg-green-primary rounded-full flex items-center justify-center border-2 border-white">
                   <span className="text-xs sm:text-sm font-medium text-white">
                     {user.first_name.charAt(0)}{user.last_name.charAt(0)}
                   </span>
