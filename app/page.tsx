@@ -425,7 +425,7 @@ function Home() {
       case 'mis-ahorros':
         return <MisAhorrosView user={user} />
       case 'configuracion':
-        return <ConfiguracionView user={user} />
+        return <ConfiguracionView user={user} onUserUpdate={handleUserUpdate} />
       default:
         // Default to como-vamos for home route
         return <ComoVamosView user={user} />

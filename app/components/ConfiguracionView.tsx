@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Settings, User, Shield, HelpCircle, AlertTriangle, X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Settings, User, Shield, HelpCircle, AlertTriangle, X, Edit } from 'lucide-react'
 import { type User as UserType } from '@/lib/supabase'
 import { supabase } from '@/lib/supabase'
 import { clearUserCache } from '@/lib/dataUtils'
@@ -12,14 +12,156 @@ import React from 'react'
 interface ConfiguracionViewProps {
   user: UserType
   navigationParams?: any
+  onUserUpdate?: (updatedUser: UserType) => void
 }
 
-export default function ConfiguracionView({ user, navigationParams }: ConfiguracionViewProps) {
+export default function ConfiguracionView({ user, navigationParams, onUserUpdate }: ConfiguracionViewProps) {
   const { refreshData } = useDataSync()
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  // Estados para el modal de edición de perfil
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editFormData, setEditFormData] = useState({
+    first_name: user.first_name,
+    last_name: user.last_name,
+    username: user.username,
+    email: user.email
+  })
+  const [editLoading, setEditLoading] = useState(false)
+  const [editError, setEditError] = useState<string | null>(null)
+
+  // Update edit form data when user changes
+  useEffect(() => {
+    setEditFormData({
+      first_name: user.first_name,
+      last_name: user.last_name,
+      username: user.username,
+      email: user.email
+    })
+  }, [user])
+
+  const handleEditProfile = () => {
+    setShowEditModal(true)
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEditError(null)
+    setEditLoading(true)
+
+    try {
+      // Get current authenticated user from Supabase Auth
+      const {
+        data: { user: authUser },
+        error: authGetError
+      } = await supabase.auth.getUser()
+
+      if (authGetError || !authUser) {
+        throw new Error('No estás autenticado. Por favor, inicia sesión nuevamente.')
+      }
+
+      const { email, first_name, last_name, username } = editFormData
+
+      // Validate required fields
+      if (!email || !first_name || !last_name || !username) {
+        throw new Error('Todos los campos son obligatorios.')
+      }
+
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        throw new Error('Por favor, ingresa un email válido.')
+      }
+
+      // Check for duplicate email/username (excluding current user)
+      const { data: existingUser, error: duplicateError } = await supabase
+        .from('users')
+        .select('id, email, username')
+        .or(`email.eq.${email},username.eq.${username}`)
+        .neq('id', authUser.id)
+        .maybeSingle()
+
+      if (duplicateError) {
+        console.error('Error checking duplicates:', duplicateError)
+        throw new Error('Error al validar los datos. Inténtalo de nuevo.')
+      }
+
+      if (existingUser) {
+        if (existingUser.email === email) {
+          throw new Error('Este email ya está en uso por otro usuario.')
+        }
+        if (existingUser.username === username) {
+          throw new Error('Este nombre de usuario ya está en uso.')
+        }
+      }
+
+      // Update email in Supabase Auth (only if changed)
+      if (email !== authUser.email) {
+        const { error: authEmailError } = await supabase.auth.updateUser({ 
+          email: email 
+        })
+        
+        if (authEmailError) {
+          console.error('Error updating auth email:', authEmailError)
+          throw new Error(`Error al actualizar el email: ${authEmailError.message}`)
+        }
+      }
+
+      // Update user metadata in Supabase Auth
+      const { error: authMetadataError } = await supabase.auth.updateUser({
+        data: {
+          first_name: first_name,
+          last_name: last_name,
+          username: username
+        }
+      })
+
+      if (authMetadataError) {
+        console.error('Error updating auth metadata:', authMetadataError)
+        throw new Error(`Error al actualizar los datos de usuario: ${authMetadataError.message}`)
+      }
+
+      // Update user data in public.users table
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          first_name: first_name,
+          last_name: last_name,
+          username: username,
+          email: email,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', authUser.id)
+        .select()
+        .single()
+
+      if (error) {
+        console.error('Error updating public users table:', error)
+        throw new Error(`Error al actualizar el perfil: ${error.message}`)
+      }
+
+      if (data) {
+        // Update the user state in the parent component
+        onUserUpdate?.(data)
+        
+        // Close modal and reset error state
+        setShowEditModal(false)
+        setEditError(null)
+        setSuccess('Perfil actualizado exitosamente')
+        
+        console.log('User profile updated successfully:', data)
+      }
+      
+    } catch (error) {
+      console.error('Failed to update user profile:', error)
+      setEditError(error instanceof Error ? error.message : 'Error al actualizar el perfil. Inténtalo de nuevo.')
+    } finally {
+      setEditLoading(false)
+    }
+  }
 
   const handleDeleteAllData = async () => {
     setIsDeleting(true)
@@ -164,15 +306,29 @@ export default function ConfiguracionView({ user, navigationParams }: Configurac
             </div>
           </div>
 
-          {/* Segunda sección */}
+          {/* Segunda sección - Editar perfil */}
           <div className="bg-white rounded-xl shadow-sm p-4 w-full">
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                Título sección 2
+                Editar perfil
               </h3>
-              <p className="text-xs text-gray-500 font-sans">
-                Contenido en desarrollo
+              <p className="text-xs text-gray-500 font-sans mb-4">
+                Actualiza tu nombre y otros datos desde aquí.
               </p>
+              
+              <button
+                onClick={handleEditProfile}
+                className="flex items-center gap-2 px-4 py-2.5
+                  bg-[#77b16e] text-white font-medium text-sm
+                  rounded-mdplus shadow-soft
+                  hover:bg-[#6bab61] hover:scale-[1.02]
+                  active:bg-[#5d9f67] active:scale-95
+                  focus:outline-none focus:ring-2 focus:ring-green-primary
+                  transition-all duration-150"
+              >
+                <Edit className="w-4 h-4 text-white" />
+                Actualizar perfil
+              </button>
             </div>
           </div>
 
@@ -191,7 +347,104 @@ export default function ConfiguracionView({ user, navigationParams }: Configurac
         </div>
       </div>
 
-      {/* Modal de confirmación */}
+      {/* Modal de edición de perfil */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-mdplus max-w-md w-full p-6 shadow-soft">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-dark font-sans">{texts.profile.updateProfile}</h2>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="text-green-dark hover:text-gray-dark"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="mb-4 bg-error-bg border border-error-red rounded-mdplus p-3">
+                <p className="text-sm text-error-red font-sans">{editError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="edit_first_name" className="block text-sm font-medium text-gray-dark font-sans">
+                    {texts.profile.name}
+                  </label>
+                  <input
+                    id="edit_first_name"
+                    type="text"
+                    value={editFormData.first_name}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                    className="mt-1 block w-full px-3 py-2 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="edit_last_name" className="block text-sm font-medium text-gray-dark font-sans">
+                    {texts.profile.lastName}
+                  </label>
+                  <input
+                    id="edit_last_name"
+                    type="text"
+                    value={editFormData.last_name}
+                    onChange={(e) => setEditFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                    className="mt-1 block w-full px-3 py-2 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="edit_username" className="block text-sm font-medium text-gray-dark font-sans">
+                  {texts.profile.username}
+                </label>
+                <input
+                  id="edit_username"
+                  type="text"
+                  value={editFormData.username}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, username: e.target.value }))}
+                  className="mt-1 block w-full px-3 py-2 border border-border-light rounded-mdplus shadow-soft focus:outline-none focus:ring-2 focus:ring-green-primary focus:border-green-primary font-sans"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-dark font-sans">
+                  {texts.email}
+                </label>
+                <div className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-mdplus text-gray-600 font-sans text-sm">
+                  {editFormData.email}
+                </div>
+                <p className="mt-1 text-xs text-gray-500 font-sans">
+                  El correo no se puede modificar desde aquí
+                </p>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-green-dark bg-beige hover:bg-border-light rounded-mdplus font-sans"
+                >
+                  {texts.cancel}
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-4 py-2 text-sm font-medium text-white bg-green-primary hover:bg-[#77b16e] rounded-mdplus disabled:opacity-50 font-sans"
+                >
+                  {editLoading ? texts.saving : texts.save}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmación de eliminación */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-soft">
