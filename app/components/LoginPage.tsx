@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Eye, EyeOff, User, Mail, Lock, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { UserInput } from '@/lib/supabase'
 import { handleSupabaseSignUp, handleSupabaseLogin, type SupabaseSignUpData, type SupabaseLoginData } from '@/lib/services/supabaseAuth'
 import { texts } from '@/lib/translations'
 
@@ -18,10 +17,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   
-  // Toggle between legacy and Supabase Auth
-  const [useSupabaseAuth, setUseSupabaseAuth] = useState(false)
-  
-  // Form data
+  // Form data - only fields needed for Supabase Auth
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -37,124 +33,73 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true)
 
     try {
-      if (useSupabaseAuth) {
-        // NEW: Supabase Auth flow
-        if (isLogin) {
-          // Supabase Auth Login
-          const result = await handleSupabaseLogin({
-            email: formData.email,
-            password: formData.password
-          })
+      if (isLogin) {
+        // Supabase Auth Login
+        const result = await handleSupabaseLogin({
+          email: formData.email,
+          password: formData.password
+        })
 
-          if (!result.success) {
-            throw new Error(result.error)
+        if (!result.success) {
+          throw new Error(result.error)
+        }
+
+        // Get user data from our users table
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', result.user!.id)
+          .single()
+
+        if (userError) {
+          console.error('Error fetching user data:', userError)
+          // If user doesn't exist in our table, create a basic record from user_metadata
+          const basicUserData = {
+            id: result.user!.id,
+            first_name: result.user!.user_metadata?.first_name || '',
+            last_name: result.user!.user_metadata?.last_name || '',
+            email: result.user!.email!,
+            status: 'active' as const,
+            role: 'user' as const,
+            subscription_tier: 'free' as const,
+            is_on_trial: false,
+            created_at: result.user!.created_at,
+            updated_at: result.user!.updated_at || result.user!.created_at
           }
+          
+          onLogin(basicUserData)
+        } else {
+          onLogin(userData)
+        }
+      } else {
+        // Supabase Auth Registration
+        const result = await handleSupabaseSignUp({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.first_name,
+          lastName: formData.last_name,
+          username: formData.username
+        })
 
-          // Get user data from our users table
+        if (!result.success) {
+          throw new Error(result.error)
+        }
+
+        if (result.needsConfirmation) {
+          setSuccess('¡Registro exitoso! Por favor revisa tu correo electrónico para confirmar tu cuenta.')
+        } else {
+          // Get user data from our users table and login
           const { data: userData, error: userError } = await supabase
             .from('users')
             .select('*')
             .eq('id', result.user!.id)
             .single()
 
-          if (userError) {
-            console.error('Error fetching user data:', userError)
-            // If user doesn't exist in our table, create a basic record
-            const basicUserData = {
-              id: result.user!.id,
-              first_name: result.user!.user_metadata?.first_name || '',
-              last_name: result.user!.user_metadata?.last_name || '',
-              username: result.user!.email!,
-              email: result.user!.email!,
-              password_hash: '',
-              status: 'active' as const,
-              created_at: result.user!.created_at
-            }
-            
-            onLogin(basicUserData)
-          } else {
+          if (userData && !userError) {
             onLogin(userData)
-          }
-        } else {
-          // Supabase Auth Registration
-          const result = await handleSupabaseSignUp({
-            email: formData.email,
-            password: formData.password,
-            firstName: formData.first_name,
-            lastName: formData.last_name
-          })
-
-          if (!result.success) {
-            throw new Error(result.error)
-          }
-
-          if (result.needsConfirmation) {
-            setSuccess('¡Registro exitoso! Por favor revisa tu correo electrónico para confirmar tu cuenta.')
           } else {
-            // Get user data from our users table and login
-            const { data: userData, error: userError } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', result.user!.id)
-              .single()
-
-            if (userData && !userError) {
-              onLogin(userData)
-            } else {
-              setSuccess('¡Registro exitoso! Ya puedes iniciar sesión.')
-            }
+            setSuccess('¡Registro exitoso! Ya puedes iniciar sesión.')
           }
-        }
-      } else {
-        // EXISTING: Legacy auth flow (unchanged)
-        if (isLogin) {
-          // Login logic
-          const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('username', formData.username)
-            .eq('password_hash', formData.password) // In production, use proper password hashing
-            .eq('status', 'active')
-            .single()
-
-          if (error) {
-            throw new Error('Usuario o contraseña incorrectos')
-          }
-
-          if (!data) {
-            throw new Error('Usuario o contraseña incorrectos')
-          }
-
-          onLogin(data)
-        } else {
-          // Registration logic
-          const userData: UserInput = {
-            first_name: formData.first_name,
-            last_name: formData.last_name,
-            username: formData.username,
-            email: formData.email,
-            password_hash: formData.password, // In production, hash the password
-            status: 'active'
-          }
-
-          const { data, error } = await supabase
-            .from('users')
-            .insert([userData])
-            .select()
-            .single()
-
-          if (error) {
-            if (error.code === '23505') { // Unique constraint violation
-              if (error.message.includes('username')) {
-                throw new Error('El nombre de usuario ya existe')
-              } else if (error.message.includes('email')) {
-                throw new Error('El correo electrónico ya existe')
-              }
-            }
-            throw new Error('Error al crear la cuenta')
-          }
-
-          onLogin(data)
         }
       }
     } catch (error) {
@@ -182,11 +127,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     resetForm()
   }
 
-  const toggleAuthMethod = () => {
-    setUseSupabaseAuth(!useSupabaseAuth)
-    resetForm()
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -205,41 +145,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          {/* Authentication Method Toggle */}
-          <div className="mb-6">
-            <div className="flex justify-center">
-              <div className="bg-gray-100 p-1 rounded-lg flex">
-                <button
-                  type="button"
-                  onClick={toggleAuthMethod}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    !useSupabaseAuth 
-                      ? 'bg-white text-gray-900 shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  🔒 Sistema Actual
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleAuthMethod}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    useSupabaseAuth 
-                      ? 'bg-green-primary text-white shadow-sm' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  ✨ Supabase Auth
-                </button>
-              </div>
-            </div>
-            {useSupabaseAuth && (
-              <p className="mt-2 text-xs text-center text-green-600">
-                🔐 Sistema seguro con cifrado y gestión automática de sesiones
-              </p>
-            )}
-          </div>
-
           <form className="space-y-6" onSubmit={handleSubmit}>
             {!isLogin && (
               <>
@@ -280,52 +185,46 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     <User className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
                   </div>
                 </div>
+
+                <div>
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                    Nombre de usuario
+                  </label>
+                  <div className="mt-1 relative">
+                    <input
+                      id="username"
+                      name="username"
+                      type="text"
+                      required
+                      value={formData.username}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
+                      placeholder="Nombre de usuario"
+                    />
+                    <User className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
+                  </div>
+                </div>
               </>
             )}
 
-            {/* Username field - only for legacy system */}
-            {!useSupabaseAuth && (
-              <div>
-                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                  Nombre de usuario
-                </label>
-                <div className="mt-1 relative">
-                  <input
-                    id="username"
-                    name="username"
-                    type="text"
-                    required
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
-                    placeholder="Nombre de usuario"
-                  />
-                  <User className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
-                </div>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                Correo electrónico
+              </label>
+              <div className="mt-1 relative">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
+                  placeholder="tu@correo.com"
+                />
+                <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
               </div>
-            )}
-
-            {/* Email field - required for Supabase Auth, optional for legacy */}
-            {(useSupabaseAuth || !isLogin) && (
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Correo electrónico
-                </label>
-                <div className="mt-1 relative">
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required={useSupabaseAuth}
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
-                    placeholder="tu@correo.com"
-                  />
-                  <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
-                </div>
-              </div>
-            )}
+            </div>
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
@@ -355,7 +254,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                   )}
                 </button>
               </div>
-              {useSupabaseAuth && !isLogin && (
+              {!isLogin && (
                 <p className="mt-1 text-xs text-gray-500">
                   Mínimo 6 caracteres
                 </p>

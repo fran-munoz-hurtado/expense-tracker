@@ -81,6 +81,8 @@ export type User = {
   id: string // UUID from auth.users
   first_name: string
   last_name: string
+  username: string
+  email: string
   status: 'active' | 'inactive' | 'banned'
   role: 'user' | 'admin'
   subscription_tier: 'free' | 'trial' | 'pro' | 'enterprise'
@@ -171,7 +173,4 @@ export type FileUploadResponse = {
   file_path?: string
   error?: string
   attachment?: TransactionAttachment
-}
-
-// Legacy types for backward compatibility (will be removed later)
-export type Expense = Transaction 
+} 

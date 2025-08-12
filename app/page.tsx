@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { Plus, X, Calendar, DollarSign, FileText, AlertCircle, Check, Edit2, Trash2, Trophy } from 'lucide-react'
-import { supabase, type User } from '@/lib/supabase'
+import { type User } from '@/lib/supabase'
 import { useDataSync, DataSyncProvider } from '@/lib/hooks/useDataSync'
 import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
+import { useAuthStore } from '@/lib/store/authStore'
 import DashboardView from './components/DashboardView'
 import GeneralDashboardView from './components/GeneralDashboardView'
 import MisMetasView from './components/MisMetasView'
@@ -16,8 +17,6 @@ import Navbar from './components/Navbar'
 import LoginPage from './components/LoginPage'
 import DebugTest from './components/DebugTest'
 import BaseMovementForm from './components/forms/BaseMovementForm'
-import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
-import { CATEGORIES } from '@/lib/config/constants'
 import { texts } from '@/lib/translations'
 import { 
   MOVEMENT_TYPES, 
@@ -34,47 +33,55 @@ function Home() {
   const navigation = useAppNavigation()
   const { refreshData } = useDataSync()
   
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Zustand auth store
+  const { user, isLoading, logout, initAuth } = useAuthStore()
   
-  // Form state - NUEVA IMPLEMENTACIÓN
+  // Form state
   const [showForm, setShowForm] = useState(false)
   const [selectedMovementType, setSelectedMovementType] = useState<MovementType | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Load user from localStorage on component mount
+  // Initialize authentication on component mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('expenseTrackerUser')
-    if (savedUser) {
+    let unsubscribe: (() => void) | null = null
+
+    const initialize = async () => {
       try {
-        const parsedUser = JSON.parse(savedUser)
-        setUser(parsedUser)
+        unsubscribe = await initAuth()
       } catch (error) {
-        console.error('Error parsing saved user:', error)
-        localStorage.removeItem('expenseTrackerUser')
+        console.error('[page] Error inicializando autenticación:', error)
       }
     }
-    setIsLoading(false)
-  }, [])
+
+    initialize()
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe()
+      }
+    }
+  }, [initAuth])
 
   const handleLogin = (userData: User) => {
-    setUser(userData)
-    // Save user to localStorage
-    localStorage.setItem('expenseTrackerUser', JSON.stringify(userData))
+    // The user will be set by the auth store's onAuthStateChange listener
+    // No manual setUser needed here since Supabase Auth will trigger the event
   }
 
-  const handleLogout = () => {
-    setUser(null)
-    // Navigate to home on logout
-    navigation.navigateToHome()
-    // Remove user from localStorage
-    localStorage.removeItem('expenseTrackerUser')
+  const handleLogout = async () => {
+    try {
+      await logout()
+      navigation.navigateToHome()
+    } catch (error) {
+      console.error('[page] Error durante logout:', error)
+      // Fallback navigation
+      navigation.navigateToHome()
+    }
   }
 
   const handleUserUpdate = (updatedUser: User) => {
+    // Update user through the auth store
+    const { setUser } = useAuthStore.getState()
     setUser(updatedUser)
-    // Update user in localStorage
-    localStorage.setItem('expenseTrackerUser', JSON.stringify(updatedUser))
   }
 
   const handleViewChange = async (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros') => {

@@ -13,6 +13,7 @@ export interface SupabaseSignUpData {
   password: string
   firstName: string
   lastName: string
+  username: string
 }
 
 export interface SupabaseLoginData {
@@ -27,14 +28,53 @@ export async function handleSupabaseSignUp(data: SupabaseSignUpData): Promise<Su
   try {
     console.log('🔄 Starting Supabase Auth registration...')
     
-    // Step 1: Register user with Supabase Auth
+    // Step 1: Validate required fields
+    if (!data.email || !data.password || !data.firstName || !data.lastName || !data.username) {
+      return { success: false, error: 'Todos los campos son obligatorios' }
+    }
+
+    // Step 2: Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(data.email)) {
+      return { success: false, error: 'Por favor, ingresa un email válido' }
+    }
+
+    // Step 3: Validate username format (alphanumeric, 3-30 chars)
+    const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/
+    if (!usernameRegex.test(data.username)) {
+      return { success: false, error: 'El nombre de usuario debe tener entre 3-30 caracteres (solo letras, números y _)' }
+    }
+
+    // Step 4: Check for duplicate email/username in public.users
+    const { data: existingUser, error: duplicateError } = await supabase
+      .from('users')
+      .select('email, username')
+      .or(`email.eq.${data.email},username.eq.${data.username}`)
+      .maybeSingle()
+
+    if (duplicateError) {
+      console.error('❌ Error checking duplicates:', duplicateError)
+      return { success: false, error: 'Error al validar los datos. Inténtalo de nuevo.' }
+    }
+
+    if (existingUser) {
+      if (existingUser.email === data.email) {
+        return { success: false, error: 'Este email ya está registrado' }
+      }
+      if (existingUser.username === data.username) {
+        return { success: false, error: 'Este nombre de usuario ya está en uso' }
+      }
+    }
+
+    // Step 5: Register user with Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: data.email,
       password: data.password,
       options: {
         data: {
           first_name: data.firstName,
-          last_name: data.lastName
+          last_name: data.lastName,
+          username: data.username
         }
       }
     })
@@ -43,8 +83,12 @@ export async function handleSupabaseSignUp(data: SupabaseSignUpData): Promise<Su
       console.error('❌ Supabase Auth registration error:', authError)
       
       // Handle common errors
-      if (authError.message.includes('User already registered')) {
+      if (authError.message.includes('User already registered') || authError.message.includes('already been registered')) {
         return { success: false, error: 'Este correo electrónico ya está registrado' }
+      }
+      
+      if (authError.message.includes('Password should be at least')) {
+        return { success: false, error: 'La contraseña debe tener al menos 6 caracteres' }
       }
       
       return { success: false, error: authError.message }
@@ -56,27 +100,38 @@ export async function handleSupabaseSignUp(data: SupabaseSignUpData): Promise<Su
 
     console.log('✅ Supabase Auth user created:', authData.user.id)
 
-    // Step 2: Insert user data into our users table
+    // Step 6: Insert user data into public.users table with all required fields
     const { error: dbError } = await supabase
       .from('users')
       .insert({
         id: authData.user.id,
         first_name: data.firstName,
         last_name: data.lastName,
-        username: authData.user.email, // Use email as username for now
-        email: authData.user.email,
-        password_hash: '', // Empty since Supabase Auth handles passwords
+        username: data.username,
+        email: data.email,
         status: 'active',
-        created_at: new Date().toISOString()
+        role: 'user',
+        subscription_tier: 'free',
+        is_on_trial: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
 
     if (dbError) {
       console.error('❌ Error inserting user data:', dbError)
-      // Note: User is created in Auth but not in our table - this needs to be handled
-      return { success: false, error: 'Usuario creado pero error al guardar datos adicionales' }
+      
+      // Clean up: Try to delete the auth user if public.users insertion failed
+      try {
+        await supabase.auth.admin.deleteUser(authData.user.id)
+        console.log('🧹 Cleaned up auth user after database error')
+      } catch (cleanupError) {
+        console.error('❌ Failed to cleanup auth user:', cleanupError)
+      }
+      
+      return { success: false, error: 'Error al crear la cuenta. Inténtalo de nuevo.' }
     }
 
-    console.log('✅ User data inserted successfully')
+    console.log('✅ User data inserted successfully in public.users')
 
     // Check if email confirmation is needed
     const needsConfirmation = !authData.user.email_confirmed_at
