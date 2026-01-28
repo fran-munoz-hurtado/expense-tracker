@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Bell, Settings, User as UserIcon, TrendingUp, DollarSign, Target, ChevronDown, Bug, LogOut, X } from 'lucide-react'
+import { Settings, ChevronDown, Bug, LogOut } from 'lucide-react'
 import { supabase, type User } from '@/lib/supabase'
 import { texts } from '@/lib/translations'
 
@@ -16,7 +16,6 @@ interface NavbarProps {
 }
 
 export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: NavbarProps) {
-  const [currentTime, setCurrentTime] = useState(new Date())
   const [greeting, setGreeting] = useState('')
   const [financialMessage, setFinancialMessage] = useState('')
   const [showUserDropdown, setShowUserDropdown] = useState(false)
@@ -37,37 +36,14 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
     }
   }, [])
 
-  // Update time and greeting every minute
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 60000)
-
-    return () => clearInterval(timer)
-  }, [])
-
   // Set greeting to a friendly but neutral 'Hola'
   useEffect(() => {
     setGreeting('Hola')
   }, [])
 
-  // Set a positive, responsible financial message
+  // Set fixed financial message
   useEffect(() => {
-    const messages = [
-      "¡Estás tomando el control de tus gastos! 🧾",
-      "¡Ser responsable con tus finanzas es un gran paso! 💡",
-      "¡Cada registro te acerca a tus metas! 🚀",
-      "¡Medir tus gastos es cuidar de ti! 🌱",
-      "¡Buen trabajo manteniendo tus cuentas claras! 👏",
-      "¡La constancia es clave para una vida financiera sana! 🔑",
-      "¡Sigue así, tu futuro yo te lo agradecerá! 🙌",
-      "¡Registrar tus gastos es un acto de responsabilidad! 🛡️"
-    ]
-    // Use the current day to select a consistent message
-    const now = new Date()
-    const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24))
-    const messageIndex = dayOfYear % messages.length
-    setFinancialMessage(messages[messageIndex])
+    setFinancialMessage("Tus cuentas claras")
   }, [])
 
   const handleDebugSection = () => {
@@ -82,21 +58,16 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
 
   return (
     <>
-      <div className="bg-neutral-bg border-b border-green-primary px-4 sm:px-6 py-3 sm:py-4 shadow-soft relative">
+      <div className="bg-neutral-bg border-b border-green-primary px-4 sm:px-6 py-2 shadow-soft relative">
           <div className="flex items-center justify-between">
-          {/* Left side - Welcome message */}
-          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
-            <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
-              <div className="min-w-0">
-                <h1 className="text-base sm:text-xl font-semibold text-gray-dark font-sans truncate">
-                  {greeting}, {user.first_name} {user.last_name}
-                </h1>
-                <p className="text-xs sm:text-sm text-green-dark flex items-center space-x-1 font-sans">
-                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-green-dark flex-shrink-0" />
-                  <span className="truncate">{financialMessage}</span>
-                </p>
-              </div>
-            </div>
+          {/* Left side - Welcome message and financial message in one line */}
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+            <h1 className="text-base sm:text-lg font-semibold text-gray-dark font-sans truncate">
+              {greeting}, {user.first_name} {user.last_name}
+            </h1>
+            <span className="text-xs sm:text-sm text-green-dark font-sans whitespace-nowrap">
+              {financialMessage}
+            </span>
           </div>
 
           {/* Right side - User menu only */}

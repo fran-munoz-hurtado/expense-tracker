@@ -1,17 +1,17 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Roboto, JetBrains_Mono } from 'next/font/google'
+import { Quicksand, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { texts } from '@/lib/translations'
 
 // ========================================
 // MODERN FONT CONFIGURATION
-// Based on Google Material Design, Apple HIG, Spotify & Uber
+// Using Quicksand as primary and display font
 // ========================================
 
-// Primary font - Inter (Google's choice, used by Uber)
-const inter = Inter({ 
+// Primary font - Quicksand (modern, friendly sans-serif)
+const quicksand = Quicksand({ 
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-quicksand',
   display: 'swap',
   weight: ['300', '400', '500', '600', '700'],
   fallback: [
@@ -19,22 +19,6 @@ const inter = Inter({
     'BlinkMacSystemFont', 
     'Segoe UI',
     'Roboto',
-    'Helvetica Neue',
-    'Arial',
-    'sans-serif'
-  ]
-})
-
-// Display font - Roboto (Google Material Design)
-const roboto = Roboto({
-  subsets: ['latin'],
-  variable: '--font-roboto',
-  display: 'swap',
-  weight: ['300', '400', '500', '700', '900'],
-  fallback: [
-    '-apple-system',
-    'BlinkMacSystemFont',
-    'Segoe UI',
     'Helvetica Neue',
     'Arial',
     'sans-serif'
@@ -96,11 +80,11 @@ export default function RootLayout({
   return (
     <html 
       lang="en" 
-      className={`${inter.variable} ${roboto.variable} ${jetbrainsMono.variable}`}
+      className={`${quicksand.variable} ${jetbrainsMono.variable}`}
       style={{
         // Set CSS variables for our parametrizable typography system
-        '--font-primary': inter.style.fontFamily,
-        '--font-display': roboto.style.fontFamily,
+        '--font-primary': quicksand.style.fontFamily,
+        '--font-display': quicksand.style.fontFamily,
         '--font-mono': jetbrainsMono.style.fontFamily,
       } as React.CSSProperties}
     >
@@ -116,9 +100,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         
-        {/* Load fonts via stylesheets for better compatibility */}
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" />
+        {/* Note: next/font/google handles font loading automatically, but keeping preconnect for performance */}
         
         {/* Theme color for browsers */}
         <meta name="theme-color" content="#3b82f6" />

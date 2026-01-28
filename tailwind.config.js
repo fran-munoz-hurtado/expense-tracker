@@ -162,7 +162,7 @@ module.exports = {
       },
 
       // MODERN TYPOGRAPHY SYSTEM
-      // Based on Google Material Design 3, Apple HIG, Spotify & Uber best practices
+      // Using Quicksand as primary and display font
       fontFamily: {
         // Primary system fonts stack (parametrizable via CSS variables)
         'primary': 'var(--font-primary)',
@@ -180,12 +180,8 @@ module.exports = {
           'sans-serif'
         ],
         
-        // Specific brand-inspired stacks
-        'inter': ['Inter', 'var(--font-primary)'],
-        'sf-pro': ['SF Pro Display', 'SF Pro Text', '-apple-system', 'var(--font-primary)'],
-        'roboto': ['Roboto', 'var(--font-primary)'],
-        // Adding Inter as primary sans font as requested
-        sans: ['Inter', 'sans-serif'],
+        // Quicksand as default sans font
+        sans: ['var(--font-primary)', 'Quicksand', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
       },
 
       // Modern font sizes using rem for scalability (Material Design 3 scale)

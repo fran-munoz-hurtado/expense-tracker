@@ -160,7 +160,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                       required
                       value={formData.first_name}
                       onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
+                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
                       placeholder="Tu nombre"
                     />
                     <User className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
@@ -179,7 +179,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                       required
                       value={formData.last_name}
                       onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
+                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
                       placeholder="Tu apellido"
                     />
                     <User className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
@@ -198,7 +198,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                       required
                       value={formData.username}
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
+                      className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
                       placeholder="Nombre de usuario"
                     />
                     <User className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
@@ -219,7 +219,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
+                  className="appearance-none block w-full px-3 py-2 pl-10 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
                   placeholder="tu@correo.com"
                 />
                 <Mail className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
@@ -238,7 +238,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                   required
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="appearance-none block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
+                  className="appearance-none block w-full px-3 py-2 pl-10 pr-10 border border-gray-300 rounded-md bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-green-primary focus:border-green-primary"
                   placeholder="Contraseña"
                 />
                 <Lock className="h-5 w-5 text-gray-400 absolute left-3 top-2.5" />
