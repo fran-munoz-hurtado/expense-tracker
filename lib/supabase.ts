@@ -1,11 +1,24 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Environment validation for security
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please check your .env.local file.')
+  throw new Error(
+    'Missing Supabase environment variables. Please check your .env.local file.\n' +
+    'Required variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY'
+  )
+}
+
+// Validate URL format
+try {
+  new URL(supabaseUrl)
+} catch (error) {
+  throw new Error(
+    `Invalid NEXT_PUBLIC_SUPABASE_URL format: "${supabaseUrl}". ` +
+    'Please ensure it is a valid URL (e.g., https://your-project.supabase.co)'
+  )
 }
 
 // Enhanced Supabase client with security and performance optimizations
