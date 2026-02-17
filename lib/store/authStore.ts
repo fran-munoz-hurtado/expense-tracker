@@ -113,31 +113,33 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     await initialize()
 
     // Set up auth state change listener
+    // IMPORTANT: Never make async Supabase calls inside this callback - causes deadlock (Supabase #762).
+    // Defer fetchUserProfile with setTimeout so it runs after the callback completes.
     console.log('[auth] Listener de sesión activado')
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('[auth] Cambio de sesión detectado:', event, session?.user?.email || 'sin usuario')
 
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
-          console.log('[auth] Usuario autenticado, cargando perfil...')
-          const userData = await fetchUserProfile(session.user.id)
-          
-          if (userData) {
-            // Use setUser callback to prevent unnecessary updates
-            const currentUser = get().user
-            if (currentUser?.id === userData.id) {
-              console.log('[auth] Usuario ya seteado en store, no se actualiza')
+          const userId = session.user.id
+          setTimeout(async () => {
+            console.log('[auth] Usuario autenticado, cargando perfil...')
+            const userData = await fetchUserProfile(userId)
+            if (userData) {
+              const currentUser = get().user
+              if (currentUser?.id === userData.id) {
+                console.log('[auth] Usuario ya seteado en store, no se actualiza')
+              } else {
+                console.log('[auth] Usuario actualizado en store:', userData.email)
+                set({ user: userData })
+              }
             } else {
-              console.log('[auth] Usuario actualizado en store:', userData.email)
-              set({ user: userData })
+              console.log('[auth] No se pudo cargar el perfil tras evento:', event)
+              set({ user: null })
             }
-          } else {
-            console.log('[auth] No se pudo cargar el perfil tras evento:', event)
-            set({ user: null })
-          }
+          }, 0)
         }
       } else if (event === 'SIGNED_OUT') {
-        console.log('[auth] Usuario desconectado')
         set({ user: null })
       }
     })
