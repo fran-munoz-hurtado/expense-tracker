@@ -6,9 +6,8 @@ import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExp
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
-import { useAppNavigation } from '@/lib/hooks/useAppNavigation'
 import { useTransactionStore } from '@/lib/store/transactionStore'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
@@ -16,6 +15,9 @@ import TransactionIcon from './TransactionIcon'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { getUserActiveCategories, addUserCategory } from '@/lib/services/categoryService'
+import { buildMisCuentasUrl, type FilterType } from '@/lib/routes'
+import { MonthFiltersSection } from './dashboard/MonthFiltersSection'
+import { MonthSummaryCards } from './dashboard/MonthSummaryCards'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -23,48 +25,22 @@ interface DashboardViewProps {
   navigationParams?: { month?: number; year?: number } | null
   user: User
   onDataChange?: () => void
+  /** Initial filter from URL ?tipo= (recurrente|unico|todos) */
+  initialFilterType?: FilterType
+  /** When true, month/year/filter changes update the URL (for /mis-cuentas routes) */
+  syncToUrl?: boolean
 }
 
-export default function DashboardView({ navigationParams, user, onDataChange }: DashboardViewProps) {
+export default function DashboardView({ navigationParams, user, onDataChange, initialFilterType = 'all', syncToUrl = false }: DashboardViewProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { refreshData, dataVersion } = useDataSync()
-  const navigation = useAppNavigation()
   
   // Zustand store
   const { transactions, isLoading, fetchTransactions, markTransactionStatus } = useTransactionStore()
   
-  // State management
-  const [selectedMonth, setSelectedMonth] = useState<number>(navigationParams?.month || new Date().getMonth() + 1)
-  
-  // Navigation function to redirect to Mis Metas with goal expansion
-  const handleNavigateToGoal = async (transaction: Transaction) => {
-    try {
-      console.log(`🎯 DashboardView: Navigating to Mis Metas for goal transaction:`, {
-        id: transaction.id,
-        description: transaction.description,
-        source_type: transaction.source_type,
-        source_id: transaction.source_id
-      })
-      
-      // Create goal key in the same format as MisMetasView
-      const goalKey = `${transaction.source_type}-${transaction.source_id}`
-      
-      // Construct the correct URL for Mis Metas with expansion parameter
-      const targetUrl = new URL(window.location.origin + window.location.pathname)
-      targetUrl.searchParams.set('view', 'mis-metas')
-      targetUrl.searchParams.set('year', transaction.year.toString())
-      targetUrl.searchParams.set('expandGoal', goalKey)
-      
-      console.log(`🎯 DashboardView: Navigating to URL:`, targetUrl.toString())
-      
-      // Navigate directly using window.location to ensure proper page transition
-      window.location.href = targetUrl.toString()
-      
-    } catch (error) {
-      console.error('❌ DashboardView: Navigation error:', error)
-    }
-  }
+  // State management - synced from URL/parent when syncToUrl
+  const currentDate = new Date()
+  const [selectedMonth, setSelectedMonth] = useState<number>(navigationParams?.month ?? currentDate.getMonth() + 1)
   
   // Function to validate transaction integrity for debugging
   function validateTransactionIntegrity(transactions: Transaction[], selectedYear: number, selectedMonth: number) {
@@ -76,9 +52,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   
   const [recurrentExpenses, setRecurrentExpenses] = useState<RecurrentExpense[]>([])
   const [nonRecurrentExpenses, setNonRecurrentExpenses] = useState<NonRecurrentExpense[]>([])
-  const [selectedYear, setSelectedYear] = useState(navigationParams?.year || new Date().getFullYear())
+  const [selectedYear, setSelectedYear] = useState(navigationParams?.year ?? currentDate.getFullYear())
   const [error, setError] = useState<string | null>(null)
-  const [filterType, setFilterType] = useState<'all' | 'recurrent' | 'non_recurrent'>('all')
+  const [filterType, setFilterType] = useState<FilterType>(initialFilterType)
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
   
@@ -205,16 +181,36 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     }
   }, [openOptionsMenu])
 
-  // Sync with URL parameters
+  // Sync state from navigationParams (from URL path when on /mis-cuentas)
   useEffect(() => {
-    const urlMonth = searchParams.get('month') ? parseInt(searchParams.get('month')!) : undefined
-    const urlYear = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
-    
-    if (urlMonth && urlYear) {
-      setSelectedMonth(urlMonth)
-      setSelectedYear(urlYear)
+    if (navigationParams?.month && navigationParams?.year) {
+      setSelectedMonth(navigationParams.month)
+      setSelectedYear(navigationParams.year)
     }
-  }, [searchParams])
+  }, [navigationParams?.month, navigationParams?.year])
+
+  // Sync filterType from initialFilterType (from URL ?tipo= when on /mis-cuentas)
+  useEffect(() => {
+    setFilterType(initialFilterType)
+  }, [initialFilterType])
+
+  // Navigate to new URL when month/year/filter changes (SEO-friendly URLs)
+  const handleMonthYearChange = useCallback((newYear: number, newMonth: number) => {
+    if (syncToUrl) {
+      router.push(buildMisCuentasUrl(newYear, newMonth, { tipo: filterType === 'all' ? undefined : filterType }))
+    } else {
+      setSelectedYear(newYear)
+      setSelectedMonth(newMonth)
+    }
+  }, [syncToUrl, filterType, router])
+
+  const handleFilterTypeChange = useCallback((newFilter: FilterType) => {
+    if (syncToUrl) {
+      router.push(buildMisCuentasUrl(selectedYear, selectedMonth, { tipo: newFilter === 'all' ? undefined : newFilter }))
+    } else {
+      setFilterType(newFilter)
+    }
+  }, [syncToUrl, selectedYear, selectedMonth, router])
 
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -344,18 +340,18 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
   }, [user, selectedMonth, selectedYear, fetchTransactions])
 
   // Filter transactions for selected month/year
-  const filteredTransactions = transactions.filter(transaction => 
-    transaction.year === selectedYear && transaction.month === selectedMonth
+  const filteredTransactions = useMemo(() =>
+    transactions.filter(t => t.year === selectedYear && t.month === selectedMonth),
+    [transactions, selectedYear, selectedMonth]
   )
 
-  // Apply type filter
-  const typeFilteredTransactions = filteredTransactions.filter(transaction => {
-    if (filterType === 'all') return true
-    return transaction.source_type === filterType
-  })
+  const typeFilteredTransactions = useMemo(() => {
+    if (filterType === 'all') return filteredTransactions
+    return filteredTransactions.filter(t => t.source_type === filterType)
+  }, [filteredTransactions, filterType])
 
-  // Sort transactions by deadline (closest first) only
-  const sortedTransactions = [...typeFilteredTransactions].sort((a, b) => {
+  const sortedTransactions = useMemo(() =>
+    [...typeFilteredTransactions].sort((a, b) => {
     // Sort by deadline (closest first)
     if (a.deadline && b.deadline) {
       return new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
@@ -367,39 +363,28 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     
     // If neither has deadline, sort by creation date
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  })
+    }),
+    [typeFilteredTransactions]
+  )
 
-  // Apply custom sorting if a sort field is selected
-  const applyCustomSorting = (transactions: Transaction[]) => {
-    if (!sortField) return transactions
-
-    return [...transactions].sort((a, b) => {
+  const finalSortedTransactions = useMemo(() => {
+    if (!sortField) return sortedTransactions
+    return [...sortedTransactions].sort((a, b) => {
       let comparison = 0
-
       switch (sortField) {
-        case 'description':
-          comparison = a.description.localeCompare(b.description)
-          break
+        case 'description': comparison = a.description.localeCompare(b.description); break
         case 'deadline':
-          // Handle cases where deadline might be null
           if (!a.deadline && !b.deadline) comparison = 0
           else if (!a.deadline) comparison = 1
           else if (!b.deadline) comparison = -1
           else comparison = new Date(a.deadline).getTime() - new Date(b.deadline).getTime()
           break
-        case 'status':
-          comparison = a.status.localeCompare(b.status)
-          break
-        case 'value':
-          comparison = a.value - b.value
-          break
+        case 'status': comparison = a.status.localeCompare(b.status); break
+        case 'value': comparison = a.value - b.value; break
       }
-
       return sortDirection === 'asc' ? comparison : -comparison
     })
-  }
-
-  const finalSortedTransactions = applyCustomSorting(sortedTransactions)
+  }, [sortedTransactions, sortField, sortDirection])
 
   // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
@@ -412,6 +397,24 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     
     return deadlineDate < todayDate;
   }
+
+  // Summary totals for MonthSummaryCards - memoized
+  const summaryTotals = useMemo(() => {
+    const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0)
+    const expense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0)
+    const paid = filteredTransactions.filter(t => t.type === 'expense' && t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
+    const pending = filteredTransactions.filter(t => {
+      if (t.type !== 'expense' || t.status !== 'pending') return false
+      if (!t.deadline) return true
+      return !isDateOverdue(t.deadline)
+    }).reduce((sum, t) => sum + t.value, 0)
+    const overdue = filteredTransactions.filter(t => {
+      if (t.type !== 'expense' || t.status !== 'pending') return false
+      if (!t.deadline) return false
+      return isDateOverdue(t.deadline)
+    }).reduce((sum, t) => sum + t.value, 0)
+    return { income, expense, paid, pending, overdue, cuantoQueda: income - expense }
+  }, [filteredTransactions])
 
   // Calcular totales del mes según la lógica del usuario
   const monthlyStats = {
@@ -1351,10 +1354,12 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
     console.log('[zustand] Transacciones visibles:', transactions.filter(t => t.month === selectedMonth && t.year === selectedYear))
   }
 
-  // Protection: Don't render until we have consistent data
-  if (!user || !selectedMonth || !selectedYear || isLoading) {
+  // Protection: Don't render until we have user and month/year. We do NOT use isLoading here
+  // so that the layout (filter, totals section, transactions section) stays visible when switching
+  // months — only totals and transactions content update with their own loading states.
+  if (!user || !selectedMonth || !selectedYear) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[zustand] DashboardView: Esperando datos... no renderiza aún', { user: !!user, selectedMonth, selectedYear, isLoading })
+      console.log('[zustand] DashboardView: Esperando datos... no renderiza aún', { user: !!user, selectedMonth, selectedYear })
     }
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
@@ -1394,285 +1399,38 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
       {/* Main Content */}
       <div className="flex-1 px-6 lg:px-8 pb-6 lg:pb-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* SECCIÓN 1: Modern Compact Filters Section */}
-          <div className="rounded-xl bg-white shadow-soft p-6 border-b border-gray-100">
-            {/* Desktop layout - unchanged */}
-            <div className="hidden sm:flex items-center justify-center">
-              <div className="inline-flex items-center gap-4 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
-                {/* Year Filter */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-gray-600 font-sans">Año</label>
-                  <div className="relative">
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary text-sm text-gray-dark font-sans min-w-[80px]"
-                    >
-                      {availableYears.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-3 w-3 text-gray-500 transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Separator */}
-                <div className="w-px h-6 bg-gray-300"></div>
-                
-                {/* Month Filter */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium text-gray-600 font-sans">Mes</label>
-                  <div className="relative">
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                      className="px-3 py-1.5 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary text-sm text-gray-dark font-sans min-w-[120px]"
-                    >
-                      {months.map((month, index) => (
-                        <option key={index + 1} value={index + 1}>{month}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-3 w-3 text-gray-500 transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Separator */}
-                <div className="w-px h-6 bg-gray-300"></div>
-                
-                {/* Current Month Button */}
-                <button
-                  onClick={() => {
-                    setSelectedYear(new Date().getFullYear());
-                    setSelectedMonth(new Date().getMonth() + 1);
-                  }}
-                  className="px-3 py-1.5 bg-green-primary text-white rounded-md text-sm font-medium hover:bg-green-dark transition-colors duration-200 font-sans"
-                >
-                  Mes Actual
-                </button>
-              </div>
+          <MonthFiltersSection
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+            onMonthYearChange={handleMonthYearChange}
+          />
+
+          <MonthSummaryCards
+            monthLabel={months[selectedMonth - 1]}
+            year={selectedYear}
+            incomeAmount={summaryTotals.income}
+            expenseAmount={summaryTotals.expense}
+            paidAmount={summaryTotals.paid}
+            pendingAmount={summaryTotals.pending}
+            overdueAmount={summaryTotals.overdue}
+            cuantoQueda={summaryTotals.cuantoQueda}
+            isLoading={isLoading}
+            formatCurrency={formatCurrency}
+          />
+
+          {/* SECCIÓN 3: Transacciones del mes - estructura estable, solo el contenido cambia */}
+          <div className="bg-white rounded-xl shadow-sm p-4 w-full">
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
+                Transacciones del mes
+              </h3>
+              <p className="text-xs text-gray-500 font-sans">
+                Control detallado de tus movimientos financieros
+              </p>
             </div>
-
-            {/* Mobile layout - reorganized filters */}
-            <div className="sm:hidden flex flex-col w-full max-w-xs mx-auto space-y-4">
-              {/* Year and Month in grid */}
-              <div className="grid grid-cols-2 gap-2 w-full">
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">Año</label>
-                  <div className="relative">
-                    <select
-                      value={selectedYear}
-                      onChange={(e) => setSelectedYear(Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary text-sm text-gray-dark font-sans"
-                    >
-                      {availableYears.map(year => (
-                        <option key={year} value={year}>{year}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-700 mb-1">Mes</label>
-                  <div className="relative">
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-green-primary focus:border-green-primary transition-all duration-200 appearance-none cursor-pointer hover:border-green-primary text-sm text-gray-dark font-sans"
-                    >
-                      {months.map((month, index) => (
-                        <option key={index + 1} value={index + 1}>{month}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Current Month Button */}
-              <button
-                onClick={() => {
-                  setSelectedYear(new Date().getFullYear());
-                  setSelectedMonth(new Date().getMonth() + 1);
-                }}
-                className="w-full px-4 py-2 bg-green-primary text-white rounded-md text-sm font-medium hover:bg-green-dark transition-colors duration-200 font-sans"
-              >
-                Mes Actual
-              </button>
-            </div>
-          </div>
-
-          {/* SECCIÓN 2: Cards de resumen - COMPLETAMENTE INDEPENDIENTE */}
-          {!isLoading && finalSortedTransactions.length > 0 && (() => {
-            const incomeAmount = finalSortedTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0);
-            const expenseAmount = finalSortedTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0);
-            const paidAmount = finalSortedTransactions.filter(t => t.type === 'expense' && t.status === 'paid').reduce((sum, t) => sum + t.value, 0);
-            const pendingAmount = finalSortedTransactions.filter(t => t.type === 'expense' && t.status === 'pending').reduce((sum, t) => sum + t.value, 0);
-            
-            const overdueAmount = finalSortedTransactions.filter(t => {
-              if (t.type !== 'expense' || t.status !== 'pending' || !t.deadline) return false;
-              const [year, month, day] = t.deadline.split('-').map(Number);
-              const deadlineDate = new Date(year, month - 1, day);
-              const today = new Date();
-              const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-              return deadlineDate < todayDate;
-            }).reduce((sum, t) => sum + t.value, 0);
-            
-            const tieneVencimientos = overdueAmount > 0;
-            const faltaPagar = pendingAmount;
-            const cuantoQueda = incomeAmount - expenseAmount;
-            
-            return (
-              <div className="bg-white rounded-xl shadow-sm p-4 w-full">
-                <div className="mb-4">
-                  <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                    Para el mes de {months[selectedMonth - 1]} {selectedYear}
-                  </h3>
-                  <p className="text-xs text-gray-500 font-sans">
-                    Estado financiero del mes en curso
-                  </p>
-                </div>
-
-                {/* Desktop layout */}
-                <div className="hidden sm:grid grid-cols-3 gap-4">
-                  <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-                    <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
-                      <PiggyBank className="w-4 h-4 text-gray-400" />
-                      <span>Ingresos</span>
-                    </div>
-                    <p className="text-lg font-medium text-gray-800 font-sans">
-                      {formatCurrency(incomeAmount)}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-                    <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
-                      <CreditCard className="w-4 h-4 text-gray-400" />
-                      <span>Gastos Totales</span>
-                    </div>
-                    <p className="text-lg font-medium text-gray-800 font-sans">
-                      {formatCurrency(expenseAmount)}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#f8f9f9] border border-[#e0e0e0] rounded-md px-4 py-2">
-                    <div className="flex items-center gap-2 text-sm text-[#777] font-sans mb-1">
-                      {faltaPagar > 0 ? (
-                        <AlertTriangle className="w-4 h-4 text-gray-400" />
-                      ) : (
-                        <CheckCircle className="w-4 h-4 text-gray-400" />
-                      )}
-                      <span>Estado de pagos</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {faltaPagar > 0 ? (
-                        <span className="bg-warning-yellow text-white px-2 py-1 rounded-md text-sm font-sans">
-                          Falta pagar {formatCurrency(faltaPagar)}
-                        </span>
-                      ) : (
-                        <span className="bg-green-primary text-white px-2 py-1 rounded-md text-sm font-sans">
-                          Pagado {formatCurrency(paidAmount)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Mobile layout */}
-                <div className="sm:hidden space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-gray-50 rounded-md p-3">
-                      <div className="flex items-center gap-1 text-xs text-gray-600 font-sans mb-1">
-                        <PiggyBank className="w-3 h-3 text-gray-400" />
-                        <span>Ingresos</span>
-                      </div>
-                      <p className="text-base font-semibold text-gray-800 font-sans truncate">
-                        {formatCurrency(incomeAmount)}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-md p-3">
-                      <div className="flex items-center gap-1 text-xs text-gray-600 font-sans mb-1">
-                        <CreditCard className="w-3 h-3 text-gray-400" />
-                        <span>Gastos Totales</span>
-                      </div>
-                      <p className="text-base font-semibold text-gray-800 font-sans truncate">
-                        {formatCurrency(expenseAmount)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gray-50 rounded-md p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs text-gray-600 font-sans">
-                        {faltaPagar > 0 ? (
-                          <AlertTriangle className="w-3 h-3 text-gray-400" />
-                        ) : (
-                          <CheckCircle className="w-3 h-3 text-gray-400" />
-                        )}
-                        <span>Estado de pagos</span>
-                      </div>
-                      <div>
-                        {faltaPagar > 0 ? (
-                          <span className="bg-warning-yellow text-white px-2 py-1 rounded-md text-xs font-sans">
-                            Falta pagar {formatCurrency(faltaPagar)}
-                          </span>
-                        ) : (
-                          <span className="bg-green-primary text-white px-2 py-1 rounded-md text-xs font-sans">
-                            Pagado {formatCurrency(paidAmount)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-end mt-4">
-                  <div className="flex items-center space-x-2">
-                    {cuantoQueda >= 0 && (
-                      <>
-                        <CheckCircle className="w-3 h-3 text-green-primary" />
-                        <span className="text-green-primary bg-green-light px-2 py-1 rounded-md text-xs font-sans">
-                          Te quedan {formatCurrency(cuantoQueda)}
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {tieneVencimientos && (
-                  <p className="text-xs text-error-red mt-2 flex items-center gap-1 font-sans">
-                    <AlertTriangle className="w-3 h-3" /> 
-                    Tienes pagos en mora ({formatCurrency(overdueAmount)})
-                  </p>
-                )}
-              </div>
-            );
-          })()}
-
-          {/* SECCIÓN 3: Transacciones del mes - COMPLETAMENTE INDEPENDIENTE */}
-          {isLoading ? (
-            <div className="bg-white rounded-xl shadow-sm p-6">
-              <div className="text-center text-green-dark font-sans">{texts.loading}</div>
-            </div>
-          ) : finalSortedTransactions.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-6">
+            {isLoading ? (
+              <div className="text-center py-8 text-green-dark font-sans">{texts.loading}</div>
+            ) : finalSortedTransactions.length === 0 ? (
               <div className="text-center px-4 py-8">
                 <div className="w-16 h-16 bg-green-light rounded-full flex items-center justify-center mx-auto mb-6">
                   <Plus className="h-8 w-8 text-green-primary" />
@@ -1684,18 +1442,8 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   Empieza agregando tus ingresos o gastos y toma el control de tu dinero.
                 </p>
               </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-xl shadow-sm p-4 w-full">
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                  Transacciones del mes
-                </h3>
-                <p className="text-xs text-gray-500 font-sans">
-                  Control detallado de tus movimientos financieros
-                </p>
-              </div>
-
+            ) : (
+              <>
               {/* Desktop Table View */}
               <div className="hidden lg:block" onMouseLeave={() => setHoveredRow(null)}>
                 <div className="overflow-x-auto">
@@ -1768,24 +1516,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                                 <div>
                                   <div className="text-sm font-medium text-gray-900 flex items-center gap-2 transaction-description font-sans">
                                     <span>{transaction.description}</span>
-                                    {/* Navigation Link Icon for Goal Transactions */}
-                                    {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
-                                      <button
-                                        onClick={() => handleNavigateToGoal(transaction)}
-                                        className="text-gray-400 hover:text-blue-600 transition-colors duration-200 p-1 rounded-md hover:bg-blue-50"
-                                        title={`Ir a Mis Metas - ${transaction.description}`}
-                                      >
-                                        <svg 
-                                          className="w-3 h-3" 
-                                          fill="none" 
-                                          stroke="currentColor" 
-                                          strokeWidth="2" 
-                                          viewBox="0 0 24 24"
-                                        >
-                                          <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                      </button>
-                                    )}
                                     
                                     {/* Category - moved to same line as title */}
                                     {transaction.type === 'expense' && 
@@ -1962,18 +1692,6 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                       <div className="flex justify-between items-center ml-9">
                         <span className="text-sm font-medium text-gray-900 truncate leading-tight">
                           {transaction.description}
-                          {/* Navigation Link Icon for Goal Transactions */}
-                          {transaction.source_type === 'recurrent' && transaction.type === 'expense' && recurrentGoalMap[transaction.source_id] && (
-                            <button
-                              onClick={() => handleNavigateToGoal(transaction)}
-                              className="ml-1 text-gray-400 hover:text-blue-600 transition-colors duration-200 p-0.5 rounded-md hover:bg-blue-50 inline-flex"
-                              title={`Ir a Mis Metas - ${transaction.description}`}
-                            >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                <path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                              </svg>
-                            </button>
-                          )}
                         </span>
 
                         <div className="flex items-center gap-x-2">
@@ -2168,8 +1886,9 @@ export default function DashboardView({ navigationParams, user, onDataChange }: 
                   );
                 })}
               </div>
-            </div>
-          )}
+            </>
+            )}
+          </div>
 
           {/* Delete Confirmation Modal */}
           {showDeleteModal && deleteModalData && (
