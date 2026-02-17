@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Quicksand, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
 import { texts } from '@/lib/translations'
+import { DataSyncProvider } from '@/lib/hooks/useDataSync'
+import SessionRefreshHandler from './components/SessionRefreshHandler'
 
 // ========================================
 // MODERN FONT CONFIGURATION
@@ -106,7 +108,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#3b82f6" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
       </head>
-      <body className="font-primary antialiased">{children}</body>
+      <body className="font-primary antialiased">
+        <SessionRefreshHandler />
+        <DataSyncProvider>{children}</DataSyncProvider>
+      </body>
     </html>
   )
 } 
