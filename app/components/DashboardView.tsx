@@ -29,9 +29,11 @@ interface DashboardViewProps {
   initialFilterType?: FilterType
   /** When true, month/year/filter changes update the URL (for /mis-cuentas routes) */
   syncToUrl?: boolean
+  /** Opens the add movement form (used in filter section) */
+  onAddExpense?: () => void
 }
 
-export default function DashboardView({ navigationParams, user, onDataChange, initialFilterType = 'all', syncToUrl = false }: DashboardViewProps) {
+export default function DashboardView({ navigationParams, user, onDataChange, initialFilterType = 'all', syncToUrl = false, onAddExpense }: DashboardViewProps) {
   const router = useRouter()
   const { refreshData, dataVersion } = useDataSync()
   
@@ -1456,6 +1458,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             selectedMonth={selectedMonth}
             selectedYear={selectedYear}
             onMonthYearChange={handleMonthYearChange}
+            onAddExpense={onAddExpense}
           />
 
           <MonthSummaryCards

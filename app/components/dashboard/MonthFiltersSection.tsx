@@ -1,6 +1,8 @@
 'use client'
 
 import { memo } from 'react'
+import { Plus } from 'lucide-react'
+import { texts } from '@/lib/translations'
 
 const MONTHS = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -13,9 +15,10 @@ interface MonthFiltersSectionProps {
   selectedMonth: number
   selectedYear: number
   onMonthYearChange: (year: number, month: number) => void
+  onAddExpense?: () => void
 }
 
-function MonthFiltersSectionInner({ selectedMonth, selectedYear, onMonthYearChange }: MonthFiltersSectionProps) {
+function MonthFiltersSectionInner({ selectedMonth, selectedYear, onMonthYearChange, onAddExpense }: MonthFiltersSectionProps) {
   return (
     <div className="rounded-xl bg-white shadow-soft p-6 border-b border-gray-100">
       <div className="hidden sm:flex items-center justify-center">
@@ -66,6 +69,19 @@ function MonthFiltersSectionInner({ selectedMonth, selectedYear, onMonthYearChan
           >
             Mes Actual
           </button>
+          {onAddExpense && (
+            <>
+              <div className="w-px h-6 bg-gray-300" />
+              <button
+                onClick={onAddExpense}
+                className="flex items-center gap-2 px-3 py-1.5 bg-green-primary text-white rounded-md text-sm font-medium hover:bg-green-dark transition-colors duration-200 font-sans"
+                aria-label={texts.addTransaction}
+              >
+                <Plus className="h-4 w-4" />
+                {texts.addTransaction}
+              </button>
+            </>
+          )}
         </div>
       </div>
       <div className="sm:hidden flex flex-col w-full max-w-xs mx-auto space-y-4">
@@ -115,6 +131,16 @@ function MonthFiltersSectionInner({ selectedMonth, selectedYear, onMonthYearChan
         >
           Mes Actual
         </button>
+        {onAddExpense && (
+          <button
+            onClick={onAddExpense}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-primary text-white rounded-md text-sm font-medium hover:bg-green-dark transition-colors duration-200 font-sans"
+            aria-label={texts.addTransaction}
+          >
+            <Plus className="h-4 w-4" />
+            {texts.addTransaction}
+          </button>
+        )}
       </div>
     </div>
   )

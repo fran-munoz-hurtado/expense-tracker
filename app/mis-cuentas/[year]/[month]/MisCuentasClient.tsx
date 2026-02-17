@@ -178,7 +178,7 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      <Navbar user={user} onLogout={handleLogout} onAddExpense={handleAddExpense} />
+      <Navbar user={user} onLogout={handleLogout} />
       <main className="flex-1 overflow-auto">
         <DashboardView
           navigationParams={navigationParams}
@@ -186,6 +186,7 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
           onDataChange={refreshData}
           initialFilterType={initialFilter}
           syncToUrl={true}
+          onAddExpense={handleAddExpense}
         />
       </main>
 
