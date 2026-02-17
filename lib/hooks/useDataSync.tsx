@@ -98,8 +98,8 @@ export const useDataSyncEffect = (
     // Execute the effect immediately (not a retry)
     const cleanup = effect(false)
     
-    // If the last operation was create_transaction, modify_transaction, or delete_transaction, schedule a retry to ensure data is synchronized
-    if (lastOperation === 'create_transaction' || lastOperation === 'modify_transaction' || lastOperation === 'delete_transaction') {
+    // If the last operation was create_transaction, modify_transaction, delete_transaction, or abono, schedule a retry to ensure data is synchronized
+    if (['create_transaction', 'modify_transaction', 'delete_transaction', 'abono'].includes(lastOperation || '')) {
       const retryTimeout = setTimeout(() => {
         if (process.env.NODE_ENV === 'development') {
           console.log(`[zustand] Retry: re-executing effect after delay for ${lastOperation}...`)

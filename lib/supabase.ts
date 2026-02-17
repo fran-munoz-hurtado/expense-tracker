@@ -188,4 +188,14 @@ export type FileUploadResponse = {
   file_path?: string
   error?: string
   attachment?: TransactionAttachment
+}
+
+export type Abono = {
+  id: number
+  transaction_id: number
+  user_id: string
+  amount: number
+  paid_at: string
+  created_at: string
+  updated_at: string
 } 

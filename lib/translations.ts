@@ -82,6 +82,21 @@ export const translations = {
   notes: 'Notas',
   notesPlaceholder: 'Añade notas opcionales (máx. 500 caracteres)',
 
+  // Abonos (partial payments)
+  abonar: 'Abonar',
+  abono: 'Abono',
+  abonos: 'Abonos',
+  addAbono: 'Agregar abono',
+  amountToAbonar: 'Monto a abonar',
+  abonoDate: 'Fecha del abono',
+  totalAbonado: 'Total abonado',
+  abonoExceedsValue: 'El total de abonos supera el valor del gasto.',
+  abonoExceedsConfirm: '¿Deseas actualizar el valor total a {total} y marcarlo como pagado?',
+  abonoSaved: 'Abono registrado',
+  noAbonosYet: 'Aún no hay abonos',
+  editAbono: 'Editar abono',
+  deleteAbono: 'Eliminar abono',
+
   // Attachments
   attachments: 'Adjuntos',
   uploadFile: 'Subir Archivo',

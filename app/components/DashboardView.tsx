@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw, MoreVertical, StickyNote } from 'lucide-react'
-import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw, MoreVertical, StickyNote, Wallet } from 'lucide-react'
+import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment, type Abono } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
 import { texts } from '@/lib/translations'
@@ -15,6 +15,7 @@ import TransactionIcon from './TransactionIcon'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { getUserActiveCategories, addUserCategory } from '@/lib/services/categoryService'
+import { fetchAbonosByTransactionIds, createAbono, updateAbono, deleteAbono } from '@/lib/services/abonoService'
 import { buildMisCuentasUrl, type FilterType } from '@/lib/routes'
 import { MonthFiltersSection } from './dashboard/MonthFiltersSection'
 import { MonthSummaryCards } from './dashboard/MonthSummaryCards'
@@ -58,7 +59,20 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [error, setError] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<FilterType>(initialFilterType)
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
+  const [abonosByTransaction, setAbonosByTransaction] = useState<Record<number, Abono[]>>({})
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+
+  // Abono modal state
+  const [showAbonoModal, setShowAbonoModal] = useState(false)
+  const [abonoModalTransaction, setAbonoModalTransaction] = useState<Transaction | null>(null)
+  const [abonoModalAmount, setAbonoModalAmount] = useState('')
+  const [abonoModalDate, setAbonoModalDate] = useState('')
+  const [showOverpaymentConfirm, setShowOverpaymentConfirm] = useState(false)
+  const [overpaymentTotal, setOverpaymentTotal] = useState(0)
+  const [isSavingAbono, setIsSavingAbono] = useState(false)
+  const [editingAbono, setEditingAbono] = useState<Abono | null>(null)
+  const [editAbonoAmount, setEditAbonoAmount] = useState('')
+  const [deleteAbonoConfirm, setDeleteAbonoConfirm] = useState<{ ab: Abono; transaction: Transaction } | null>(null)
   
   // Sorting state
   const [sortField, setSortField] = useState<'description' | 'deadline' | 'status' | 'value' | null>(null)
@@ -308,11 +322,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       setRecurrentExpenses(result.expenses.recurrent)
       setNonRecurrentExpenses(result.expenses.nonRecurrent)
 
-      // Fetch attachment counts if we have transactions
+      // Fetch attachment counts and abonos if we have transactions
       if (transactions && transactions.length > 0) {
         const transactionIds = transactions.map((t: Transaction) => t.id)
-        const attachmentCountsData = await fetchAttachmentCounts(user, transactionIds)
+        const [attachmentCountsData, abonosData] = await Promise.all([
+          fetchAttachmentCounts(user, transactionIds),
+          fetchAbonosByTransactionIds(user.id, transactionIds),
+        ])
         setAttachmentCounts(attachmentCountsData)
+        setAbonosByTransaction(abonosData)
       }
 
     } catch (error) {
@@ -409,23 +427,47 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     return deadlineDate < todayDate;
   }
 
-  // Summary totals for MonthSummaryCards - memoized
+  // Helper: amount still owed for a pending expense (considering abonos)
+  const getAmountOwed = useCallback((t: Transaction) => {
+    const totalAbonado = (abonosByTransaction[t.id] || []).reduce((sum, a) => sum + Number(a.amount), 0)
+    return Math.max(0, t.value - totalAbonado)
+  }, [abonosByTransaction])
+
+  // Helper: total abonado for a transaction
+  const getTotalAbonadoForTxn = useCallback((t: Transaction) => {
+    return (abonosByTransaction[t.id] || []).reduce((sum, a) => sum + Number(a.amount), 0)
+  }, [abonosByTransaction])
+
+  // Summary totals for MonthSummaryCards - memoized (abonos-aware)
   const summaryTotals = useMemo(() => {
     const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0)
-    const expense = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0)
+    // Total gastos: sum of expense values, or totalAbonado if overpaid (abonos > value)
+    const expense = filteredTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => {
+        const abonado = getTotalAbonadoForTxn(t)
+        const effectiveValue = t.status === 'paid' ? t.value : Math.max(t.value, abonado)
+        return sum + effectiveValue
+      }, 0)
     const paid = filteredTransactions.filter(t => t.type === 'expense' && t.status === 'paid').reduce((sum, t) => sum + t.value, 0)
-    const pending = filteredTransactions.filter(t => {
-      if (t.type !== 'expense' || t.status !== 'pending') return false
-      if (!t.deadline) return true
-      return !isDateOverdue(t.deadline)
-    }).reduce((sum, t) => sum + t.value, 0)
-    const overdue = filteredTransactions.filter(t => {
-      if (t.type !== 'expense' || t.status !== 'pending') return false
-      if (!t.deadline) return false
-      return isDateOverdue(t.deadline)
-    }).reduce((sum, t) => sum + t.value, 0)
+    // Falta pagar (pending, non-overdue): amount owed minus abonos
+    const pending = filteredTransactions
+      .filter(t => {
+        if (t.type !== 'expense' || t.status !== 'pending') return false
+        if (!t.deadline) return true
+        return !isDateOverdue(t.deadline)
+      })
+      .reduce((sum, t) => sum + getAmountOwed(t), 0)
+    // Falta pagar (overdue): amount owed minus abonos
+    const overdue = filteredTransactions
+      .filter(t => {
+        if (t.type !== 'expense' || t.status !== 'pending') return false
+        if (!t.deadline) return false
+        return isDateOverdue(t.deadline)
+      })
+      .reduce((sum, t) => sum + getAmountOwed(t), 0)
     return { income, expense, paid, pending, overdue, cuantoQueda: income - expense }
-  }, [filteredTransactions])
+  }, [filteredTransactions, getAmountOwed, getTotalAbonadoForTxn])
 
   // Calcular totales del mes según la lógica del usuario
   const monthlyStats = {
@@ -1042,6 +1084,80 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     }
   }
 
+  const getTotalAbonado = (transactionId: number) =>
+    (abonosByTransaction[transactionId] || []).reduce((sum, a) => sum + Number(a.amount), 0)
+
+  const handleAbonarClick = (transaction: Transaction) => {
+    if (transaction.type !== 'expense') return
+    setAbonoModalTransaction(transaction)
+    setAbonoModalAmount('')
+    setAbonoModalDate(new Date().toISOString().slice(0, 10))
+    setShowOverpaymentConfirm(false)
+    setShowAbonoModal(true)
+    setOpenActionsDropdown(null)
+    setOpenOptionsMenu(null)
+  }
+
+  const handleSaveAbono = async (confirmOverpayment = false) => {
+    if (!abonoModalTransaction || !user) return
+    const amount = parseCurrency(abonoModalAmount)
+    if (!amount || amount <= 0) {
+      setError(texts.invalidAmount)
+      return
+    }
+
+    const totalAbonado = getTotalAbonado(abonoModalTransaction.id)
+    const newTotal = totalAbonado + amount
+
+    if (newTotal > abonoModalTransaction.value && !confirmOverpayment) {
+      setOverpaymentTotal(newTotal)
+      setShowOverpaymentConfirm(true)
+      return
+    }
+
+    setIsSavingAbono(true)
+    setError(null)
+    try {
+      await createAbono(user.id, abonoModalTransaction.id, amount, abonoModalDate)
+      const abonos = abonosByTransaction[abonoModalTransaction.id] || []
+      setAbonosByTransaction(prev => ({
+        ...prev,
+        [abonoModalTransaction.id]: [...abonos, { id: 0, transaction_id: abonoModalTransaction.id, user_id: user.id, amount, paid_at: abonoModalDate, created_at: '', updated_at: '' }]
+      }))
+
+      const shouldMarkPaid = confirmOverpayment || newTotal >= abonoModalTransaction.value
+      if (shouldMarkPaid) {
+        const newValue = confirmOverpayment ? overpaymentTotal : abonoModalTransaction.value
+        await updateTransaction({
+          id: abonoModalTransaction.id,
+          userId: user.id,
+          value: newValue,
+          deadline: abonoModalTransaction.deadline ?? undefined,
+          notes: abonoModalTransaction.notes ?? undefined,
+        })
+        await markTransactionStatus({ transactionId: abonoModalTransaction.id, newStatus: 'paid', userId: user.id })
+      }
+
+      refreshData(user.id, 'abono')
+    } catch (e) {
+      console.error('Error saving abono:', e)
+      setError('Error al guardar el abono')
+      return
+    } finally {
+      setIsSavingAbono(false)
+      setShowAbonoModal(false)
+      setAbonoModalTransaction(null)
+      setAbonoModalAmount('')
+      setShowOverpaymentConfirm(false)
+      setEditingAbono(null)
+      setDeleteAbonoConfirm(null)
+    }
+  }
+
+  const handleOverpaymentConfirm = () => {
+    handleSaveAbono(true)
+  }
+
   const handleAttachmentUploadComplete = (attachment: TransactionAttachment) => {
     // Update attachment counts
     setAttachmentCounts(prev => ({
@@ -1637,6 +1753,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             <td className="px-4 py-3 whitespace-nowrap text-right">
                               <div className="text-sm font-medium text-gray-900 font-sans">
                                 {formatCurrency(transaction.value)}
+                                {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
+                                  <span className="block text-xs text-gray-500 font-normal mt-0.5">
+                                    {formatCurrency(getTotalAbonado(transaction.id))} / {formatCurrency(transaction.value)}
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="px-2 py-3 whitespace-nowrap">
@@ -1726,6 +1847,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                           <span className="ml-auto text-amber-500">·</span>
                                         )}
                                       </button>
+                                      {transaction.type === 'expense' && transaction.status !== 'paid' && (
+                                        <button
+                                          onClick={() => {
+                                            handleAbonarClick(transaction)
+                                            setOpenActionsDropdown(null)
+                                          }}
+                                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                                        >
+                                          <Wallet className="w-4 h-4 flex-shrink-0" />
+                                          <span>{texts.abonar}</span>
+                                        </button>
+                                      )}
                                       <button
                                         onClick={() => {
                                           handleModifyTransaction(transaction.id)
@@ -1784,9 +1917,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                         </span>
 
                         <div className="flex items-center gap-x-2">
-                          <span className="text-sm font-medium text-gray-900 leading-tight">
-                            {formatCurrency(transaction.value)}
-                          </span>
+                          <div className="text-right">
+                            <span className="text-sm font-medium text-gray-900 leading-tight">
+                              {formatCurrency(transaction.value)}
+                            </span>
+                            {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
+                              <span className="block text-xs text-gray-500 font-normal">
+                                {formatCurrency(getTotalAbonado(transaction.id))} / {formatCurrency(transaction.value)}
+                              </span>
+                            )}
+                          </div>
                           
                           <div className="relative">
                             <input
@@ -1915,6 +2055,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               <button
                                 onClick={() => {
                                   handleNotesClick(transaction)
+                                  setOpenOptionsMenu(null)
                                 }}
                                 className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
                               >
@@ -1924,6 +2065,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                   <span className="ml-auto text-amber-500">·</span>
                                 )}
                               </button>
+                              {transaction.type === 'expense' && transaction.status !== 'paid' && (
+                                <button
+                                  onClick={() => {
+                                    handleAbonarClick(transaction)
+                                    setOpenOptionsMenu(null)
+                                  }}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                                >
+                                  <Wallet className="w-4 h-4 flex-shrink-0" />
+                                  <span>{texts.abonar}</span>
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   handleModifyTransaction(transaction.id)
@@ -2010,6 +2163,247 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                       {texts.save}
                     </button>
                   </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Abono Modal (partial payments) */}
+          {showAbonoModal && abonoModalTransaction && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div
+                className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+                aria-hidden="true"
+                onClick={() => {
+                  if (showOverpaymentConfirm) setShowOverpaymentConfirm(false)
+                  else if (editingAbono) { setEditingAbono(null); setEditAbonoAmount(''); setError(null) }
+                  else if (deleteAbonoConfirm) setDeleteAbonoConfirm(null)
+                  else {
+                    setShowAbonoModal(false)
+                    setAbonoModalTransaction(null)
+                    setAbonoModalAmount('')
+                  }
+                }}
+              />
+              <section className="modify-form-modal relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => {
+                    if (showOverpaymentConfirm) setShowOverpaymentConfirm(false)
+                    else if (editingAbono) { setEditingAbono(null); setEditAbonoAmount(''); setError(null) }
+                    else if (deleteAbonoConfirm) setDeleteAbonoConfirm(null)
+                    else {
+                      setShowAbonoModal(false)
+                      setAbonoModalTransaction(null)
+                      setAbonoModalAmount('')
+                    }
+                  }}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 z-10"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="p-6 flex flex-col overflow-hidden flex-1 min-h-0">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-50 rounded-full p-1.5">
+                      <Wallet className="h-4 w-4 text-green-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">{texts.abonar}</h2>
+                      <p className="text-sm text-gray-500 truncate max-w-[200px]">{abonoModalTransaction.description}</p>
+                    </div>
+                  </div>
+
+                  {showOverpaymentConfirm ? (
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600">{texts.abonoExceedsValue}</p>
+                      <p className="text-sm text-gray-700 font-medium">
+                        {texts.abonoExceedsConfirm.replace('{total}', formatCurrency(overpaymentTotal))}
+                      </p>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowOverpaymentConfirm(false)}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                        >
+                          {texts.cancel}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleOverpaymentConfirm}
+                          disabled={isSavingAbono}
+                          className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] disabled:opacity-50"
+                        >
+                          {isSavingAbono ? '...' : texts.save}
+                        </button>
+                      </div>
+                    </div>
+                  ) : deleteAbonoConfirm ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-8 h-8 bg-error-bg rounded-full p-1.5">
+                          <Trash2 className="h-4 w-4 text-error-red" />
+                        </div>
+                        <h3 className="text-base font-semibold text-gray-900">{texts.deleteAbono}</h3>
+                      </div>
+                      <p className="text-sm text-gray-600">{texts.areYouSure}</p>
+                      <div className="bg-gray-50 rounded-lg p-3 text-sm">
+                        <span className="text-gray-700">{formatCurrency(Number(deleteAbonoConfirm.ab.amount))}</span>
+                        <span className="text-gray-500"> · {deleteAbonoConfirm.ab.paid_at ? new Date(deleteAbonoConfirm.ab.paid_at).toLocaleDateString('es-CO') : '-'}</span>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setDeleteAbonoConfirm(null)}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                        >
+                          {texts.cancel}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!user) return
+                            await deleteAbono(user.id, deleteAbonoConfirm.ab.id)
+                            setAbonosByTransaction(prev => {
+                              const list = (prev[deleteAbonoConfirm.transaction.id] || []).filter(a => a.id !== deleteAbonoConfirm.ab.id)
+                              return { ...prev, [deleteAbonoConfirm.transaction.id]: list }
+                            })
+                            refreshData(user.id, 'abono')
+                            setDeleteAbonoConfirm(null)
+                          }}
+                          className="px-4 py-2 text-sm font-medium text-white bg-error-red rounded-md hover:bg-red-700"
+                        >
+                          {texts.delete}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Lista de abonos existentes */}
+                      <div className="mb-4 flex-shrink-0">
+                        <h3 className="text-sm font-medium text-gray-700 mb-2">{texts.totalAbonado}: {formatCurrency(getTotalAbonado(abonoModalTransaction.id))} / {formatCurrency(abonoModalTransaction.value)}</h3>
+                        <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
+                          {(abonosByTransaction[abonoModalTransaction.id] || []).length === 0 ? (
+                            <p className="px-3 py-3 text-sm text-gray-500">{texts.noAbonosYet}</p>
+                          ) : (
+                            (abonosByTransaction[abonoModalTransaction.id] || []).map((ab) => (
+                              <div key={ab.id} className="px-3 py-2 text-sm border-b border-gray-100 last:border-b-0">
+                                {editingAbono?.id === ab.id ? (
+                                  <div className="space-y-2">
+                                    <label className="block text-xs font-medium text-gray-600">{texts.amountToAbonar}</label>
+                                    {error && <p className="text-xs text-red-600">{error}</p>}
+                                    <input
+                                      type="text"
+                                      value={editAbonoAmount}
+                                      onChange={(e) => setEditAbonoAmount(e.target.value)}
+                                      placeholder="0"
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                                    />
+                                    <div className="flex gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => { setEditingAbono(null); setEditAbonoAmount(''); setError(null) }}
+                                        className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                                      >
+                                        {texts.cancel}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          if (!user || !ab.paid_at) return
+                                          const v = parseCurrency(editAbonoAmount)
+                                          if (v > 0) {
+                                            await updateAbono(user.id, ab.id, v, ab.paid_at)
+                                            setAbonosByTransaction(prev => {
+                                              const list = prev[abonoModalTransaction.id] || []
+                                              return { ...prev, [abonoModalTransaction.id]: list.map(a => a.id === ab.id ? { ...a, amount: v } : a) }
+                                            })
+                                            refreshData(user.id, 'abono')
+                                            setEditingAbono(null)
+                                            setEditAbonoAmount('')
+                                            setError(null)
+                                          } else {
+                                            setError(texts.invalidAmount)
+                                          }
+                                        }}
+                                        className="px-3 py-1.5 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e]"
+                                      >
+                                        {texts.save}
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center justify-between">
+                                    <span>{formatCurrency(Number(ab.amount))} · {ab.paid_at ? new Date(ab.paid_at).toLocaleDateString('es-CO') : '-'}</span>
+                                    <div className="flex gap-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setEditingAbono(ab)
+                                          setEditAbonoAmount(String(ab.amount))
+                                          setError(null)
+                                        }}
+                                        className="text-green-dark hover:underline"
+                                      >
+                                        {texts.editAbono}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setDeleteAbonoConfirm({ ab, transaction: abonoModalTransaction })}
+                                        className="text-red-600 hover:underline"
+                                      >
+                                        {texts.deleteAbono}
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Nuevo abono */}
+                      <div className="space-y-3 flex-shrink-0">
+                        <label className="block text-sm font-medium text-gray-700">{texts.amountToAbonar}</label>
+                        <input
+                          type="text"
+                          value={abonoModalAmount}
+                          onChange={(e) => setAbonoModalAmount(e.target.value)}
+                          placeholder="0"
+                          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                        />
+                        <label className="block text-sm font-medium text-gray-700">{texts.abonoDate}</label>
+                        <input
+                          type="date"
+                          value={abonoModalDate}
+                          onChange={(e) => setAbonoModalDate(e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                        />
+                      </div>
+                      {error && <p className="text-sm text-red-600 mt-1">{error}</p>}
+                      <div className="flex justify-end gap-2 mt-4 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAbonoModal(false)
+                            setAbonoModalTransaction(null)
+                            setAbonoModalAmount('')
+                          }}
+                          className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                        >
+                          {texts.cancel}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveAbono(false)}
+                          disabled={isSavingAbono}
+                          className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e] disabled:opacity-50"
+                        >
+                          {isSavingAbono ? '...' : texts.addAbono}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </section>
             </div>
