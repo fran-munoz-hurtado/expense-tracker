@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Settings, ChevronDown, Bug, LogOut } from 'lucide-react'
+import { Plus, ChevronDown, LogOut } from 'lucide-react'
 import { supabase, type User } from '@/lib/supabase'
 import { texts } from '@/lib/translations'
 
@@ -11,11 +11,10 @@ const DEBUG_ENABLED = false
 interface NavbarProps {
   user: User
   onLogout: () => void
-  onViewChange: (view: 'dashboard' | 'general-dashboard' | 'debug' | 'mis-metas' | 'categories' | 'como-vamos' | 'mis-ahorros' | 'configuracion') => void
-  onUserUpdate?: (updatedUser: User) => void
+  onAddExpense: () => void
 }
 
-export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: NavbarProps) {
+export default function Navbar({ user, onLogout, onAddExpense }: NavbarProps) {
   const [greeting, setGreeting] = useState('')
   const [financialMessage, setFinancialMessage] = useState('')
   const [showUserDropdown, setShowUserDropdown] = useState(false)
@@ -46,21 +45,11 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
     setFinancialMessage("Tus cuentas claras")
   }, [])
 
-  const handleDebugSection = () => {
-    onViewChange('debug')
-    setShowUserDropdown(false)
-  }
-
-  const handleConfiguracion = () => {
-    onViewChange('configuracion')
-    setShowUserDropdown(false)
-  }
-
   return (
     <>
       <div className="bg-neutral-bg border-b border-green-primary px-4 sm:px-6 py-2 shadow-soft relative">
           <div className="flex items-center justify-between">
-          {/* Left side - Welcome message and financial message in one line */}
+          {/* Left side - Welcome message and financial message */}
           <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
             <h1 className="text-base sm:text-lg font-semibold text-gray-dark font-sans truncate">
               {greeting}, {user.first_name} {user.last_name}
@@ -70,8 +59,16 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
             </span>
           </div>
 
-          {/* Right side - User menu only */}
+          {/* Right side - Add button and user menu */}
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+            <button
+              onClick={onAddExpense}
+              className="flex items-center gap-2 px-3 py-1.5 bg-green-primary text-white text-sm font-medium rounded-md hover:bg-green-dark transition-colors"
+              aria-label={texts.addTransaction}
+            >
+              <Plus className="h-4 w-4" />
+              {texts.addTransaction}
+            </button>
             {/* User menu */}
             <div className="relative" ref={dropdownRef}>
               <button 
@@ -93,25 +90,6 @@ export default function Navbar({ user, onLogout, onViewChange, onUserUpdate }: N
                     <p className="text-sm font-medium text-gray-dark font-sans">{user.first_name} {user.last_name}</p>
                     <p className="text-xs text-green-dark font-sans">{user.email}</p>
                   </div>
-                  
-                  <button
-                    onClick={handleConfiguracion}
-                    className="w-full flex items-center px-4 py-2 text-sm text-gray-dark hover:bg-border-light font-sans"
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Configuración
-                  </button>
-                  
-                  {/* Debug section - only show in development */}
-                  {process.env.NODE_ENV === 'development' && DEBUG_ENABLED && (
-                    <button
-                      onClick={handleDebugSection}
-                      className="w-full flex items-center px-4 py-2 text-sm text-gray-dark hover:bg-border-light font-sans"
-                    >
-                      <Bug className="h-4 w-4 mr-2" />
-                      {texts.profile.debugSection}
-                    </button>
-                  )}
                   
                   <div className="border-t border-border-light">
                     <button
