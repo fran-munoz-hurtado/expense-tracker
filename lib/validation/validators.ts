@@ -416,6 +416,14 @@ export class TransactionValidator extends BaseValidator {
       }
     }
 
+    // Notes validation (optional, max 500 chars)
+    if (data.notes !== undefined && data.notes !== null && data.notes !== '') {
+      const notesError = this.stringLength(data.notes, 'Notes', 0, 500)
+      if (notesError) {
+        errors.notes = [notesError]
+      }
+    }
+
     return {
       isValid: Object.keys(errors).length === 0,
       errors

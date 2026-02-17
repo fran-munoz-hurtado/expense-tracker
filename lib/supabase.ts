@@ -119,6 +119,7 @@ export type Transaction = {
   value: number
   status: 'paid' | 'pending'
   deadline?: string | null // Allow null from database
+  notes?: string | null
   type: 'expense' | 'income'
   category: string
   created_at: string

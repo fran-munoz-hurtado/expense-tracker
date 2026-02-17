@@ -48,6 +48,7 @@ interface TransactionStore {
     description?: string
     value?: number
     deadline?: string | null
+    notes?: string | null
   }) => Promise<void>
   updateRecurrentTransactionSeries: (params: {
     userId: string // UUID
@@ -208,6 +209,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     description,
     value,
     deadline,
+    notes,
   }) => {
     const { transactions } = get()
 
@@ -220,7 +222,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     }
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('[zustand] updateTransaction: editing transaction', id, 'with new values', { description, value, deadline })
+      console.log('[zustand] updateTransaction: editing transaction', id, 'with new values', { description, value, deadline, notes })
     }
 
     // ✅ 1. Mutación optimista
@@ -229,6 +231,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       ...(description !== undefined && { description }),
       ...(value !== undefined && { value }),
       ...(deadline !== undefined && { deadline }),
+      ...(notes !== undefined && { notes }),
     }
 
     set({
@@ -246,6 +249,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     if (description !== undefined) updateData.description = description
     if (value !== undefined) updateData.value = value
     if (deadline !== undefined) updateData.deadline = deadline
+    if (notes !== undefined) updateData.notes = notes
 
     const { error } = await supabase
       .from('transactions')

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw } from 'lucide-react'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw, MoreVertical, StickyNote } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
@@ -36,7 +36,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const { refreshData, dataVersion } = useDataSync()
   
   // Zustand store
-  const { transactions, isLoading, fetchTransactions, markTransactionStatus } = useTransactionStore()
+  const { transactions, isLoading, fetchTransactions, markTransactionStatus, updateTransaction } = useTransactionStore()
   
   // State management - synced from URL/parent when syncToUrl
   const currentDate = new Date()
@@ -125,7 +125,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     month: number
     year: number
     payment_deadline: string
+    notes?: string
     originalId?: number
+    transactionId?: number
     modifySeries?: boolean
     isgoal?: boolean
     category?: string
@@ -168,18 +170,25 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   
   // Mobile options menu state
   const [openOptionsMenu, setOpenOptionsMenu] = useState<number | null>(null)
+  const [openActionsDropdown, setOpenActionsDropdown] = useState<number | null>(null)
+
+  // Notes modal state (quick edit from dropdown)
+  const [showNotesModal, setShowNotesModal] = useState(false)
+  const [notesModalTransaction, setNotesModalTransaction] = useState<Transaction | null>(null)
+  const [notesModalValue, setNotesModalValue] = useState('')
   
-  // Close mobile options menu when clicking outside
+  // Close mobile options menu and desktop actions dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = () => {
       setOpenOptionsMenu(null)
+      setOpenActionsDropdown(null)
     }
     
-    if (openOptionsMenu !== null) {
+    if (openOptionsMenu !== null || openActionsDropdown !== null) {
       document.addEventListener('click', handleClickOutside)
       return () => document.removeEventListener('click', handleClickOutside)
     }
-  }, [openOptionsMenu])
+  }, [openOptionsMenu, openActionsDropdown])
 
   // Sync state from navigationParams (from URL path when on /mis-cuentas)
   useEffect(() => {
@@ -731,7 +740,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         month: nonRecurrentExpense.month,
         year: nonRecurrentExpense.year,
         payment_deadline: nonRecurrentExpense.payment_deadline || '',
+        notes: transaction.notes || '',
         originalId: nonRecurrentExpense.id,
+        transactionId: transaction.id,
         modifySeries: false,
         category: transaction.category
       })
@@ -801,7 +812,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             month: transaction.month,
             year: transaction.year,
             payment_deadline: transaction.deadline || '',
+            notes: transaction.notes || '',
             originalId: transaction.id,
+            transactionId: transaction.id,
             modifySeries: false,
             category: transaction.category
           })
@@ -824,7 +837,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             month: nonRecurrentExpense.month,
             year: nonRecurrentExpense.year,
             payment_deadline: nonRecurrentExpense.payment_deadline || '',
+            notes: transaction.notes || '',
             originalId: nonRecurrentExpense.id,
+            transactionId: transaction.id,
             modifySeries: false,
             category: transaction.category
           })
@@ -928,7 +943,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             .update({
               description: modifyFormData.description,
               value: Number(modifyFormData.value),
-              deadline: modifyFormData.payment_deadline || null
+              deadline: modifyFormData.payment_deadline || null,
+              ...(modifyFormData.notes !== undefined && { notes: modifyFormData.notes || null })
             })
             .eq('id', modifyFormData.originalId)
             .eq('user_id', user.id)
@@ -950,6 +966,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
           .eq('user_id', user.id)
 
         if (error) throw error
+
+        // Update transaction notes (notes live on transactions, not expenses)
+        if (modifyFormData.transactionId) {
+          const { error: notesError } = await supabase
+            .from('transactions')
+            .update({ notes: modifyFormData.notes || null })
+            .eq('id', modifyFormData.transactionId)
+            .eq('user_id', user.id)
+          if (notesError) console.warn('Could not update transaction notes:', notesError)
+        }
       }
 
       // Trigger global data refresh using the new system
@@ -985,6 +1011,33 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const handleAttachmentList = (transaction: Transaction) => {
     setSelectedTransactionForList(transaction)
     setShowAttachmentsList(true)
+  }
+
+  const handleNotesClick = (transaction: Transaction) => {
+    setNotesModalTransaction(transaction)
+    setNotesModalValue(transaction.notes ?? '')
+    setShowNotesModal(true)
+    setOpenActionsDropdown(null)
+    setOpenOptionsMenu(null)
+  }
+
+  const handleSaveNotes = async () => {
+    if (!notesModalTransaction || !user) return
+    try {
+      await updateTransaction({
+        id: notesModalTransaction.id,
+        userId: user.id,
+        notes: notesModalValue.trim() || null
+      })
+      refreshData(user.id, 'update_notes')
+    } catch (e) {
+      console.error('Error saving notes:', e)
+      setError('Error al guardar las notas')
+    } finally {
+      setShowNotesModal(false)
+      setNotesModalTransaction(null)
+      setNotesModalValue('')
+    }
   }
 
   const handleAttachmentUploadComplete = (attachment: TransactionAttachment) => {
@@ -1445,7 +1498,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             ) : (
               <>
               {/* Desktop Table View */}
-              <div className="hidden lg:block" onMouseLeave={() => setHoveredRow(null)}>
+              <div className="hidden lg:block" onMouseLeave={() => { setHoveredRow(null); setOpenActionsDropdown(null) }}>
                 <div className="overflow-x-auto">
                   <table className="min-w-full">
                     <thead className="bg-gray-50 border-b border-gray-200">
@@ -1489,9 +1542,6 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             )}
                           </div>
                         </th>
-                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
-                          {texts.paid}
-                        </th>
                         <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
                           {texts.actions}
                         </th>
@@ -1532,6 +1582,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                       </button>
                                     )}
                                     
+                                    {/* Notes icon with tooltip */}
+                                    {transaction.notes && transaction.notes.trim() && (
+                                      <div className="relative group">
+                                        <StickyNote className="h-3 w-3 text-amber-500 cursor-default" />
+                                        <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 max-w-xs left-full ml-2 -top-2 break-words">
+                                          {transaction.notes}
+                                        </div>
+                                      </div>
+                                    )}
                                     {/* Info icon with tooltip */}
                                     {(transaction.deadline || transaction.source_type === 'recurrent') && (
                                       <div className="relative group">
@@ -1577,14 +1636,14 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                 {formatCurrency(transaction.value)}
                               </div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-center">
-                              <div className="flex items-center justify-center">
-                                <div className="relative">
+                            <td className="px-2 py-3 whitespace-nowrap">
+                              <div className="flex items-center gap-x-1">
+                                {/* Pay/Unpay - always visible */}
+                                <div className="relative" onClick={(e) => e.stopPropagation()}>
                                   <input
                                     type="checkbox"
                                     checked={transaction.status === 'paid'}
                                     onChange={(e) => {
-                                      console.log(`🔘 Desktop: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
                                       handleCheckboxChange(transaction.id, e.target.checked)
                                     }}
                                     className="sr-only"
@@ -1603,7 +1662,6 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                       ${transaction.status === 'paid' ? 'scale-110' : 'scale-100'}
                                     `}
                                   >
-                                    {/* Checkmark with white color */}
                                     {transaction.status === 'paid' && (
                                       <svg
                                         className="w-3 h-3 text-white relative z-10"
@@ -1625,41 +1683,69 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                         />
                                       </svg>
                                     )}
-                                    
-                                    {/* Hover effect */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
                                   </label>
                                 </div>
-                              </div>
-                            </td>
-                            <td className="px-2 py-3 whitespace-nowrap">
-                              <div className="flex items-center gap-x-0.5">
-                                <button
-                                  onClick={() => handleAttachmentList(transaction)}
-                                  className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative flex items-center justify-center p-1 rounded-md transition-all duration-200 hover:scale-105"
-                                  title="View attachments"
-                                >
-                                  <Paperclip className="w-3 h-3" />
-                                  {attachmentCounts[transaction.id] > 0 && (
-                                    <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
-                                      {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
-                                    </span>
+                                {/* Dropdown for other actions */}
+                                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    onClick={() => setOpenActionsDropdown(openActionsDropdown === transaction.id ? null : transaction.id)}
+                                    className="p-1 rounded-md text-green-dark hover:bg-gray-100 hover:opacity-80 transition-all"
+                                    aria-label="Más opciones"
+                                  >
+                                    <MoreVertical className="w-4 h-4" />
+                                  </button>
+                                  {openActionsDropdown === transaction.id && (
+                                    <div className="absolute right-0 top-full mt-1 py-1 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[140px] z-20">
+                                      <button
+                                        onClick={() => {
+                                          handleAttachmentList(transaction)
+                                          setOpenActionsDropdown(null)
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                                      >
+                                        <Paperclip className="w-4 h-4 flex-shrink-0" />
+                                        <span>{texts.attachments}</span>
+                                        {attachmentCounts[transaction.id] > 0 && (
+                                          <span className="ml-auto bg-warning-bg text-gray-700 text-xs rounded-full px-2 py-0.5">
+                                            {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
+                                          </span>
+                                        )}
+                                      </button>
+                                      <button
+                                        onClick={() => handleNotesClick(transaction)}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                                      >
+                                        <StickyNote className="w-4 h-4 flex-shrink-0" />
+                                        <span>{texts.notes}</span>
+                                        {transaction.notes && transaction.notes.trim() && (
+                                          <span className="ml-auto text-amber-500">·</span>
+                                        )}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          handleModifyTransaction(transaction.id)
+                                          setOpenActionsDropdown(null)
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                                      >
+                                        <Edit className="w-4 h-4 flex-shrink-0" />
+                                        <span>Editar</span>
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          handleDeleteTransaction(transaction.id)
+                                          setOpenActionsDropdown(null)
+                                        }}
+                                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-sans"
+                                      >
+                                        <Trash2 className="w-4 h-4 flex-shrink-0" />
+                                        <span>{texts.delete}</span>
+                                      </button>
+                                    </div>
                                   )}
-                                </button>
-                                <button
-                                  onClick={() => handleModifyTransaction(transaction.id)}
-                                  className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-1 rounded-md transition-all duration-200 hover:scale-105"
-                                  title="Modify transaction"
-                                >
-                                  <Edit className="w-3 h-3" />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteTransaction(transaction.id)}
-                                  className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-1 rounded-md transition-all duration-200 hover:scale-105"
-                                  title="Delete transaction"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
+                                </div>
                               </div>
                             </td>
                           </tr>
@@ -1782,104 +1868,88 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                           )}
                         </div>
 
-                        <button
-                          onClick={() => setOpenOptionsMenu(isMenuOpen ? null : transaction.id)}
-                          className="text-xs text-gray-500 hover:text-gray-700 transition-colors ml-auto"
-                        >
-                          <span>Ver opciones</span>
-                          <svg className={`w-3 h-3 inline ml-1 transition-transform ${isMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        </button>
-                      </div>
-
-                      {/* EXPANDIBLE */}
-                      {isMenuOpen && (
-                        <div className="ml-9 mt-2 p-4 bg-white rounded-xl shadow-sm border border-gray-200 max-w-full overflow-hidden">
-                          <div className="space-y-3">
-                            {/* Fila 1: Categoría */}
-                            <div>
-                              <h4 className="text-xs font-medium text-gray-500 font-sans mb-2">
-                                Categoría
-                              </h4>
-                              {/* Category - only show for eligible transactions */}
+                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            onClick={() => setOpenOptionsMenu(isMenuOpen ? null : transaction.id)}
+                            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                            aria-label="Más opciones"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                          {isMenuOpen && (
+                            <div className="absolute right-0 top-full mt-1 py-1 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[160px] z-20">
                               {transaction.type === 'expense' && 
                                !(transaction.category === 'Ahorro' && 
                                  (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
-                               !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) ? (
+                               !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
                                 <button
                                   onClick={() => {
                                     handleCategoryClick(transaction)
                                     setOpenOptionsMenu(null)
                                   }}
-                                  className="p-0 m-0 bg-transparent border-none appearance-none focus:outline-none"
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
                                 >
-                                  <span className={cn(
-                                    "inline-flex items-center justify-center px-3 py-0.5 text-xs font-medium font-sans rounded-full min-w-[80px]",
-                                    "text-green-dark bg-beige"
-                                  )}>
-                                    {transaction.category && transaction.category !== 'sin categoría' 
-                                      ? transaction.category 
-                                      : 'sin categoría'}
-                                  </span>
+                                  <Tag className="w-4 h-4 flex-shrink-0" />
+                                  <span>Categoría: {transaction.category && transaction.category !== 'sin categoría' ? transaction.category : 'sin categoría'}</span>
                                 </button>
-                              ) : (
-                                <span className="text-xs text-gray-400 font-sans">
-                                  No categorizable
-                                </span>
                               )}
+                              <button
+                                onClick={() => {
+                                  handleAttachmentList(transaction)
+                                  setOpenOptionsMenu(null)
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                              >
+                                <Paperclip className="w-4 h-4 flex-shrink-0" />
+                                <span>{texts.attachments}</span>
+                                {attachmentCounts[transaction.id] > 0 && (
+                                  <span className="ml-auto bg-warning-bg text-gray-700 text-xs rounded-full px-2 py-0.5">
+                                    {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
+                                  </span>
+                                )}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleNotesClick(transaction)
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                              >
+                                <StickyNote className="w-4 h-4 flex-shrink-0" />
+                                <span>{texts.notes}</span>
+                                {transaction.notes && transaction.notes.trim() && (
+                                  <span className="ml-auto text-amber-500">·</span>
+                                )}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleModifyTransaction(transaction.id)
+                                  setOpenOptionsMenu(null)
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                              >
+                                <Edit className="w-4 h-4 flex-shrink-0" />
+                                <span>Editar</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleDeleteTransaction(transaction.id)
+                                  setOpenOptionsMenu(null)
+                                }}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-sans"
+                              >
+                                <Trash2 className="w-4 h-4 flex-shrink-0" />
+                                <span>{texts.delete}</span>
+                              </button>
                             </div>
-                            
-                            {/* Fila 2: Acciones */}
-                            <div>
-                              <h4 className="text-xs font-medium text-gray-500 font-sans mb-2">
-                                Acciones
-                              </h4>
-                              {/* Action Icons - horizontal row */}
-                              <div className="flex justify-start gap-x-3">
-                                {/* Edit */}
-                                <button
-                                  onClick={() => {
-                                    handleModifyTransaction(transaction.id)
-                                    setOpenOptionsMenu(null)
-                                  }}
-                                  className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-1.5 rounded-md transition-all duration-200 hover:scale-105 flex-shrink-0"
-                                  title="Editar"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                                
-                                {/* Attachments */}
-                                <button
-                                  onClick={() => {
-                                    handleAttachmentList(transaction)
-                                    setOpenOptionsMenu(null)
-                                  }}
-                                  className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 relative p-1.5 rounded-md transition-all duration-200 hover:scale-105 flex-shrink-0"
-                                  title="Adjuntos"
-                                >
-                                  <Paperclip className="w-4 h-4" />
-                                  {attachmentCounts[transaction.id] > 0 && (
-                                    <span className="absolute -top-0.5 -right-0.5 bg-warning-bg text-gray-700 text-[10px] rounded-full w-4 h-4 flex items-center justify-center font-normal">
-                                      {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
-                                    </span>
-                                  )}
-                                </button>
-                                
-                                {/* Delete */}
-                                <button
-                                  onClick={() => {
-                                    handleDeleteTransaction(transaction.id)
-                                    setOpenOptionsMenu(null)
-                                  }}
-                                  className="text-green-dark hover:opacity-70 hover:shadow-md hover:shadow-gray-200 p-1.5 rounded-md transition-all duration-200 hover:scale-105 flex-shrink-0"
-                                  title="Eliminar"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {transaction.notes && transaction.notes.trim() && (
+                        <div className="ml-9 mt-1 flex items-start gap-1">
+                          <StickyNote className="h-3 w-3 text-amber-500 flex-shrink-0 mt-0.5" />
+                          <p className="text-xs text-gray-600 line-clamp-2 font-sans">{transaction.notes}</p>
                         </div>
                       )}
                     </div>
@@ -1889,6 +1959,58 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             </>
             )}
           </div>
+
+          {/* Notes Modal (quick edit from dropdown) */}
+          {showNotesModal && notesModalTransaction && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" onClick={() => { setShowNotesModal(false); setNotesModalTransaction(null); setNotesModalValue('') }} />
+              <section className="modify-form-modal relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => { setShowNotesModal(false); setNotesModalTransaction(null); setNotesModalValue('') }}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 z-10"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="flex items-center justify-center w-8 h-8 bg-amber-50 rounded-full p-1.5">
+                      <StickyNote className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">{texts.notes}</h2>
+                      <p className="text-sm text-gray-500 truncate max-w-[200px]">{notesModalTransaction.description}</p>
+                    </div>
+                  </div>
+                  <textarea
+                    value={notesModalValue}
+                    onChange={(e) => setNotesModalValue(e.target.value.slice(0, 500))}
+                    placeholder={texts.notesPlaceholder}
+                    rows={4}
+                    maxLength={500}
+                    className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400 resize-none"
+                  />
+                  <p className="text-xs text-gray-500 mt-1 font-sans">{notesModalValue.length}/500</p>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button
+                      type="button"
+                      onClick={() => { setShowNotesModal(false); setNotesModalTransaction(null); setNotesModalValue('') }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                    >
+                      {texts.cancel}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveNotes}
+                      className="px-4 py-2 text-sm font-medium text-white bg-green-primary rounded-md hover:bg-[#77b16e]"
+                    >
+                      {texts.save}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
 
           {/* Delete Confirmation Modal */}
           {showDeleteModal && deleteModalData && (
@@ -2109,7 +2231,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
               {/* Overlay borroso y semitransparente */}
               <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-              <section className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <section className="modify-form-modal relative bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-md max-h-[90vh] overflow-y-auto">
                 <button
                   onClick={resetModifyForm}
                   className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1 z-10"
@@ -2139,7 +2261,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             type="text"
                             value={modifyFormData.description}
                             onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                             placeholder="Descripción"
                             required
                           />
@@ -2154,7 +2276,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             <select
                               value={modifyFormData.month_from}
                               onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_from: Number(e.target.value) } : null)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                              className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                               required
                             >
                               {months.map((month, index) => (
@@ -2167,7 +2289,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             <select
                               value={modifyFormData.year_from}
                               onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_from: Number(e.target.value) } : null)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                              className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                               required
                             >
                               {availableYears.map((year, index) => (
@@ -2182,7 +2304,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             <select
                               value={modifyFormData.month_to}
                               onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month_to: Number(e.target.value) } : null)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                              className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                               required
                             >
                               {months.map((month, index) => (
@@ -2195,7 +2317,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             <select
                               value={modifyFormData.year_to}
                               onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year_to: Number(e.target.value) } : null)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                              className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                               required
                             >
                               {availableYears.map((year, index) => (
@@ -2218,7 +2340,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               value: parseCurrency(e.target.value)
                             } : null)}
                             placeholder="$0.00"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                             required
                           />
                         </div>
@@ -2231,7 +2353,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             value={modifyFormData.payment_day_deadline}
                             onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_day_deadline: e.target.value } : null)}
                             placeholder="15"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                           />
                         </div>
                       </div>
@@ -2290,7 +2412,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                           type="text"
                           value={modifyFormData.description}
                           onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                           placeholder="Descripción"
                           required
                         />
@@ -2303,7 +2425,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                           <select
                             value={modifyFormData.month}
                             onChange={(e) => setModifyFormData(prev => prev ? { ...prev, month: Number(e.target.value) } : null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                             required
                           >
                             {months.map((month, index) => (
@@ -2316,7 +2438,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                           <select
                             value={modifyFormData.year}
                             onChange={(e) => setModifyFormData(prev => prev ? { ...prev, year: Number(e.target.value) } : null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                             required
                           >
                             {availableYears.map((year, index) => (
@@ -2338,7 +2460,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               value: parseCurrency(e.target.value)
                             } : null)}
                             placeholder="$0.00"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                             required
                           />
                         </div>
@@ -2348,9 +2470,23 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             type="date"
                             value={modifyFormData.payment_deadline}
                             onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                            className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                           />
                         </div>
+                      </div>
+
+                      {/* Notas */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-dark">{texts.notes}</label>
+                        <textarea
+                          value={modifyFormData.notes ?? ''}
+                          onChange={(e) => setModifyFormData(prev => prev ? { ...prev, notes: e.target.value.slice(0, 500) } : null)}
+                          placeholder={texts.notesPlaceholder}
+                          rows={3}
+                          maxLength={500}
+                          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400 resize-none"
+                        />
+                        <p className="text-xs text-gray-500 font-sans">{(modifyFormData.notes?.length ?? 0)}/500</p>
                       </div>
 
                       {/* Botones */}
@@ -2389,7 +2525,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                         type="text"
                         value={modifyFormData.description}
                         onChange={(e) => setModifyFormData(prev => prev ? { ...prev, description: e.target.value } : null)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                         placeholder="Descripción"
                         required
                       />
@@ -2407,7 +2543,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             value: parseCurrency(e.target.value)
                           } : null)}
                           placeholder="$0.00"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
                           required
                         />
                       </div>
@@ -2417,9 +2553,23 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                           type="date"
                           value={modifyFormData.payment_deadline}
                           onChange={(e) => setModifyFormData(prev => prev ? { ...prev, payment_deadline: e.target.value } : null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
+                          className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm"
                         />
                       </div>
+                    </div>
+
+                    {/* Notas */}
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">{texts.notes}</label>
+                      <textarea
+                        value={modifyFormData.notes ?? ''}
+                        onChange={(e) => setModifyFormData(prev => prev ? { ...prev, notes: e.target.value.slice(0, 500) } : null)}
+                        placeholder={texts.notesPlaceholder}
+                        rows={3}
+                        maxLength={500}
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400 resize-none"
+                      />
+                      <p className="text-xs text-gray-500 font-sans">{(modifyFormData.notes?.length ?? 0)}/500</p>
                     </div>
 
                     {/* Botones */}

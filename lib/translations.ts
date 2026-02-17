@@ -78,6 +78,10 @@ export const translations = {
   isGoal: 'Es Meta',
   goal: 'Meta',
   
+  // Notes
+  notes: 'Notas',
+  notesPlaceholder: 'Añade notas opcionales (máx. 500 caracteres)',
+
   // Attachments
   attachments: 'Adjuntos',
   uploadFile: 'Subir Archivo',

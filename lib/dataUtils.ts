@@ -481,6 +481,7 @@ export const updateTransaction = asyncHandler(async (
     value?: number
     status?: 'paid' | 'pending'
     deadline?: string | null
+    notes?: string | null
     type?: TransactionType
     category?: Category
   }
