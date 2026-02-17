@@ -773,6 +773,7 @@
   input[type="email"],
   input[type="password"],
   input[type="number"],
+  input[type="date"],
   textarea {
     color: #1a1a1a;
   }
@@ -781,7 +782,20 @@
   input[type="email"]:focus,
   input[type="password"]:focus,
   input[type="number"]:focus,
+  input[type="date"]:focus,
   textarea:focus {
     color: #1a1a1a;
   }
+}
+
+/* Force white background on modal form inputs - independent of browser/screen settings */
+.modify-form-modal input,
+.modify-form-modal select,
+.modify-form-modal textarea {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+}
+
+.modify-form-modal {
+  color-scheme: light;
 } 
