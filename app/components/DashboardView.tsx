@@ -840,7 +840,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         .eq('id', sourceId)
         .eq('user_id', user.id)
         .maybeSingle()
-      recurrentExpense = data as RecurrentExpense | null
+      recurrentExpense = data ?? undefined
     }
 
     const period = recurrentExpense
@@ -1017,7 +1017,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             .eq('id', sourceId)
             .eq('user_id', user.id)
             .maybeSingle()
-          recurrentExpense = data as RecurrentExpense | null
+          recurrentExpense = data ?? undefined
         }
         if (!recurrentExpense) {
           // Serie eliminada o no accesible: no abrir formulario de "solo esta" — el usuario eligió "Toda la Serie"
@@ -1059,7 +1059,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
               .eq('id', sourceId)
               .eq('user_id', user.id)
               .maybeSingle()
-            recurrentExpense = data as RecurrentExpense | null
+            recurrentExpense = data ?? undefined
           }
           if (!recurrentExpense) {
             // Serie no encontrada: usar datos de la transacción
