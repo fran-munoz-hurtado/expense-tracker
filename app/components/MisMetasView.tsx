@@ -17,6 +17,7 @@ import TransactionAttachments from './TransactionAttachments'
 import TransactionIcon from './TransactionIcon'
 import React from 'react' // Added missing import for React
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useGroupStore } from '@/lib/store/groupStore'
 
 interface MisMetasViewProps {
   user: User
@@ -49,8 +50,8 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   const { refreshData } = useDataSync()
   const navigation = useAppNavigation()
   
-  // Zustand store
   const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  const { currentGroupId } = useGroupStore()
   
   // Function to validate goal transactions for debugging
   function validateGoalTransactions(transactions: Transaction[]) {
@@ -223,7 +224,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
 
   // Fetch goal data using pure Zustand pattern
   const fetchGoalData = useCallback(async () => {
-    if (!user) return
+    if (!user || !currentGroupId) return
     
     try {
       setError(null)
@@ -231,15 +232,12 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       console.log('[zustand] MisMetasView: fetchTransactions triggered')
       
       // Use pure Zustand pattern with scope: 'all' for historical goal data
-      await fetchTransactions({ 
-        userId: user.id, 
-        scope: 'all' // Fetch all transactions without month/year filters
-      })
+      await fetchTransactions({ userId: user.id, groupId: currentGroupId, scope: 'all' })
       
       console.log('[zustand] MisMetasView: transactions loaded:', transactions.length)
       
       // Also fetch expenses to build recurrentGoalMap (this is legitimate)
-      const expenses = await fetchUserExpenses(user)
+      const expenses = await fetchUserExpenses(user, currentGroupId)
       setRecurrentExpenses(expenses.recurrent)
       setNonRecurrentExpenses(expenses.nonRecurrent)
 
@@ -253,7 +251,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
       console.error('❌ Error in fetchGoalData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
-  }, [user, fetchTransactions, transactions])
+  }, [user, currentGroupId, fetchTransactions, transactions])
 
   // Initial data fetch
   useEffect(() => {

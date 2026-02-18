@@ -2,11 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { ChevronDown, LogOut } from 'lucide-react'
-import { supabase, type User } from '@/lib/supabase'
+import { type User } from '@/lib/supabase'
 import { texts } from '@/lib/translations'
-
-// Debug feature flag - set to true to enable debug section
-const DEBUG_ENABLED = false
 
 interface NavbarProps {
   user: User
@@ -17,43 +14,30 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
   const [greeting, setGreeting] = useState('')
   const [financialMessage, setFinancialMessage] = useState('')
   const [showUserDropdown, setShowUserDropdown] = useState(false)
-
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowUserDropdown(false)
-      }
+      const target = event.target as Node
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) setShowUserDropdown(false)
     }
-
     document.addEventListener('mousedown', handleClickOutside)
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Set greeting to a friendly but neutral 'Hola'
-  useEffect(() => {
-    setGreeting('Hola')
-  }, [])
-
-  // Set fixed financial message
-  useEffect(() => {
-    setFinancialMessage("Tus cuentas claras")
-  }, [])
+  useEffect(() => { setGreeting('Hola') }, [])
+  useEffect(() => { setFinancialMessage('Tus cuentas claras') }, [])
 
   return (
     <>
       <div className="relative z-10 w-full bg-gradient-to-br from-[#77b56e] via-[#6a9f61] to-[#5d7760] px-4 sm:px-6 py-2.5 shadow-[0_4px_14px_rgba(93,119,96,0.25)]">
           <div className="flex items-center justify-between">
-          {/* Left side - Welcome message and financial message */}
-          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+          {/* Left side - Welcome message */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <h1 className="text-base sm:text-lg font-semibold text-white font-sans truncate">
               {greeting}, {user.first_name} {user.last_name}
             </h1>
-            <span className="text-xs sm:text-sm text-white/90 font-sans whitespace-nowrap">
+            <span className="text-xs sm:text-sm text-white/90 font-sans whitespace-nowrap hidden sm:inline">
               {financialMessage}
             </span>
           </div>

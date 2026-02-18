@@ -1,4 +1,4 @@
-import { supabase, createOptimizedQuery, batchQuery, type User, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type TransactionAttachment } from './supabase'
+import { supabase, createOptimizedQuery, createGroupQuery, batchQuery, type User, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type TransactionAttachment } from './supabase'
 import { CATEGORIES, TRANSACTION_TYPES, DEFAULT_VALUES, type Category, type TransactionType } from './config/constants'
 import { AppError, asyncHandler, ErrorHandler } from './errors/AppError'
 import { TransactionValidator, ExpenseValidator, ValidationHelper } from './validation/validators'
@@ -7,89 +7,76 @@ import { APP_CONFIG } from './config/constants'
 
 // Enhanced data fetching functions with comprehensive error handling and validation
 export const fetchUserTransactions = asyncHandler(async (
-  user: User, 
-  month?: number, 
-  year?: number, 
-  type?: TransactionType, 
-  category?: Category
+  user: User,
+  month?: number,
+  year?: number,
+  type?: TransactionType,
+  category?: Category,
+  groupId?: string | null
 ): Promise<Transaction[]> => {
   if (!user || !user.id) {
     throw AppError.validation('Invalid user provided to fetchUserTransactions')
   }
-  
+  if (!groupId) {
+    return [] // Group required for group-based view
+  }
+
   // Validate month and year if provided
   if (month !== undefined && (month < 1 || month > 12)) {
     throw AppError.validation('Invalid month provided to fetchUserTransactions')
   }
-  
   if (year !== undefined && (year < 1900 || year > 2100)) {
     throw AppError.validation('Invalid year provided to fetchUserTransactions')
   }
-  
-  const cacheKey = `transactions-${user.id}-${month || 'all'}-${year || 'all'}-${type || 'all'}-${category || 'all'}`
-  const cached = globalCaches.transactions.get<Transaction[]>(cacheKey)
-  
-  if (cached) {
-    return cached
-  }
 
-  let query = createOptimizedQuery('transactions', user.id)
-  
+  const cacheKey = `transactions-${groupId}-${month || 'all'}-${year || 'all'}-${type || 'all'}-${category || 'all'}`
+  const cached = globalCaches.transactions.get<Transaction[]>(cacheKey)
+  if (cached) return cached
+
+  let query = createGroupQuery('transactions', groupId)
+
   if (month && year) {
     query = query.eq('month', month).eq('year', year)
   } else if (year) {
-    // Apply year filter even when month is not specified
     query = query.eq('year', year)
   } else if (month) {
-    // Apply month filter even when year is not specified
     query = query.eq('month', month)
   }
-  
-  if (type) {
-    query = query.eq('type', type)
-  }
-  
-  if (category) {
-    query = query.eq('category', category)
-  }
-  
+  if (type) query = query.eq('type', type)
+  if (category) query = query.eq('category', category)
+
   const { data, error } = await query.order('created_at', { ascending: false })
-  
   if (error) {
     throw AppError.database(`Failed to fetch transactions: ${error.message}`, error)
   }
-  
   const result = data || []
   globalCaches.transactions.set(cacheKey, result)
   return result
 })
 
-export const fetchUserExpenses = asyncHandler(async (user: User, type?: TransactionType, category?: Category): Promise<{
-  recurrent: RecurrentExpense[]
-  nonRecurrent: NonRecurrentExpense[]
-}> => {
+export const fetchUserExpenses = asyncHandler(async (
+  user: User,
+  groupId: string | null,
+  type?: TransactionType,
+  category?: Category
+): Promise<{ recurrent: RecurrentExpense[]; nonRecurrent: NonRecurrentExpense[] }> => {
   if (!user || !user.id) {
     throw AppError.validation('Invalid user provided to fetchUserExpenses')
   }
-
-  const cacheKey = `expenses-${user.id}-${type || 'all'}-${category || 'all'}`
-  const cached = globalCaches.userData.get<{
-    recurrent: RecurrentExpense[]
-    nonRecurrent: NonRecurrentExpense[]
-  }>(cacheKey)
-  
-  if (cached) {
-    return cached
+  if (!groupId) {
+    return { recurrent: [], nonRecurrent: [] }
   }
 
-  let recurrentQuery = createOptimizedQuery('recurrent_expenses', user.id)
-  let nonRecurrentQuery = createOptimizedQuery('non_recurrent_expenses', user.id)
-  
+  const cacheKey = `expenses-${groupId}-${type || 'all'}-${category || 'all'}`
+  const cached = globalCaches.userData.get<{ recurrent: RecurrentExpense[]; nonRecurrent: NonRecurrentExpense[] }>(cacheKey)
+  if (cached) return cached
+
+  let recurrentQuery = createGroupQuery('recurrent_expenses', groupId)
+  let nonRecurrentQuery = createGroupQuery('non_recurrent_expenses', groupId)
   if (type) {
     recurrentQuery = recurrentQuery.eq('type', type)
     nonRecurrentQuery = nonRecurrentQuery.eq('type', type)
   }
-  
   if (category) {
     recurrentQuery = recurrentQuery.eq('category', category)
     nonRecurrentQuery = nonRecurrentQuery.eq('category', category)
@@ -99,7 +86,6 @@ export const fetchUserExpenses = asyncHandler(async (user: User, type?: Transact
     recurrentQuery.select('*'),
     nonRecurrentQuery.select('*')
   ])
-
   const result = {
     recurrent: recurrent.data || [],
     nonRecurrent: nonRecurrent.data || []
@@ -108,30 +94,28 @@ export const fetchUserExpenses = asyncHandler(async (user: User, type?: Transact
   return result
 })
 
-export const fetchMonthlyStats = asyncHandler(async (user: User, month: number, year: number) => {
+export const fetchMonthlyStats = asyncHandler(async (user: User, month: number, year: number, groupId: string | null) => {
   if (!user || !user.id) {
     throw AppError.validation('Invalid user provided to fetchMonthlyStats')
   }
-
   if (month < 1 || month > 12) {
     throw AppError.validation('Invalid month provided to fetchMonthlyStats')
   }
-
   if (year < 1900 || year > 2100) {
     throw AppError.validation('Invalid year provided to fetchMonthlyStats')
   }
-
-  const cacheKey = `monthly-stats-${user.id}-${month}-${year}`
-  const cached = globalCaches.stats.get(cacheKey)
-  
-  if (cached) {
-    return cached
+  if (!groupId) {
+    return { total: 0, paid: 0, pending: 0, expenses: 0, income: 0, goals: 0, overdue: 0 }
   }
+
+  const cacheKey = `monthly-stats-${groupId}-${month}-${year}`
+  const cached = globalCaches.stats.get(cacheKey)
+  if (cached) return cached
 
   const { data, error } = await supabase
     .from('transactions')
     .select('value, status, type, category')
-    .eq('user_id', user.id)
+    .eq('group_id', groupId)
     .eq('month', month)
     .eq('year', year)
 
@@ -139,40 +123,37 @@ export const fetchMonthlyStats = asyncHandler(async (user: User, month: number, 
     throw AppError.database(`Failed to fetch monthly stats: ${error.message}`, error)
   }
 
-  // For goals calculation, we need to fetch from recurrent_expenses since isgoal is there
   const { data: goalData, error: goalError } = await supabase
     .from('recurrent_expenses')
-    .select(`
-      id,
-      value,
-      transactions!inner(
-        id,
-        month,
-        year
-      )
-    `)
-    .eq('user_id', user.id)
+    .select('id, value')
+    .eq('group_id', groupId)
     .eq('isgoal', true)
-    .eq('transactions.month', month)
-    .eq('transactions.year', year)
 
   if (goalError) {
     console.warn('Failed to fetch goal data for stats:', goalError.message)
   }
 
-  const stats = {
-    total: data?.reduce((sum, t) => sum + t.value, 0) || 0,
-    paid: data?.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.value, 0) || 0,
-    pending: data?.filter(t => t.status === 'pending').reduce((sum, t) => sum + t.value, 0) || 0,
-    expenses: data?.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.value, 0) || 0,
-    income: data?.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0) || 0,
-    goals: goalData?.reduce((sum, g) => sum + g.value, 0) || 0,
-    overdue: data?.filter(t => {
-      // Calculate overdue logic here if needed
-      return false
-    }).reduce((sum, t) => sum + t.value, 0) || 0
-  }
+  const goalTransactions = goalData
+    ? (await supabase
+        .from('transactions')
+        .select('value')
+        .eq('month', month)
+        .eq('year', year)
+        .in('source_id', goalData.map(g => g.id))
+        .eq('source_type', 'recurrent')
+        .eq('group_id', groupId))
+        .data || []
+    : []
 
+  const stats = {
+    total: data?.reduce((sum, t) => sum + Number(t.value), 0) || 0,
+    paid: data?.filter(t => t.status === 'paid').reduce((sum, t) => sum + Number(t.value), 0) || 0,
+    pending: data?.filter(t => t.status === 'pending').reduce((sum, t) => sum + Number(t.value), 0) || 0,
+    expenses: data?.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.value), 0) || 0,
+    income: data?.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.value), 0) || 0,
+    goals: goalTransactions.reduce((sum, t) => sum + Number(t.value), 0) || 0,
+    overdue: 0
+  }
   globalCaches.stats.set(cacheKey, stats)
   return stats
 })
@@ -384,18 +365,20 @@ export const createRecurrentExpense = asyncHandler(async (
     type?: TransactionType
     category?: Category
     isgoal?: boolean
-  }
+  },
+  groupId?: string | null
 ) => {
   if (!user || !user.id) {
     throw AppError.validation('Invalid user provided to createRecurrentExpense')
   }
+  if (!groupId) {
+    throw AppError.validation('Grupo requerido para crear gasto recurrente')
+  }
 
-  // Validate expense data
   const validationResult = ExpenseValidator.validateRecurrentCreation({
     ...expenseData,
     user_id: user.id
   })
-  
   if (!validationResult.isValid) {
     throw AppError.validation('Invalid recurrent expense data', { fields: validationResult.errors })
   }
@@ -405,6 +388,7 @@ export const createRecurrentExpense = asyncHandler(async (
     .insert({
       ...expenseData,
       user_id: user.id,
+      group_id: groupId,
       type: expenseData.type || DEFAULT_VALUES.EXPENSE.TYPE,
       category: expenseData.category || DEFAULT_VALUES.EXPENSE.CATEGORY,
       isgoal: expenseData.isgoal || DEFAULT_VALUES.EXPENSE.ISGOAL,
@@ -433,14 +417,16 @@ export const createNonRecurrentExpense = asyncHandler(async (
     payment_deadline?: string | null
     type?: TransactionType
     category?: Category
-    // isgoal is NOT included because non_recurrent_expenses table doesn't have this column
-  }
+  },
+  groupId?: string | null
 ) => {
   if (!user || !user.id) {
     throw AppError.validation('Invalid user provided to createNonRecurrentExpense')
   }
+  if (!groupId) {
+    throw AppError.validation('Grupo requerido para crear gasto')
+  }
 
-  // Validate expense data
   const validationResult = ExpenseValidator.validateNonRecurrentCreation({
     ...expenseData,
     user_id: user.id
@@ -455,9 +441,9 @@ export const createNonRecurrentExpense = asyncHandler(async (
     .insert({
       ...expenseData,
       user_id: user.id,
+      group_id: groupId,
       type: expenseData.type || DEFAULT_VALUES.EXPENSE.TYPE,
       category: expenseData.category || DEFAULT_VALUES.EXPENSE.CATEGORY,
-      // isgoal is NOT included because non_recurrent_expenses table doesn't have this column
     })
     .select()
     .single()
@@ -528,54 +514,29 @@ export const updateTransaction = asyncHandler(async (
 })
 
 // Enhanced category-based queries
-export const fetchTransactionsByCategory = asyncHandler(async (user: User, category: Category, month?: number, year?: number) => {
-  if (!user || !user.id) {
-    throw AppError.validation('Invalid user provided to fetchTransactionsByCategory')
-  }
-
-  const cacheKey = `transactions-category-${user.id}-${category}-${month || 'all'}-${year || 'all'}`
+export const fetchTransactionsByCategory = asyncHandler(async (user: User, groupId: string | null, category: Category, month?: number, year?: number) => {
+  if (!user || !user.id) throw AppError.validation('Invalid user provided to fetchTransactionsByCategory')
+  if (!groupId) return []
+  const cacheKey = `transactions-category-${groupId}-${category}-${month || 'all'}-${year || 'all'}`
   const cached = globalCaches.transactions.get<Transaction[]>(cacheKey)
-  
-  if (cached) {
-    return cached
-  }
-
-  let query = createOptimizedQuery('transactions', user.id)
-    .eq('category', category)
-  
-  if (month && year) {
-    query = query.eq('month', month).eq('year', year)
-  }
-  
+  if (cached) return cached
+  let query = createGroupQuery('transactions', groupId).eq('category', category)
+  if (month && year) query = query.eq('month', month).eq('year', year)
   const { data, error } = await query.order('created_at', { ascending: false })
-  
-  if (error) {
-    throw AppError.database(`Failed to fetch transactions by category: ${error.message}`, error)
-  }
-
+  if (error) throw AppError.database(`Failed to fetch transactions by category: ${error.message}`, error)
   const result = data || []
   globalCaches.transactions.set(cacheKey, result)
   return result
 })
 
-export const fetchTransactionsByType = asyncHandler(async (user: User, type: TransactionType, month?: number, year?: number) => {
-  if (!user || !user.id) {
-    throw AppError.validation('Invalid user provided to fetchTransactionsByType')
-  }
-
-  const cacheKey = `transactions-type-${user.id}-${type}-${month || 'all'}-${year || 'all'}`
+export const fetchTransactionsByType = asyncHandler(async (user: User, groupId: string | null, type: TransactionType, month?: number, year?: number) => {
+  if (!user || !user.id) throw AppError.validation('Invalid user provided to fetchTransactionsByType')
+  if (!groupId) return []
+  const cacheKey = `transactions-type-${groupId}-${type}-${month || 'all'}-${year || 'all'}`
   const cached = globalCaches.transactions.get<Transaction[]>(cacheKey)
-  
-  if (cached) {
-    return cached
-  }
-
-  let query = createOptimizedQuery('transactions', user.id)
-    .eq('type', type)
-  
-  if (month && year) {
-    query = query.eq('month', month).eq('year', year)
-  }
+  if (cached) return cached
+  let query = createGroupQuery('transactions', groupId).eq('type', type)
+  if (month && year) query = query.eq('month', month).eq('year', year)
   
   const { data, error } = await query.order('created_at', { ascending: false })
   

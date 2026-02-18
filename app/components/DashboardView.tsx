@@ -10,9 +10,11 @@ import { texts } from '@/lib/translations'
 import { useRouter } from 'next/navigation'
 import { useDataSync, useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useGroupStore } from '@/lib/store/groupStore'
 import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import TransactionIcon from './TransactionIcon'
+import GroupBadge from './GroupBadge'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { getUserActiveCategories, addUserCategory } from '@/lib/services/categoryService'
@@ -36,9 +38,8 @@ interface DashboardViewProps {
 export default function DashboardView({ navigationParams, user, onDataChange, initialFilterType = 'all', syncToUrl = false, onAddExpense }: DashboardViewProps) {
   const router = useRouter()
   const { refreshData, dataVersion } = useDataSync()
-  
-  // Zustand store
-  const { transactions, isLoading, fetchTransactions, markTransactionStatus, updateTransaction } = useTransactionStore()
+  const { currentGroupId, groups, isLoading: isGroupsLoading } = useGroupStore()
+  const { transactions, isLoading, fetchTransactions, setTransactions, markTransactionStatus, updateTransaction } = useTransactionStore()
   
   // State management - synced from URL/parent when syncToUrl
   const currentDate = new Date()
@@ -318,23 +319,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     setFilterType(initialFilterType)
   }, [initialFilterType])
 
-  // Navigate to new URL when month/year/filter changes (SEO-friendly URLs)
+  // Navigate to new URL when month/year/filter changes (SEO-friendly URLs with group)
   const handleMonthYearChange = useCallback((newYear: number, newMonth: number) => {
     if (syncToUrl) {
-      router.push(buildMisCuentasUrl(newYear, newMonth, { tipo: filterType === 'all' ? undefined : filterType }))
+      router.push(buildMisCuentasUrl(newYear, newMonth, {
+        tipo: filterType === 'all' ? undefined : filterType,
+        grupo: currentGroupId ?? undefined,
+      }))
     } else {
       setSelectedYear(newYear)
       setSelectedMonth(newMonth)
     }
-  }, [syncToUrl, filterType, router])
+  }, [syncToUrl, filterType, currentGroupId, router])
 
   const handleFilterTypeChange = useCallback((newFilter: FilterType) => {
     if (syncToUrl) {
-      router.push(buildMisCuentasUrl(selectedYear, selectedMonth, { tipo: newFilter === 'all' ? undefined : newFilter }))
+      router.push(buildMisCuentasUrl(selectedYear, selectedMonth, {
+        tipo: newFilter === 'all' ? undefined : newFilter,
+        grupo: currentGroupId ?? undefined,
+      }))
     } else {
       setFilterType(newFilter)
     }
-  }, [syncToUrl, selectedYear, selectedMonth, router])
+  }, [syncToUrl, selectedYear, selectedMonth, currentGroupId, router])
 
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -436,7 +443,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       const result = await measureQueryPerformance(
         'fetchDashboardExpenses',
         async () => {
-          const expenses = await fetchUserExpenses(user)
+          const expenses = await fetchUserExpenses(user, currentGroupId)
           return { expenses }
         }
       )
@@ -459,16 +466,23 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
-  }, [user, selectedMonth, selectedYear, transactions])
+  }, [user, currentGroupId, selectedMonth, selectedYear, transactions])
+
+  const prevGroupIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (prevGroupIdRef.current !== null && prevGroupIdRef.current !== currentGroupId) {
+      setTransactions([])
+    }
+    prevGroupIdRef.current = currentGroupId
+  }, [currentGroupId, setTransactions])
 
   // Direct transaction fetching from Zustand store
   useEffect(() => {
-    if (user) {
-      console.log('[zustand] DashboardView: fetching data from store for', selectedMonth, selectedYear)
-      fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
+    if (user && currentGroupId) {
+      fetchTransactions({ userId: user.id, groupId: currentGroupId, year: selectedYear, month: selectedMonth })
       validateTransactionIntegrity(transactions, selectedYear, selectedMonth)
     }
-  }, [user, selectedMonth, selectedYear, fetchTransactions])
+  }, [user, currentGroupId, selectedMonth, selectedYear, fetchTransactions])
 
   // Initial data fetch
   useEffect(() => {
@@ -482,13 +496,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     }
   }, [isLoading, transactions])
 
-  // Use the new data synchronization system - call fetchTransactions directly
   useDataSyncEffect(() => {
-    if (user) {
-      console.log('[zustand] DashboardView: useDataSyncEffect triggered')
-      fetchTransactions({ userId: user.id, year: selectedYear, month: selectedMonth })
+    if (user && currentGroupId) {
+      fetchTransactions({ userId: user.id, groupId: currentGroupId, year: selectedYear, month: selectedMonth })
     }
-  }, [user, selectedMonth, selectedYear, fetchTransactions])
+  }, [user, currentGroupId, selectedMonth, selectedYear, fetchTransactions])
 
   // Filter transactions for selected month/year
   const filteredTransactions = useMemo(() =>
@@ -1913,18 +1925,26 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     console.log('[zustand] Transacciones visibles:', transactions.filter(t => t.month === selectedMonth && t.year === selectedYear))
   }
 
-  // Protection: Don't render until we have user and month/year. We do NOT use isLoading here
-  // so that the layout (filter, totals section, transactions section) stays visible when switching
-  // months — only totals and transactions content update with their own loading states.
   if (!user || !selectedMonth || !selectedYear) {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[zustand] DashboardView: Esperando datos... no renderiza aún', { user: !!user, selectedMonth, selectedYear })
-    }
     return (
       <div className="flex-1 flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-primary mx-auto"></div>
           <p className="mt-4 text-sm text-gray-600 font-sans">{texts.loading}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isGroupsLoading && !currentGroupId) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-sm mx-auto px-4">
+          <p className="text-sm text-gray-600 font-sans">
+            {groups.length === 0
+              ? 'No perteneces a ningún grupo. Contacta al administrador para que te añada a un grupo.'
+              : 'Selecciona un grupo para ver las transacciones.'}
+          </p>
         </div>
       </div>
     )
@@ -1942,7 +1962,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-3 bg-white border-b border-gray-200 gap-3">
         {/* Fila 1: Título + filtros + agregar */}
         <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-3 lg:gap-4 min-w-0">
-          <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans shrink-0">Mis cuentas</h2>
+          <div className="flex items-center gap-2 shrink-0 min-w-0">
+            <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans shrink-0">Mis cuentas</h2>
+            <div className="lg:hidden shrink-0">
+              <GroupBadge user={user} variant="light" />
+            </div>
+          </div>
           {/* Filtros: en mobile grid full-width; en desktop inline seguidos (Año, Mes, Mes Actual) */}
           <div className="w-full lg:w-auto grid grid-cols-3 gap-2 lg:flex lg:flex-nowrap lg:items-center lg:gap-2 lg:flex-none min-w-0">
             <select
@@ -1980,6 +2005,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
               {texts.addTransaction}
             </button>
           )}
+          <div className="hidden lg:flex shrink-0">
+            <GroupBadge user={user} variant="light" />
+          </div>
         </div>
         {/* Fila 2: Totales - en mobile: fila1 Ingresos+Gastos, fila2 Estado+resto; en desktop inline */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-sans lg:shrink-0 lg:bg-transparent bg-gray-50 rounded-lg px-3 py-2.5 lg:p-0 lg:rounded-none border border-gray-200 lg:border-0 shadow-[0_4px_14px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)] lg:shadow-none">

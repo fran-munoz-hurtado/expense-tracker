@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Trophy, AlertTriangle } from 'lucide-react'
 import { type User, type Transaction } from '@/lib/supabase'
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useGroupStore } from '@/lib/store/groupStore'
 import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import TransactionIcon from './TransactionIcon'
 import { cn } from '@/lib/utils'
@@ -15,8 +16,8 @@ interface MisAhorrosViewProps {
 }
 
 export default function MisAhorrosView({ user, navigationParams }: MisAhorrosViewProps) {
-  // Zustand store
   const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  const { currentGroupId } = useGroupStore()
   
   const [error, setError] = useState<string | null>(null)
   const navigation = useAppNavigation()
@@ -55,18 +56,11 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
 
   // Fetch transactions data using pure Zustand pattern
   const fetchData = useCallback(async () => {
-    if (!user) return
+    if (!user || !currentGroupId) return
     
     try {
       setError(null)
-      
-      console.log('[zustand] MisAhorrosView: fetchTransactions triggered')
-      
-      // Use pure Zustand pattern with scope: 'all' for historical savings data
-      await fetchTransactions({ 
-        userId: user.id, 
-        scope: 'all' // Fetch all transactions without month/year filters
-      })
+      await fetchTransactions({ userId: user.id, groupId: currentGroupId, scope: 'all' })
       
       console.log('[zustand] MisAhorrosView: transactions loaded:', transactions.length)
       
@@ -77,7 +71,7 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
       console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
-  }, [user, fetchTransactions, transactions])
+  }, [user, currentGroupId, fetchTransactions, transactions])
 
   // Initial data fetch
   useEffect(() => {

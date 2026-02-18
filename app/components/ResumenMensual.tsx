@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { CheckCircle, AlertTriangle, PiggyBank, CreditCard } from 'lucide-react'
 import { type Transaction, type User } from '@/lib/supabase'
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useGroupStore } from '@/lib/store/groupStore'
 import { texts } from '@/lib/translations'
 
 interface ResumenMensualProps {
@@ -11,7 +12,7 @@ interface ResumenMensualProps {
 }
 
 export default function ResumenMensual({ user }: ResumenMensualProps) {
-  // Zustand store
+  const { currentGroupId } = useGroupStore()
   const { transactions, isLoading, fetchTransactions, lastFetchedScopes } = useTransactionStore()
 
   // Get current month and year
@@ -19,22 +20,15 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
   const currentMonth = currentDate.getMonth() + 1
   const currentYear = currentDate.getFullYear()
 
-  // Initial data fetch using pure Zustand pattern with loop protection
   useEffect(() => {
-    if (user) {
-      // Build scope key the same way the store does
-      const scopeKey = `${user.id}:${currentYear}:${currentMonth}`
+    if (user && currentGroupId) {
+      const scopeKey = `${currentGroupId}:${currentYear}:${currentMonth}`
       const alreadyFetched = lastFetchedScopes && lastFetchedScopes[scopeKey] !== undefined
-      
       if (!alreadyFetched) {
-        console.log('[zustand] ResumenMensual: will fetch?', true, `(scope: ${scopeKey})`)
-        console.log('[zustand] ResumenMensual: fetchTransactions triggered for', currentMonth, currentYear)
-        fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
-      } else {
-        console.log('[zustand] ResumenMensual: will fetch?', false, `(scope: ${scopeKey} already fetched)`)
+        fetchTransactions({ userId: user.id, groupId: currentGroupId, year: currentYear, month: currentMonth })
       }
     }
-  }, [user?.id, currentYear, currentMonth, fetchTransactions, lastFetchedScopes])
+  }, [user?.id, currentGroupId, currentYear, currentMonth, fetchTransactions, lastFetchedScopes])
 
   // Filter transactions for current month from Zustand store
   const currentMonthTransactions = transactions.filter(t =>

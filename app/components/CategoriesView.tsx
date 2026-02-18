@@ -18,6 +18,7 @@ import { getUserActiveCategories, addUserCategory, getUserActiveCategoriesWithIn
 import TransactionIcon from './TransactionIcon'
 import CategoryOriginLabel from './CategoryOriginLabel'
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useGroupStore } from '@/lib/store/groupStore'
 
 interface CategoriesViewProps {
   navigationParams?: { year?: number; month?: number } | null
@@ -58,8 +59,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   const navigation = useAppNavigation()
   const { refreshData } = useDataSync()
   
-  // Zustand store
   const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  const { currentGroupId } = useGroupStore()
   
   // Function to validate categories data for debugging
   function validateCategoriesData(transactions: Transaction[]) {
@@ -349,23 +350,12 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
 
   // Fetch transactions data using pure Zustand pattern
   const fetchData = useCallback(async () => {
-    if (!user) return
+    if (!user || !currentGroupId) return
     
     try {
       setError(null)
-      
-      console.log('[zustand] CategoriesView: fetchTransactions triggered')
-      
-      // Use pure Zustand pattern with scope: 'all' for historical data
-      await fetchTransactions({ 
-        userId: user.id, 
-        scope: 'all' // Fetch all transactions without month/year filters
-      })
-      
-      console.log('[zustand] CategoriesView: transactions loaded:', transactions.length)
-      
-      // Also fetch expenses to build recurrentGoalMap
-      const expenses = await fetchUserExpenses(user)
+      await fetchTransactions({ userId: user.id, groupId: currentGroupId, scope: 'all' })
+      const expenses = await fetchUserExpenses(user, currentGroupId)
       setRecurrentExpenses(expenses.recurrent)
       
       // Validate categories data
@@ -378,7 +368,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       console.error('❌ Error in fetchData():', error)
       setError(`Error al cargar datos: ${error instanceof Error ? error.message : 'Error desconocido'}`)
     }
-  }, [user, fetchTransactions, transactions]) // Dependencies for useCallback
+  }, [user, currentGroupId, fetchTransactions, transactions])
 
   // Initial data fetch
   useEffect(() => {

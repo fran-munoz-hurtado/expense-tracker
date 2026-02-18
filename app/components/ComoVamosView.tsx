@@ -10,6 +10,7 @@ import { CATEGORIES } from '@/lib/config/constants'
 import { getTransactionIconType, getTransactionIconColor, getTransactionIconBackground } from '@/lib/utils/transactionIcons'
 import { renderCustomIcon } from '@/lib/utils/iconRenderer'
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useGroupStore } from '@/lib/store/groupStore'
 import { useDataSyncEffect } from '@/lib/hooks/useDataSync'
 import ResumenMensual from './ResumenMensual'
 import TransactionIcon from './TransactionIcon'
@@ -25,7 +26,7 @@ interface ComoVamosViewProps {
 }
 
 export default function ComoVamosView({ user, navigationParams }: ComoVamosViewProps) {
-  // Zustand store
+  const { currentGroupId } = useGroupStore()
   const { transactions, isLoading, fetchTransactions } = useTransactionStore()
   
   // Function to validate transaction integrity for debugging
@@ -74,31 +75,24 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     return map
   }, [recurrentExpenses])
 
-  // Fetch transactions and expenses for current month
   useEffect(() => {
-    if (user) {
-      console.log('[zustand] ComoVamosView: fetching data from store for', currentMonth, currentYear)
-      fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
-      
-      // Validate transaction integrity
+    if (user && currentGroupId) {
+      fetchTransactions({ userId: user.id, groupId: currentGroupId, year: currentYear, month: currentMonth })
       validateTransactionIntegrity(transactions, currentYear, currentMonth)
     }
-  }, [user, currentMonth, currentYear, fetchTransactions])
+  }, [user, currentGroupId, currentMonth, currentYear, fetchTransactions])
 
-  // Data sync effect using pure Zustand pattern
   useDataSyncEffect(() => {
-    if (user) {
-      console.log('[zustand] ComoVamosView: useDataSyncEffect triggered')
-      fetchTransactions({ userId: user.id, year: currentYear, month: currentMonth })
+    if (user && currentGroupId) {
+      fetchTransactions({ userId: user.id, groupId: currentGroupId, year: currentYear, month: currentMonth })
     }
-  }, [user, currentYear, currentMonth, fetchTransactions])
+  }, [user, currentGroupId, currentYear, currentMonth, fetchTransactions])
 
-  // Fetch expenses separately (not yet moved to Zustand)
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
-        if (user) {
-          const expenses = await fetchUserExpenses(user)
+        if (user && currentGroupId) {
+          const expenses = await fetchUserExpenses(user, currentGroupId)
           setRecurrentExpenses(expenses.recurrent)
           setNonRecurrentExpenses(expenses.nonRecurrent)
         }
@@ -108,7 +102,7 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     }
 
     fetchExpenses()
-  }, [user])
+  }, [user, currentGroupId])
 
   // Development logging for Zustand transactions
   useEffect(() => {

@@ -61,6 +61,14 @@ export const createOptimizedQuery = (table: string, userId: string) => {
     .eq('user_id', userId)
 }
 
+/** Query by group_id (for shared group transactions) */
+export const createGroupQuery = (table: string, groupId: string) => {
+  if (!groupId || groupId.trim() === '') {
+    throw new Error('Invalid group ID provided to createGroupQuery')
+  }
+  return supabase.from(table).select('*').eq('group_id', groupId)
+}
+
 // Batch query helper for multiple operations with error handling
 export const batchQuery = async (queries: Promise<any>[]) => {
   try {

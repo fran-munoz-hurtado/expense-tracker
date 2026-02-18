@@ -11,6 +11,7 @@ import { useDataSyncEffect, useDataSync } from '@/lib/hooks/useDataSync'
 import { getMonthlyColumnStats, getPercentage, type ColumnType } from '@/lib/utils/dashboardTable'
 import { getColor, getGradient } from '@/lib/config/colors'
 import { useTransactionStore } from '@/lib/store/transactionStore'
+import { useGroupStore } from '@/lib/store/groupStore'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -26,6 +27,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
   
   // Zustand store
   const { transactions, isLoading, fetchTransactions } = useTransactionStore()
+  const { currentGroupId } = useGroupStore()
   
   // Function to validate that all transactions belong to the selected year
   function validateYearTransactions(transactions: Transaction[], selectedYear: number) {
@@ -119,7 +121,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
 
   // Fetch data using pure Zustand pattern
   const fetchData = useCallback(async () => {
-    if (!user || !selectedYear) return
+    if (!user || !currentGroupId || !selectedYear) return
     
     try {
       setError(null)
@@ -127,15 +129,12 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
       console.log('[zustand] GeneralDashboardView: fetchTransactions triggered for year', selectedYear)
       
       // Use pure Zustand pattern with year filtering
-      await fetchTransactions({ 
-        userId: user.id, 
-        year: selectedYear 
-      })
+      await fetchTransactions({ userId: user.id, groupId: currentGroupId, year: selectedYear })
       
       console.log('[zustand] GeneralDashboardView: transactions loaded:', transactions.length)
       
       // Also fetch expenses for calculations (legitimate)
-      const expenses = await fetchUserExpenses(user)
+      const expenses = await fetchUserExpenses(user, currentGroupId)
       setRecurrentExpenses(expenses.recurrent)
       setNonRecurrentExpenses(expenses.nonRecurrent)
       

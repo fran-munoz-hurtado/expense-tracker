@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { X, Trophy } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useDataSync } from '@/lib/hooks/useDataSync'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
+import { useGroupStore } from '@/lib/store/groupStore'
 import DashboardView from '@/app/components/DashboardView'
 import Navbar from '@/app/components/Navbar'
 import LoginPage from '@/app/components/LoginPage'
@@ -14,7 +15,7 @@ import { texts } from '@/lib/translations'
 import { MOVEMENT_TYPES, type MovementType } from '@/lib/config/icons'
 import { createRecurrentExpense, createNonRecurrentExpense } from '@/lib/dataUtils'
 import TransactionIcon from '@/app/components/TransactionIcon'
-import { FILTER_PARAMS_REVERSE, type FilterType } from '@/lib/routes'
+import { FILTER_PARAMS_REVERSE, buildMisCuentasUrl, parseMisCuentasPath, type FilterType } from '@/lib/routes'
 
 function LoadingFallback() {
   return (
@@ -31,12 +32,17 @@ interface MisCuentasClientProps {
   year: number
   month: number
   filterParam?: string
+  /** When present, canonical URL with group (SEO) */
+  groupId?: string
 }
 
-export default function MisCuentasClient({ year, month, filterParam }: MisCuentasClientProps) {
+export default function MisCuentasClient({ year, month, filterParam, groupId: urlGroupId }: MisCuentasClientProps) {
   const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const { refreshData } = useDataSync()
   const { user, isLoading, logout, initAuth } = useAuthStore()
+  const { fetchGroups, reset: resetGroups, currentGroupId, setCurrentGroupId } = useGroupStore()
 
   const [showForm, setShowForm] = useState(false)
   const [selectedMovementType, setSelectedMovementType] = useState<MovementType | null>(null)
@@ -58,8 +64,33 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
     return () => unsubscribe?.()
   }, [initAuth])
 
+  useEffect(() => {
+    if (user?.id) fetchGroups(user.id)
+  }, [user?.id, fetchGroups])
+
+  // Sync group from URL → store ( canonical route with groupId )
+  useEffect(() => {
+    if (urlGroupId) setCurrentGroupId(urlGroupId)
+  }, [urlGroupId, setCurrentGroupId])
+
+  // Legacy route: replace URL with canonical (with group) when we have one
+  useEffect(() => {
+    if (!urlGroupId && currentGroupId && pathname.startsWith('/mis-cuentas')) {
+      const parsed = parseMisCuentasPath(pathname)
+      if (parsed?.year && parsed.month) {
+        const tipo = searchParams.get('tipo')
+        const filterType = tipo && FILTER_PARAMS_REVERSE[tipo] ? FILTER_PARAMS_REVERSE[tipo] : undefined
+        router.replace(buildMisCuentasUrl(parsed.year, parsed.month, {
+          tipo: filterType === 'all' ? undefined : filterType,
+          grupo: currentGroupId,
+        }))
+      }
+    }
+  }, [urlGroupId, currentGroupId, pathname, searchParams, router])
+
   const handleLogout = async () => {
     try {
+      resetGroups()
       await logout()
       router.push('/')
     } catch (error) {
@@ -88,7 +119,7 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
             type: payload.type,
             category: payload.category,
             isgoal: payload.isgoal
-          })
+          }, currentGroupId!)
         } else {
           await createNonRecurrentExpense(user!, {
             description: payload.description,
@@ -98,7 +129,7 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
             payment_deadline: payload.payment_deadline,
             type: payload.type,
             category: payload.category,
-          })
+          }, currentGroupId!)
         }
       } else {
         if (selectedMovementType === 'RECURRENT_INCOME') {
@@ -113,7 +144,7 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
             type: payload.type,
             category: payload.category,
             isgoal: payload.isgoal
-          })
+          }, currentGroupId!)
         } else {
           await createNonRecurrentExpense(user!, {
             description: payload.description,
@@ -123,7 +154,7 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
             payment_deadline: payload.payment_deadline,
             type: payload.type,
             category: payload.category,
-          })
+          }, currentGroupId!)
         }
       }
       await refreshData(user!.id, 'create_transaction')
@@ -175,6 +206,7 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
   if (!user) return <LoginPage onLogin={() => {}} />
 
   const navigationParams = { month, year }
+  const hasGroup = !!currentGroupId
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -186,7 +218,7 @@ export default function MisCuentasClient({ year, month, filterParam }: MisCuenta
           onDataChange={refreshData}
           initialFilterType={initialFilter}
           syncToUrl={true}
-          onAddExpense={handleAddExpense}
+          onAddExpense={hasGroup ? handleAddExpense : undefined}
         />
       </main>
 
