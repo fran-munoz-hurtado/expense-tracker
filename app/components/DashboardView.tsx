@@ -17,8 +17,6 @@ import { CATEGORIES } from '@/lib/config/constants'
 import { getUserActiveCategories, addUserCategory } from '@/lib/services/categoryService'
 import { fetchAbonosByTransactionIds, createAbono, updateAbono, deleteAbono } from '@/lib/services/abonoService'
 import { buildMisCuentasUrl, type FilterType } from '@/lib/routes'
-import { MonthFiltersSection } from './dashboard/MonthFiltersSection'
-import { MonthSummaryCards } from './dashboard/MonthSummaryCards'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -438,7 +436,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     return (abonosByTransaction[t.id] || []).reduce((sum, a) => sum + Number(a.amount), 0)
   }, [abonosByTransaction])
 
-  // Summary totals for MonthSummaryCards - memoized (abonos-aware)
+  // Summary totals for compact bar - memoized (abonos-aware)
   const summaryTotals = useMemo(() => {
     const income = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.value, 0)
     // Total gastos: sum of expense values, or totalAbonado if overpaid (abonos > value)
@@ -1564,55 +1562,108 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     )
   }
 
+  const displayValue = (v: number) => isLoading ? '—' : formatCurrency(v)
+  const faltaPagar = summaryTotals.pending
+
+  const tieneVencimientos = summaryTotals.overdue > 0
+  const cuantoQueda = summaryTotals.cuantoQueda
+
   return (
     <div className="flex-1 flex flex-col h-screen bg-gray-50">
-      {/* Header */}
-      <div className="p-6 lg:p-8 pb-4">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold text-gray-dark font-sans">Mis cuentas</h2>
-          <p className="text-sm text-green-dark font-sans">Control de tus ingresos y gastos</p>
-        </div>
-
-        {/* Error Display */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-            <div className="flex">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800 mb-1">{texts.errorOccurred}</h3>
-                <div className="text-sm text-red-700">
-                  {error}
-                </div>
-              </div>
-            </div>
+      {/* Barra superior compacta - Desktop y Mobile (consistente) */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-3 bg-white border-b border-gray-200 gap-3">
+        {/* Fila 1: Título + filtros + agregar */}
+        <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-3 lg:gap-4 min-w-0">
+          <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans shrink-0">Mis cuentas</h2>
+          {/* Filtros: en mobile grid full-width; en desktop inline seguidos (Año, Mes, Mes Actual) */}
+          <div className="w-full lg:w-auto grid grid-cols-3 gap-2 lg:flex lg:flex-nowrap lg:items-center lg:gap-2 lg:flex-none min-w-0">
+            <select
+              value={selectedYear}
+              onChange={(e) => handleMonthYearChange(Number(e.target.value), selectedMonth)}
+              className="w-full min-w-0 px-2 py-2.5 lg:py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-dark font-sans focus:ring-2 focus:ring-green-primary focus:border-green-primary lg:min-w-[72px]"
+            >
+              {availableYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+            <select
+              value={selectedMonth}
+              onChange={(e) => handleMonthYearChange(selectedYear, Number(e.target.value))}
+              className="w-full min-w-0 px-2 py-2.5 lg:py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-dark font-sans focus:ring-2 focus:ring-green-primary focus:border-green-primary lg:min-w-[100px]"
+            >
+              {months.map((m, i) => (
+                <option key={i} value={i + 1}>{m}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => handleMonthYearChange(new Date().getFullYear(), new Date().getMonth() + 1)}
+              className="w-full min-w-0 px-2 py-2.5 lg:py-1.5 lg:px-4 lg:min-w-[100px] text-sm font-medium text-green-primary bg-green-light border border-green-primary/40 hover:bg-green-primary hover:text-white rounded-md transition-colors font-sans whitespace-nowrap"
+            >
+              Mes Actual
+            </button>
           </div>
-        )}
+          {onAddExpense && (
+            <button
+              onClick={onAddExpense}
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 lg:py-1.5 bg-green-primary text-white rounded-md text-sm font-medium hover:bg-green-dark transition-colors font-sans shrink-0 min-h-[44px] lg:min-h-0 w-full lg:w-auto"
+              aria-label={texts.addTransaction}
+            >
+              <Plus className="h-4 w-4" />
+              {texts.addTransaction}
+            </button>
+          )}
+        </div>
+        {/* Fila 2: Totales - en mobile dentro de contenedor; en desktop inline */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-sans lg:shrink-0 lg:bg-transparent bg-gray-50 rounded-lg px-3 py-2.5 lg:p-0 lg:rounded-none border border-gray-200 lg:border-0">
+          <span className="text-gray-500">Ingresos:</span>
+          <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.income)}</span>
+          <span className="text-gray-300 hidden sm:inline">|</span>
+          <span className="text-gray-500">Gastos:</span>
+          <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.expense)}</span>
+          <span className="text-gray-300 hidden sm:inline">|</span>
+          <span className="text-gray-500">Estado:</span>
+          {faltaPagar > 0 ? (
+            <span className="bg-warning-bg text-warning-yellow px-2 py-0.5 rounded text-xs font-medium">
+              Falta pagar {displayValue(faltaPagar)}
+            </span>
+          ) : (
+            <span className="bg-green-light text-green-primary px-2 py-0.5 rounded text-xs font-medium">
+              Pagado {displayValue(summaryTotals.paid)}
+            </span>
+          )}
+          {cuantoQueda >= 0 && (
+            <>
+              <span className="text-gray-300 hidden sm:inline">|</span>
+              <span className="text-green-primary bg-green-light px-2 py-0.5 rounded text-xs font-medium">
+                Te quedan {displayValue(cuantoQueda)}
+              </span>
+            </>
+          )}
+          {tieneVencimientos && (
+            <span className="text-error-red text-xs font-medium">
+              Mora {displayValue(summaryTotals.overdue)}
+            </span>
+          )}
+        </div>
       </div>
 
+      {/* Error Display */}
+      {error && (
+        <div className="mx-4 lg:mx-8 mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+          <div className="flex">
+            <AlertCircle className="h-5 w-5 text-red-400" />
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800 mb-1">{texts.errorOccurred}</h3>
+              <div className="text-sm text-red-700">{error}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
-      <div className="flex-1 px-6 lg:px-8 pb-6 lg:pb-8">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <MonthFiltersSection
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            onMonthYearChange={handleMonthYearChange}
-            onAddExpense={onAddExpense}
-          />
-
-          <MonthSummaryCards
-            monthLabel={months[selectedMonth - 1]}
-            year={selectedYear}
-            incomeAmount={summaryTotals.income}
-            expenseAmount={summaryTotals.expense}
-            paidAmount={summaryTotals.paid}
-            pendingAmount={summaryTotals.pending}
-            overdueAmount={summaryTotals.overdue}
-            cuantoQueda={summaryTotals.cuantoQueda}
-            isLoading={isLoading}
-            formatCurrency={formatCurrency}
-          />
-
-          {/* SECCIÓN 3: Transacciones del mes - full viewport width en mobile */}
+      <div className="flex-1 px-4 lg:px-8 pb-6 lg:pb-8">
+        <div className="max-w-4xl mx-auto space-y-4">
+          {/* Transacciones del mes - full viewport width en mobile */}
           <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
@@ -1643,9 +1694,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                 <div className="overflow-x-auto">
                   <table className="min-w-full table-fixed">
                     <colgroup>
-                      <col className="w-[45%]" />
-                      <col className="w-[67px]" />
+                      <col className="w-[47%]" />
                       <col className="w-[90px]" />
+                      <col className="w-[59px]" />
                     </colgroup>
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
@@ -1663,7 +1714,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                           </div>
                         </th>
                         <th 
-                          className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans w-[67px] border-r border-dashed border-gray-300"
+                          className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans w-[90px] border-r border-dashed border-gray-300"
                           onClick={() => handleSort('value')}
                         >
                           <div className="flex items-center space-x-1 justify-center">
@@ -1676,7 +1727,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                           </div>
                         </th>
                         <th 
-                          className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans w-[90px]"
+                          className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans w-[59px]"
                           onClick={() => handleSort('status')}
                         >
                           <div className="flex items-center justify-center space-x-1">
@@ -1750,7 +1801,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                 </div>
                               </div>
                             </td>
-                            <td className="px-1.5 py-2 whitespace-nowrap text-right w-[67px] border-r border-dashed border-gray-300">
+                            <td className="px-1.5 py-2 whitespace-nowrap text-right w-[90px] border-r border-dashed border-gray-300">
                               <div className="flex items-center justify-end gap-x-1">
                                 <div className="text-sm font-medium text-gray-900 font-sans text-right tabular-nums">
                                   {formatCurrency(transaction.value)}
@@ -1886,7 +1937,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               </div>
                             </div>
                             </td>
-                            <td className="px-2 py-2 whitespace-nowrap w-[90px] text-center">
+                            <td className="px-2 py-2 whitespace-nowrap w-[59px] text-center">
                               <span className={cn("inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-medium font-sans", getStatusColor(transaction))}>
                                 {getStatusText(transaction)}
                               </span>
@@ -1899,21 +1950,21 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                 </div>
               </div>
 
-              {/* Mobile Table View - 3 columnas: descripción | valor+3puntos | estado (scrolleable horizontal) */}
+              {/* Mobile Table View - 3 columnas: descripción | valor+3puntos | estado (sin scroll, estado con wrap) */}
               <div className="lg:hidden overflow-x-auto" onMouseLeave={() => setOpenOptionsMenu(null)}>
-                <table className="min-w-[380px] w-full text-xs table-fixed">
+                <table className="min-w-0 w-full max-w-full text-xs table-fixed">
                   <colgroup>
-                    <col className="w-[160px]" />
-                    <col className="w-[140px]" />
-                    <col className="w-[80px]" />
+                    <col className="w-[128px]" />
+                    <col className="w-[126px]" />
+                    <col className="w-[70px]" />
                   </colgroup>
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="pl-1.5 pr-1.5 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50">
+                      <th className="pl-1.5 pr-1.5 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50 w-[128px]">
                         {texts.description}
                       </th>
-                      <th className="pl-1 pr-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans w-[140px] border-r border-dashed border-gray-300">{texts.amount}</th>
-                      <th className="px-0.5 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans w-[80px]">{texts.status}</th>
+                      <th className="pl-1 pr-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans w-[126px] border-r border-dashed border-gray-300">{texts.amount}</th>
+                      <th className="px-0.5 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans">{texts.status}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
@@ -1921,7 +1972,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                       const isMenuOpen = openOptionsMenu === transaction.id
                       return (
                         <tr key={transaction.id} className="border-b border-gray-100">
-                          <td className="px-1.5 py-1.5 w-[160px] border-r border-dashed border-gray-300">
+                          <td className="px-1.5 py-1.5 w-[128px] border-r border-dashed border-gray-300">
                             <div className="relative bg-white h-full flex items-center gap-1 min-w-0 min-h-[44px]">
                               <div className="flex-shrink-0">
                                 <TransactionIcon
@@ -1942,7 +1993,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               </div>
                             </div>
                           </td>
-                          <td className="py-1.5 align-middle border-r border-dashed border-gray-300" style={{ width: 140, paddingLeft: 0, paddingRight: 0 }}>
+                          <td className="py-1.5 align-middle border-r border-dashed border-gray-300" style={{ width: 126, paddingLeft: 0, paddingRight: 0 }}>
                             <div className="w-full flex justify-end">
                               <div className="inline-flex items-center gap-x-1 flex-shrink-0">
                               <div className="leading-tight text-right shrink-0 tabular-nums">
@@ -2019,8 +2070,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             </div>
                             </div>
                           </td>
-                          <td className="px-0.5 py-1.5 align-middle whitespace-nowrap w-[70px] text-center">
-                            <span className={cn("inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-medium font-sans", getStatusColor(transaction))}>
+                          <td className="px-0.5 py-1.5 align-middle text-center min-w-0">
+                            <span className={cn("inline-block max-w-full px-1.5 py-0.5 rounded-full text-xs font-medium font-sans break-words text-center leading-tight", getStatusColor(transaction))}>
                               {getStatusText(transaction)}
                             </span>
                           </td>
