@@ -13,7 +13,6 @@ import {
   type GroupMemberInfo,
   type GroupStats
 } from '@/lib/services/groupService'
-import GroupBadge from './GroupBadge'
 
 interface GroupDetailViewProps {
   groupId: string
@@ -151,16 +150,6 @@ export default function GroupDetailView({ groupId, user }: GroupDetailViewProps)
             <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans truncate">
               {group.name}
             </h2>
-            {user && (
-              <>
-                <div className="lg:hidden">
-                  <GroupBadge user={user} variant="light" />
-                </div>
-                <div className="hidden lg:flex">
-                  <GroupBadge user={user} variant="light" />
-                </div>
-              </>
-            )}
           </div>
         </div>
         <button

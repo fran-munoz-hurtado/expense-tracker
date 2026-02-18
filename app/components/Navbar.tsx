@@ -8,9 +8,11 @@ import { texts } from '@/lib/translations'
 interface NavbarProps {
   user: User
   onLogout: () => void
+  /** Slot para el menú hamburguesa (solo mobile) */
+  leftSlot?: React.ReactNode
 }
 
-export default function Navbar({ user, onLogout }: NavbarProps) {
+export default function Navbar({ user, onLogout, leftSlot }: NavbarProps) {
   const [greeting, setGreeting] = useState('')
   const [financialMessage, setFinancialMessage] = useState('')
   const [showUserDropdown, setShowUserDropdown] = useState(false)
@@ -32,8 +34,9 @@ export default function Navbar({ user, onLogout }: NavbarProps) {
     <>
       <div className="relative z-10 w-full bg-gradient-to-br from-[#77b56e] via-[#6a9f61] to-[#5d7760] px-4 sm:px-6 py-2.5 shadow-[0_4px_14px_rgba(93,119,96,0.25)]">
           <div className="flex items-center justify-between">
-          {/* Left side - Welcome message */}
+          {/* Left side - slot hamburger + Welcome message */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            {leftSlot}
             <h1 className="text-base sm:text-lg font-semibold text-white font-sans truncate">
               {greeting}, {user.first_name} {user.last_name}
             </h1>

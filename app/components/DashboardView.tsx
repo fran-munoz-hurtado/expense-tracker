@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw, MoreVertical, StickyNote, Wallet } from 'lucide-react'
+import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw, MoreVertical, StickyNote, Wallet, Users } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment, type Abono } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
 import { cn } from '@/lib/utils'
@@ -15,6 +15,7 @@ import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import TransactionIcon from './TransactionIcon'
 import GroupBadge from './GroupBadge'
+import CreateSpaceButton from './CreateSpaceButton'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { getUserActiveCategories, addUserCategory } from '@/lib/services/categoryService'
@@ -1938,15 +1939,39 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
   if (!isGroupsLoading && !currentGroupId) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
-        <div className="text-center max-w-sm mx-auto px-4">
-          <p className="text-sm text-gray-600 font-sans">
-            {groups.length === 0
-              ? 'No perteneces a ningún grupo. Contacta al administrador para que te añada a un grupo.'
-              : 'Selecciona un grupo para ver las transacciones.'}
-          </p>
+      <>
+        <div className="flex-1 flex items-center justify-center bg-gray-50 px-4">
+          <div className="text-center max-w-md mx-auto">
+            {groups.length === 0 ? (
+              <>
+                <div className="w-20 h-20 bg-green-light rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Users className="h-10 w-10 text-green-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 font-sans mb-2">
+                  Crea tu espacio para comenzar
+                </h3>
+                <p className="text-sm text-gray-600 font-sans mb-6">
+                  Organiza tus finanzas en un espacio propio. Puedes compartirlo luego con familia o equipo para llevar las cuentas juntos.
+                </p>
+                <CreateSpaceButton
+                  user={user}
+                  onSuccess={() => {
+                    const newGroupId = useGroupStore.getState().currentGroupId
+                    if (newGroupId && syncToUrl) {
+                      router.push(buildMisCuentasUrl(selectedYear, selectedMonth, {
+                        tipo: filterType === 'all' ? undefined : filterType,
+                        grupo: newGroupId,
+                      }))
+                    }
+                  }}
+                />
+              </>
+            ) : (
+              <p className="text-sm text-gray-600 font-sans">Selecciona un grupo para ver las transacciones.</p>
+            )}
+          </div>
         </div>
-      </div>
+      </>
     )
   }
 
@@ -1962,9 +1987,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-3 bg-white border-b border-gray-200 gap-3">
         {/* Fila 1: Título + filtros + agregar */}
         <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-3 lg:gap-4 min-w-0">
-          <div className="flex items-center gap-2 shrink-0 min-w-0">
+          <div className="flex items-center justify-between w-full lg:w-auto lg:justify-start gap-2 shrink-0 min-w-0">
             <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans shrink-0">Mis cuentas</h2>
-            <div className="lg:hidden shrink-0">
+            <div className="lg:hidden w-full flex justify-end min-w-0">
               <GroupBadge user={user} variant="light" />
             </div>
           </div>
@@ -1998,16 +2023,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
           {onAddExpense && (
             <button
               onClick={onAddExpense}
-              className="flex items-center justify-center gap-1.5 px-3 py-2.5 lg:py-1.5 bg-gradient-to-b from-green-primary to-green-dark text-white rounded-md text-sm font-medium border border-green-dark/40 shadow-[0_2px_6px_rgba(93,119,96,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_4px_12px_rgba(93,119,96,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] active:scale-[0.98] transition-all duration-200 font-sans shrink-0 min-h-[44px] lg:min-h-0 w-full lg:w-auto"
+              className="lg:hidden flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gradient-to-b from-green-primary to-green-dark text-white rounded-md text-sm font-medium border border-green-dark/40 shadow-[0_2px_6px_rgba(93,119,96,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_4px_12px_rgba(93,119,96,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] active:scale-[0.98] transition-all duration-200 font-sans shrink-0 min-h-[44px] w-full"
               aria-label={texts.addTransaction}
             >
               <Plus className="h-4 w-4" />
               {texts.addTransaction}
             </button>
           )}
-          <div className="hidden lg:flex shrink-0">
-            <GroupBadge user={user} variant="light" />
-          </div>
         </div>
         {/* Fila 2: Totales - en mobile: fila1 Ingresos+Gastos, fila2 Estado+resto; en desktop inline */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-sans lg:shrink-0 lg:bg-transparent bg-gray-50 rounded-lg px-3 py-2.5 lg:p-0 lg:rounded-none border border-gray-200 lg:border-0 shadow-[0_4px_14px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)] lg:shadow-none">
@@ -2062,13 +2084,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         <div className="max-w-4xl mx-auto space-y-4">
           {/* Transacciones del mes - full viewport width en mobile */}
           <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
-            <div className="mb-4">
-              <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                Transacciones del mes
-              </h3>
-              <p className="text-xs text-gray-500 font-sans">
-                Control detallado de tus movimientos financieros
-              </p>
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
+                  Transacciones del mes
+                </h3>
+                <p className="text-xs text-gray-500 font-sans">
+                  Control detallado de tus movimientos financieros
+                </p>
+              </div>
+              {/* Desktop: GroupBadge y Añadir movimiento junto al título */}
+              <div className="hidden lg:flex items-center gap-2 shrink-0">
+                <GroupBadge user={user} variant="light" />
+                {onAddExpense && (
+                  <button
+                    onClick={onAddExpense}
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-b from-green-primary to-green-dark text-white rounded-md text-sm font-medium border border-green-dark/40 shadow-[0_2px_6px_rgba(93,119,96,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_4px_12px_rgba(93,119,96,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] active:scale-[0.98] transition-all duration-200 font-sans"
+                    aria-label={texts.addTransaction}
+                  >
+                    <Plus className="h-4 w-4" />
+                    {texts.addTransaction}
+                  </button>
+                )}
+              </div>
             </div>
             {isLoading ? (
               <div className="text-center py-8 text-green-dark font-sans">{texts.loading}</div>

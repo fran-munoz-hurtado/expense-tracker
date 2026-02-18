@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useGroupStore } from '@/lib/store/groupStore'
-import Navbar from '@/app/components/Navbar'
+import AppLayoutWithSidebar from '@/app/components/AppLayoutWithSidebar'
 import LoginPage from '@/app/components/LoginPage'
 import GroupsManagementView from '@/app/components/GroupsManagementView'
 import { texts } from '@/lib/translations'
@@ -57,11 +57,8 @@ export default function GruposClient() {
   if (!user) return <LoginPage onLogin={() => {}} />
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <Navbar user={user} onLogout={handleLogout} />
-      <main className="flex-1 overflow-auto">
-        <GroupsManagementView user={user} />
-      </main>
-    </div>
+    <AppLayoutWithSidebar user={user} onLogout={handleLogout}>
+      <GroupsManagementView user={user} />
+    </AppLayoutWithSidebar>
   )
 }

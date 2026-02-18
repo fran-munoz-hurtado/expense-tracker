@@ -121,7 +121,7 @@ export default function GroupBadge({ user, variant = 'light' }: GroupBadgeProps)
         </button>
 
         {showDropdown && (
-          <div className="absolute left-0 top-full mt-1 w-56 bg-white rounded-xl shadow-[0_4px_14px_rgba(0,0,0,0.12)] border border-gray-200 py-1 z-50">
+          <div className="absolute right-0 left-auto lg:left-0 lg:right-auto top-full mt-1 w-56 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-[0_4px_14px_rgba(0,0,0,0.12)] border border-gray-200 py-1 z-50">
             <div className="px-3 py-2 border-b border-gray-100">
               <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tus grupos</p>
             </div>

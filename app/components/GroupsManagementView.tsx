@@ -5,7 +5,7 @@ import { Users, ChevronRight } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useGroupStore, type Group } from '@/lib/store/groupStore'
 import { ROUTES } from '@/lib/routes'
-import GroupBadge from './GroupBadge'
+import CreateSpaceButton from './CreateSpaceButton'
 
 interface GroupsManagementViewProps {
   user?: User
@@ -31,18 +31,9 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
         <div className="flex flex-col lg:flex-row lg:items-center lg:flex-wrap gap-3 lg:gap-4 min-w-0">
           <div className="flex items-center gap-2 shrink-0">
             <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans">Gestión de grupos</h2>
-            {user && (
-              <div className="lg:hidden shrink-0">
-                <GroupBadge user={user} variant="light" />
-              </div>
-            )}
           </div>
-          {user && (
-            <div className="hidden lg:flex shrink-0">
-              <GroupBadge user={user} variant="light" />
-            </div>
-          )}
         </div>
+        {user && <CreateSpaceButton user={user} />}
       </div>
 
       {/* Main Content - mismo canvas que transacciones */}
@@ -67,9 +58,10 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
                 <h3 className="text-base font-medium text-gray-500 mb-2 font-sans opacity-80">
                   No perteneces a ningún grupo aún
                 </h3>
-                <p className="text-sm text-gray-400 font-sans opacity-60">
+                <p className="text-sm text-gray-400 font-sans opacity-60 mb-6">
                   Crea un grupo o pide que te inviten para compartir finanzas
                 </p>
+                {user && <CreateSpaceButton user={user} />}
               </div>
             ) : (
               <>

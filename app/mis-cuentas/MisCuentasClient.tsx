@@ -8,7 +8,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useGroupStore } from '@/lib/store/groupStore'
 import DashboardView from '@/app/components/DashboardView'
-import Navbar from '@/app/components/Navbar'
+import AppLayoutWithSidebar from '@/app/components/AppLayoutWithSidebar'
 import LoginPage from '@/app/components/LoginPage'
 import BaseMovementForm from '@/app/components/forms/BaseMovementForm'
 import { texts } from '@/lib/translations'
@@ -209,10 +209,8 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
   const hasGroup = !!currentGroupId
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
-      <Navbar user={user} onLogout={handleLogout} />
-      <main className="flex-1 overflow-auto">
-        <DashboardView
+    <AppLayoutWithSidebar user={user} onLogout={handleLogout}>
+      <DashboardView
           navigationParams={navigationParams}
           user={user}
           onDataChange={refreshData}
@@ -220,7 +218,6 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
           syncToUrl={true}
           onAddExpense={hasGroup ? handleAddExpense : undefined}
         />
-      </main>
 
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -303,6 +300,6 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
           )}
         </div>
       )}
-    </div>
+    </AppLayoutWithSidebar>
   )
 }
