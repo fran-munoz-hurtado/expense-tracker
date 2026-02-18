@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw, MoreVertical, StickyNote, Wallet } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment, type Abono } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
@@ -59,6 +60,76 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [attachmentCounts, setAttachmentCounts] = useState<Record<number, number>>({})
   const [abonosByTransaction, setAbonosByTransaction] = useState<Record<number, Abono[]>>({})
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
+  const [openInfoTooltipId, setOpenInfoTooltipId] = useState<number | null>(null)
+  const [infoTooltipAnchor, setInfoTooltipAnchor] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
+  const infoTooltipCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [hoveredNotesId, setHoveredNotesId] = useState<number | null>(null)
+  const [notesTooltipAnchor, setNotesTooltipAnchor] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
+  const notesTooltipCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Medir posición del trigger para el tooltip (evitar que se corte por overflow de la tabla)
+  useLayoutEffect(() => {
+    if (!openInfoTooltipId) {
+      setInfoTooltipAnchor(null)
+      return
+    }
+    const el = document.querySelector(`[data-info-tooltip-trigger][data-transaction-id="${openInfoTooltipId}"]`)
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    setInfoTooltipAnchor({ left: rect.left, top: rect.top, width: rect.width, height: rect.height })
+  }, [openInfoTooltipId])
+
+  useEffect(() => {
+    if (!openInfoTooltipId) return
+    const updateAnchor = () => {
+      const el = document.querySelector(`[data-info-tooltip-trigger][data-transaction-id="${openInfoTooltipId}"]`)
+      if (el) setInfoTooltipAnchor(el.getBoundingClientRect())
+    }
+    window.addEventListener('scroll', updateAnchor, true)
+    window.addEventListener('resize', updateAnchor)
+    return () => {
+      window.removeEventListener('scroll', updateAnchor, true)
+      window.removeEventListener('resize', updateAnchor)
+    }
+  }, [openInfoTooltipId])
+
+  useLayoutEffect(() => {
+    if (!hoveredNotesId) {
+      setNotesTooltipAnchor(null)
+      return
+    }
+    const el = document.querySelector(`[data-notes-tooltip-trigger][data-transaction-id="${hoveredNotesId}"]`)
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    setNotesTooltipAnchor({ left: rect.left, top: rect.top, width: rect.width, height: rect.height })
+  }, [hoveredNotesId])
+
+  useEffect(() => {
+    if (!hoveredNotesId) return
+    const updateAnchor = () => {
+      const el = document.querySelector(`[data-notes-tooltip-trigger][data-transaction-id="${hoveredNotesId}"]`)
+      if (el) setNotesTooltipAnchor(el.getBoundingClientRect())
+    }
+    window.addEventListener('scroll', updateAnchor, true)
+    window.addEventListener('resize', updateAnchor)
+    return () => {
+      window.removeEventListener('scroll', updateAnchor, true)
+      window.removeEventListener('resize', updateAnchor)
+    }
+  }, [hoveredNotesId])
+
+  // Cerrar tooltip Info al hacer click fuera (excluir trigger y el contenido del tooltip en portal)
+  useEffect(() => {
+    if (!openInfoTooltipId) return
+    const handleClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (!target.closest('[data-info-tooltip-trigger]') && !target.closest('[data-info-tooltip-content]')) {
+        setOpenInfoTooltipId(null)
+      }
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [openInfoTooltipId])
 
   // Abono modal state
   const [showAbonoModal, setShowAbonoModal] = useState(false)
@@ -95,7 +166,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     period: string
     transactionId: number
     transaction: Transaction
+    isOrphaned?: boolean
   } | null>(null)
+
+  // Delete series in progress (para el botón Eliminar serie)
+  const [isDeletingSeries, setIsDeletingSeries] = useState(false)
 
   // Delete individual transaction confirmation state
   const [showDeleteIndividualConfirmation, setShowDeleteIndividualConfirmation] = useState(false)
@@ -116,6 +191,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     action: 'mark_paid' | 'unmark_paid'
   } | null>(null)
 
+  // Ref para evitar closure stale en modal de modificación
+  const modifyModalTransactionRef = useRef<Transaction | null>(null)
   // Modify confirmation state
   const [showModifyModal, setShowModifyModal] = useState(false)
   const [modifyModalData, setModifyModalData] = useState<{
@@ -145,6 +222,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     modifySeries?: boolean
     isgoal?: boolean
     category?: string
+    editContextMonth?: number
+    editContextYear?: number
   } | null>(null)
 
   // Modify confirmation state
@@ -156,6 +235,28 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     period: string
     action: string
   } | null>(null)
+
+  // Extend series: valores para meses nuevos (Fase 2)
+  const [showExtendValuesModal, setShowExtendValuesModal] = useState(false)
+  const [extendValuesData, setExtendValuesData] = useState<{
+    newMonthsLabel: string
+    suggestedValue: number
+    suggestedPaymentDay: string
+  } | null>(null)
+
+  // Aplicar valor/due date a existentes: toda la serie vs de acá en adelante
+  const [showApplyToExistingModal, setShowApplyToExistingModal] = useState(false)
+  const [applyToExistingData, setApplyToExistingData] = useState<{
+    valueChanged: boolean
+    dueDateChanged: boolean
+    oldValue: number
+    newValue: number
+    oldDueDay: string | null
+    newDueDay: string
+    fromMonth: number
+    fromYear: number
+  } | null>(null)
+  const [applyToExistingChoice, setApplyToExistingChoice] = useState<'all' | 'from_month' | null>(null)
 
   // Attachment modal state
   const [showAttachmentModal, setShowAttachmentModal] = useState(false)
@@ -290,6 +391,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     let [int, dec] = value.replace(/[^\d.]/g, '').split('.')
     int = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
     return dec !== undefined ? `${int}.${dec}` : int
+  }
+
+  // Helper: meses nuevos cuando se extiende una serie (añadidos al inicio o al final)
+  const getNewMonthsWhenExtending = (
+    oldFromY: number, oldFromM: number, oldToY: number, oldToM: number,
+    newFromY: number, newFromM: number, newToY: number, newToM: number
+  ): { year: number; month: number }[] => {
+    const result: { year: number; month: number }[] = []
+    // Meses añadidos al final
+    let y = oldToM === 12 ? oldToY + 1 : oldToY
+    let m = oldToM === 12 ? 1 : oldToM + 1
+    while (y < newToY || (y === newToY && m <= newToM)) {
+      result.push({ year: y, month: m })
+      if (m === 12) { m = 1; y++ } else { m++ }
+    }
+    // Meses añadidos al inicio
+    y = newFromY
+    m = newFromM
+    while (y < oldFromY || (y === oldFromY && m < oldFromM)) {
+      result.push({ year: y, month: m })
+      if (m === 12) { m = 1; y++ } else { m++ }
+    }
+    return result
   }
 
   // Helper function to get currency input value - just return the raw number as string
@@ -664,26 +788,31 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       setError(null)
 
       if (transaction.source_type === 'recurrent' && deleteSeries) {
-        // Delete the entire recurrent series
+        // Delete entire series: transacciones primero (abonos y attachments cascadan), luego recurrent_expenses
+        const sourceId = Number(transaction.source_id)
+        const { error: txError } = await supabase
+          .from('transactions')
+          .delete()
+          .eq('source_id', sourceId)
+          .eq('source_type', 'recurrent')
+          .eq('user_id', user.id)
+        if (txError) throw txError
         const { error } = await supabase
           .from('recurrent_expenses')
           .delete()
-          .eq('id', transaction.source_id)
+          .eq('id', sourceId)
           .eq('user_id', user.id)
-
         if (error) throw error
       } else {
-        // Delete only this transaction
+        // Delete only this transaction (abonos y attachments cascadan)
         const { error } = await supabase
           .from('transactions')
           .delete()
           .eq('id', transactionId)
           .eq('user_id', user.id)
-
         if (error) throw error
       }
 
-      // Trigger global data refresh using the new system
       console.log('🔄 Triggering global data refresh after deletion')
       refreshData(user.id, 'delete_transaction')
       
@@ -700,22 +829,31 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     if (!deleteModalData) return
 
     const { transaction } = deleteModalData
-    
-    // Get the recurrent expense data for the confirmation modal
-    const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
-    if (!recurrentExpense) {
-      setError('Original recurrent expense not found')
-      return
+    const sourceId = Number(transaction.source_id)
+    console.log('[DELETE_SERIES] handleDeleteSeries', { sourceId, description: transaction.description })
+
+    let recurrentExpense = recurrentExpenses.find(re => Number(re.id) === sourceId)
+    if (!recurrentExpense && user?.id) {
+      const { data } = await supabase
+        .from('recurrent_expenses')
+        .select('*')
+        .eq('id', sourceId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+      recurrentExpense = data as RecurrentExpense | null
     }
 
-    const period = `${months[recurrentExpense.month_from - 1]} ${recurrentExpense.year_from} a ${months[recurrentExpense.month_to - 1]} ${recurrentExpense.year_to}`
+    const period = recurrentExpense
+      ? `${months[recurrentExpense.month_from - 1]} ${recurrentExpense.year_from} a ${months[recurrentExpense.month_to - 1]} ${recurrentExpense.year_to}`
+      : 'serie (registro eliminado)'
 
     setDeleteSeriesConfirmationData({
       description: transaction.description,
       value: transaction.value,
       period,
       transactionId: deleteModalData.transactionId,
-      transaction: transaction
+      transaction,
+      isOrphaned: !recurrentExpense
     })
     
     setShowDeleteModal(false)
@@ -723,30 +861,82 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   }
 
   const handleConfirmDeleteSeries = async () => {
-    if (!deleteSeriesConfirmationData) return
+    if (!deleteSeriesConfirmationData) {
+      console.warn('[DELETE_SERIES] No deleteSeriesConfirmationData')
+      return
+    }
+    if (!user?.id) {
+      console.error('[DELETE_SERIES] No user.id')
+      setError('No hay sesión de usuario')
+      return
+    }
 
-    const { transactionId, transaction } = deleteSeriesConfirmationData
+    const { transaction, isOrphaned } = deleteSeriesConfirmationData
+    const sourceId = Number(transaction.source_id)
+    console.log('[DELETE_SERIES] Inicio', { sourceId, isOrphaned, userId: user.id })
 
     try {
       setError(null)
+      setIsDeletingSeries(true)
 
-      // Delete the entire recurrent series
-      const { error } = await supabase
-        .from('recurrent_expenses')
-        .delete()
-        .eq('id', transaction.source_id)
+      // 1. Borrar primero las transacciones de la serie
+      console.log('[DELETE_SERIES] Paso 1: seleccionando transacciones...')
+      const { data: txns, error: selectError } = await supabase
+        .from('transactions')
+        .select('id')
+        .eq('source_id', sourceId)
+        .eq('source_type', 'recurrent')
         .eq('user_id', user.id)
 
-      if (error) throw error
+      console.log('[DELETE_SERIES] Select resultado', { count: txns?.length ?? 0, selectError: selectError?.message })
 
-      // Trigger global data refresh using the new system
-      console.log('🔄 Triggering global data refresh after series deletion')
+      if (selectError) throw selectError
+
+      if (txns && txns.length > 0) {
+        console.log('[DELETE_SERIES] Paso 2a: borrando', txns.length, 'transacciones...')
+        const { error: txError } = await supabase
+          .from('transactions')
+          .delete()
+          .eq('source_id', sourceId)
+          .eq('source_type', 'recurrent')
+          .eq('user_id', user.id)
+        if (txError) {
+          console.error('[DELETE_SERIES] Error borrando transacciones:', txError)
+          throw txError
+        }
+        console.log('[DELETE_SERIES] Transacciones borradas OK')
+      } else {
+        console.log('[DELETE_SERIES] No hay transacciones que borrar')
+      }
+
+      // 2. Borrar la fila en recurrent_expenses (solo si existe)
+      if (!isOrphaned) {
+        console.log('[DELETE_SERIES] Paso 2b: borrando recurrent_expenses...')
+        const { error } = await supabase
+          .from('recurrent_expenses')
+          .delete()
+          .eq('id', sourceId)
+          .eq('user_id', user.id)
+        if (error) {
+          console.error('[DELETE_SERIES] Error borrando recurrent_expenses:', error)
+          throw error
+        }
+        console.log('[DELETE_SERIES] recurrent_expenses borrado OK')
+      }
+
+      console.log('[DELETE_SERIES] Completado OK, refrescando...')
       refreshData(user.id, 'delete_transaction')
-      
+
     } catch (error) {
-      console.error('Error deleting series:', error)
-      setError(`Error al eliminar serie: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+      console.error('[DELETE_SERIES] Error:', error)
+      if (error && typeof error === 'object' && 'code' in error) {
+        console.error('[DELETE_SERIES] Supabase error code:', (error as { code?: string }).code)
+      }
+      const errMsg = error instanceof Error ? error.message : String(error)
+      setError(`Error al eliminar serie: ${errMsg}`)
     } finally {
+      console.log('[DELETE_SERIES] Finally: cerrando modal')
+      setIsDeletingSeries(false)
       setShowDeleteSeriesConfirmation(false)
       setDeleteSeriesConfirmationData(null)
     }
@@ -764,7 +954,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
     // For non-recurrent transactions, go directly to the form
     if (transaction.source_type === 'non_recurrent') {
-      const nonRecurrentExpense = nonRecurrentExpenses.find(nre => nre.id === transaction.source_id)
+      const nonRecurrentExpense = nonRecurrentExpenses.find(nre => Number(nre.id) === Number(transaction.source_id))
       if (!nonRecurrentExpense) {
         setError('Original non-recurrent expense not found')
         return
@@ -790,7 +980,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       })
       setShowModifyForm(true)
     } else {
-      // For recurrent transactions, show the confirmation modal
+      // For recurrent transactions, show the confirmation modal (Toda la Serie / Solo Esta)
+      modifyModalTransactionRef.current = transaction
+      setShowModifyForm(false)
+      setModifyFormData(null)
+      setShowModifyConfirmation(false)
+      setModifyConfirmationData(null)
+      setShowExtendValuesModal(false)
+      setExtendValuesData(null)
+      setShowApplyToExistingModal(false)
+      setApplyToExistingData(null)
+      setApplyToExistingChoice(null)
       setModifyModalData({
         transactionId: id,
         transaction,
@@ -802,20 +1002,32 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   }
 
   const handleConfirmModify = async (modifySeries: boolean) => {
-    if (!modifyModalData) return
-
-    const { transaction } = modifyModalData
+    const transaction = modifyModalTransactionRef.current ?? modifyModalData?.transaction
+    if (!transaction) return
 
     try {
       if (transaction.source_type === 'recurrent' && modifySeries) {
-        // Get the original recurrent expense data
-        const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+        const sourceId = Number(transaction.source_id)
+        let recurrentExpense = recurrentExpenses.find(re => Number(re.id) === sourceId)
+        // Fallback: fetch from Supabase when not in local array
+        if (!recurrentExpense && user?.id) {
+          const { data } = await supabase
+            .from('recurrent_expenses')
+            .select('*')
+            .eq('id', sourceId)
+            .eq('user_id', user.id)
+            .maybeSingle()
+          recurrentExpense = data as RecurrentExpense | null
+        }
         if (!recurrentExpense) {
-          setError('Original recurrent expense not found')
+          // Serie eliminada o no accesible: no abrir formulario de "solo esta" — el usuario eligió "Toda la Serie"
+          setShowModifyModal(false)
+          setModifyModalData(null)
+          modifyModalTransactionRef.current = null
+          setError('La serie original ya no existe. Usa "Solo esta transacción" para modificar solo esta.')
           return
         }
 
-        // Set up form data for editing the entire series
         setModifyFormData({
           type: 'recurrent',
           description: recurrentExpense.description,
@@ -831,14 +1043,50 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
           originalId: recurrentExpense.id,
           modifySeries: true,
           isgoal: recurrentExpense.isgoal || false,
-          category: transaction.category
+          category: transaction.category,
+          editContextMonth: transaction.month,
+          editContextYear: transaction.year
         })
       } else {
         // Set up form data for editing individual transaction
         if (transaction.source_type === 'recurrent') {
-          const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
+          const sourceId = Number(transaction.source_id)
+          let recurrentExpense = recurrentExpenses.find(re => Number(re.id) === sourceId)
+          if (!recurrentExpense && user?.id) {
+            const { data } = await supabase
+              .from('recurrent_expenses')
+              .select('*')
+              .eq('id', sourceId)
+              .eq('user_id', user.id)
+              .maybeSingle()
+            recurrentExpense = data as RecurrentExpense | null
+          }
           if (!recurrentExpense) {
-            setError('Original recurrent expense not found')
+            // Serie no encontrada: usar datos de la transacción
+            const deadlineDay = transaction.deadline ? parseInt(transaction.deadline.split('-')[2], 10) : undefined
+            setModifyFormData({
+              type: 'recurrent',
+              description: transaction.description,
+              month_from: transaction.month,
+              month_to: transaction.month,
+              year_from: transaction.year,
+              year_to: transaction.year,
+              value: transaction.value,
+              payment_day_deadline: deadlineDay ? String(deadlineDay) : '',
+              month: transaction.month,
+              year: transaction.year,
+              payment_deadline: transaction.deadline || '',
+              notes: transaction.notes || '',
+              originalId: transaction.id,
+              transactionId: transaction.id,
+              modifySeries: false,
+              isgoal: false,
+              category: transaction.category
+            })
+            setShowModifyModal(false)
+            setModifyModalData(null)
+            modifyModalTransactionRef.current = null
+            setShowModifyForm(true)
             return
           }
 
@@ -861,7 +1109,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             category: transaction.category
           })
         } else {
-          const nonRecurrentExpense = nonRecurrentExpenses.find(nre => nre.id === transaction.source_id)
+          const nonRecurrentExpense = nonRecurrentExpenses.find(nre => Number(nre.id) === Number(transaction.source_id))
           if (!nonRecurrentExpense) {
             setError('Original non-recurrent expense not found')
             return
@@ -890,6 +1138,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
       setShowModifyModal(false)
       setModifyModalData(null)
+      modifyModalTransactionRef.current = null
       setShowModifyForm(true)
 
     } catch (error) {
@@ -898,7 +1147,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     }
   }
 
+
   const handleCancelModify = () => {
+    modifyModalTransactionRef.current = null
     setShowModifyModal(false)
     setModifyModalData(null)
   }
@@ -917,14 +1168,105 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       ? 'modify entire series' 
       : 'modify transaction'
 
-    // Show confirmation dialog
+    // Fase 2: si extendemos la serie, preguntar valor y due date para los meses nuevos
+    if (modifyFormData.type === 'recurrent' && modifyFormData.modifySeries && modifyFormData.originalId) {
+      const recurrent = recurrentExpenses.find(re => re.id === modifyFormData.originalId)
+      if (recurrent) {
+        const newMonths = getNewMonthsWhenExtending(
+          recurrent.year_from, recurrent.month_from, recurrent.year_to, recurrent.month_to,
+          modifyFormData.year_from, modifyFormData.month_from, modifyFormData.year_to, modifyFormData.month_to
+        )
+        if (newMonths.length > 0) {
+          const newMonthsLabel = newMonths
+            .map(({ year, month }) => `${months[month - 1]} ${year}`)
+            .join(', ')
+          setExtendValuesData({
+            newMonthsLabel,
+            suggestedValue: modifyFormData.value,
+            suggestedPaymentDay: modifyFormData.payment_day_deadline || ''
+          })
+          setShowExtendValuesModal(true)
+          return
+        }
+      }
+    }
+
+    // Aplicar valor/due date a existentes: si cambió, preguntar toda la serie vs de acá en adelante
+    proceedToApplyOrConfirm(modifyFormData, period, action)
+  }
+
+  const proceedToApplyOrConfirm = (
+    formData: NonNullable<typeof modifyFormData>,
+    period: string,
+    action: string
+  ) => {
+    const needsApplyModal = formData.type === 'recurrent' && formData.modifySeries && formData.originalId
+    if (!needsApplyModal) {
+      setModifyConfirmationData({ type: formData.type, description: formData.description, value: formData.value, period, action })
+      setShowModifyConfirmation(true)
+      return
+    }
+    const recurrent = recurrentExpenses.find(re => re.id === formData.originalId)
+    if (!recurrent) {
+      setModifyConfirmationData({ type: formData.type, description: formData.description, value: formData.value, period, action })
+      setShowModifyConfirmation(true)
+      return
+    }
+    const newDueDay = formData.payment_day_deadline?.trim() || null
+    const oldDueDay = recurrent.payment_day_deadline != null ? String(recurrent.payment_day_deadline) : null
+    const valueChanged = formData.value !== Number(recurrent.value)
+    const dueDateChanged = newDueDay !== oldDueDay
+    if (!valueChanged && !dueDateChanged) {
+      setModifyConfirmationData({ type: formData.type, description: formData.description, value: formData.value, period, action })
+      setShowModifyConfirmation(true)
+      return
+    }
+    const fromMonth = formData.editContextMonth ?? new Date().getMonth() + 1
+    const fromYear = formData.editContextYear ?? new Date().getFullYear()
+    setApplyToExistingData({
+      valueChanged,
+      dueDateChanged,
+      oldValue: Number(recurrent.value),
+      newValue: formData.value,
+      oldDueDay,
+      newDueDay: newDueDay || '',
+      fromMonth,
+      fromYear
+    })
+    setApplyToExistingChoice(null)
+    setShowApplyToExistingModal(true)
+  }
+
+  const handleConfirmExtendValues = () => {
+    if (!extendValuesData || !modifyFormData) return
+    const updatedForm = { ...modifyFormData, value: extendValuesData.suggestedValue, payment_day_deadline: extendValuesData.suggestedPaymentDay }
+    setModifyFormData(updatedForm)
+    setShowExtendValuesModal(false)
+    setExtendValuesData(null)
+    const period = modifyFormData.type === 'recurrent' 
+      ? `${months[modifyFormData.month_from - 1]} ${modifyFormData.year_from} a ${months[modifyFormData.month_to - 1]} ${modifyFormData.year_to}`
+      : `${months[modifyFormData.month - 1]} ${modifyFormData.year}`
+    proceedToApplyOrConfirm(updatedForm, period, 'modify entire series')
+  }
+
+  const handleConfirmApplyToExisting = (choice: 'all' | 'from_month') => {
+    if (!applyToExistingData || !modifyFormData) {
+      setError('Datos de modificación no disponibles. Por favor, intenta de nuevo.')
+      return
+    }
+    setApplyToExistingChoice(choice)
+    setShowApplyToExistingModal(false)
+    const period = modifyFormData.type === 'recurrent' 
+      ? `${months[modifyFormData.month_from - 1]} ${modifyFormData.year_from} a ${months[modifyFormData.month_to - 1]} ${modifyFormData.year_to}`
+      : `${months[modifyFormData.month - 1]} ${modifyFormData.year}`
     setModifyConfirmationData({
       type: modifyFormData.type,
       description: modifyFormData.description,
       value: modifyFormData.value,
       period,
-      action
+      action: 'modify entire series'
     })
+    setApplyToExistingData(null)
     setShowModifyConfirmation(true)
   }
 
@@ -953,9 +1295,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         })
 
         if (modifyFormData.modifySeries && modifyFormData.originalId) {
-          // Update the entire series
-          console.log('Updating entire recurrent series...')
-          const { data, error } = await supabase
+          // Update the entire series (trigger handles range/description)
+          const { error } = await supabase
             .from('recurrent_expenses')
             .update(recurrentData)
             .eq('id', modifyFormData.originalId)
@@ -963,20 +1304,37 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
           if (error) throw error
 
-          console.log('Recurrent expense updated successfully:', data)
+          // Aplicar valor y/o deadline a transacciones existentes si el usuario lo eligió
+          if (applyToExistingChoice && (modifyFormData.value !== undefined || modifyFormData.payment_day_deadline)) {
+            const { data: txns } = await supabase
+              .from('transactions')
+              .select('id, year, month')
+              .eq('source_id', modifyFormData.originalId)
+              .eq('source_type', 'recurrent')
+              .eq('user_id', user.id)
 
-          // Check if transactions were updated
-          const { data: transactions, error: transError } = await supabase
-            .from('transactions')
-            .select('*')
-            .eq('source_id', modifyFormData.originalId)
-            .eq('source_type', 'recurrent')
-            .eq('user_id', user.id)
-
-          if (transError) {
-            console.error('Error checking transactions:', transError)
-          } else {
-            console.log('Transactions after update:', transactions)
+            if (txns && txns.length > 0) {
+              const fromY = modifyFormData.editContextYear ?? new Date().getFullYear()
+              const fromM = modifyFormData.editContextMonth ?? new Date().getMonth() + 1
+              const paymentDay = modifyFormData.payment_day_deadline ? Number(modifyFormData.payment_day_deadline) : null
+              const newValue = Number(modifyFormData.value)
+              const toUpdate = applyToExistingChoice === 'all'
+                ? txns
+                : txns.filter(t => t.year > fromY || (t.year === fromY && t.month >= fromM))
+              const computeDeadline = (y: number, m: number): string | null => {
+                if (!paymentDay) return null
+                const lastDay = new Date(y, m, 0).getDate()
+                const day = Math.min(paymentDay, lastDay)
+                return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+              }
+              await Promise.all(toUpdate.map(t => {
+                const updates: { value?: number; deadline?: string | null } = {}
+                if (modifyFormData.value !== undefined) updates.value = newValue
+                if (paymentDay != null) updates.deadline = computeDeadline(t.year, t.month)
+                if (Object.keys(updates).length === 0) return Promise.resolve()
+                return supabase.from('transactions').update(updates).eq('id', t.id).eq('user_id', user.id)
+              }))
+            }
           }
         } else {
           // Update individual transaction
@@ -1032,6 +1390,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       setModifyConfirmationData(null)
       setShowModifyForm(false)
       setModifyFormData(null)
+      setShowApplyToExistingModal(false)
+      setApplyToExistingData(null)
+      setApplyToExistingChoice(null)
+      setShowExtendValuesModal(false)
+      setExtendValuesData(null)
     }
   }
 
@@ -1040,6 +1403,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     setShowModifyForm(false)
     setShowModifyConfirmation(false)
     setModifyConfirmationData(null)
+    setShowExtendValuesModal(false)
+    setExtendValuesData(null)
+    setShowApplyToExistingModal(false)
+    setApplyToExistingData(null)
+    setApplyToExistingChoice(null)
   }
 
   // Attachment handlers
@@ -1746,9 +2114,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                       {finalSortedTransactions.map((transaction) => {
                         const isSavingsTransaction = transaction.category === 'Ahorro'
                         return (
-                          <tr key={transaction.id} className="group bg-white hover:bg-gray-50 transition-colors border-b border-gray-100">
-                            <td className="px-2 py-2 max-w-0 border-r border-dashed border-gray-300">
-                              <div className="relative bg-white group-hover:bg-gray-50 h-full flex items-center gap-2 min-w-0 min-h-[52px]">
+                          <tr key={transaction.id} className="group/row bg-white hover:bg-gray-50 transition-colors border-b border-gray-100">
+                            <td className="px-2 py-2 max-w-0 border-r border-dashed border-gray-300 overflow-visible">
+                              <div className="relative bg-white group-hover/row:bg-gray-50 h-full flex items-center gap-2 min-w-0 min-h-[52px]">
                                 <div className="flex-shrink-0">
                                   <TransactionIcon
                                     transaction={transaction}
@@ -1775,31 +2143,45 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                     </button>
                                   )}
                                   {transaction.notes && transaction.notes.trim() && (
-                                    <div className="relative group flex-shrink-0">
-                                      <StickyNote className="h-3 w-3 text-amber-500 cursor-default" />
-                                      <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 max-w-xs left-full ml-2 -top-2 break-words">
-                                        {transaction.notes}
-                                      </div>
-                                    </div>
-                                  )}
-                                  {(transaction.deadline || transaction.source_type === 'recurrent') && (
-                                    <div className="relative group flex-shrink-0">
-                                      <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
-                                      <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
-                                        {transaction.deadline && (
-                                          <div>Vence: {(() => {
-                                            const [y, m, d] = transaction.deadline!.split('-').map(Number);
-                                            return `${d.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
-                                          })()}</div>
-                                        )}
-                                        {transaction.source_type === 'recurrent' && (() => {
-                                          const re = recurrentExpenses.find(r => r.id === transaction.source_id);
-                                          return re ? <div>Rango: {monthAbbreviations[re.month_from - 1]} {re.year_from} - {monthAbbreviations[re.month_to - 1]} {re.year_to}</div> : null;
-                                        })()}
-                                      </div>
+                                    <div
+                                      data-notes-tooltip-trigger
+                                      data-transaction-id={transaction.id}
+                                      className="relative flex-shrink-0"
+                                      onMouseEnter={() => {
+                                        if (notesTooltipCloseTimeoutRef.current) {
+                                          clearTimeout(notesTooltipCloseTimeoutRef.current)
+                                          notesTooltipCloseTimeoutRef.current = null
+                                        }
+                                        setHoveredNotesId(transaction.id)
+                                      }}
+                                      onMouseLeave={() => {
+                                        notesTooltipCloseTimeoutRef.current = setTimeout(() => setHoveredNotesId(null), 100)
+                                      }}
+                                    >
+                                      <StickyNote className="h-3 w-3 text-amber-500 cursor-default" aria-label="Ver notas" />
                                     </div>
                                   )}
                                 </div>
+                                {(transaction.deadline || transaction.source_type === 'recurrent') && (
+                                  <div
+                                    data-info-tooltip-trigger
+                                    data-transaction-id={transaction.id}
+                                    className="relative group/info flex-shrink-0"
+                                    onClick={(e) => { e.stopPropagation(); setOpenInfoTooltipId(prev => prev === transaction.id ? null : transaction.id) }}
+                                    onMouseEnter={() => {
+                                      if (infoTooltipCloseTimeoutRef.current) {
+                                        clearTimeout(infoTooltipCloseTimeoutRef.current)
+                                        infoTooltipCloseTimeoutRef.current = null
+                                      }
+                                      setOpenInfoTooltipId(transaction.id)
+                                    }}
+                                    onMouseLeave={() => {
+                                      infoTooltipCloseTimeoutRef.current = setTimeout(() => setOpenInfoTooltipId(null), 100)
+                                    }}
+                                  >
+                                    <Info className="h-3 w-3 text-gray-400 cursor-pointer" aria-label="Ver vencimiento y rango" />
+                                  </div>
+                                )}
                               </div>
                             </td>
                             <td className="px-1.5 py-2 whitespace-nowrap text-right w-[90px] border-r border-dashed border-gray-300">
@@ -1973,7 +2355,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                       const isMenuOpen = openOptionsMenu === transaction.id
                       return (
                         <tr key={transaction.id} className="border-b border-gray-100">
-                          <td className="px-1.5 py-1.5 w-[128px] border-r border-dashed border-gray-300">
+                          <td className="px-1.5 py-1.5 w-[128px] border-r border-dashed border-gray-300 overflow-visible">
                             <div className="relative bg-white h-full flex items-center gap-1 min-w-0 min-h-[44px]">
                               <div className="flex-shrink-0">
                                 <TransactionIcon
@@ -1992,6 +2374,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                   {transaction.description}
                                 </span>
                               </div>
+                              {(transaction.deadline || transaction.source_type === 'recurrent') && (
+                                <div
+                                  data-info-tooltip-trigger
+                                  data-transaction-id={transaction.id}
+                                  className="relative flex-shrink-0"
+                                  onClick={(e) => { e.stopPropagation(); setOpenInfoTooltipId(prev => prev === transaction.id ? null : transaction.id) }}
+                                >
+                                  <Info className="h-3 w-3 text-gray-400 cursor-pointer" aria-label="Ver vencimiento y rango" />
+                                </div>
+                              )}
                             </div>
                           </td>
                           <td className="py-1.5 align-middle border-r border-dashed border-gray-300" style={{ width: 126, paddingLeft: 0, paddingRight: 0 }}>
@@ -2026,7 +2418,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               <div className="relative flex justify-end shrink-0" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   type="button"
-                                  onClick={() => setOpenOptionsMenu(isMenuOpen ? null : transaction.id)}
+                                  onClick={() => { setOpenInfoTooltipId(null); setOpenOptionsMenu(isMenuOpen ? null : transaction.id) }}
                                   className="p-1 rounded text-gray-500 hover:bg-gray-100 flex justify-center items-center shrink-0"
                                   aria-label="Más opciones"
                                   style={{ width: 28, minWidth: 28 }}
@@ -2085,6 +2477,73 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             </>
             )}
           </div>
+
+          {/* Tooltip Info (vencimiento/rango) en Portal para que no se corte por overflow de la tabla */}
+          {openInfoTooltipId && infoTooltipAnchor && typeof document !== 'undefined' && (() => {
+            const tx = finalSortedTransactions.find(t => t.id === openInfoTooltipId)
+            if (!tx) return null
+            const style: React.CSSProperties = {
+              position: 'fixed',
+              left: infoTooltipAnchor.left + infoTooltipAnchor.width + 8,
+              top: infoTooltipAnchor.top,
+              zIndex: 9999,
+            }
+            return createPortal(
+              <div
+                data-info-tooltip-content
+                className="bg-gray-800 text-white text-xs rounded-md p-2 whitespace-nowrap shadow-lg"
+                style={style}
+                onMouseEnter={() => {
+                  if (infoTooltipCloseTimeoutRef.current) {
+                    clearTimeout(infoTooltipCloseTimeoutRef.current)
+                    infoTooltipCloseTimeoutRef.current = null
+                  }
+                }}
+                onMouseLeave={() => setOpenInfoTooltipId(null)}
+              >
+                {tx.deadline && (
+                  <div>Vence: {(() => {
+                    const [y, m, d] = tx.deadline!.split('-').map(Number)
+                    return `${d.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`
+                  })()}</div>
+                )}
+                {tx.source_type === 'recurrent' && (() => {
+                  const re = recurrentExpenses.find(r => Number(r.id) === Number(tx.source_id))
+                  return re ? <div>Rango: {monthAbbreviations[re.month_from - 1]} {re.year_from} - {monthAbbreviations[re.month_to - 1]} {re.year_to}</div> : null
+                })()}
+              </div>,
+              document.body
+            )
+          })()}
+
+          {/* Tooltip Notas (desktop) en Portal para que no se corte por overflow de la tabla */}
+          {hoveredNotesId && notesTooltipAnchor && typeof document !== 'undefined' && (() => {
+            const tx = finalSortedTransactions.find(t => t.id === hoveredNotesId)
+            if (!tx?.notes?.trim()) return null
+            const style: React.CSSProperties = {
+              position: 'fixed',
+              left: notesTooltipAnchor.left + notesTooltipAnchor.width + 8,
+              top: notesTooltipAnchor.top,
+              zIndex: 9999,
+            }
+            return createPortal(
+              <div
+                data-notes-tooltip-content
+                className="bg-gray-800 text-white text-xs rounded-md p-2 max-w-xs break-words shadow-lg"
+                style={style}
+                onMouseEnter={() => {
+                  if (notesTooltipCloseTimeoutRef.current) {
+                    clearTimeout(notesTooltipCloseTimeoutRef.current)
+                    notesTooltipCloseTimeoutRef.current = null
+                  }
+                }}
+                onMouseLeave={() => setHoveredNotesId(null)}
+              >
+                {tx.notes}
+              </div>,
+              document.body
+            )
+          })()}
 
           {/* Notes Modal (quick edit from dropdown) */}
           {showNotesModal && notesModalTransaction && (
@@ -2489,10 +2948,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
           {/* Modify Confirmation Modal */}
           {showModifyModal && modifyModalData && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
-              {/* Overlay borroso y semitransparente */}
-              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
-              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+            <div key={`modify-modal-${modifyModalData.transactionId}`} className="fixed inset-0 z-[100] flex items-center justify-center">
+              {/* Overlay borroso - no captura clicks */}
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all pointer-events-none" aria-hidden="true"></div>
+              <section className="relative z-10 bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
                 <button
                   onClick={handleCancelModify}
                   className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
@@ -2560,20 +3019,23 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                     {modifyModalData.isRecurrent ? (
                       <>
                         <button
-                          onClick={() => handleConfirmModify(true)}
-                          className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); handleConfirmModify(true) }}
+                          className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors cursor-pointer"
                         >
                           Toda la Serie
                         </button>
                         <button
-                          onClick={() => handleConfirmModify(false)}
-                          className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); handleConfirmModify(false) }}
+                          className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors cursor-pointer"
                         >
                           Solo Esta Transacción
                         </button>
                       </>
                     ) : (
                       <button
+                        type="button"
                         onClick={() => handleConfirmModify(false)}
                         className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
                       >
@@ -2957,6 +3419,174 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                     </div>
                   </form>
                 )}
+              </section>
+            </div>
+          )}
+
+          {/* Extend Series: valores para meses nuevos (Fase 2) */}
+          {showExtendValuesModal && extendValuesData && modifyFormData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+                <button
+                  onClick={() => {
+                    setShowExtendValuesModal(false)
+                    setExtendValuesData(null)
+                  }}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                      <Info className="h-4 w-4 text-green-primary" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Extender serie</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">
+                    Se crearán transacciones para los siguientes meses. Indica el valor y día de pago que tendrán:
+                  </p>
+                  
+                  <div className="w-full bg-gray-50 rounded-lg p-3 space-y-1">
+                    <p className="text-sm font-medium text-gray-700">{extendValuesData.newMonthsLabel}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Valor ($)</label>
+                      <input
+                        type="text"
+                        value={getCurrencyInputValue(extendValuesData.suggestedValue)}
+                        onChange={(e) => setExtendValuesData(prev => prev ? {
+                          ...prev,
+                          suggestedValue: parseCurrency(e.target.value)
+                        } : null)}
+                        placeholder="$0"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-gray-dark">Día de pago</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={31}
+                        value={extendValuesData.suggestedPaymentDay}
+                        onChange={(e) => setExtendValuesData(prev => prev ? {
+                          ...prev,
+                          suggestedPaymentDay: e.target.value
+                        } : null)}
+                        placeholder="5"
+                        className="w-full px-3 py-2 bg-white text-gray-900 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-primary focus:border-green-primary text-sm placeholder-gray-400"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="w-full bg-green-light border border-green-200 rounded-lg p-2.5">
+                    <p className="text-sm text-green-primary">
+                      Las transacciones existentes conservan su valor y fecha. Solo se aplica a los meses nuevos.
+                    </p>
+                  </div>
+
+                  <div className="w-full space-y-2">
+                    <button
+                      onClick={handleConfirmExtendValues}
+                      className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors"
+                    >
+                      Confirmar y continuar
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowExtendValuesModal(false)
+                        setExtendValuesData(null)
+                      }}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Aplicar valor/due date a existentes: toda la serie vs de acá en adelante */}
+          {showApplyToExistingModal && applyToExistingData && modifyFormData && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-all" aria-hidden="true"></div>
+              <section className="relative bg-white rounded-2xl p-0 w-full max-w-sm shadow-2xl border border-gray-200 flex flex-col items-stretch">
+                <button
+                  onClick={() => {
+                    setShowApplyToExistingModal(false)
+                    setApplyToExistingData(null)
+                  }}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 p-1"
+                  aria-label="Cerrar"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+
+                <div className="px-6 py-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 bg-green-light rounded-full p-1.5">
+                      <Info className="h-4 w-4 text-green-primary" />
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">¿Aplicar cambios a transacciones existentes?</h2>
+                  </div>
+                  <p className="text-sm text-gray-500">Cambiaste los siguientes datos. Indica si quieres aplicarlos a las transacciones que ya existen:</p>
+                  
+                  <div className="w-full bg-gray-50 rounded-lg p-3 space-y-2">
+                    {applyToExistingData.valueChanged && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">Valor:</span>
+                        <span className="text-sm font-medium text-gray-900">{formatCurrency(applyToExistingData.oldValue)} → {formatCurrency(applyToExistingData.newValue)}</span>
+                      </div>
+                    )}
+                    {applyToExistingData.dueDateChanged && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-500">Día de pago:</span>
+                        <span className="text-sm font-medium text-gray-900">
+                          {applyToExistingData.oldDueDay ? `día ${applyToExistingData.oldDueDay}` : '—'} → {applyToExistingData.newDueDay ? `día ${applyToExistingData.newDueDay}` : '—'}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-sm text-gray-600">¿Aplicar estos cambios a:</p>
+                  <div className="w-full space-y-2">
+                    <button
+                      onClick={() => handleConfirmApplyToExisting('all')}
+                      className="w-full px-4 py-2 bg-green-primary text-white rounded-xl text-sm font-medium hover:bg-[#77b16e] transition-colors text-left"
+                    >
+                      Toda la serie
+                    </button>
+                    <button
+                      onClick={() => handleConfirmApplyToExisting('from_month')}
+                      className="w-full px-4 py-2 bg-green-light border border-green-primary/40 text-green-primary rounded-xl text-sm font-medium hover:bg-green-primary hover:text-white transition-colors text-left"
+                    >
+                      De {months[applyToExistingData.fromMonth - 1]} {applyToExistingData.fromYear} en adelante
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!modifyFormData) return
+                        setShowApplyToExistingModal(false)
+                        setApplyToExistingData(null)
+                        setApplyToExistingChoice(null)
+                        const period = modifyFormData.type === 'recurrent' 
+                          ? `${months[modifyFormData.month_from - 1]} ${modifyFormData.year_from} a ${months[modifyFormData.month_to - 1]} ${modifyFormData.year_to}`
+                          : `${months[modifyFormData.month - 1]} ${modifyFormData.year}`
+                        setModifyConfirmationData({ type: modifyFormData.type, description: modifyFormData.description, value: modifyFormData.value, period, action: 'modify entire series' })
+                        setShowModifyConfirmation(true)
+                      }}
+                      className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-200 transition-colors"
+                    >
+                      No aplicar (solo descripción y rango)
+                    </button>
+                  </div>
+                </div>
               </section>
             </div>
           )}
@@ -3396,7 +4026,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                         <span className="text-yellow-600 text-xs font-bold">!</span>
                       </div>
                       <div>
-                        <p className="text-sm text-yellow-800">Esta acción no se puede deshacer</p>
+                        {deleteSeriesConfirmationData.isOrphaned ? (
+                          <p className="text-sm text-yellow-800">La serie ya no existe. Se eliminarán las transacciones asociadas.</p>
+                        ) : (
+                          <p className="text-sm text-yellow-800">Se eliminarán todas las transacciones, abonos y la serie. Esta acción no se puede deshacer.</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -3405,16 +4039,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                   <div className="w-full space-y-2">
                     <button
                       onClick={handleConfirmDeleteSeries}
-                      disabled={isLoading}
+                      disabled={isDeletingSeries}
                       className="w-full px-4 py-2 bg-error-bg text-error-red border border-red-200 rounded-xl text-sm font-medium hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isLoading ? (
+                      {isDeletingSeries ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-error-red mr-2"></div>
                           Eliminando...
                         </div>
                       ) : (
-                        'Eliminar serie'
+                        deleteSeriesConfirmationData.isOrphaned ? 'Eliminar transacciones' : 'Eliminar serie'
                       )}
                     </button>
                     

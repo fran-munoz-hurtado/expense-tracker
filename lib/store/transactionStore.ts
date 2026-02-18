@@ -477,14 +477,26 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       console.log('[zustand] deleteRecurrentSeries: optimistic deletion applied (', seriesToDelete.length, 'items)')
     }
 
-    // ✅ 2. Persistir en Supabase - eliminar de recurrent_expenses (triggea cascade delete)
+    // ✅ 2. Persistir en Supabase: primero transacciones (abonos y attachments cascadan), luego recurrent_expenses
+    const { error: txError } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('source_id', sourceId)
+      .eq('source_type', 'recurrent')
+      .eq('user_id', userId)
+    if (txError) {
+      set({ transactions: [...transactions] })
+      console.error('[zustand] deleteRecurrentSeries: error deleting transactions', sourceId, ':', txError)
+      return
+    }
+
     const { error } = await supabase
       .from('recurrent_expenses')
       .delete()
       .eq('id', sourceId)
       .eq('user_id', userId)
 
-    // ❌ 3. Revertir si hay error
+    // ❌ 3. Revertir si hay error (no podemos restaurar transacciones ya borradas)
     if (error) {
       set({
         transactions: [...transactions], // Restaurar el array original completo
