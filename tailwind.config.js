@@ -19,7 +19,7 @@ module.exports = {
     'text-body-large', 'text-body-medium', 'text-body-small',
     'text-label-large', 'text-label-medium', 'text-label-small',
     // New color tokens for safelist
-    'bg-green-primary', 'text-green-primary', 'text-green-dark', 'bg-green-light',
+    'bg-green-primary', 'text-green-primary', 'text-green-dark', 'bg-green-light', 'from-green-primary', 'to-green-dark',
     'bg-beige', 'bg-neutral-bg', 'bg-neutral-light', 'border-border-light',
     'text-gray-text', 'text-gray-dark', 'bg-warning-bg', 'text-warning-yellow',
     'bg-error-bg', 'text-error-red', 'bg-info-bg', 'text-info-blue',

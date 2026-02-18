@@ -1605,7 +1605,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
           {onAddExpense && (
             <button
               onClick={onAddExpense}
-              className="flex items-center justify-center gap-1.5 px-3 py-2.5 lg:py-1.5 bg-green-primary text-white rounded-md text-sm font-medium hover:bg-green-dark transition-colors font-sans shrink-0 min-h-[44px] lg:min-h-0 w-full lg:w-auto"
+              className="flex items-center justify-center gap-1.5 px-3 py-2.5 lg:py-1.5 bg-gradient-to-b from-green-primary to-green-dark text-white rounded-md text-sm font-medium border border-green-dark/40 shadow-[0_2px_6px_rgba(93,119,96,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_4px_12px_rgba(93,119,96,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] active:scale-[0.98] transition-all duration-200 font-sans shrink-0 min-h-[44px] lg:min-h-0 w-full lg:w-auto"
               aria-label={texts.addTransaction}
             >
               <Plus className="h-4 w-4" />
@@ -1613,13 +1613,14 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             </button>
           )}
         </div>
-        {/* Fila 2: Totales - en mobile dentro de contenedor; en desktop inline */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-sans lg:shrink-0 lg:bg-transparent bg-gray-50 rounded-lg px-3 py-2.5 lg:p-0 lg:rounded-none border border-gray-200 lg:border-0">
+        {/* Fila 2: Totales - en mobile: fila1 Ingresos+Gastos, fila2 Estado+resto; en desktop inline */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-sans lg:shrink-0 lg:bg-transparent bg-gray-50 rounded-lg px-3 py-2.5 lg:p-0 lg:rounded-none border border-gray-200 lg:border-0 shadow-[0_4px_14px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)] lg:shadow-none">
           <span className="text-gray-500">Ingresos:</span>
           <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.income)}</span>
           <span className="text-gray-300 hidden sm:inline">|</span>
           <span className="text-gray-500">Gastos:</span>
           <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.expense)}</span>
+          <span className="flex-none w-full lg:hidden" aria-hidden="true" />
           <span className="text-gray-300 hidden sm:inline">|</span>
           <span className="text-gray-500">Estado:</span>
           {faltaPagar > 0 ? (
@@ -1807,7 +1808,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                   {formatCurrency(transaction.value)}
                                   {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
                                     <span className="block text-xs text-gray-500 font-normal">
-                                      {formatCurrency(getTotalAbonado(transaction.id))} / {formatCurrency(transaction.value)}
+                                      {formatCurrency(getTotalAbonado(transaction.id))}
                                     </span>
                                   )}
                                 </div>
@@ -1999,7 +2000,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               <div className="leading-tight text-right shrink-0 tabular-nums">
                                 <span className="text-xs font-medium text-gray-900 font-sans">{formatCurrency(transaction.value)}</span>
                                 {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
-                                  <span className="block text-[9px] text-gray-500">{formatCurrency(getTotalAbonado(transaction.id))}/{formatCurrency(transaction.value)}</span>
+                                  <span className="block text-[9px] text-gray-500">{formatCurrency(getTotalAbonado(transaction.id))}</span>
                                 )}
                               </div>
                               <input
