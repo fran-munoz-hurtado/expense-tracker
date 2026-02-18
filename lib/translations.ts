@@ -54,7 +54,7 @@ export const translations = {
   type: 'Tipo',
   
   // Status
-  paid: 'Ya pagado',
+  paid: 'Pagado',
   pending: 'Pendiente',
   overdue: 'Se pasó la fecha',
   

@@ -20,7 +20,7 @@ interface MonthFiltersSectionProps {
 
 function MonthFiltersSectionInner({ selectedMonth, selectedYear, onMonthYearChange, onAddExpense }: MonthFiltersSectionProps) {
   return (
-    <div className="rounded-xl bg-white shadow-soft p-6 border-b border-gray-100">
+    <div className="rounded-xl bg-white shadow-soft p-6 border-b border-gray-100 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
       <div className="hidden sm:flex items-center justify-center">
         <div className="inline-flex items-center gap-4 bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
           <div className="flex items-center gap-2">

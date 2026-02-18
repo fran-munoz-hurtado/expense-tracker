@@ -33,7 +33,7 @@ function MonthSummaryCardsInner({
   const displayValue = (v: number) => isLoading ? '—' : formatCurrency(v)
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 w-full">
+    <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
       <div className="mb-4">
         <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
           Para el mes de {monthLabel} {year}

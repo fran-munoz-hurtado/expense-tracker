@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { Plus, Edit, Trash2, DollarSign, Calendar, FileText, Repeat, CheckCircle, AlertCircle, X, Paperclip, ChevronUp, ChevronDown, Tag, Info, PiggyBank, CreditCard, AlertTriangle, Clock, RotateCcw, MoreVertical, StickyNote, Wallet } from 'lucide-react'
 import { supabase, type Transaction, type RecurrentExpense, type NonRecurrentExpense, type User, type TransactionAttachment, type Abono } from '@/lib/supabase'
 import { fetchUserTransactions, fetchUserExpenses, fetchMonthlyStats, fetchAttachmentCounts, measureQueryPerformance, clearUserCache } from '@/lib/dataUtils'
@@ -1399,13 +1399,35 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     return texts.pending
   }
 
-  // Updated getStatusColor function to use consistent colors from getDaysUntilDeadlineText
+  // Solo colores; el tamaño y padding se aplican siempre igual en el span para consistencia
   const getStatusColor = (transaction: Transaction) => {
-    if (transaction.status === 'paid') return 'bg-green-light text-green-primary' // Keep the same "Pagado" badge style
+    if (transaction.status === 'paid') return 'bg-green-light text-green-primary'
     if (transaction.deadline) {
-      return getDaysUntilDeadlineText(transaction.deadline).className
+      const [year, month, day] = transaction.deadline.split('-').map(Number)
+      const today = new Date()
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      const deadlineDate = new Date(year, month - 1, day)
+      const diffDays = Math.ceil((deadlineDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24))
+      if (diffDays < 0) return 'text-error-red bg-error-bg'
+      return 'text-warning-yellow bg-warning-bg'
     }
-    return 'bg-warning-bg text-warning-yellow' // Default for pending without deadline
+    return 'bg-warning-bg text-warning-yellow'
+  }
+
+  // Mobile only: status as colored circles (green/yellow/red) with optional day number
+  const getMobileStatusCircle = (transaction: Transaction): { bg: string; text: string; num: number | null } => {
+    if (transaction.status === 'paid') return { bg: 'bg-green-primary', text: 'text-white', num: null }
+    if (transaction.deadline) {
+      const [y, m, d] = transaction.deadline.split('-').map(Number)
+      const today = new Date()
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+      const deadlineDate = new Date(y, m - 1, d)
+      const diffDays = Math.ceil((deadlineDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24))
+      if (diffDays > 0) return { bg: 'bg-warning-yellow', text: 'text-gray-900', num: diffDays }
+      if (diffDays === 0) return { bg: 'bg-warning-yellow', text: 'text-gray-900', num: 0 }
+      return { bg: 'bg-error-red', text: 'text-white', num: Math.abs(diffDays) }
+    }
+    return { bg: 'bg-warning-yellow', text: 'text-gray-900', num: null }
   }
 
   // 1. Construyo un mapa de recurrentes con isgoal=true
@@ -1590,8 +1612,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             formatCurrency={formatCurrency}
           />
 
-          {/* SECCIÓN 3: Transacciones del mes - estructura estable, solo el contenido cambia */}
-          <div className="bg-white rounded-xl shadow-sm p-4 w-full">
+          {/* SECCIÓN 3: Transacciones del mes - full viewport width en mobile */}
+          <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
                 Transacciones del mes
@@ -1619,11 +1641,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
               {/* Desktop Table View */}
               <div className="hidden lg:block" onMouseLeave={() => { setHoveredRow(null); setOpenActionsDropdown(null) }}>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full">
+                  <table className="min-w-full table-fixed">
+                    <colgroup>
+                      <col className="w-[45%]" />
+                      <col className="w-[67px]" />
+                      <col className="w-[90px]" />
+                    </colgroup>
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
                         <th 
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
+                          className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans border-r border-dashed border-gray-300 bg-gray-50"
                           onClick={() => handleSort('description')}
                         >
                           <div className="flex items-center space-x-1">
@@ -1636,23 +1663,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                           </div>
                         </th>
                         <th 
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
-                          onClick={() => handleSort('status')}
-                        >
-                          <div className="flex items-center space-x-1">
-                            <span>{texts.status}</span>
-                            {sortField === 'status' && (
-                              sortDirection === 'asc' ? 
-                                <ChevronUp className="h-4 w-4" /> : 
-                                <ChevronDown className="h-4 w-4" />
-                            )}
-                          </div>
-                        </th>
-                        <th 
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans"
+                          className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans w-[67px] border-r border-dashed border-gray-300"
                           onClick={() => handleSort('value')}
                         >
-                          <div className="flex items-center space-x-1">
+                          <div className="flex items-center space-x-1 justify-center">
                             <span>{texts.amount}</span>
                             {sortField === 'value' && (
                               sortDirection === 'asc' ? 
@@ -1661,8 +1675,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             )}
                           </div>
                         </th>
-                        <th className="px-2 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">
-                          {texts.actions}
+                        <th 
+                          className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans w-[90px]"
+                          onClick={() => handleSort('status')}
+                        >
+                          <div className="flex items-center justify-center space-x-1">
+                            <span>{texts.status}</span>
+                            {sortField === 'status' && (
+                              sortDirection === 'asc' ? 
+                                <ChevronUp className="h-4 w-4" /> : 
+                                <ChevronDown className="h-4 w-4" />
+                            )}
+                          </div>
                         </th>
                       </tr>
                     </thead>
@@ -1670,98 +1694,73 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                       {finalSortedTransactions.map((transaction) => {
                         const isSavingsTransaction = transaction.category === 'Ahorro'
                         return (
-                          <tr key={transaction.id} className="bg-white hover:bg-gray-50 transition-colors border-b border-gray-100">
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <div className="flex items-center space-x-3">
-                                <div className="flex items-center space-x-2">
-                                  {/* Usar TransactionIcon parametrizado */}
-                                  <TransactionIcon 
+                          <tr key={transaction.id} className="group bg-white hover:bg-gray-50 transition-colors border-b border-gray-100">
+                            <td className="px-2 py-2 max-w-0 border-r border-dashed border-gray-300">
+                              <div className="relative bg-white group-hover:bg-gray-50 h-full flex items-center gap-2 min-w-0 min-h-[52px]">
+                                <div className="flex-shrink-0">
+                                  <TransactionIcon
                                     transaction={transaction}
                                     recurrentGoalMap={recurrentGoalMap}
                                     size="w-4 h-4"
                                     showBackground={true}
                                   />
                                 </div>
-                                <div>
-                                  <div className="text-sm font-medium text-gray-900 flex items-center gap-2 transaction-description font-sans">
-                                    <span>{transaction.description}</span>
-                                    
-                                    {/* Category - moved to same line as title */}
-                                    {transaction.type === 'expense' && 
-                                     !(transaction.category === 'Ahorro' && 
-                                       (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
-                                     !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
-                                      <button
-                                        onClick={() => handleCategoryClick(transaction)}
-                                        className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans"
-                                      >
-                                        {transaction.category && transaction.category !== 'sin categoría' 
-                                          ? transaction.category 
-                                          : 'sin categoría'}
-                                      </button>
-                                    )}
-                                    
-                                    {/* Notes icon with tooltip */}
-                                    {transaction.notes && transaction.notes.trim() && (
-                                      <div className="relative group">
-                                        <StickyNote className="h-3 w-3 text-amber-500 cursor-default" />
-                                        <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 max-w-xs left-full ml-2 -top-2 break-words">
-                                          {transaction.notes}
-                                        </div>
+                                <div className="min-w-0 flex-1 flex items-center gap-1.5 overflow-hidden">
+                                  <span
+                                    className="text-sm font-medium text-gray-900 truncate font-sans block"
+                                    title={transaction.description}
+                                  >
+                                    {transaction.description}
+                                  </span>
+                                  {transaction.type === 'expense' &&
+                                   !(transaction.category === 'Ahorro' && (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
+                                   !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
+                                    <button
+                                      onClick={() => handleCategoryClick(transaction)}
+                                      className="text-xs font-medium text-green-dark bg-beige px-2 py-1 rounded-full hover:bg-border-light hover:text-gray-dark transition-colors cursor-pointer font-sans flex-shrink-0"
+                                    >
+                                      {transaction.category && transaction.category !== 'sin categoría' ? transaction.category : 'sin categoría'}
+                                    </button>
+                                  )}
+                                  {transaction.notes && transaction.notes.trim() && (
+                                    <div className="relative group flex-shrink-0">
+                                      <StickyNote className="h-3 w-3 text-amber-500 cursor-default" />
+                                      <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 max-w-xs left-full ml-2 -top-2 break-words">
+                                        {transaction.notes}
                                       </div>
-                                    )}
-                                    {/* Info icon with tooltip */}
-                                    {(transaction.deadline || transaction.source_type === 'recurrent') && (
-                                      <div className="relative group">
-                                        <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
-                                        <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
-                                          {transaction.deadline && (
-                                            <div>
-                                              Vence: {(() => {
-                                                const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                                return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                                              })()}
-                                            </div>
-                                          )}
-                                          {transaction.source_type === 'recurrent' && (
-                                            (() => {
-                                              const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
-                                              if (recurrentExpense) {
-                                                return (
-                                                  <div>
-                                                    Rango: {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
-                                                  </div>
-                                                )
-                                              }
-                                              return null
-                                            })()
-                                          )}
-                                        </div>
+                                    </div>
+                                  )}
+                                  {(transaction.deadline || transaction.source_type === 'recurrent') && (
+                                    <div className="relative group flex-shrink-0">
+                                      <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
+                                      <div className="absolute z-10 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
+                                        {transaction.deadline && (
+                                          <div>Vence: {(() => {
+                                            const [y, m, d] = transaction.deadline!.split('-').map(Number);
+                                            return `${d.toString().padStart(2, '0')}/${m.toString().padStart(2, '0')}/${y}`;
+                                          })()}</div>
+                                        )}
+                                        {transaction.source_type === 'recurrent' && (() => {
+                                          const re = recurrentExpenses.find(r => r.id === transaction.source_id);
+                                          return re ? <div>Rango: {monthAbbreviations[re.month_from - 1]} {re.year_from} - {monthAbbreviations[re.month_to - 1]} {re.year_to}</div> : null;
+                                        })()}
                                       </div>
-                                    )}
-                                  </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">
-                              <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans", 
-                                getStatusColor(transaction)
-                              )}>
-                                {getStatusText(transaction)}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 whitespace-nowrap text-right">
-                              <div className="text-sm font-medium text-gray-900 font-sans">
-                                {formatCurrency(transaction.value)}
-                                {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
-                                  <span className="block text-xs text-gray-500 font-normal mt-0.5">
-                                    {formatCurrency(getTotalAbonado(transaction.id))} / {formatCurrency(transaction.value)}
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="px-2 py-3 whitespace-nowrap">
-                              <div className="flex items-center gap-x-1">
+                            <td className="px-1.5 py-2 whitespace-nowrap text-right w-[67px] border-r border-dashed border-gray-300">
+                              <div className="flex items-center justify-end gap-x-1">
+                                <div className="text-sm font-medium text-gray-900 font-sans text-right tabular-nums">
+                                  {formatCurrency(transaction.value)}
+                                  {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
+                                    <span className="block text-xs text-gray-500 font-normal">
+                                      {formatCurrency(getTotalAbonado(transaction.id))} / {formatCurrency(transaction.value)}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-x-0.5 flex-shrink-0">
                                 {/* Pay/Unpay - always visible */}
                                 <div className="relative" onClick={(e) => e.stopPropagation()}>
                                   <input
@@ -1841,11 +1840,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                         onClick={() => handleNotesClick(transaction)}
                                         className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
                                       >
-                                        <StickyNote className="w-4 h-4 flex-shrink-0" />
-                                        <span>{texts.notes}</span>
-                                        {transaction.notes && transaction.notes.trim() && (
-                                          <span className="ml-auto text-amber-500">·</span>
-                                        )}
+                                        <StickyNote className={cn("w-4 h-4 flex-shrink-0", transaction.notes?.trim() && "text-amber-500")} />
+                                        <span className="flex items-center gap-1.5">
+                                          {texts.notes}
+                                          {transaction.notes?.trim() && (
+                                            <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                                          )}
+                                        </span>
                                       </button>
                                       {transaction.type === 'expense' && transaction.status !== 'paid' && (
                                         <button
@@ -1883,6 +1884,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                   )}
                                 </div>
                               </div>
+                            </div>
+                            </td>
+                            <td className="px-2 py-2 whitespace-nowrap w-[90px] text-center">
+                              <span className={cn("inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-medium font-sans", getStatusColor(transaction))}>
+                                {getStatusText(transaction)}
+                              </span>
                             </td>
                           </tr>
                         );
@@ -1892,225 +1899,136 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                 </div>
               </div>
 
-              {/* Mobile Card View */}
-              <div className="lg:hidden space-y-1 divide-y divide-gray-100">
-                {finalSortedTransactions.map((transaction) => {
-                  const isSavingsTransaction = transaction.category === 'Ahorro'
-                  const isMenuOpen = openOptionsMenu === transaction.id
-                  
-                  return (
-                    <div key={transaction.id} className="flex flex-col gap-y-1 px-1 py-2 relative">
-                      {/* 🔁 Ícono de tipo de transacción */}
-                      <div className="absolute left-0 top-3.5">
-                        <TransactionIcon 
-                          transaction={transaction}
-                          recurrentGoalMap={recurrentGoalMap}
-                          size="w-4 h-4"
-                          showBackground={true}
-                        />
-                      </div>
-
-                      {/* 🟩 Línea 1: descripción + monto + check */}
-                      <div className="flex justify-between items-center ml-9">
-                        <span className="text-sm font-medium text-gray-900 truncate leading-tight">
-                          {transaction.description}
-                        </span>
-
-                        <div className="flex items-center gap-x-2">
-                          <div className="text-right">
-                            <span className="text-sm font-medium text-gray-900 leading-tight">
-                              {formatCurrency(transaction.value)}
-                            </span>
-                            {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
-                              <span className="block text-xs text-gray-500 font-normal">
-                                {formatCurrency(getTotalAbonado(transaction.id))} / {formatCurrency(transaction.value)}
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={transaction.status === 'paid'}
-                              onChange={(e) => {
-                                console.log(`🔘 Mobile: Checkbox clicked for transaction ${transaction.id}, checked: ${e.target.checked}`)
-                                handleCheckboxChange(transaction.id, e.target.checked)
-                              }}
-                              className="sr-only"
-                              id={`checkbox-mobile-${transaction.id}`}
-                            />
-                            <label
-                              htmlFor={`checkbox-mobile-${transaction.id}`}
-                              className={`
-                                relative inline-flex items-center justify-center w-4 h-4
-                                ${transaction.status === 'paid' 
-                                  ? 'bg-green-primary border-green-primary' 
-                                  : 'bg-beige border border-border-light hover:border-green-primary hover:shadow-soft'
-                                }
-                                rounded-full overflow-hidden cursor-pointer
-                                transition-all duration-200
-                                ${transaction.status === 'paid' ? 'scale-105' : 'scale-100'}
-                              `}
-                            >
-                              {transaction.status === 'paid' && (
-                                <svg
-                                  className="w-2.5 h-2.5 text-white relative z-10"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
+              {/* Mobile Table View - 3 columnas: descripción | valor+3puntos | estado (scrolleable horizontal) */}
+              <div className="lg:hidden overflow-x-auto" onMouseLeave={() => setOpenOptionsMenu(null)}>
+                <table className="min-w-[380px] w-full text-xs table-fixed">
+                  <colgroup>
+                    <col className="w-[160px]" />
+                    <col className="w-[140px]" />
+                    <col className="w-[80px]" />
+                  </colgroup>
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="pl-1.5 pr-1.5 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50">
+                        {texts.description}
+                      </th>
+                      <th className="pl-1 pr-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans w-[140px] border-r border-dashed border-gray-300">{texts.amount}</th>
+                      <th className="px-0.5 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans w-[80px]">{texts.status}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white">
+                    {finalSortedTransactions.map((transaction) => {
+                      const isMenuOpen = openOptionsMenu === transaction.id
+                      return (
+                        <tr key={transaction.id} className="border-b border-gray-100">
+                          <td className="px-1.5 py-1.5 w-[160px] border-r border-dashed border-gray-300">
+                            <div className="relative bg-white h-full flex items-center gap-1 min-w-0 min-h-[44px]">
+                              <div className="flex-shrink-0">
+                                <TransactionIcon
+                                  transaction={transaction}
+                                  recurrentGoalMap={recurrentGoalMap}
+                                  size="w-2.5 h-2.5"
+                                  showBackground={true}
+                                  containerSize="w-5 h-5"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1 overflow-hidden">
+                                <span
+                                  className="text-xs font-medium text-gray-900 font-sans block break-words w-full"
+                                  title={transaction.description}
                                 >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={3}
-                                    d="M5 13l4 4L19 7"
-                                  />
-                                </svg>
-                              )}
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 🟨 Línea 2: estado + info + "Ver opciones" */}
-                      <div className="flex justify-between items-center ml-9">
-                        <div className="flex items-center gap-x-2">
-                          <span className={cn("inline-flex items-center px-3 py-0.5 rounded-full text-xs font-medium font-sans min-w-[80px] justify-center", 
-                            getStatusColor(transaction)
-                          )}>
-                            {getStatusText(transaction)}
-                          </span>
-                          
-                          {(transaction.deadline || transaction.source_type === 'recurrent') && (
-                            <div className="relative group">
-                              <Info className="h-3 w-3 text-gray-400 cursor-pointer" />
-                              <div className="absolute z-20 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gray-800 text-white text-xs rounded-md p-2 -top-2 left-full ml-2 whitespace-nowrap">
-                                {transaction.deadline && (
-                                  <div>
-                                    Fecha de vencimiento: {(() => {
-                                      const [year, month, day] = transaction.deadline.split('-').map(Number);
-                                      return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
-                                    })()}
-                                  </div>
+                                  {transaction.description}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-1.5 align-middle border-r border-dashed border-gray-300" style={{ width: 140, paddingLeft: 0, paddingRight: 0 }}>
+                            <div className="w-full flex justify-end">
+                              <div className="inline-flex items-center gap-x-1 flex-shrink-0">
+                              <div className="leading-tight text-right shrink-0 tabular-nums">
+                                <span className="text-xs font-medium text-gray-900 font-sans">{formatCurrency(transaction.value)}</span>
+                                {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
+                                  <span className="block text-[9px] text-gray-500">{formatCurrency(getTotalAbonado(transaction.id))}/{formatCurrency(transaction.value)}</span>
                                 )}
-                                {transaction.source_type === 'recurrent' && (
-                                  (() => {
-                                    const recurrentExpense = recurrentExpenses.find(re => re.id === transaction.source_id)
-                                    if (recurrentExpense) {
-                                      return (
-                                        <div>
-                                          Rango: {monthAbbreviations[recurrentExpense.month_from - 1]} {recurrentExpense.year_from} - {monthAbbreviations[recurrentExpense.month_to - 1]} {recurrentExpense.year_to}
-                                        </div>
-                                      )
-                                    }
-                                    return null
-                                  })()
+                              </div>
+                              <input
+                                type="checkbox"
+                                checked={transaction.status === 'paid'}
+                                onChange={(e) => handleCheckboxChange(transaction.id, e.target.checked)}
+                                className="sr-only"
+                                id={`checkbox-mobile-${transaction.id}`}
+                              />
+                              <label
+                                htmlFor={`checkbox-mobile-${transaction.id}`}
+                                className={`
+                                  inline-flex items-center justify-center w-4 h-4 rounded-full cursor-pointer transition-all flex-shrink-0
+                                  ${transaction.status === 'paid' ? 'bg-green-primary border-green-primary' : 'bg-beige border border-border-light'}
+                                `}
+                              >
+                                {transaction.status === 'paid' && (
+                                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </label>
+                              <div className="relative flex justify-end shrink-0" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenOptionsMenu(isMenuOpen ? null : transaction.id)}
+                                  className="p-1 rounded text-gray-500 hover:bg-gray-100 flex justify-center items-center shrink-0"
+                                  aria-label="Más opciones"
+                                  style={{ width: 28, minWidth: 28 }}
+                                >
+                                  <MoreVertical className="w-3.5 h-3.5 flex-shrink-0" />
+                                </button>
+                                {isMenuOpen && (
+                                  <div className="absolute right-0 top-full mt-0.5 py-1 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[140px] z-20">
+                                    {transaction.type === 'expense' && !(transaction.category === 'Ahorro' && (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
+                                      <button onClick={() => { handleCategoryClick(transaction); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                                        <Tag className="w-3 h-3 flex-shrink-0" />
+                                        <span>Categoría: {transaction.category && transaction.category !== 'sin categoría' ? transaction.category : 'sin categoría'}</span>
+                                      </button>
+                                    )}
+                                    <button onClick={() => { handleAttachmentList(transaction); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                                      <Paperclip className="w-3 h-3 flex-shrink-0" /><span>{texts.attachments}</span>
+                                      {attachmentCounts[transaction.id] > 0 && <span className="ml-auto bg-warning-bg text-gray-700 text-[10px] rounded-full px-1.5 py-0.5">{attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}</span>}
+                                    </button>
+                                    <button onClick={() => { handleNotesClick(transaction); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                                      <StickyNote className={cn("w-3 h-3 flex-shrink-0", transaction.notes?.trim() && "text-amber-500")} />
+                                      <span className="flex items-center gap-1.5">
+                                        {texts.notes}
+                                        {transaction.notes?.trim() && (
+                                          <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                                        )}
+                                      </span>
+                                    </button>
+                                    {transaction.type === 'expense' && transaction.status !== 'paid' && (
+                                      <button onClick={() => { handleAbonarClick(transaction); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                                        <Wallet className="w-3 h-3 flex-shrink-0" /><span>{texts.abonar}</span>
+                                      </button>
+                                    )}
+                                    <button onClick={() => { handleModifyTransaction(transaction.id); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                                      <Edit className="w-3 h-3 flex-shrink-0" /><span>Editar</span>
+                                    </button>
+                                    <button onClick={() => { handleDeleteTransaction(transaction.id); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 font-sans">
+                                      <Trash2 className="w-3 h-3 flex-shrink-0" /><span>{texts.delete}</span>
+                                    </button>
+                                  </div>
                                 )}
                               </div>
                             </div>
-                          )}
-                        </div>
-
-                        <div className="relative" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            type="button"
-                            onClick={() => setOpenOptionsMenu(isMenuOpen ? null : transaction.id)}
-                            className="p-1.5 rounded-md text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
-                            aria-label="Más opciones"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                          {isMenuOpen && (
-                            <div className="absolute right-0 top-full mt-1 py-1 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[160px] z-20">
-                              {transaction.type === 'expense' && 
-                               !(transaction.category === 'Ahorro' && 
-                                 (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) &&
-                               !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
-                                <button
-                                  onClick={() => {
-                                    handleCategoryClick(transaction)
-                                    setOpenOptionsMenu(null)
-                                  }}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                                >
-                                  <Tag className="w-4 h-4 flex-shrink-0" />
-                                  <span>Categoría: {transaction.category && transaction.category !== 'sin categoría' ? transaction.category : 'sin categoría'}</span>
-                                </button>
-                              )}
-                              <button
-                                onClick={() => {
-                                  handleAttachmentList(transaction)
-                                  setOpenOptionsMenu(null)
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                              >
-                                <Paperclip className="w-4 h-4 flex-shrink-0" />
-                                <span>{texts.attachments}</span>
-                                {attachmentCounts[transaction.id] > 0 && (
-                                  <span className="ml-auto bg-warning-bg text-gray-700 text-xs rounded-full px-2 py-0.5">
-                                    {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
-                                  </span>
-                                )}
-                              </button>
-                              <button
-                                onClick={() => {
-                                  handleNotesClick(transaction)
-                                  setOpenOptionsMenu(null)
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                              >
-                                <StickyNote className="w-4 h-4 flex-shrink-0" />
-                                <span>{texts.notes}</span>
-                                {transaction.notes && transaction.notes.trim() && (
-                                  <span className="ml-auto text-amber-500">·</span>
-                                )}
-                              </button>
-                              {transaction.type === 'expense' && transaction.status !== 'paid' && (
-                                <button
-                                  onClick={() => {
-                                    handleAbonarClick(transaction)
-                                    setOpenOptionsMenu(null)
-                                  }}
-                                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                                >
-                                  <Wallet className="w-4 h-4 flex-shrink-0" />
-                                  <span>{texts.abonar}</span>
-                                </button>
-                              )}
-                              <button
-                                onClick={() => {
-                                  handleModifyTransaction(transaction.id)
-                                  setOpenOptionsMenu(null)
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                              >
-                                <Edit className="w-4 h-4 flex-shrink-0" />
-                                <span>Editar</span>
-                              </button>
-                              <button
-                                onClick={() => {
-                                  handleDeleteTransaction(transaction.id)
-                                  setOpenOptionsMenu(null)
-                                }}
-                                className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-sans"
-                              >
-                                <Trash2 className="w-4 h-4 flex-shrink-0" />
-                                <span>{texts.delete}</span>
-                              </button>
                             </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {transaction.notes && transaction.notes.trim() && (
-                        <div className="ml-9 mt-1 flex items-start gap-1">
-                          <StickyNote className="h-3 w-3 text-amber-500 flex-shrink-0 mt-0.5" />
-                          <p className="text-xs text-gray-600 line-clamp-2 font-sans">{transaction.notes}</p>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                          </td>
+                          <td className="px-0.5 py-1.5 align-middle whitespace-nowrap w-[70px] text-center">
+                            <span className={cn("inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-xs font-medium font-sans", getStatusColor(transaction))}>
+                              {getStatusText(transaction)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </>
             )}
