@@ -1,34 +1,19 @@
 'use client'
 
-import Script from 'next/script'
 import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
-import { GA_MEASUREMENT_ID, isGAEnabled, pageview } from '@/lib/analytics'
+import { pageview } from '@/lib/analytics'
 
+/**
+ * Envía pageview en cada cambio de ruta (SPA).
+ * El script de gtag se carga en layout.tsx (head) para que GA reconozca la instalación.
+ */
 export default function GoogleAnalytics() {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (!isGAEnabled() || !pathname) return
-    pageview(pathname)
+    if (pathname) pageview(pathname)
   }, [pathname])
 
-  if (!isGAEnabled()) return null
-
-  return (
-    <>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-        strategy="afterInteractive"
-      />
-      <Script id="ga-init" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${GA_MEASUREMENT_ID}', { send_page_view: false });
-        `}
-      </Script>
-    </>
-  )
+  return null
 }
