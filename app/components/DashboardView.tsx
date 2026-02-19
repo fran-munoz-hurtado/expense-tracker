@@ -72,11 +72,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   // Obtener el trigger VISIBLE (en mobile la tabla desktop está hidden y querySelector devuelve la primera)
   const getVisibleInfoTooltipTrigger = (txId: number) => {
     const els = document.querySelectorAll(`[data-info-tooltip-trigger][data-transaction-id="${txId}"]`)
-    for (const el of els) {
-      const rect = el.getBoundingClientRect()
-      if (rect.width > 0 && rect.height > 0) return el
+    const arr = Array.from(els)
+    for (let i = 0; i < arr.length; i++) {
+      const rect = arr[i].getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) return arr[i]
     }
-    return els[0] ?? null
+    return arr[0] ?? null
   }
 
   // Medir posición del trigger para el tooltip (evitar que se corte por overflow de la tabla)
