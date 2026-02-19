@@ -7,6 +7,10 @@ export type Group = {
   created_by: string
   created_at: string
   updated_at: string
+  /** Cantidad de miembros (solo si se ha cargado) */
+  member_count?: number
+  /** Rol del usuario actual en este espacio */
+  my_role?: 'admin' | 'member'
 }
 
 export type GroupMember = {
@@ -45,7 +49,7 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
     try {
       const { data: membersData, error: membersError } = await supabase
         .from('group_members')
-        .select('group_id')
+        .select('group_id, role')
         .eq('user_id', userId)
         .eq('status', 'active')
 
@@ -61,6 +65,8 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
       }
 
       const groupIds = Array.from(new Set(membersData.map(m => m.group_id)))
+      const myRoleByGroup = new Map(membersData.map(m => [m.group_id, m.role as 'admin' | 'member']))
+
       const { data: groupsData, error: groupsError } = await supabase
         .from('groups')
         .select('id, name, created_by, created_at, updated_at')
@@ -73,7 +79,24 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
         return
       }
 
-      const groups: Group[] = groupsData || []
+      const baseGroups = groupsData || []
+      let countsByGroup = new Map<string, number>()
+      if (groupIds.length > 0) {
+        const { data: countsData, error: countsError } = await supabase.rpc('get_groups_member_counts', {
+          p_group_ids: groupIds
+        })
+        if (!countsError && countsData) {
+          countsByGroup = new Map((countsData as Array<{ group_id: string; member_count: number }>).map(
+            r => [r.group_id, Number(r.member_count)]
+          ))
+        }
+      }
+
+      const groups: Group[] = baseGroups.map(g => ({
+        ...g,
+        member_count: countsByGroup.get(g.id),
+        my_role: myRoleByGroup.get(g.id)
+      }))
       set({ groups })
 
       const { currentGroupId } = get()

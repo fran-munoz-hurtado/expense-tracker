@@ -69,13 +69,23 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [notesTooltipAnchor, setNotesTooltipAnchor] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
   const notesTooltipCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // Obtener el trigger VISIBLE (en mobile la tabla desktop está hidden y querySelector devuelve la primera)
+  const getVisibleInfoTooltipTrigger = (txId: number) => {
+    const els = document.querySelectorAll(`[data-info-tooltip-trigger][data-transaction-id="${txId}"]`)
+    for (const el of els) {
+      const rect = el.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) return el
+    }
+    return els[0] ?? null
+  }
+
   // Medir posición del trigger para el tooltip (evitar que se corte por overflow de la tabla)
   useLayoutEffect(() => {
     if (!openInfoTooltipId) {
       setInfoTooltipAnchor(null)
       return
     }
-    const el = document.querySelector(`[data-info-tooltip-trigger][data-transaction-id="${openInfoTooltipId}"]`)
+    const el = getVisibleInfoTooltipTrigger(openInfoTooltipId)
     if (!el) return
     const rect = el.getBoundingClientRect()
     setInfoTooltipAnchor({ left: rect.left, top: rect.top, width: rect.width, height: rect.height })
@@ -84,7 +94,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   useEffect(() => {
     if (!openInfoTooltipId) return
     const updateAnchor = () => {
-      const el = document.querySelector(`[data-info-tooltip-trigger][data-transaction-id="${openInfoTooltipId}"]`)
+      const el = getVisibleInfoTooltipTrigger(openInfoTooltipId)
       if (el) setInfoTooltipAnchor(el.getBoundingClientRect())
     }
     window.addEventListener('scroll', updateAnchor, true)
@@ -2079,10 +2089,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 px-4 lg:px-8 pb-6 lg:pb-8">
-        <div className="max-w-4xl mx-auto space-y-4">
-          {/* Transacciones del mes - full viewport width en mobile */}
+      {/* Main Content - desktop: tabla a ancho completo; mobile: layout existente */}
+      <div className="flex-1 px-4 lg:px-8 pb-6 lg:pb-8 overflow-auto">
+        <div className="max-w-4xl lg:max-w-none mx-auto lg:mx-0 space-y-4">
+          {/* Transacciones del mes - full width en desktop (sidebar a derecha); full viewport en mobile */}
           <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
             <div className="mb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div>
@@ -2544,14 +2554,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             )}
           </div>
 
-          {/* Tooltip Info (vencimiento/rango) en Portal para que no se corte por overflow de la tabla */}
+          {/* Tooltip Info (vencimiento/rango) en Portal - encima del ícono, centrado */}
           {openInfoTooltipId && infoTooltipAnchor && typeof document !== 'undefined' && (() => {
             const tx = finalSortedTransactions.find(t => t.id === openInfoTooltipId)
             if (!tx) return null
+            const gap = 6
             const style: React.CSSProperties = {
               position: 'fixed',
-              left: infoTooltipAnchor.left + infoTooltipAnchor.width + 8,
-              top: infoTooltipAnchor.top,
+              left: infoTooltipAnchor.left + infoTooltipAnchor.width / 2,
+              top: infoTooltipAnchor.top - gap,
+              transform: 'translate(-50%, -100%)',
               zIndex: 9999,
             }
             return createPortal(

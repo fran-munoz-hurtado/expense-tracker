@@ -72,6 +72,19 @@ CREATE POLICY "Users can delete own non-recurrent expenses" ON public.non_recurr
 CREATE POLICY "Users can view own transactions" ON public.transactions
   FOR SELECT USING (auth.uid() = user_id);
 
+-- Users can view transactions of groups they belong to
+CREATE POLICY "Users can view group transactions" ON public.transactions
+  FOR SELECT
+  USING (
+    group_id IS NOT NULL
+    AND group_id IN (
+      SELECT gm.group_id
+      FROM public.group_members gm
+      WHERE gm.user_id = auth.uid()
+      AND gm.status = 'active'
+    )
+  );
+
 -- Users can insert their own transactions
 CREATE POLICY "Users can insert own transactions" ON public.transactions
   FOR INSERT WITH CHECK (auth.uid() = user_id);
@@ -112,6 +125,20 @@ CREATE POLICY "Users can delete own categories" ON public.user_categories
 CREATE POLICY "Users can view own transaction attachments" ON public.transaction_attachments
   FOR SELECT USING (
     auth.uid() = user_id
+  );
+
+-- Users can view attachments for group transactions
+CREATE POLICY "Users can view group transaction attachments" ON public.transaction_attachments
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.transactions t
+      JOIN public.group_members gm ON t.group_id = gm.group_id AND gm.status = 'active'
+      WHERE t.id = transaction_attachments.transaction_id
+      AND t.group_id IS NOT NULL
+      AND gm.user_id = auth.uid()
+    )
   );
 
 -- Users can insert attachments for their own transactions

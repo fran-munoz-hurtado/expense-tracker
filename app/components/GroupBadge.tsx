@@ -123,7 +123,7 @@ export default function GroupBadge({ user, variant = 'light' }: GroupBadgeProps)
         {showDropdown && (
           <div className="absolute right-0 left-auto lg:left-0 lg:right-auto top-full mt-1 w-56 max-w-[calc(100vw-1rem)] bg-white rounded-xl shadow-[0_4px_14px_rgba(0,0,0,0.12)] border border-gray-200 py-1 z-50">
             <div className="px-3 py-2 border-b border-gray-100">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tus grupos</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Tus espacios</p>
             </div>
             {groups.length > 0 ? (
               <ul role="listbox" className="max-h-48 overflow-y-auto">
@@ -160,7 +160,7 @@ export default function GroupBadge({ user, variant = 'light' }: GroupBadgeProps)
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-dark hover:bg-green-50 font-medium font-sans"
               >
                 <Settings className="h-4 w-4" />
-                Gestión de grupos
+                Mis espacios
               </button>
             </div>
           </div>

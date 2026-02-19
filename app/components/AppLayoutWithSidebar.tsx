@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu, X, Wallet, LayoutGrid } from 'lucide-react'
 import Navbar from './Navbar'
+import PendingInvitationsBanner from './PendingInvitationsBanner'
 import { type User } from '@/lib/supabase'
 
 const SIDEBAR_BG = 'bg-sky-100' // Azul claro
@@ -136,8 +137,9 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
         </div>
       )}
 
-      {/* Área principal: Navbar + contenido */}
+      {/* Área principal: Navbar + banner invitaciones + contenido */}
       <div className="flex-1 flex flex-col min-w-0">
+        <PendingInvitationsBanner user={user} />
         <Navbar
           user={user}
           onLogout={onLogout}

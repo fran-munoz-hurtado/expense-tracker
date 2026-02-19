@@ -30,22 +30,22 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-3 bg-white border-b border-gray-200 gap-3">
         <div className="flex flex-col lg:flex-row lg:items-center lg:flex-wrap gap-3 lg:gap-4 min-w-0">
           <div className="flex items-center gap-2 shrink-0">
-            <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans">Gestión de grupos</h2>
+            <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans">Mis espacios</h2>
           </div>
         </div>
         {user && <CreateSpaceButton user={user} />}
       </div>
 
-      {/* Main Content - mismo canvas que transacciones */}
-      <div className="flex-1 px-4 lg:px-8 pb-6 lg:pb-8">
-        <div className="max-w-4xl mx-auto space-y-4">
+      {/* Main Content - desktop: tabla a ancho completo; mobile: layout existente */}
+      <div className="flex-1 px-4 lg:px-8 pb-6 lg:pb-8 overflow-auto">
+        <div className="max-w-4xl lg:max-w-none mx-auto lg:mx-0 space-y-4">
           <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                Tus grupos
+                Tus espacios
               </h3>
               <p className="text-xs text-gray-500 font-sans">
-                Grupos en los que participas. Haz clic en Ver para ver el detalle del grupo.
+                Espacios en los que participas. Haz clic en Ver para ver el detalle del espacio.
               </p>
             </div>
             {isLoading ? (
@@ -65,12 +65,14 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
               </div>
             ) : (
               <>
-                {/* Desktop Table - misma estructura que transacciones */}
+                {/* Desktop Table - incluye Miembros y Rol */}
                 <div className="hidden lg:block">
                   <div className="overflow-x-auto">
                     <table className="min-w-full table-fixed">
                       <colgroup>
-                        <col className="w-[47%]" />
+                        <col className="w-[35%]" />
+                        <col className="w-[80px]" />
+                        <col className="w-[80px]" />
                         <col className="w-[90px]" />
                         <col className="w-[59px]" />
                       </colgroup>
@@ -78,6 +80,12 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
                         <tr>
                           <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50">
                             Nombre
+                          </th>
+                          <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans w-[80px] border-r border-dashed border-gray-300">
+                            Miembros
+                          </th>
+                          <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans w-[80px] border-r border-dashed border-gray-300">
+                            Rol
                           </th>
                           <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans w-[90px] border-r border-dashed border-gray-300">
                             Creado
@@ -108,6 +116,18 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
                                   </span>
                                 )}
                               </div>
+                            </td>
+                            <td className="px-2 py-2 text-center text-sm text-gray-600 font-sans border-r border-dashed border-gray-300">
+                              {g.member_count != null ? g.member_count : '—'}
+                            </td>
+                            <td className="px-2 py-2 text-center text-sm font-sans border-r border-dashed border-gray-300">
+                              {g.my_role === 'admin' ? (
+                                <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-xs font-medium">Administrador</span>
+                              ) : g.my_role === 'member' ? (
+                                <span className="text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-xs font-medium">Miembro</span>
+                              ) : (
+                                '—'
+                              )}
                             </td>
                             <td className="px-2 py-2 text-center text-sm text-gray-600 font-sans border-r border-dashed border-gray-300">
                               {formatDate(g.created_at)}

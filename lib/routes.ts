@@ -20,6 +20,7 @@ export const ROUTES = {
     `/mis-cuentas/${groupId}/${year}/${month}`,
   misCuentasGrupos: '/mis-cuentas/grupos',
   misCuentasGrupoDetail: (groupId: string) => `/mis-cuentas/grupos/${groupId}`,
+  invitationAccept: (token: string) => `/mis-cuentas/invitation/accept?token=${encodeURIComponent(token)}`,
 } as const
 
 export type FilterType = 'all' | 'recurrent' | 'non_recurrent'
