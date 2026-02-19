@@ -7,7 +7,7 @@
 
 export const translations = {
   // App general
-  appTitle: 'CuandoQueda',
+  appTitle: 'Controla',
   loading: 'Cargando...',
   saving: 'Guardando...',
   save: 'Guardar',

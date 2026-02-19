@@ -33,7 +33,7 @@ module.exports = {
   ],
   theme: {
     extend: {
-      // 🎨 CuandoQueda Color Palette - Calm Green & Sand
+      // 🎨 Controla Color Palette - Calm Green & Sand
       colors: {
         // Base Palette - Calm Green & Sand
         green: {

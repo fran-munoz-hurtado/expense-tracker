@@ -199,7 +199,7 @@ export default function GroupDetailView({ groupId, user }: GroupDetailViewProps)
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col h-screen bg-gray-50">
+      <div className="flex-1 flex flex-col h-screen bg-transparent">
         <div className="px-4 lg:px-8 py-3 bg-white border-b border-gray-200">
           <div className="h-8 w-24 bg-gray-200 animate-pulse rounded" />
         </div>
@@ -215,7 +215,7 @@ export default function GroupDetailView({ groupId, user }: GroupDetailViewProps)
 
   if (error || !group) {
     return (
-      <div className="flex-1 flex flex-col h-screen bg-gray-50">
+      <div className="flex-1 flex flex-col h-screen bg-transparent">
         <div className="px-4 lg:px-8 py-3 bg-white border-b border-gray-200">
           <button
             onClick={() => router.push(ROUTES.misCuentasGrupos)}
@@ -233,7 +233,7 @@ export default function GroupDetailView({ groupId, user }: GroupDetailViewProps)
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gray-50">
+    <div className="flex-1 flex flex-col h-screen bg-transparent">
       {/* Barra superior */}
       <div className="px-4 lg:px-8 py-3 bg-white border-b border-gray-200">
         <button

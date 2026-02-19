@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Eye, EyeOff, User, Mail, Lock, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseSignUp, handleSupabaseLogin, handleSupabaseGoogleLogin, type SupabaseSignUpData, type SupabaseLoginData } from '@/lib/services/supabaseAuth'
@@ -151,8 +152,18 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div
+      className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8"
+      style={{
+        background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 25%, #eff6ff 50%, #f0fdf4 75%, #ecfdf5 100%)',
+      }}
+    >
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="text-center mb-4">
+          <Link href="/" className="text-sm text-gray-500 hover:text-green-primary transition-colors">
+            ← Volver
+          </Link>
+        </div>
         <div className="text-center">
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
             {isLogin ? 'Inicia sesión' : 'Crea tu cuenta'}

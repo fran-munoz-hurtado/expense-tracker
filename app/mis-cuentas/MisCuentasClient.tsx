@@ -20,7 +20,10 @@ import { FILTER_PARAMS_REVERSE, buildMisCuentasUrl, parseMisCuentasPath, type Fi
 
 function LoadingFallback() {
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
+    <div
+      className="flex h-screen items-center justify-center"
+      style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 25%, #eff6ff 50%, #f0fdf4 75%, #ecfdf5 100%)' }}
+    >
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
         <p className="text-gray-600">{texts.loading}</p>

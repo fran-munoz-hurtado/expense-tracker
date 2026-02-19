@@ -972,7 +972,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gray-50">
+    <div className="flex-1 flex flex-col h-screen bg-transparent">
       {/* Header */}
       <div className="p-6 lg:p-8 pb-4">
         <div className="mb-4">

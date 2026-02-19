@@ -25,7 +25,7 @@
 3. En la barra superior verás el nombre del proyecto actual y un dropdown
 4. Clic en el dropdown del proyecto
 5. Clic en **"Nuevo proyecto"** (New Project)
-6. Nombre del proyecto: ej. "CuandoQueda" o "expense-tracker"
+6. Nombre del proyecto: ej. "Controla" o "expense-tracker"
 7. Clic en **Crear**
 8. Espera unos segundos. No toques ninguna opción de facturación.
 
@@ -38,7 +38,7 @@
 
 ### Paso 1.3: Completar la pantalla de consentimiento (Paso 1 de 4)
 
-1. **App name**: CuandoQueda (o el nombre de tu app)
+1. **App name**: Controla (o el nombre de tu app)
 2. **User support email**: selecciona tu correo
 3. **Developer contact information**: tu correo
 4. Clic en **Guardar y continuar**

@@ -5,6 +5,7 @@ import { texts } from '@/lib/translations'
 import { DataSyncProvider } from '@/lib/hooks/useDataSync'
 import SessionRefreshHandler from './components/SessionRefreshHandler'
 import GoogleAnalytics from './components/GoogleAnalytics'
+import WebVitals from './components/WebVitals'
 
 // ========================================
 // MODERN FONT CONFIGURATION
@@ -47,22 +48,43 @@ const jetbrainsMono = JetBrains_Mono({
   ]
 })
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://controla.app'
+
 export const metadata: Metadata = {
-  title: texts.appTitle,
-  description: 'Modern expense tracker with beautiful typography - Track your monthly expenses and incomes with a beautiful, accessible interface',
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: `${texts.appTitle} — Control de gastos e ingresos`,
+    template: `%s | ${texts.appTitle}`,
+  },
+  description: 'Controla tus gastos e ingresos mensuales. Organiza tus finanzas personales, crea espacios compartidos con familia o equipo. App gratis para presupuesto y ahorro.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: texts.appTitle,
   },
-  // SEO improvements
-  keywords: ['expense tracker', 'budget management', 'financial planning', 'modern UI'],
-  authors: [{ name: 'Expense Tracker Team' }],
+  keywords: ['control de gastos', 'finanzas personales', 'presupuesto mensual', 'ahorro', 'gastos e ingresos', 'controla', 'espacios compartidos', 'presupuesto familiar'],
+  authors: [{ name: 'Controla', url: baseUrl }],
+  creator: 'Controla',
   openGraph: {
-    title: texts.appTitle,
-    description: 'Modern expense tracker with beautiful typography',
+    title: `${texts.appTitle} — Control de gastos e ingresos`,
+    description: 'Controla tus gastos e ingresos. Organiza finanzas personales o comparte espacios con familia o equipo. Gratis.',
     type: 'website',
+    locale: 'es_CO',
+    url: baseUrl,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${texts.appTitle} — Control de gastos e ingresos`,
+    description: 'Controla tus gastos e ingresos. Organiza finanzas o comparte espacios. Gratis.',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 }
 
@@ -82,7 +104,7 @@ export default function RootLayout({
 }) {
   return (
     <html 
-      lang="en" 
+      lang="es" 
       className={`${quicksand.variable} ${jetbrainsMono.variable}`}
       style={{
         // Set CSS variables for our parametrizable typography system
@@ -127,9 +149,43 @@ export default function RootLayout({
         {/* Theme color for browsers */}
         <meta name="theme-color" content="#3b82f6" />
         <meta name="msapplication-TileColor" content="#3b82f6" />
+        {process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION && (
+          <meta name="google-site-verification" content={process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION} />
+        )}
+        {/* JSON-LD: Organization + WebApplication para rich snippets */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@graph': [
+                {
+                  '@type': 'Organization',
+                  name: texts.appTitle,
+                  url: baseUrl,
+                  description: 'App para control de gastos e ingresos. Finanzas personales y espacios compartidos.',
+                },
+                {
+                  '@type': 'WebApplication',
+                  name: texts.appTitle,
+                  url: baseUrl,
+                  applicationCategory: 'FinanceApplication',
+                  operatingSystem: 'Web',
+                  description: 'Controla tus gastos e ingresos mensuales. Organiza finanzas personales o comparte espacios con familia o equipo.',
+                  offers: {
+                    '@type': 'Offer',
+                    price: '0',
+                    priceCurrency: 'COP',
+                  },
+                },
+              ],
+            }),
+          }}
+        />
       </head>
       <body className="font-primary antialiased">
         <GoogleAnalytics />
+        <WebVitals />
         <SessionRefreshHandler />
         <DataSyncProvider>{children}</DataSyncProvider>
       </body>

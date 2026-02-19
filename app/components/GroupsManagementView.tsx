@@ -25,7 +25,7 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
   }
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gray-50">
+    <div className="flex-1 flex flex-col h-screen bg-transparent">
       {/* Barra superior - misma estructura que DashboardView */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-3 bg-white border-b border-gray-200 gap-3">
         <div className="flex flex-col lg:flex-row lg:items-center lg:flex-wrap gap-3 lg:gap-4 min-w-0">

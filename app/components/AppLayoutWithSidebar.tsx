@@ -48,7 +48,12 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
   ]
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div
+      className="flex h-screen"
+      style={{
+        background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 25%, #eff6ff 50%, #f0fdf4 75%, #ecfdf5 100%)',
+      }}
+    >
       {/* Desktop: sidebar siempre visible */}
       <aside
         className={`hidden lg:flex lg:flex-col lg:w-52 lg:shrink-0 ${SIDEBAR_BG} border-r border-sky-200`}

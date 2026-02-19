@@ -1926,7 +1926,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
   if (!user || !selectedMonth || !selectedYear) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
+      <div className="flex-1 flex items-center justify-center bg-transparent">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-primary mx-auto"></div>
           <p className="mt-4 text-sm text-gray-600 font-sans">{texts.loading}</p>
@@ -1938,7 +1938,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   if (!isGroupsLoading && !currentGroupId) {
     return (
       <>
-        <div className="flex-1 flex items-center justify-center bg-gray-50 px-4">
+        <div className="flex-1 flex items-center justify-center bg-transparent px-4">
           <div className="text-center max-w-md mx-auto">
             {groups.length === 0 ? (
               <>
@@ -1980,7 +1980,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const cuantoQueda = summaryTotals.cuantoQueda
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-gray-50">
+    <div className="flex-1 flex flex-col h-screen bg-transparent">
       {/* Barra superior compacta - Desktop y Mobile (consistente) */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-3 bg-white border-b border-gray-200 gap-3">
         {/* Fila 1: Título + filtros + agregar */}

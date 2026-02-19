@@ -13,7 +13,7 @@
 
 export const ROUTES = {
   home: '/',
-  login: '/',
+  login: '/login',
   misCuentas: '/mis-cuentas',
   misCuentasMonth: (year: number, month: number) => `/mis-cuentas/${year}/${month}`,
   misCuentasWithGroup: (groupId: string, year: number, month: number) =>
