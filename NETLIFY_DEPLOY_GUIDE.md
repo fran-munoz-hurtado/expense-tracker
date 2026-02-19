@@ -49,6 +49,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 
 # Site URL (reemplaza con tu URL real de Netlify)
 NEXT_PUBLIC_SITE_URL=https://tu-app-name.netlify.app
+
+# Google Analytics 4 (opcional, formato G-XXXXXXXXXX)
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
 
 ### 4. Configuración en Supabase

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Eye, EyeOff, User, Mail, Lock, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseSignUp, handleSupabaseLogin, handleSupabaseGoogleLogin, type SupabaseSignUpData, type SupabaseLoginData } from '@/lib/services/supabaseAuth'
+import { analytics } from '@/lib/analytics'
 import { texts } from '@/lib/translations'
 
 interface LoginPageProps {
@@ -45,6 +46,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           throw new Error(result.error)
         }
 
+        analytics.login('email')
+
         // Get user data from our users table
         const { data: userData, error: userError } = await supabase
           .from('users')
@@ -85,6 +88,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         if (!result.success) {
           throw new Error(result.error)
         }
+
+        analytics.signUp('email')
 
         if (result.needsConfirmation) {
           setSuccess('¡Registro exitoso! Por favor revisa tu correo electrónico para confirmar tu cuenta.')
@@ -131,6 +136,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const handleGoogleLogin = async () => {
     setError(null)
     setGoogleLoading(true)
+    analytics.login('google')
     try {
       const result = await handleSupabaseGoogleLogin()
       if (!result.success) {
