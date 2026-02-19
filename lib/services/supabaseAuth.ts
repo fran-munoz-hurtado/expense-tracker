@@ -199,6 +199,42 @@ export async function handleSupabaseLogin(data: SupabaseLoginData): Promise<Supa
 }
 
 /**
+ * Handle login with Google (OAuth)
+ * Redirects to Google and then back to the app
+ */
+export async function handleSupabaseGoogleLogin(): Promise<{ success: boolean; error?: string }> {
+  try {
+    const siteUrl = typeof window !== 'undefined'
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${siteUrl}/mis-cuentas`,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    })
+
+    if (error) {
+      console.error('❌ Google sign-in error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('❌ Unexpected error during Google sign-in:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error al iniciar sesión con Google'
+    }
+  }
+}
+
+/**
  * Get current authenticated user
  */
 export async function getCurrentSupabaseUser(): Promise<User | null> {
