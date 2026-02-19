@@ -128,8 +128,8 @@ export async function fetchPendingInvitations(userId: string): Promise<PendingIn
 
   if (membersError || !members?.length) return []
 
-  const groupIds = [...new Set(members.map((m) => m.group_id))]
-  const invitedByIds = [...new Set(members.map((m) => m.invited_by).filter(Boolean))]
+  const groupIds = Array.from(new Set(members.map((m) => m.group_id)))
+  const invitedByIds = Array.from(new Set(members.map((m) => m.invited_by).filter(Boolean)))
 
   const [{ data: groups, error: groupsError }, { data: inviters }] = await Promise.all([
     supabase.from('groups').select('id, name').in('id', groupIds),
