@@ -77,8 +77,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     const initialize = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
+        // On OAuth return, Supabase may still be exchanging the code (PKCE).
+        // If URL has ?code= and no session yet, wait for the exchange to complete.
+        let { data: { session }, error } = await supabase.auth.getSession()
+        if (!session?.user && typeof window !== 'undefined' && window.location.search.includes('code=')) {
+          console.log('[auth] OAuth code detected, waiting for exchange...')
+          await new Promise((r) => setTimeout(r, 2000))
+          const retry = await supabase.auth.getSession()
+          session = retry.data.session
+          error = retry.error
+        }
+
         if (error) {
           console.error('[auth] Error obteniendo sesión:', error)
           set({ isLoading: false, isInitialized: true })

@@ -211,7 +211,7 @@ export async function handleSupabaseGoogleLogin(): Promise<{ success: boolean; e
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${siteUrl}/mis-cuentas`,
+        redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent('/mis-cuentas')}`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent'

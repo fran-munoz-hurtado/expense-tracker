@@ -300,6 +300,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   // Mobile options menu state
   const [openOptionsMenu, setOpenOptionsMenu] = useState<number | null>(null)
   const [openActionsDropdown, setOpenActionsDropdown] = useState<number | null>(null)
+  const [actionsDropdownAnchor, setActionsDropdownAnchor] = useState<{ top: number; right: number } | null>(null)
 
   // Notes modal state (quick edit from dropdown)
   const [showNotesModal, setShowNotesModal] = useState(false)
@@ -311,6 +312,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     const handleClickOutside = () => {
       setOpenOptionsMenu(null)
       setOpenActionsDropdown(null)
+      setActionsDropdownAnchor(null)
     }
     
     if (openOptionsMenu !== null || openActionsDropdown !== null) {
@@ -2123,7 +2125,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             ) : (
               <>
               {/* Desktop Table View */}
-              <div className="hidden lg:block" onMouseLeave={() => { setHoveredRow(null); setOpenActionsDropdown(null) }}>
+              <div className="hidden lg:block" onMouseLeave={() => setHoveredRow(null)}>
                 <div className="overflow-x-auto">
                   <table className="min-w-full table-fixed">
                     <colgroup>
@@ -2307,79 +2309,25 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                     <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-all duration-300 rounded-full" />
                                   </label>
                                 </div>
-                                {/* Dropdown for other actions */}
+                                {/* Dropdown for other actions - rendered via portal to overlay table */}
                                 <div className="relative" onClick={(e) => e.stopPropagation()}>
                                   <button
                                     type="button"
-                                    onClick={() => setOpenActionsDropdown(openActionsDropdown === transaction.id ? null : transaction.id)}
+                                    onClick={(e) => {
+                                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                                      if (openActionsDropdown === transaction.id) {
+                                        setOpenActionsDropdown(null)
+                                        setActionsDropdownAnchor(null)
+                                      } else {
+                                        setOpenActionsDropdown(transaction.id)
+                                        setActionsDropdownAnchor({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                                      }
+                                    }}
                                     className="p-1 rounded-md text-green-dark hover:bg-gray-100 hover:opacity-80 transition-all"
                                     aria-label="Más opciones"
                                   >
                                     <MoreVertical className="w-4 h-4" />
                                   </button>
-                                  {openActionsDropdown === transaction.id && (
-                                    <div className="absolute right-0 top-full mt-1 py-1 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[140px] z-20">
-                                      <button
-                                        onClick={() => {
-                                          handleAttachmentList(transaction)
-                                          setOpenActionsDropdown(null)
-                                        }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                                      >
-                                        <Paperclip className="w-4 h-4 flex-shrink-0" />
-                                        <span>{texts.attachments}</span>
-                                        {attachmentCounts[transaction.id] > 0 && (
-                                          <span className="ml-auto bg-warning-bg text-gray-700 text-xs rounded-full px-2 py-0.5">
-                                            {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
-                                          </span>
-                                        )}
-                                      </button>
-                                      <button
-                                        onClick={() => handleNotesClick(transaction)}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                                      >
-                                        <StickyNote className={cn("w-4 h-4 flex-shrink-0", transaction.notes?.trim() && "text-amber-500")} />
-                                        <span className="flex items-center gap-1.5">
-                                          {texts.notes}
-                                          {transaction.notes?.trim() && (
-                                            <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
-                                          )}
-                                        </span>
-                                      </button>
-                                      {transaction.type === 'expense' && transaction.status !== 'paid' && (
-                                        <button
-                                          onClick={() => {
-                                            handleAbonarClick(transaction)
-                                            setOpenActionsDropdown(null)
-                                          }}
-                                          className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                                        >
-                                          <Wallet className="w-4 h-4 flex-shrink-0" />
-                                          <span>{texts.abonar}</span>
-                                        </button>
-                                      )}
-                                      <button
-                                        onClick={() => {
-                                          handleModifyTransaction(transaction.id)
-                                          setOpenActionsDropdown(null)
-                                        }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
-                                      >
-                                        <Edit className="w-4 h-4 flex-shrink-0" />
-                                        <span>Editar</span>
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          handleDeleteTransaction(transaction.id)
-                                          setOpenActionsDropdown(null)
-                                        }}
-                                        className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-sans"
-                                      >
-                                        <Trash2 className="w-4 h-4 flex-shrink-0" />
-                                        <span>{texts.delete}</span>
-                                      </button>
-                                    </div>
-                                  )}
                                 </div>
                               </div>
                             </div>
@@ -2396,6 +2344,90 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                   </table>
                 </div>
               </div>
+
+              {/* Actions dropdown via portal - overlays table so it's always visible */}
+              {typeof document !== 'undefined' &&
+               openActionsDropdown !== null &&
+               actionsDropdownAnchor &&
+               (() => {
+                 const transaction = finalSortedTransactions.find((t) => t.id === openActionsDropdown)
+                 if (!transaction) return null
+                 const closeDropdown = () => {
+                   setOpenActionsDropdown(null)
+                   setActionsDropdownAnchor(null)
+                 }
+                 return createPortal(
+                   <div
+                     className="fixed py-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[140px] z-[9999]"
+                     style={{ top: actionsDropdownAnchor.top, right: actionsDropdownAnchor.right }}
+                     onClick={(e) => e.stopPropagation()}
+                   >
+                     <button
+                       onClick={() => {
+                         handleAttachmentList(transaction)
+                         closeDropdown()
+                       }}
+                       className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                     >
+                       <Paperclip className="w-4 h-4 flex-shrink-0" />
+                       <span>{texts.attachments}</span>
+                       {attachmentCounts[transaction.id] > 0 && (
+                         <span className="ml-auto bg-warning-bg text-gray-700 text-xs rounded-full px-2 py-0.5">
+                           {attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}
+                         </span>
+                       )}
+                     </button>
+                     <button
+                       onClick={() => {
+                         handleNotesClick(transaction)
+                         closeDropdown()
+                       }}
+                       className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                     >
+                       <StickyNote className={cn('w-4 h-4 flex-shrink-0', transaction.notes?.trim() && 'text-amber-500')} />
+                       <span className="flex items-center gap-1.5">
+                         {texts.notes}
+                         {transaction.notes?.trim() && (
+                           <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+                         )}
+                       </span>
+                     </button>
+                     {transaction.type === 'expense' && transaction.status !== 'paid' && (
+                       <button
+                         onClick={() => {
+                           handleAbonarClick(transaction)
+                           closeDropdown()
+                         }}
+                         className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                       >
+                         <Wallet className="w-4 h-4 flex-shrink-0" />
+                         <span>{texts.abonar}</span>
+                       </button>
+                     )}
+                     <button
+                       onClick={() => {
+                         handleModifyTransaction(transaction.id)
+                         closeDropdown()
+                       }}
+                       className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans"
+                     >
+                       <Edit className="w-4 h-4 flex-shrink-0" />
+                       <span>Editar</span>
+                     </button>
+                     <button
+                       onClick={() => {
+                         handleDeleteTransaction(transaction.id)
+                         closeDropdown()
+                       }}
+                       className="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 font-sans"
+                     >
+                       <Trash2 className="w-4 h-4 flex-shrink-0" />
+                       <span>{texts.delete}</span>
+                     </button>
+                   </div>,
+                   document.body
+                 )
+               })()}
 
               {/* Mobile Table View - 3 columnas: descripción | valor+3puntos | estado (sin scroll, estado con wrap) */}
               <div className="lg:hidden overflow-x-auto" onMouseLeave={() => setOpenOptionsMenu(null)}>

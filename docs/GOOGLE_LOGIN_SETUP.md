@@ -107,8 +107,9 @@ Clic en **Guardar y continuar** hasta llegar al Paso 4 y **Volver al panel**.
    - **Redirect URLs**: añade las URLs donde tu app está alojada, p. ej.:
      - `https://tu-app.netlify.app/**`
      - `http://localhost:3000/**`
+     - O explícitamente: `https://tu-app.netlify.app/auth/callback`, `http://localhost:3000/auth/callback`
 
-Tras iniciar sesión con Google, la app redirige al usuario a `/mis-cuentas`. El cliente Supabase (`detectSessionInUrl: true`, `flowType: 'pkce'`) detecta la sesión en la URL y carga el perfil automáticamente.
+Tras iniciar sesión con Google, Supabase redirige a `/auth/callback?code=...&next=/mis-cuentas`. La ruta de callback intercambia el código por sesión y redirige a `/mis-cuentas`.
 
 ### 3. Migración handle_new_user (ya incluida)
 
