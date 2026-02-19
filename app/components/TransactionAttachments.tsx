@@ -8,6 +8,7 @@ import { texts } from '@/lib/translations'
 interface TransactionAttachmentsProps {
   transactionId: number
   userId: string // UUID
+  groupId?: string | null // cuando es transacción de grupo, no filtrar por user_id
   onAttachmentChange?: () => void
   onAttachmentDeleted?: (attachmentId: number) => void
   onAddAttachment?: () => void
@@ -16,6 +17,7 @@ interface TransactionAttachmentsProps {
 export default function TransactionAttachments({ 
   transactionId, 
   userId, 
+  groupId,
   onAttachmentDeleted,
   onAddAttachment
 }: TransactionAttachmentsProps) {
@@ -31,19 +33,16 @@ export default function TransactionAttachments({
 
   useEffect(() => {
     loadAttachments()
-  }, [transactionId])
+  }, [transactionId, groupId])
 
   const loadAttachments = async () => {
     try {
       setLoading(true)
       setError(null)
       
-      const { data, error } = await supabase
-        .from('transaction_attachments')
-        .select('*')
-        .eq('transaction_id', transactionId)
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+      let query = supabase.from('transaction_attachments').select('*').eq('transaction_id', transactionId)
+      if (!groupId) query = query.eq('user_id', userId)
+      const { data, error } = await query.order('created_at', { ascending: false })
       
       if (error) {
         throw error

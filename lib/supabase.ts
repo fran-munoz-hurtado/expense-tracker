@@ -118,7 +118,8 @@ export type UserInput = Omit<User, 'id' | 'created_at' | 'updated_at'>
 
 export type Transaction = {
   id: number
-  user_id: string // UUID
+  user_id: string // UUID (creator)
+  group_id?: string | null // UUID - when set, any group member can edit
   year: number
   month: number
   description: string
@@ -137,6 +138,7 @@ export type Transaction = {
 export type RecurrentExpense = {
   id: number
   user_id: string // UUID
+  group_id?: string | null
   description: string
   month_from: number
   month_to: number
@@ -154,6 +156,7 @@ export type RecurrentExpense = {
 export type NonRecurrentExpense = {
   id: number
   user_id: string // UUID
+  group_id?: string | null
   description: string
   year: number
   month: number

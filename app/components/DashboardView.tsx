@@ -237,6 +237,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     category?: string
     editContextMonth?: number
     editContextYear?: number
+    groupId?: string | null
   } | null>(null)
 
   // Modify confirmation state
@@ -814,26 +815,21 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       if (transaction.source_type === 'recurrent' && deleteSeries) {
         // Delete entire series: transacciones primero (abonos y attachments cascadan), luego recurrent_expenses
         const sourceId = Number(transaction.source_id)
-        const { error: txError } = await supabase
-          .from('transactions')
-          .delete()
-          .eq('source_id', sourceId)
-          .eq('source_type', 'recurrent')
-          .eq('user_id', user.id)
+        const gid = transaction.group_id ?? currentGroupId ?? undefined
+        let q1 = supabase.from('transactions').delete().eq('source_id', sourceId).eq('source_type', 'recurrent')
+        if (gid) q1 = q1.eq('group_id', gid); else q1 = q1.eq('user_id', user.id)
+        const { error: txError } = await q1
         if (txError) throw txError
-        const { error } = await supabase
-          .from('recurrent_expenses')
-          .delete()
-          .eq('id', sourceId)
-          .eq('user_id', user.id)
+        let q2 = supabase.from('recurrent_expenses').delete().eq('id', sourceId)
+        if (gid) q2 = q2.eq('group_id', gid); else q2 = q2.eq('user_id', user.id)
+        const { error } = await q2
         if (error) throw error
       } else {
         // Delete only this transaction (abonos y attachments cascadan)
-        const { error } = await supabase
-          .from('transactions')
-          .delete()
-          .eq('id', transactionId)
-          .eq('user_id', user.id)
+        const gid = transaction.group_id ?? currentGroupId ?? undefined
+        let q = supabase.from('transactions').delete().eq('id', transactionId)
+        if (gid) q = q.eq('group_id', gid); else q = q.eq('user_id', user.id)
+        const { error } = await q
         if (error) throw error
       }
 
@@ -858,12 +854,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
     let recurrentExpense = recurrentExpenses.find(re => Number(re.id) === sourceId)
     if (!recurrentExpense && user?.id) {
-      const { data } = await supabase
-        .from('recurrent_expenses')
-        .select('*')
-        .eq('id', sourceId)
-        .eq('user_id', user.id)
-        .maybeSingle()
+      const gid = transaction.group_id ?? currentGroupId ?? undefined
+      let sel = supabase.from('recurrent_expenses').select('*').eq('id', sourceId)
+      if (gid) sel = sel.eq('group_id', gid); else sel = sel.eq('user_id', user.id)
+      const { data } = await sel.maybeSingle()
       recurrentExpense = data ?? undefined
     }
 
@@ -903,14 +897,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       setError(null)
       setIsDeletingSeries(true)
 
-      // 1. Borrar primero las transacciones de la serie
-      console.log('[DELETE_SERIES] Paso 1: seleccionando transacciones...')
-      const { data: txns, error: selectError } = await supabase
-        .from('transactions')
-        .select('id')
-        .eq('source_id', sourceId)
-        .eq('source_type', 'recurrent')
-        .eq('user_id', user.id)
+      // 1. Borrar primero las transacciones de la serie (group_id si es de grupo)
+      const groupId = transaction.group_id ?? undefined
+      console.log('[DELETE_SERIES] Paso 1: seleccionando transacciones...', { groupId })
+      let selectQuery = supabase.from('transactions').select('id').eq('source_id', sourceId).eq('source_type', 'recurrent')
+      if (groupId) selectQuery = selectQuery.eq('group_id', groupId)
+      else selectQuery = selectQuery.eq('user_id', user.id)
+      const { data: txns, error: selectError } = await selectQuery
 
       console.log('[DELETE_SERIES] Select resultado', { count: txns?.length ?? 0, selectError: selectError?.message })
 
@@ -918,12 +911,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
       if (txns && txns.length > 0) {
         console.log('[DELETE_SERIES] Paso 2a: borrando', txns.length, 'transacciones...')
-        const { error: txError } = await supabase
-          .from('transactions')
-          .delete()
-          .eq('source_id', sourceId)
-          .eq('source_type', 'recurrent')
-          .eq('user_id', user.id)
+        let txDeleteQuery = supabase.from('transactions').delete().eq('source_id', sourceId).eq('source_type', 'recurrent')
+        if (groupId) txDeleteQuery = txDeleteQuery.eq('group_id', groupId)
+        else txDeleteQuery = txDeleteQuery.eq('user_id', user.id)
+        const { error: txError } = await txDeleteQuery
         if (txError) {
           console.error('[DELETE_SERIES] Error borrando transacciones:', txError)
           throw txError
@@ -936,11 +927,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       // 2. Borrar la fila en recurrent_expenses (solo si existe)
       if (!isOrphaned) {
         console.log('[DELETE_SERIES] Paso 2b: borrando recurrent_expenses...')
-        const { error } = await supabase
-          .from('recurrent_expenses')
-          .delete()
-          .eq('id', sourceId)
-          .eq('user_id', user.id)
+        let recurrentDeleteQuery = supabase.from('recurrent_expenses').delete().eq('id', sourceId)
+        if (groupId) recurrentDeleteQuery = recurrentDeleteQuery.eq('group_id', groupId)
+        else recurrentDeleteQuery = recurrentDeleteQuery.eq('user_id', user.id)
+        const { error } = await recurrentDeleteQuery
         if (error) {
           console.error('[DELETE_SERIES] Error borrando recurrent_expenses:', error)
           throw error
@@ -978,7 +968,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
     // For non-recurrent transactions, go directly to the form
     if (transaction.source_type === 'non_recurrent') {
-      const nonRecurrentExpense = nonRecurrentExpenses.find(nre => Number(nre.id) === Number(transaction.source_id))
+      let nonRecurrentExpense = nonRecurrentExpenses.find(nre => Number(nre.id) === Number(transaction.source_id))
+      // Fallback: fetch from Supabase when not in local array (ej. transacción de grupo)
+      if (!nonRecurrentExpense && user?.id) {
+        const gid = transaction.group_id ?? currentGroupId ?? undefined
+        let sel = supabase.from('non_recurrent_expenses').select('*').eq('id', Number(transaction.source_id))
+        if (gid) sel = sel.eq('group_id', gid); else sel = sel.eq('user_id', user.id)
+        const { data } = await sel.maybeSingle()
+        nonRecurrentExpense = data ?? undefined
+      }
       if (!nonRecurrentExpense) {
         setError('Original non-recurrent expense not found')
         return
@@ -998,6 +996,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         payment_deadline: nonRecurrentExpense.payment_deadline || '',
         notes: transaction.notes || '',
         originalId: nonRecurrentExpense.id,
+        groupId: transaction.group_id ?? currentGroupId ?? null,
         transactionId: transaction.id,
         modifySeries: false,
         category: transaction.category
@@ -1035,12 +1034,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         let recurrentExpense = recurrentExpenses.find(re => Number(re.id) === sourceId)
         // Fallback: fetch from Supabase when not in local array
         if (!recurrentExpense && user?.id) {
-          const { data } = await supabase
-            .from('recurrent_expenses')
-            .select('*')
-            .eq('id', sourceId)
-            .eq('user_id', user.id)
-            .maybeSingle()
+          const gid = transaction.group_id ?? currentGroupId ?? undefined
+          let sel = supabase.from('recurrent_expenses').select('*').eq('id', sourceId)
+          if (gid) sel = sel.eq('group_id', gid); else sel = sel.eq('user_id', user.id)
+          const { data } = await sel.maybeSingle()
           recurrentExpense = data ?? undefined
         }
         if (!recurrentExpense) {
@@ -1069,7 +1066,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
           isgoal: recurrentExpense.isgoal || false,
           category: transaction.category,
           editContextMonth: transaction.month,
-          editContextYear: transaction.year
+          editContextYear: transaction.year,
+          groupId: transaction.group_id ?? currentGroupId ?? null,
         })
       } else {
         // Set up form data for editing individual transaction
@@ -1077,12 +1075,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
           const sourceId = Number(transaction.source_id)
           let recurrentExpense = recurrentExpenses.find(re => Number(re.id) === sourceId)
           if (!recurrentExpense && user?.id) {
-            const { data } = await supabase
-              .from('recurrent_expenses')
-              .select('*')
-              .eq('id', sourceId)
-              .eq('user_id', user.id)
-              .maybeSingle()
+            const gid = transaction.group_id ?? currentGroupId ?? undefined
+            let sel = supabase.from('recurrent_expenses').select('*').eq('id', sourceId)
+            if (gid) sel = sel.eq('group_id', gid); else sel = sel.eq('user_id', user.id)
+            const { data } = await sel.maybeSingle()
             recurrentExpense = data ?? undefined
           }
           if (!recurrentExpense) {
@@ -1105,7 +1101,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
               transactionId: transaction.id,
               modifySeries: false,
               isgoal: false,
-              category: transaction.category
+              category: transaction.category,
+              groupId: transaction.group_id ?? currentGroupId ?? null,
             })
             setShowModifyModal(false)
             setModifyModalData(null)
@@ -1130,10 +1127,19 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             originalId: transaction.id,
             transactionId: transaction.id,
             modifySeries: false,
-            category: transaction.category
+            category: transaction.category,
+            groupId: transaction.group_id ?? currentGroupId ?? null,
           })
         } else {
-          const nonRecurrentExpense = nonRecurrentExpenses.find(nre => Number(nre.id) === Number(transaction.source_id))
+          let nonRecurrentExpense = nonRecurrentExpenses.find(nre => Number(nre.id) === Number(transaction.source_id))
+          // Fallback: fetch from Supabase when not in local array (ej. transacción de grupo)
+          if (!nonRecurrentExpense && user?.id) {
+            const gid = transaction.group_id ?? currentGroupId ?? undefined
+            let sel = supabase.from('non_recurrent_expenses').select('*').eq('id', Number(transaction.source_id))
+            if (gid) sel = sel.eq('group_id', gid); else sel = sel.eq('user_id', user.id)
+            const { data } = await sel.maybeSingle()
+            nonRecurrentExpense = data ?? undefined
+          }
           if (!nonRecurrentExpense) {
             setError('Original non-recurrent expense not found')
             return
@@ -1155,7 +1161,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             originalId: nonRecurrentExpense.id,
             transactionId: transaction.id,
             modifySeries: false,
-            category: transaction.category
+            category: transaction.category,
+            groupId: transaction.group_id ?? currentGroupId ?? null,
           })
         }
       }
@@ -1320,22 +1327,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
         if (modifyFormData.modifySeries && modifyFormData.originalId) {
           // Update the entire series (trigger handles range/description)
-          const { error } = await supabase
-            .from('recurrent_expenses')
-            .update(recurrentData)
-            .eq('id', modifyFormData.originalId)
-            .eq('user_id', user.id)
+          const gid = modifyFormData.groupId ?? currentGroupId ?? undefined
+          let recurrentUpd = supabase.from('recurrent_expenses').update(recurrentData).eq('id', modifyFormData.originalId)
+          if (gid) recurrentUpd = recurrentUpd.eq('group_id', gid); else recurrentUpd = recurrentUpd.eq('user_id', user.id)
+          const { error } = await recurrentUpd
 
           if (error) throw error
 
           // Aplicar valor y/o deadline a transacciones existentes si el usuario lo eligió
           if (applyToExistingChoice && (modifyFormData.value !== undefined || modifyFormData.payment_day_deadline)) {
-            const { data: txns } = await supabase
-              .from('transactions')
-              .select('id, year, month')
-              .eq('source_id', modifyFormData.originalId)
-              .eq('source_type', 'recurrent')
-              .eq('user_id', user.id)
+            let txnsSel = supabase.from('transactions').select('id, year, month').eq('source_id', modifyFormData.originalId).eq('source_type', 'recurrent')
+            if (gid) txnsSel = txnsSel.eq('group_id', gid); else txnsSel = txnsSel.eq('user_id', user.id)
+            const { data: txns } = await txnsSel
 
             if (txns && txns.length > 0) {
               const fromY = modifyFormData.editContextYear ?? new Date().getFullYear()
@@ -1356,48 +1359,46 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                 if (modifyFormData.value !== undefined) updates.value = newValue
                 if (paymentDay != null) updates.deadline = computeDeadline(t.year, t.month)
                 if (Object.keys(updates).length === 0) return Promise.resolve()
-                return supabase.from('transactions').update(updates).eq('id', t.id).eq('user_id', user.id)
+                let txUpd = supabase.from('transactions').update(updates).eq('id', t.id)
+                if (gid) txUpd = txUpd.eq('group_id', gid); else txUpd = txUpd.eq('user_id', user.id)
+                return txUpd
               }))
             }
           }
         } else {
           // Update individual transaction
-          const { error } = await supabase
-            .from('transactions')
-            .update({
-              description: modifyFormData.description,
-              value: Number(modifyFormData.value),
-              deadline: modifyFormData.payment_deadline || null,
-              ...(modifyFormData.notes !== undefined && { notes: modifyFormData.notes || null })
-            })
-            .eq('id', modifyFormData.originalId)
-            .eq('user_id', user.id)
+          const gid = modifyFormData.groupId ?? currentGroupId ?? undefined
+          let txUpd = supabase.from('transactions').update({
+            description: modifyFormData.description,
+            value: Number(modifyFormData.value),
+            deadline: modifyFormData.payment_deadline || null,
+            ...(modifyFormData.notes !== undefined && { notes: modifyFormData.notes || null })
+          }).eq('id', modifyFormData.originalId)
+          if (gid) txUpd = txUpd.eq('group_id', gid); else txUpd = txUpd.eq('user_id', user.id)
+          const { error } = await txUpd
 
           if (error) throw error
         }
       } else if (modifyFormData.type === 'non_recurrent') {
         // Update non-recurrent expense
-        const { error } = await supabase
-          .from('non_recurrent_expenses')
-          .update({
-            description: modifyFormData.description,
-            month: modifyFormData.month,
-            year: modifyFormData.year,
-            value: Number(modifyFormData.value),
-            payment_deadline: modifyFormData.payment_deadline || null
-          })
-          .eq('id', modifyFormData.originalId)
-          .eq('user_id', user.id)
+        const gid = modifyFormData.groupId ?? currentGroupId ?? undefined
+        let nreUpd = supabase.from('non_recurrent_expenses').update({
+          description: modifyFormData.description,
+          month: modifyFormData.month,
+          year: modifyFormData.year,
+          value: Number(modifyFormData.value),
+          payment_deadline: modifyFormData.payment_deadline || null
+        }).eq('id', modifyFormData.originalId)
+        if (gid) nreUpd = nreUpd.eq('group_id', gid); else nreUpd = nreUpd.eq('user_id', user.id)
+        const { error } = await nreUpd
 
         if (error) throw error
 
         // Update transaction notes (notes live on transactions, not expenses)
         if (modifyFormData.transactionId) {
-          const { error: notesError } = await supabase
-            .from('transactions')
-            .update({ notes: modifyFormData.notes || null })
-            .eq('id', modifyFormData.transactionId)
-            .eq('user_id', user.id)
+          let notesUpd = supabase.from('transactions').update({ notes: modifyFormData.notes || null }).eq('id', modifyFormData.transactionId)
+          if (gid) notesUpd = notesUpd.eq('group_id', gid); else notesUpd = notesUpd.eq('user_id', user.id)
+          const { error: notesError } = await notesUpd
           if (notesError) console.warn('Could not update transaction notes:', notesError)
         }
       }
@@ -1634,44 +1635,31 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         console.log('Updating recurrent transaction series with category:', finalCategory)
         
         // Update the recurrent expense
-        const { error: recurrentError } = await supabase
-          .from('recurrent_expenses')
-          .update({ category: finalCategory })
-          .eq('id', selectedTransactionForCategory.source_id)
-          .eq('user_id', user.id)
-
+        const gidCat = (selectedTransactionForCategory as Transaction).group_id ?? currentGroupId ?? undefined
+        let recCatUpd = supabase.from('recurrent_expenses').update({ category: finalCategory }).eq('id', selectedTransactionForCategory.source_id)
+        if (gidCat) recCatUpd = recCatUpd.eq('group_id', gidCat); else recCatUpd = recCatUpd.eq('user_id', user.id)
+        const { error: recurrentError } = await recCatUpd
         if (recurrentError) throw recurrentError
 
         // Update all transactions in the series
-        const { error: transactionsError } = await supabase
-          .from('transactions')
-          .update({ category: finalCategory })
-          .eq('source_id', selectedTransactionForCategory.source_id)
-          .eq('source_type', 'recurrent')
-          .eq('user_id', user.id)
-
+        let txCatUpd = supabase.from('transactions').update({ category: finalCategory }).eq('source_id', selectedTransactionForCategory.source_id).eq('source_type', 'recurrent')
+        if (gidCat) txCatUpd = txCatUpd.eq('group_id', gidCat); else txCatUpd = txCatUpd.eq('user_id', user.id)
+        const { error: transactionsError } = await txCatUpd
         if (transactionsError) throw transactionsError
 
       } else {
         // Update non-recurrent transaction
         console.log('Updating non-recurrent transaction with category:', finalCategory)
         
-        // Update the non-recurrent expense
-        const { error: nonRecurrentError } = await supabase
-          .from('non_recurrent_expenses')
-          .update({ category: finalCategory })
-          .eq('id', selectedTransactionForCategory.source_id)
-          .eq('user_id', user.id)
-
+        const gidCat = (selectedTransactionForCategory as Transaction).group_id ?? currentGroupId ?? undefined
+        let nreCatUpd = supabase.from('non_recurrent_expenses').update({ category: finalCategory }).eq('id', selectedTransactionForCategory.source_id)
+        if (gidCat) nreCatUpd = nreCatUpd.eq('group_id', gidCat); else nreCatUpd = nreCatUpd.eq('user_id', user.id)
+        const { error: nonRecurrentError } = await nreCatUpd
         if (nonRecurrentError) throw nonRecurrentError
 
-        // Update the transaction
-        const { error: transactionError } = await supabase
-          .from('transactions')
-          .update({ category: finalCategory })
-          .eq('id', selectedTransactionForCategory.id)
-          .eq('user_id', user.id)
-
+        let txCatUpd2 = supabase.from('transactions').update({ category: finalCategory }).eq('id', selectedTransactionForCategory.id)
+        if (gidCat) txCatUpd2 = txCatUpd2.eq('group_id', gidCat); else txCatUpd2 = txCatUpd2.eq('user_id', user.id)
+        const { error: transactionError } = await txCatUpd2
         if (transactionError) throw transactionError
       }
 
@@ -1902,12 +1890,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     try {
       setError(null)
 
-      // Delete only this transaction
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', transactionId)
-        .eq('user_id', user.id)
+      // Delete only this transaction (group_id si es de grupo)
+      const gid = transaction.group_id ?? currentGroupId ?? undefined
+      let delQ = supabase.from('transactions').delete().eq('id', transactionId)
+      if (gid) delQ = delQ.eq('group_id', gid); else delQ = delQ.eq('user_id', user.id)
+      const { error } = await delQ
 
       if (error) throw error
 
@@ -3802,6 +3789,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                     <TransactionAttachments
                       transactionId={selectedTransactionForList.id}
                       userId={user.id}
+                      groupId={selectedTransactionForList.group_id ?? currentGroupId ?? null}
                       onAttachmentDeleted={handleAttachmentDeleted}
                       onAddAttachment={() => handleAttachmentUpload(selectedTransactionForList)}
                     />

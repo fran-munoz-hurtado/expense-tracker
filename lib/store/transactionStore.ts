@@ -55,6 +55,7 @@ interface TransactionStore {
     userId: string // UUID
     recurrentId: number
     updatedData: RecurrentFormData
+    groupId?: string | null // cuando es gasto de grupo
   }) => Promise<void>
   createTransaction: (params: {
     userId: string // UUID
@@ -68,6 +69,7 @@ interface TransactionStore {
   deleteRecurrentSeries: (params: {
     sourceId: number
     userId: string // UUID
+    groupId?: string | null // cuando es serie de grupo
   }) => Promise<void>
 }
 
@@ -181,12 +183,14 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       ),
     })
 
-    // ✅ 2. Persistir en Supabase
-    const { error } = await supabase
-      .from('transactions')
-      .update({ status: newStatus })
-      .eq('id', transactionId)
-      .eq('user_id', userId)
+    // ✅ 2. Persistir en Supabase (group_id si es transacción de grupo)
+    let query = supabase.from('transactions').update({ status: newStatus }).eq('id', transactionId)
+    if (original.group_id) {
+      query = query.eq('group_id', original.group_id)
+    } else {
+      query = query.eq('user_id', userId)
+    }
+    const { error } = await query
 
     // ❌ 3. Revertir si hay error
     if (error) {
@@ -250,11 +254,13 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     if (deadline !== undefined) updateData.deadline = deadline
     if (notes !== undefined) updateData.notes = notes
 
-    const { error } = await supabase
-      .from('transactions')
-      .update(updateData)
-      .eq('id', id)
-      .eq('user_id', userId)
+    let updateQuery = supabase.from('transactions').update(updateData).eq('id', id)
+    if (original.group_id) {
+      updateQuery = updateQuery.eq('group_id', original.group_id)
+    } else {
+      updateQuery = updateQuery.eq('user_id', userId)
+    }
+    const { error } = await updateQuery
 
     // ❌ 3. Revertir si hay error
     if (error) {
@@ -287,11 +293,13 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
     userId,
     recurrentId,
     updatedData,
+    groupId,
   }) => {
     if (process.env.NODE_ENV === 'development') {
       console.log('[zustand] 🔄 updateRecurrentTransactionSeries: start', { 
         userId, 
         recurrentId, 
+        groupId,
         range: `${updatedData.month_from}/${updatedData.year_from} - ${updatedData.month_to}/${updatedData.year_to}`,
         description: updatedData.description,
         value: updatedData.value
@@ -300,21 +308,23 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
 
     try {
       // ✅ 1. Actualizar recurrent_expenses (Supabase manejará los triggers)
-      const { error } = await supabase
-        .from('recurrent_expenses')
-        .update({
-          description: updatedData.description,
-          month_from: updatedData.month_from,
-          month_to: updatedData.month_to,
-          year_from: updatedData.year_from,
-          year_to: updatedData.year_to,
-          value: updatedData.value,
-          payment_day_deadline: updatedData.payment_day_deadline,
-          isgoal: updatedData.isgoal || false,
-          category: updatedData.category,
-        })
-        .eq('id', recurrentId)
-        .eq('user_id', userId)
+      let recurrentQuery = supabase.from('recurrent_expenses').update({
+        description: updatedData.description,
+        month_from: updatedData.month_from,
+        month_to: updatedData.month_to,
+        year_from: updatedData.year_from,
+        year_to: updatedData.year_to,
+        value: updatedData.value,
+        payment_day_deadline: updatedData.payment_day_deadline,
+        isgoal: updatedData.isgoal || false,
+        category: updatedData.category,
+      }).eq('id', recurrentId)
+      if (groupId) {
+        recurrentQuery = recurrentQuery.eq('group_id', groupId)
+      } else {
+        recurrentQuery = recurrentQuery.eq('user_id', userId)
+      }
+      const { error } = await recurrentQuery
 
       if (error) {
         console.error('[zustand] ❌ updateRecurrentTransactionSeries: error updating recurrent_expenses', error)
@@ -409,12 +419,14 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       console.log('[zustand] deleteTransaction: removed transaction', transactionId, 'from UI optimistically')
     }
 
-    // ✅ 2. Persistir en Supabase
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', transactionId)
-      .eq('user_id', userId)
+    // ✅ 2. Persistir en Supabase (group_id si es transacción de grupo)
+    let deleteQuery = supabase.from('transactions').delete().eq('id', transactionId)
+    if (original.group_id) {
+      deleteQuery = deleteQuery.eq('group_id', original.group_id)
+    } else {
+      deleteQuery = deleteQuery.eq('user_id', userId)
+    }
+    const { error } = await deleteQuery
 
     // ❌ 3. Revertir si hay error
     if (error) {
@@ -444,6 +456,7 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
   deleteRecurrentSeries: async ({
     sourceId,
     userId,
+    groupId,
   }) => {
     const { transactions } = get()
 
@@ -476,24 +489,24 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       console.log('[zustand] deleteRecurrentSeries: optimistic deletion applied (', seriesToDelete.length, 'items)')
     }
 
-    // ✅ 2. Persistir en Supabase: primero transacciones (abonos y attachments cascadan), luego recurrent_expenses
-    const { error: txError } = await supabase
-      .from('transactions')
-      .delete()
+    // ✅ 2. Persistir en Supabase: primero transacciones, luego recurrent_expenses
+    const groupIdOr = groupId ?? seriesToDelete[0]?.group_id
+    let txDeleteQuery = supabase.from('transactions').delete()
       .eq('source_id', sourceId)
       .eq('source_type', 'recurrent')
-      .eq('user_id', userId)
+    if (groupIdOr) txDeleteQuery = txDeleteQuery.eq('group_id', groupIdOr)
+    else txDeleteQuery = txDeleteQuery.eq('user_id', userId)
+    const { error: txError } = await txDeleteQuery
     if (txError) {
       set({ transactions: [...transactions] })
       console.error('[zustand] deleteRecurrentSeries: error deleting transactions', sourceId, ':', txError)
       return
     }
 
-    const { error } = await supabase
-      .from('recurrent_expenses')
-      .delete()
-      .eq('id', sourceId)
-      .eq('user_id', userId)
+    let recurrentDeleteQuery = supabase.from('recurrent_expenses').delete().eq('id', sourceId)
+    if (groupIdOr) recurrentDeleteQuery = recurrentDeleteQuery.eq('group_id', groupIdOr)
+    else recurrentDeleteQuery = recurrentDeleteQuery.eq('user_id', userId)
+    const { error } = await recurrentDeleteQuery
 
     // ❌ 3. Revertir si hay error (no podemos restaurar transacciones ya borradas)
     if (error) {
