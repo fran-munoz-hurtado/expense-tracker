@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Users, X } from 'lucide-react'
 import { type User } from '@/lib/supabase'
 import { useGroupStore } from '@/lib/store/groupStore'
+import { analytics } from '@/lib/analytics'
 
 interface CreateSpaceButtonProps {
   user: User
@@ -41,6 +42,7 @@ export default function CreateSpaceButton({ user, onSuccess, className }: Create
     const result = await createGroup(user.id, newGroupName.trim())
     setIsCreating(false)
     if (result.success) {
+      analytics.createSpace()
       handleClose()
       onSuccess?.()
     } else {

@@ -34,11 +34,22 @@ export function trackEvent(
   window.gtag('event', eventName, params)
 }
 
+/** Tipos de movimiento que se pueden añadir */
+export type MovementTypeForAnalytics =
+  | 'RECURRENT_EXPENSE'
+  | 'SINGLE_EXPENSE'
+  | 'RECURRENT_INCOME'
+  | 'SINGLE_INCOME'
+  | 'GOAL'
+  | 'SAVINGS'
+
 // Convenience events for the app
 export const analytics = {
   login: (method: 'email' | 'google') => trackEvent('login', { method }),
   signUp: (method: 'email' | 'google') => trackEvent('sign_up', { method }),
-  createTransaction: () => trackEvent('create_transaction'),
+  /** Cuando se añade cualquier movimiento (incluye tipo) */
+  addMovement: (movementType: MovementTypeForAnalytics) =>
+    trackEvent('add_movement', { movement_type: movementType }),
   createSpace: () => trackEvent('create_space'),
   inviteMember: () => trackEvent('invite_member'),
 }

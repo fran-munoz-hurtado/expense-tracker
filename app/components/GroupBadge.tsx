@@ -8,6 +8,7 @@ import { type User } from '@/lib/supabase'
 import { useGroupStore } from '@/lib/store/groupStore'
 import { buildMisCuentasUrl, parseMisCuentasPath, FILTER_PARAMS_REVERSE } from '@/lib/routes'
 import { cn } from '@/lib/utils'
+import { analytics } from '@/lib/analytics'
 
 interface GroupBadgeProps {
   user: User
@@ -73,6 +74,7 @@ export default function GroupBadge({ user, variant = 'light' }: GroupBadgeProps)
     const result = await createGroup(user.id, newGroupName.trim())
     setIsCreating(false)
     if (result.success) {
+      analytics.createSpace()
       setShowCreateModal(false)
       const newGroupId = useGroupStore.getState().currentGroupId
       if (newGroupId && pathname.startsWith('/mis-cuentas')) {

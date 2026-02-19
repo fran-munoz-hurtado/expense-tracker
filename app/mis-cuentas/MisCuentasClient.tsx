@@ -14,6 +14,7 @@ import BaseMovementForm from '@/app/components/forms/BaseMovementForm'
 import { texts } from '@/lib/translations'
 import { MOVEMENT_TYPES, type MovementType } from '@/lib/config/icons'
 import { createRecurrentExpense, createNonRecurrentExpense } from '@/lib/dataUtils'
+import { analytics } from '@/lib/analytics'
 import TransactionIcon from '@/app/components/TransactionIcon'
 import { FILTER_PARAMS_REVERSE, buildMisCuentasUrl, parseMisCuentasPath, type FilterType } from '@/lib/routes'
 
@@ -157,6 +158,7 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
           }, currentGroupId!)
         }
       }
+      if (selectedMovementType) analytics.addMovement(selectedMovementType)
       await refreshData(user!.id, 'create_transaction')
       handleCloseForm()
     } catch (error) {

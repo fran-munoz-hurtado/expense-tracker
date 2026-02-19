@@ -18,6 +18,7 @@ import {
 } from '@/lib/services/groupService'
 import { inviteMember } from '@/lib/services/invitationService'
 import { useGroupStore } from '@/lib/store/groupStore'
+import { analytics } from '@/lib/analytics'
 
 interface GroupDetailViewProps {
   groupId: string
@@ -133,6 +134,7 @@ export default function GroupDetailView({ groupId, user }: GroupDetailViewProps)
     const result = await inviteMember(groupId, inviteEmail.trim())
     setIsInviting(false)
     if (result.success) {
+      analytics.inviteMember()
       setShowInviteModal(false)
       setInviteEmail('')
       const [groupData, membersData] = await Promise.all([
