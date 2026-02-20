@@ -48,7 +48,7 @@ const jetbrainsMono = JetBrains_Mono({
   ]
 })
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://controla.app'
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://controla.click'
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),

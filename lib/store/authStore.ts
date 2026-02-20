@@ -29,17 +29,27 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   logout: async () => {
     console.log('[auth] Iniciando logout desde store...')
     try {
-      const { error } = await supabase.auth.signOut()
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
+      // Siempre limpiamos el estado local inmediatamente (no depender del listener)
+      set({ user: null })
       if (error) {
-        console.error('[auth] Error durante logout:', error)
-        throw error
+        console.error('[auth] Error durante logout (limpiando igual):', error)
+        // Fallback: borrar sesión de localStorage si signOut falló (p. ej. bug 403)
+        if (typeof window !== 'undefined') {
+          const keysToRemove: string[] = []
+          for (let i = 0; i < window.localStorage.length; i++) {
+            const key = window.localStorage.key(i)
+            if (key?.startsWith('sb-') && key.includes('auth')) {
+              keysToRemove.push(key)
+            }
+          }
+          keysToRemove.forEach((k) => window.localStorage.removeItem(k))
+        }
       } else {
         console.log('[auth] Logout exitoso desde store')
       }
-      // Note: User state will be cleared by onAuthStateChange listener
     } catch (error) {
       console.error('[auth] Error inesperado durante logout:', error)
-      // Fallback: clear user state manually
       set({ user: null })
       throw error
     }

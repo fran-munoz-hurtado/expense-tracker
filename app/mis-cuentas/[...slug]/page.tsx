@@ -40,8 +40,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       canonical,
     },
     robots: {
-      index: true,
-      follow: true,
+      index: false,
+      follow: false,
     },
   }
 }

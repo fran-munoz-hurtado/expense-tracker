@@ -10,12 +10,14 @@ import { supabase } from '@/lib/supabase'
  * When the user switches back (even for milliseconds), the session can be stale.
  * This hook ensures the token is always fresh before any Supabase call.
  *
- * Use once at app root (e.g. layout) — applies to all Supabase operations app-wide.
+ * Solo refresca si hay sesión activa (evita restaurar sesión tras logout).
  */
 export function useRefreshSessionOnVisible(): void {
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState !== 'visible') return
+      void supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!session) return
         void supabase.auth
           .refreshSession()
           .then(({ error }) => {
@@ -28,7 +30,7 @@ export function useRefreshSessionOnVisible(): void {
               console.warn('[session] Error refreshing session on tab focus:', err)
             }
           })
-      }
+      })
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)

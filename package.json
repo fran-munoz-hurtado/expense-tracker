@@ -23,7 +23,7 @@
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.8.7",
     "@supabase/auth-helpers-react": "^0.4.2",
-    "@supabase/supabase-js": "^2.38.5",
+    "@supabase/supabase-js": "^2.47.0",
     "clsx": "^2.0.0",
     "critters": "^0.0.23",
     "date-fns": "^2.30.0",

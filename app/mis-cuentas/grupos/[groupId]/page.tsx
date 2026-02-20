@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `Detalle del grupo | ${texts.appTitle}`,
     description: `Información detallada del grupo: miembros, transacciones y más.`,
-    robots: { index: true, follow: true },
+    robots: { index: false, follow: false },
     alternates: {
       canonical: `/mis-cuentas/grupos/${groupId}`,
     },
