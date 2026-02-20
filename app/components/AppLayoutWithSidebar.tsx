@@ -85,15 +85,13 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
           })}
           </div>
           <div className="mt-auto pt-2 border-t border-sky-200/50">
-            <div className="rounded-lg bg-red-100/90 border border-red-300 px-1.5 py-0.5">
-              <button
-                onClick={onLogout}
-                className="w-full flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-red-600 font-medium text-xs font-sans hover:bg-red-200/80 transition-colors"
-              >
-                <LogOut className="h-3 w-3 shrink-0" strokeWidth={1.5} />
-                {texts.logout}
-              </button>
-            </div>
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-gradient-to-b from-sky-600 to-sky-700 text-white text-xs font-medium font-sans border border-sky-700/50 shadow-[0_2px_8px_rgba(2,132,199,0.25)] hover:from-sky-700 hover:to-sky-800 hover:shadow-[0_4px_12px_rgba(2,132,199,0.3)] active:scale-[0.99] transition-all duration-200"
+            >
+              <LogOut className="h-3 w-3 shrink-0" strokeWidth={1.5} />
+              {texts.logout}
+            </button>
           </div>
         </nav>
       </aside>
@@ -154,15 +152,13 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
               })}
               </div>
               <div className="mt-auto pt-2 border-t border-sky-200/50">
-                <div className="rounded-lg bg-red-100/90 border border-red-300 px-1.5 py-0.5">
-                  <button
-                    onClick={() => { onLogout(); setMenuOpen(false) }}
-                    className="w-full flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-red-600 font-medium text-xs font-sans hover:bg-red-200/80 transition-colors"
-                  >
-                    <LogOut className="h-3 w-3 shrink-0" strokeWidth={1.5} />
-                    {texts.logout}
-                  </button>
-                </div>
+                <button
+                  onClick={() => { onLogout(); setMenuOpen(false) }}
+                  className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg bg-gradient-to-b from-sky-600 to-sky-700 text-white text-xs font-medium font-sans border border-sky-700/50 shadow-[0_2px_8px_rgba(2,132,199,0.25)] hover:from-sky-700 hover:to-sky-800 hover:shadow-[0_4px_12px_rgba(2,132,199,0.3)] active:scale-[0.99] transition-all duration-200"
+                >
+                  <LogOut className="h-3 w-3 shrink-0" strokeWidth={1.5} />
+                  {texts.logout}
+                </button>
               </div>
             </nav>
           </aside>

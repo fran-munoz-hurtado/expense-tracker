@@ -305,6 +305,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
   
   // Mobile options menu state (3 dots - same actions as desktop)
+  const optionsMenuJustOpenedRef = useRef(false)
   const [openOptionsMenu, setOpenOptionsMenu] = useState<number | null>(null)
   const [optionsMenuAnchor, setOptionsMenuAnchor] = useState<{ top?: number; bottom?: number; right: number; placement: 'below' | 'above' } | null>(null)
   const [openActionsDropdown, setOpenActionsDropdown] = useState<number | null>(null)
@@ -319,6 +320,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [notesModalValue, setNotesModalValue] = useState('')
   
   // Close mobile options menu and desktop actions dropdown when clicking outside
+  // Defer listener to next tick so the same click that opens the menu doesn't immediately close it
   useEffect(() => {
     const handleClickOutside = () => {
       setOpenOptionsMenu(null)
@@ -330,8 +332,13 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     }
     
     if (openOptionsMenu !== null || openActionsDropdown !== null || openAssignDropdownId !== null) {
-      document.addEventListener('click', handleClickOutside)
-      return () => document.removeEventListener('click', handleClickOutside)
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('click', handleClickOutside)
+      }, 0)
+      return () => {
+        clearTimeout(timeoutId)
+        document.removeEventListener('click', handleClickOutside)
+      }
     }
   }, [openOptionsMenu, openActionsDropdown, openAssignDropdownId])
 
@@ -2651,32 +2658,32 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                      onClick={(e) => e.stopPropagation()}
                    >
                      {transaction.type === 'expense' && !(transaction.category === 'Ahorro' && (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
-                       <button onClick={() => { handleCategoryClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                         <Tag className="w-3 h-3 flex-shrink-0" />
+                       <button onClick={() => { handleCategoryClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans">
+                         <Tag className="w-3.5 h-3.5 flex-shrink-0" />
                          <span>Categoría: {transaction.category && transaction.category !== 'sin categoría' ? transaction.category : 'sin categoría'}</span>
                        </button>
                      )}
-                     <button onClick={() => { handleAttachmentList(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                       <Paperclip className="w-3 h-3 flex-shrink-0" /><span>{texts.attachments}</span>
-                       {attachmentCounts[transaction.id] > 0 && <span className="ml-auto bg-warning-bg text-gray-700 text-[10px] rounded-full px-1.5 py-0.5">{attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}</span>}
+                     <button onClick={() => { handleAttachmentList(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans">
+                       <Paperclip className="w-3.5 h-3.5 flex-shrink-0" /><span>{texts.attachments}</span>
+                       {attachmentCounts[transaction.id] > 0 && <span className="ml-auto bg-warning-bg text-gray-700 text-xs rounded-full px-1.5 py-0.5">{attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}</span>}
                      </button>
-                     <button onClick={() => { handleNotesClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                       <StickyNote className={cn('w-3 h-3 flex-shrink-0', transaction.notes?.trim() && 'text-amber-500')} />
+                     <button onClick={() => { handleNotesClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans">
+                       <StickyNote className={cn('w-3.5 h-3.5 flex-shrink-0', transaction.notes?.trim() && 'text-amber-500')} />
                        <span className="flex items-center gap-1.5">
                          {texts.notes}
                          {transaction.notes?.trim() && <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />}
                        </span>
                      </button>
                      {transaction.type === 'expense' && transaction.status !== 'paid' && (
-                       <button onClick={() => { handleAbonarClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                         <Wallet className="w-3 h-3 flex-shrink-0" /><span>{texts.abonar}</span>
+                       <button onClick={() => { handleAbonarClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans">
+                         <Wallet className="w-3.5 h-3.5 flex-shrink-0" /><span>{texts.abonar}</span>
                        </button>
                      )}
-                     <button onClick={() => { handleModifyTransaction(transaction.id); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                       <Edit className="w-3 h-3 flex-shrink-0" /><span>Editar</span>
+                     <button onClick={() => { handleModifyTransaction(transaction.id); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50 font-sans">
+                       <Edit className="w-3.5 h-3.5 flex-shrink-0" /><span>Editar</span>
                      </button>
-                     <button onClick={() => { handleDeleteTransaction(transaction.id); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 font-sans">
-                       <Trash2 className="w-3 h-3 flex-shrink-0" /><span>{texts.delete}</span>
+                     <button onClick={() => { handleDeleteTransaction(transaction.id); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-sm text-red-600 hover:bg-red-50 font-sans">
+                       <Trash2 className="w-3.5 h-3.5 flex-shrink-0" /><span>{texts.delete}</span>
                      </button>
                    </div>,
                    document.body
@@ -2710,15 +2717,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                      onClick={(e) => e.stopPropagation()}
                    >
                      <div className="px-2 py-1 text-[10px] font-medium text-gray-500 uppercase border-b border-gray-100 font-sans sticky top-0 bg-white">{texts.assignedTo}</div>
-                     <button onClick={() => { handleAssignSelect(transaction, null); closeDropdown() }} className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:py-2 text-left text-xs lg:text-sm font-sans', !transaction.assigned_to ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}>
-                       <div className={cn('w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-[10px] flex-shrink-0')}>—</div>
+                     <button onClick={() => { handleAssignSelect(transaction, null); closeDropdown() }} className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:py-2 text-left text-sm font-sans', !transaction.assigned_to ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}>
+                       <div className={cn('w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs flex-shrink-0')}>—</div>
                        —
                      </button>
                      {groupMembers.filter(m => m.status === 'active').map((m) => (
                        <button
                          key={m.user_id}
                          onClick={() => { handleAssignSelect(transaction, m.user_id); closeDropdown() }}
-                         className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:px-2 lg:py-2 text-left text-xs lg:text-sm font-sans', transaction.assigned_to === m.user_id ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}
+                         className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:px-2 lg:py-2 text-left text-sm font-sans', transaction.assigned_to === m.user_id ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}
                        >
                          <MemberAvatar userId={m.user_id} members={groupMembers} size="sm" />
                          {getMemberDisplayName(m.user_id)}
@@ -2773,24 +2780,27 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                   IMPORTANTE: scroll-hint-wrapper va en el padre (no en el scroll). Gradientes fijos a pantalla,
                   desaparecen al llegar al inicio/final del scroll. */}
               <div className={cn('lg:hidden relative scroll-hint-wrapper', !showScrollHint && 'scroll-at-end', !showScrollHintLeft && 'scroll-at-start')}>
-                <div ref={mobileTableScrollRef} className="overflow-x-auto scrollbar-hide-mobile" onScroll={checkScrollHint} onMouseLeave={() => setOpenOptionsMenu(null)}>
-                <table className="text-xs table-auto min-w-[450px]">
+                <div ref={mobileTableScrollRef} className="overflow-x-auto scrollbar-hide-mobile" onScroll={checkScrollHint} onMouseLeave={() => {
+                  if (!optionsMenuJustOpenedRef.current) setOpenOptionsMenu(null)
+                }}>
+                <div className="px-3 min-w-min">
+                <table className="text-sm table-auto min-w-[540px]">
                   <colgroup>
-                    <col className="min-w-[110px]" />
+                    <col className="min-w-[178px]" />
                     <col className="min-w-[44px]" />
                     <col className="min-w-[130px]" />
                     <col className="min-w-[70px]" />
                   </colgroup>
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="pl-1.5 pr-1.5 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50">
+                      <th className="pl-1.5 pr-1.5 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50">
                         {texts.description}
                       </th>
-                      <th className="pl-1 pr-1 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">
+                      <th className="pl-1 pr-1 py-1.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">
                         {texts.assignedTo}
                       </th>
-                      <th className="pl-1 pr-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">{texts.amount}</th>
-                      <th className="px-0.5 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans">{texts.status}</th>
+                      <th className="pl-1 pr-1 py-1.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">{texts.amount}</th>
+                      <th className="px-0.5 py-1.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans">{texts.status}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white">
@@ -2798,7 +2808,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                       const isMenuOpen = openOptionsMenu === transaction.id
                       return (
                         <tr key={transaction.id} className="border-b border-gray-100">
-                          <td className="px-1.5 py-1.5 w-[128px] border-r border-dashed border-gray-300 overflow-visible">
+                          <td className="px-1.5 py-1.5 w-[178px] min-w-[178px] border-r border-dashed border-gray-300 overflow-visible">
                             <div className="relative bg-white h-full flex items-center gap-1 min-w-0 min-h-[44px]">
                               <div className="flex-shrink-0">
                                 <TransactionIcon
@@ -2811,7 +2821,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               </div>
                               <div className="min-w-0 flex-1 overflow-hidden">
                                 <span
-                                  className="text-xs font-medium text-gray-900 font-sans block break-words w-full"
+                                  className="text-sm font-medium text-gray-900 font-sans block break-words w-full"
                                   title={transaction.description}
                                 >
                                   {transaction.description}
@@ -2854,9 +2864,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                 aria-label={transaction.assigned_to ? getMemberDisplayName(transaction.assigned_to) : texts.assignedTo}
                               >
                                 {transaction.assigned_to ? (
-                                  <MemberAvatar userId={transaction.assigned_to} members={groupMembers} size="sm" />
+                                  <MemberAvatar userId={transaction.assigned_to} members={groupMembers} size="md" />
                                 ) : (
-                                  <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-[10px] flex-shrink-0">—</div>
+                                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-xs flex-shrink-0">—</div>
                                 )}
                               </button>
                             </div>
@@ -2865,9 +2875,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             <div className="w-full flex justify-end min-w-[130px]">
                               <div className="inline-flex items-center gap-x-1 flex-shrink-0">
                               <div className="leading-tight text-right shrink-0 tabular-nums">
-                                <span className="text-xs font-medium text-gray-900 font-sans">{formatCurrency(transaction.value)}</span>
+                                <span className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(transaction.value)}</span>
                                 {(abonosByTransaction[transaction.id]?.length ?? 0) > 0 && transaction.type === 'expense' && transaction.status !== 'paid' && (
-                                  <span className="block text-[9px] text-gray-500">{formatCurrency(getTotalAbonado(transaction.id))}</span>
+                                  <span className="block text-xs text-gray-500">{formatCurrency(getTotalAbonado(transaction.id))}</span>
                                 )}
                               </div>
                               <input
@@ -2899,6 +2909,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                       setOpenOptionsMenu(null)
                                       setOptionsMenuAnchor(null)
                                     } else {
+                                      optionsMenuJustOpenedRef.current = true
+                                      setTimeout(() => { optionsMenuJustOpenedRef.current = false }, 150)
                                       const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
                                       const spaceBelow = window.innerHeight - rect.bottom - 8
                                       const spaceAbove = rect.top - 8
@@ -2921,7 +2933,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                             </div>
                           </td>
                           <td className="px-0.5 py-1.5 align-middle text-center min-w-0">
-                            <span className={cn("inline-block max-w-full px-1.5 py-0.5 rounded-full text-xs font-medium font-sans break-words text-center leading-tight", getStatusColor(transaction))}>
+                            <span className={cn("inline-block max-w-full px-1.5 py-0.5 rounded-full text-sm font-medium font-sans break-words text-center leading-tight", getStatusColor(transaction))}>
                               {getStatusText(transaction)}
                             </span>
                           </td>
@@ -2930,6 +2942,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                     })}
                   </tbody>
                 </table>
+                </div>
                 </div>
               </div>
             </>

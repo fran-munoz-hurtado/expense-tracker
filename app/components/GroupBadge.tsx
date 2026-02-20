@@ -154,7 +154,7 @@ export default function GroupBadge({ user, variant = 'light' }: GroupBadgeProps)
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-green-dark hover:bg-green-50 font-medium font-sans"
               >
                 <Plus className="h-4 w-4" />
-                Crear grupo
+                Crear espacio
               </button>
               <button
                 type="button"
@@ -186,13 +186,13 @@ export default function GroupBadge({ user, variant = 'light' }: GroupBadgeProps)
                   <Users className="h-4 w-4 text-green-600" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 font-sans">Crear grupo</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 font-sans">Crear espacio</h2>
                   <p className="text-sm text-gray-500 font-sans">Comparte finanzas con familia o equipo</p>
                 </div>
               </div>
               <div>
                 <label htmlFor="group-name" className="block text-sm font-medium text-gray-700 font-sans mb-1">
-                  Nombre del grupo
+                  Nombre del espacio
                 </label>
                 <input
                   id="group-name"
