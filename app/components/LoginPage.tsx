@@ -2,11 +2,14 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Eye, EyeOff, User, Mail, Lock, ArrowRight } from 'lucide-react'
+import { Eye, EyeOff, User, Mail, Lock, ArrowRight, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseSignUp, handleSupabaseLogin, handleSupabaseGoogleLogin, type SupabaseSignUpData, type SupabaseLoginData } from '@/lib/services/supabaseAuth'
 import { analytics } from '@/lib/analytics'
 import { texts } from '@/lib/translations'
+import PrivacyPolicyContent from './PrivacyPolicyContent'
+
+const PRIVACY_CONSENT_STORAGE_KEY = 'privacy_consent_signup'
 
 interface LoginPageProps {
   onLogin: (user: any) => void
@@ -23,6 +26,8 @@ export default function LoginPage({ onLogin, showPasswordLogin = true, variant =
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   
   // Form data - only fields needed for Supabase Auth
   const [formData, setFormData] = useState({
@@ -140,14 +145,23 @@ export default function LoginPage({ onLogin, showPasswordLogin = true, variant =
 
   const handleGoogleLogin = async () => {
     setError(null)
+    const isSignupFlow = !showPasswordLogin && variant === 'signup'
+    if (isSignupFlow && !acceptedPrivacy) {
+      setError('Debes aceptar la Política de Tratamiento de Datos para continuar.')
+      return
+    }
     setGoogleLoading(true)
     analytics.login('google')
     try {
-      const result = await handleSupabaseGoogleLogin()
+      if (isSignupFlow && acceptedPrivacy) {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(PRIVACY_CONSENT_STORAGE_KEY, JSON.stringify({ accepted: true, policy_version: '1.0' }))
+        }
+      }
+      const result = await handleSupabaseGoogleLogin(isSignupFlow ? { fromSignup: true } : undefined)
       if (!result.success) {
         setError(result.error ?? 'Error al iniciar sesión con Google')
       }
-      // On success, user is redirected to Google, so no need to call onLogin here
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesión con Google')
     } finally {
@@ -331,7 +345,7 @@ export default function LoginPage({ onLogin, showPasswordLogin = true, variant =
               <button
                 type="button"
                 onClick={handleGoogleLogin}
-                disabled={loading || googleLoading}
+                disabled={loading || googleLoading || (!showPasswordLogin && variant === 'signup' && !acceptedPrivacy)}
                 className="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -342,6 +356,27 @@ export default function LoginPage({ onLogin, showPasswordLogin = true, variant =
                 </svg>
                 {googleLoading ? 'Conectando...' : (!showPasswordLogin ? (variant === 'signup' ? 'Crear cuenta con Google' : 'Entrar con Google') : 'Continuar con Google')}
               </button>
+              {!showPasswordLogin && variant === 'signup' && (
+                <div className="flex items-center gap-2 mt-3">
+                  <input
+                    id="privacy-accept"
+                    type="checkbox"
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    className="h-4 w-4 shrink-0 rounded border border-gray-300 focus:ring-green-primary focus:ring-2"
+                  />
+                  <label htmlFor="privacy-accept" className="text-sm text-gray-700">
+                    Acepto la{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowPrivacyModal(true)}
+                      className="text-green-primary hover:text-green-dark underline"
+                    >
+                      Política de Tratamiento de Datos
+                    </button>
+                  </label>
+                </div>
+              )}
               {!showPasswordLogin && (
                 <p className="mt-3 text-xs text-gray-500 text-center">
                   {variant === 'signup'
@@ -384,6 +419,36 @@ export default function LoginPage({ onLogin, showPasswordLogin = true, variant =
             </>
             )}
           </form>
+
+          {showPrivacyModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/50" onClick={() => setShowPrivacyModal(false)} aria-hidden="true" />
+              <div className="relative bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Política de Tratamiento de Datos</h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowPrivacyModal(false)}
+                    className="p-1 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="overflow-y-auto p-4 flex-1">
+                  <PrivacyPolicyContent />
+                </div>
+                <div className="p-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowPrivacyModal(false)}
+                    className="w-full py-2 px-4 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-primary"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {showPasswordLogin && (
           <div className="mt-6">

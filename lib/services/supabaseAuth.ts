@@ -201,17 +201,21 @@ export async function handleSupabaseLogin(data: SupabaseLoginData): Promise<Supa
 /**
  * Handle login with Google (OAuth)
  * Redirects to Google and then back to the app
+ * @param fromSignup - si viene de /signup, se añade from=signup para guardar consentimiento en callback
  */
-export async function handleSupabaseGoogleLogin(): Promise<{ success: boolean; error?: string }> {
+export async function handleSupabaseGoogleLogin(options?: { fromSignup?: boolean }): Promise<{ success: boolean; error?: string }> {
   try {
     const siteUrl = typeof window !== 'undefined'
       ? window.location.origin
       : process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
+    let redirectTo = `${siteUrl}/auth/callback?next=${encodeURIComponent('/mis-cuentas')}`
+    if (options?.fromSignup) redirectTo += '&from=signup'
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${siteUrl}/auth/callback?next=${encodeURIComponent('/mis-cuentas')}`,
+        redirectTo,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent'
@@ -273,6 +277,26 @@ export async function handleSupabaseLogout(): Promise<{ success: boolean; error?
       success: false, 
       error: error instanceof Error ? error.message : 'Error inesperado durante el cierre de sesión' 
     }
+  }
+}
+
+/**
+ * Guarda el consentimiento de Política de Tratamiento de Datos (signup con Google)
+ */
+export async function savePrivacyConsent(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { error } = await supabase.from('user_privacy_consents').upsert(
+      { user_id: userId, accepted_privacy: true, accepted_at: new Date().toISOString(), policy_version: '1.0' },
+      { onConflict: 'user_id' }
+    )
+    if (error) {
+      console.error('❌ Error guardando consentimiento:', error)
+      return { success: false, error: error.message }
+    }
+    return { success: true }
+  } catch (err) {
+    console.error('❌ Error guardando consentimiento:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Error desconocido' }
   }
 }
 
