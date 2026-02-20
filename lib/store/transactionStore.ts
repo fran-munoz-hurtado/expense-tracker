@@ -56,6 +56,12 @@ interface TransactionStore {
     assignedTo: string | null
     userId: string // UUID
   }) => Promise<void>
+  updateRecurrentSeriesAssignedTo: (params: {
+    sourceId: number
+    assignedTo: string | null
+    userId: string // UUID
+    groupId?: string | null
+  }) => Promise<void>
   updateRecurrentTransactionSeries: (params: {
     userId: string // UUID
     recurrentId: number
@@ -326,6 +332,34 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
         ),
       })
       console.error('[zustand] updateTransactionAssignedTo: failed', error)
+    } else {
+      try {
+        clearUserCache(userId)
+      } catch (e) { /* ignore */ }
+    }
+  },
+  updateRecurrentSeriesAssignedTo: async ({ sourceId, assignedTo, userId, groupId }) => {
+    const { transactions } = get()
+    const series = transactions.filter(t => t.source_id === sourceId && t.source_type === 'recurrent')
+    if (series.length === 0) return
+
+    const ids = series.map(t => t.id)
+    set({
+      transactions: transactions.map(t =>
+        t.source_id === sourceId && t.source_type === 'recurrent'
+          ? { ...t, assigned_to: assignedTo }
+          : t
+      ),
+    })
+
+    let updateQuery = supabase.from('transactions').update({ assigned_to: assignedTo }).eq('source_id', sourceId).eq('source_type', 'recurrent')
+    if (groupId != null && groupId !== '') updateQuery = updateQuery.eq('group_id', groupId)
+    else updateQuery = updateQuery.eq('user_id', userId)
+    const { error } = await updateQuery
+
+    if (error) {
+      set({ transactions })
+      console.error('[zustand] updateRecurrentSeriesAssignedTo: failed', error)
     } else {
       try {
         clearUserCache(userId)

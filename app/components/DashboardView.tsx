@@ -42,7 +42,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const router = useRouter()
   const { refreshData, dataVersion } = useDataSync()
   const { currentGroupId, groups, isLoading: isGroupsLoading } = useGroupStore()
-  const { transactions, isLoading, fetchTransactions, setTransactions, markTransactionStatus, updateTransaction, updateTransactionAssignedTo } = useTransactionStore()
+  const { transactions, isLoading, fetchTransactions, setTransactions, markTransactionStatus, updateTransaction, updateTransactionAssignedTo, updateRecurrentSeriesAssignedTo } = useTransactionStore()
   
   // State management - synced from URL/parent when syncToUrl
   const currentDate = new Date()
@@ -310,6 +310,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [openActionsDropdown, setOpenActionsDropdown] = useState<number | null>(null)
   const [actionsDropdownAnchor, setActionsDropdownAnchor] = useState<{ top?: number; bottom?: number; right: number; placement: 'below' | 'above' } | null>(null)
   const [assignDropdownAnchor, setAssignDropdownAnchor] = useState<{ top?: number; bottom?: number; left: number; centerX: boolean; placement: 'below' | 'above' } | null>(null)
+  const [showAssignSeriesModal, setShowAssignSeriesModal] = useState(false)
+  const [assignSeriesModalData, setAssignSeriesModalData] = useState<{ transaction: Transaction; assignedTo: string } | null>(null)
 
   // Notes modal state (quick edit from dropdown)
   const [showNotesModal, setShowNotesModal] = useState(false)
@@ -734,7 +736,45 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const handleAssignChange = async (transactionId: number, assignedTo: string | null) => {
     if (!user) return
     setOpenAssignDropdownId(null)
+    setAssignDropdownAnchor(null)
     await updateTransactionAssignedTo({ transactionId, userId: user.id, assignedTo })
+  }
+
+  const handleAssignSelect = (transaction: Transaction, assignedTo: string | null) => {
+    const closeDropdown = () => {
+      setOpenAssignDropdownId(null)
+      setAssignDropdownAnchor(null)
+    }
+    if (assignedTo === null) {
+      handleAssignChange(transaction.id, null)
+      closeDropdown()
+      return
+    }
+    if (transaction.source_type === 'recurrent') {
+      setAssignSeriesModalData({ transaction, assignedTo })
+      setShowAssignSeriesModal(true)
+      closeDropdown()
+    } else {
+      handleAssignChange(transaction.id, assignedTo)
+      closeDropdown()
+    }
+  }
+
+  const handleAssignSeriesConfirm = async (applyToSeries: boolean) => {
+    if (!user || !assignSeriesModalData) return
+    const { transaction, assignedTo } = assignSeriesModalData
+    setShowAssignSeriesModal(false)
+    setAssignSeriesModalData(null)
+    if (applyToSeries) {
+      await updateRecurrentSeriesAssignedTo({
+        sourceId: Number(transaction.source_id),
+        assignedTo,
+        userId: user.id,
+        groupId: transaction.group_id ?? currentGroupId
+      })
+    } else {
+      await updateTransactionAssignedTo({ transactionId: transaction.id, userId: user.id, assignedTo })
+    }
   }
 
   const handleCheckboxChange = async (transactionId: number, isChecked: boolean) => {
@@ -2670,14 +2710,14 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                      onClick={(e) => e.stopPropagation()}
                    >
                      <div className="px-2 py-1 text-[10px] font-medium text-gray-500 uppercase border-b border-gray-100 font-sans sticky top-0 bg-white">{texts.assignedTo}</div>
-                     <button onClick={() => { handleAssignChange(transaction.id, null); closeDropdown() }} className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:py-2 text-left text-xs lg:text-sm font-sans', !transaction.assigned_to ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}>
+                     <button onClick={() => { handleAssignSelect(transaction, null); closeDropdown() }} className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:py-2 text-left text-xs lg:text-sm font-sans', !transaction.assigned_to ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}>
                        <div className={cn('w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-[10px] flex-shrink-0')}>—</div>
                        —
                      </button>
                      {groupMembers.filter(m => m.status === 'active').map((m) => (
                        <button
                          key={m.user_id}
-                         onClick={() => { handleAssignChange(transaction.id, m.user_id); closeDropdown() }}
+                         onClick={() => { handleAssignSelect(transaction, m.user_id); closeDropdown() }}
                          className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:px-2 lg:py-2 text-left text-xs lg:text-sm font-sans', transaction.assigned_to === m.user_id ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}
                        >
                          <MemberAvatar userId={m.user_id} members={groupMembers} size="sm" />
@@ -2688,6 +2728,46 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                    document.body
                  )
                })()}
+
+              {/* Modal: asignar recurrente - solo este mes o toda la serie */}
+              {showAssignSeriesModal && assignSeriesModalData && (
+                <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50" onClick={() => { setShowAssignSeriesModal(false); setAssignSeriesModalData(null) }}>
+                  <section
+                    className="bg-white rounded-xl shadow-2xl border border-gray-200 w-full max-w-sm p-6"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-green-light flex items-center justify-center flex-shrink-0">
+                        <Users className="h-5 w-5 text-green-primary" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 font-sans">{texts.assignToSeriesTitle}</h3>
+                    </div>
+                    <p className="text-sm text-gray-600 font-sans mb-6">
+                      {texts.assignToSeriesMessage.replace('{{name}}', getMemberDisplayName(assignSeriesModalData.assignedTo))}
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={() => handleAssignSeriesConfirm(false)}
+                        className="w-full px-4 py-3 bg-green-primary text-white rounded-xl font-medium hover:bg-[#77b16e] transition-colors font-sans"
+                      >
+                        {texts.assignOnlyThis}
+                      </button>
+                      <button
+                        onClick={() => handleAssignSeriesConfirm(true)}
+                        className="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors font-sans"
+                      >
+                        {texts.assignEntireSeries}
+                      </button>
+                      <button
+                        onClick={() => { setShowAssignSeriesModal(false); setAssignSeriesModalData(null) }}
+                        className="w-full px-4 py-2.5 text-sm text-gray-500 hover:text-gray-700 font-sans"
+                      >
+                        {texts.cancel}
+                      </button>
+                    </div>
+                  </section>
+                </div>
+              )}
 
               {/* Mobile Table View - descripción | asignado | valor+3puntos | estado (scroll horizontal)
                   IMPORTANTE: scroll-hint-wrapper va en el padre (no en el scroll). Gradientes fijos a pantalla,
