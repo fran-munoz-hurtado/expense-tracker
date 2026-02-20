@@ -49,7 +49,7 @@ export default function LandingPage() {
             </p>
             <nav className="mt-12 flex flex-col sm:flex-row gap-4 justify-center" aria-label="Acciones principales">
               <Link
-                href="/login"
+                href="/signup"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-semibold text-white rounded-xl shadow-lg hover:shadow-xl transition-all"
                 style={{ background: 'linear-gradient(135deg, #2563eb 0%, #0d9488 100%)', boxShadow: '0 4px 14px rgba(13, 148, 136, 0.35)' }}
                 aria-label="Empezar gratis — Crear cuenta"
@@ -224,7 +224,7 @@ export default function LandingPage() {
           </h2>
           <p className="mt-4 text-lg text-blue-100">Crea tu primer espacio hoy. Es más sencillo de lo que crees.</p>
           <Link
-            href="/login"
+            href="/signup"
             className="mt-10 inline-flex items-center justify-center gap-2 px-10 py-4 text-lg font-semibold bg-white hover:bg-gray-50 rounded-xl shadow-xl transition-all"
             style={{ color: '#0d9488' }}
             aria-label="Empezar gratis — Ir a registro o login"

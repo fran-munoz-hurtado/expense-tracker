@@ -18,7 +18,7 @@ function LoadingFallback() {
   )
 }
 
-export default function LoginRoutePage() {
+export default function SignupRoutePage() {
   const router = useRouter()
   const { user, isLoading, initAuth } = useAuthStore()
 
@@ -35,7 +35,7 @@ export default function LoginRoutePage() {
   }, [user, isLoading, router])
 
   if (isLoading) return <LoadingFallback />
-  if (!user) return <LoginPage onLogin={() => {}} showPasswordLogin={false} variant="login" />
+  if (!user) return <LoginPage onLogin={() => {}} showPasswordLogin={false} variant="signup" />
 
   return <LoadingFallback />
 }
