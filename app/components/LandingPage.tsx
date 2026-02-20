@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Wallet, Users, TrendingUp, Calendar, ArrowRight, Check } from 'lucide-react'
+import { Wallet, Users, ArrowRight, Check } from 'lucide-react'
 import { texts } from '@/lib/translations'
 
 /* Placeholder para imágenes - reemplaza con tus assets */
@@ -34,14 +34,18 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-20 sm:pt-28 pb-16 sm:pb-24">
           <div className="text-center max-w-3xl mx-auto">
             <p className="text-sm font-medium tracking-wide uppercase mb-4" style={{ color: '#0d9488' }}>
-              Finanzas personales
+              FINANZAS PERSONALES Y COMPARTIDAS
             </p>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-gray-900 tracking-tight leading-[1.1]">
-              Sabes cuánto te{' '}
-              <span className="bg-gradient-to-r from-blue-600 to-emerald-600 bg-clip-text text-transparent">queda</span> cada mes?
+              ¿Sabes realmente con cuánto cuentas este mes?
             </h1>
             <p className="mt-6 text-lg sm:text-xl text-gray-600 leading-relaxed">
-              Controla tus gastos e ingresos en un solo lugar. Organiza tus finanzas personales o comparte espacios con familia o equipo.
+              Organiza tus ingresos y obligaciones en espacios claros.
+              <br />
+              En pocos clics sabrás cuánto puedes gastar sin afectar tus pagos.
+            </p>
+            <p className="mt-3 text-sm text-gray-500">
+              Sin Excel. Sin estrés. Más simple de lo que crees.
             </p>
             <nav className="mt-12 flex flex-col sm:flex-row gap-4 justify-center" aria-label="Acciones principales">
               <Link
@@ -61,131 +65,66 @@ export default function LandingPage() {
                 Ya tengo cuenta
               </Link>
             </nav>
+            <p className="mt-4 text-sm text-gray-500">
+              Crea tu primer espacio en menos de un minuto.
+            </p>
           </div>
         </div>
       </header>
 
-      {/* Featured — imagen + copy */}
-      <section className="py-20 sm:py-28 bg-white" aria-labelledby="destacado">
+      {/* Rompe la barrera mental */}
+      <section className="py-20 sm:py-28 bg-white" aria-labelledby="rompe-barrera">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="order-2 lg:order-1">
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-gray-200/50" role="img" aria-label="Dashboard de Controla mostrando gastos e ingresos">
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-gray-200/50" role="img" aria-label="Organizar tu dinero no tiene que ser complicado">
                 <PlaceholderImage className="w-full h-full" />
               </div>
             </div>
             <div className="order-1 lg:order-2">
-              <h2 id="destacado" className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-gray-900 tracking-tight">
-                Todo tu dinero, una sola vista
+              <h2 id="rompe-barrera" className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-gray-900 tracking-tight">
+                Organizar tu dinero no tiene que ser complicado.
               </h2>
               <p className="mt-4 text-lg text-gray-600 leading-relaxed">
-                Dashboard claro con gastos recurrentes, ingresos y gastos únicos. Filtra por mes, categoría o tipo. Sin complicaciones.
-              </p>
-              <ul className="mt-6 space-y-3">
-                {['Recurrentes y gastos únicos', 'Ingresos y ahorros', 'Pendientes vs pagados'].map((item) => (
-                  <li key={item} className="flex items-center gap-3 text-gray-700">
-                    <Check className="w-5 h-5 flex-shrink-0" style={{ color: '#0d9488' }} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Beneficios con imágenes */}
-      <section className="py-20 sm:py-28 bg-slate-50" aria-labelledby="beneficios">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 id="beneficios" className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-gray-900">
-              ¿Por qué {texts.appTitle}?
-            </h2>
-            <p className="mt-3 text-lg text-gray-600 max-w-xl mx-auto">
-              Diseñado para que organices tus finanzas sin fricción.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: Wallet, title: 'Control total', desc: 'Gastos recurrentes, ingresos y gastos únicos en un dashboard claro.', img: true },
-              { icon: Users, title: 'Espacios compartidos', desc: 'Comparte finanzas con familia o roomies. Cada uno ve y colabora.', img: true },
-              { icon: TrendingUp, title: 'Objetivos y ahorro', desc: 'Define metas, haz seguimiento y ve cuánto vas logrando.', img: true },
-              { icon: Calendar, title: 'Mes a mes', desc: 'Organizado por mes y año. Fácil de navegar y entender.', img: true },
-            ].map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow border border-gray-100">
-                <div className="aspect-[16/10] flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #eff6ff 100%)' }}>
-                  <Icon className="w-12 h-12 group-hover:scale-110 transition-all" style={{ color: '#0d9488' }} />
-                </div>
-                <div className="p-6">
-                  <h3 className="font-semibold text-gray-900">{title}</h3>
-                  <p className="mt-2 text-gray-600 text-sm leading-relaxed">{desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Cómo funciona — 4 pasos, espacios destacados */}
-      <section className="py-20 sm:py-28 bg-white" aria-labelledby="como-funciona">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 id="como-funciona" className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-gray-900">
-              Cómo funciona
-            </h2>
-            <p className="mt-3 text-lg text-gray-600 max-w-xl mx-auto">
-              En cuatro pasos simples empiezas a tener el control.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl text-white font-bold text-lg shadow-lg" style={{ background: 'linear-gradient(135deg, #2563eb 0%, #0d9488 100%)' }}>1</span>
-              <h3 className="mt-5 font-semibold text-gray-900">Crea tu cuenta</h3>
-              <p className="mt-2 text-gray-600 text-sm">Regístrate con Google o email en segundos.</p>
-            </div>
-            <div className="text-center relative">
-              <div className="absolute -top-1 -right-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-medium">Destacado</div>
-              <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl text-white font-bold text-lg shadow-lg" style={{ background: 'linear-gradient(135deg, #2563eb 0%, #0d9488 100%)' }}>2</span>
-              <h3 className="mt-5 font-semibold text-gray-900">Crea o únete a espacios compartidos</h3>
-              <p className="mt-2 text-gray-600 text-sm">
-                <strong className="text-gray-800">Lugares que puedes compartir</strong> con familia, roomies o equipo. Todos ven y colaboran en las finanzas del espacio.
+                No necesitas hacer un presupuesto complejo.
+                <br />
+                No necesitas fórmulas ni hojas de cálculo.
+                <br />
+                Solo necesitas dos cosas: registrar lo que entra y registrar lo que debes pagar.
+                <br />
+                Controla organiza el resto automáticamente y te muestra cuánto te queda realmente disponible.
               </p>
             </div>
-            <div className="text-center">
-              <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl text-white font-bold text-lg shadow-lg" style={{ background: 'linear-gradient(135deg, #2563eb 0%, #0d9488 100%)' }}>3</span>
-              <h3 className="mt-5 font-semibold text-gray-900">Agrega gastos e ingresos</h3>
-              <p className="mt-2 text-gray-600 text-sm">Recurrentes o únicos. Con fechas y categorías.</p>
-            </div>
-            <div className="text-center">
-              <span className="inline-flex items-center justify-center w-14 h-14 rounded-2xl text-white font-bold text-lg shadow-lg" style={{ background: 'linear-gradient(135deg, #2563eb 0%, #0d9488 100%)' }}>4</span>
-              <h3 className="mt-5 font-semibold text-gray-900">Sabe cuánto queda</h3>
-              <p className="mt-2 text-gray-600 text-sm">Ve en tiempo real qué pagaste y qué falta por pagar.</p>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* Espacios compartidos — sección destacada */}
+      {/* Espacios (concepto) */}
       <section className="py-20 sm:py-28 bg-slate-50" aria-labelledby="espacios">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div>
               <h2 id="espacios" className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-gray-900">
-                Espacios que puedes compartir
+                Todo se organiza por espacios.
               </h2>
               <p className="mt-4 text-lg text-gray-600 leading-relaxed">
-                Crea espacios para casa, pareja, roomies o equipo. Invita a quien quieras y colaboren juntos en las finanzas del hogar o proyecto.
+                Tu vida financiera no es una sola lista.
+                <br />
+                Con Controla puedes crear espacios independientes para separar tus cuentas y coordinarlas mejor.
               </p>
               <ul className="mt-6 space-y-3">
-                {['Casa o apartamento compartido', 'Finanzas en pareja', 'Proyectos o equipos', 'Cada miembro colabora'].map((item) => (
+                {['🏠 Familia', '💑 Pareja', '👥 Roomies', '📂 Proyectos', '👤 Personal'].map((item) => (
                   <li key={item} className="flex items-center gap-3 text-gray-700">
                     <Check className="w-5 h-5 flex-shrink-0" style={{ color: '#0d9488' }} />
                     <span>{item}</span>
                   </li>
                 ))}
               </ul>
+              <p className="mt-6 text-gray-600">
+                Cada espacio tiene sus propios ingresos, obligaciones y metas. Todo separado. Todo claro.
+              </p>
             </div>
-            <div role="img" aria-label="Espacios compartidos para finanzas en familia o equipo">
+            <div role="img" aria-label="Espacios para organizar finanzas personales y compartidas">
               <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-gray-200/50">
                 <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #d1fae5 0%, #dbeafe 100%)' }} aria-hidden>
                   <Users className="w-24 h-24 opacity-60" style={{ color: '#0d9488' }} />
@@ -196,21 +135,103 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Beneficio central — Disponible real */}
+      <section className="py-20 sm:py-28 bg-white" aria-labelledby="disponible-real">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div className="order-2 lg:order-1">
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-gray-200/50" role="img" aria-label="Sabe cuánto puedes gastar sin afectar tus obligaciones">
+                <PlaceholderImage className="w-full h-full" />
+              </div>
+            </div>
+            <div className="order-1 lg:order-2">
+              <h2 id="disponible-real" className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-gray-900 tracking-tight">
+                Sabe cuánto puedes gastar sin afectar tus obligaciones.
+              </h2>
+              <p className="mt-4 text-lg text-gray-600 leading-relaxed">
+                En cada espacio puedes ver tu mes completo, con claridad real.
+              </p>
+              <ul className="mt-6 space-y-3">
+                {['💰 Ingresos del mes', '📌 Obligaciones pendientes ordenadas por vencimiento', '✔️ Pagos realizados', '🟢 Disponible real después de cubrir lo comprometido'].map((item) => (
+                  <li key={item} className="flex items-center gap-3 text-gray-700">
+                    <Check className="w-5 h-5 flex-shrink-0" style={{ color: '#0d9488' }} />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-6 text-lg text-gray-700 font-medium">
+                No adivinas. No dependes de memoria. Tienes claridad real.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Finanzas compartidas */}
+      <section className="py-20 sm:py-28 bg-slate-50" aria-labelledby="finanzas-compartidas">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            <div>
+              <h2 id="finanzas-compartidas" className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-gray-900">
+                Coordina finanzas compartidas sin discusiones.
+              </h2>
+              <p className="mt-4 text-lg text-gray-600 leading-relaxed">
+                Invita miembros a un espacio.
+                <br />
+                Todos ven las mismas obligaciones.
+                <br />
+                Todos saben qué falta pagar.
+              </p>
+              <p className="mt-6 text-gray-700">
+                Sin mensajes cruzados. Sin &quot;yo pensé que ya lo habías pagado&quot;.
+              </p>
+            </div>
+            <div role="img" aria-label="Coordina finanzas compartidas con tu familia o equipo">
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden shadow-xl shadow-gray-200/50">
+                <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #d1fae5 0%, #dbeafe 100%)' }} aria-hidden>
+                  <Users className="w-24 h-24 opacity-60" style={{ color: '#0d9488' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Ideal si… */}
+      <section className="py-20 sm:py-28 bg-white" aria-labelledby="ideal-si">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 id="ideal-si" className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-gray-900">
+              Ideal si quieres:
+            </h2>
+          </div>
+          <ul className="max-w-2xl mx-auto space-y-3">
+            {['Organizar pagos mensuales', 'No olvidar vencimientos', 'Saber cuánto puedes gastar', 'Llevar finanzas familiares claras', 'Separar proyectos sin mezclar cuentas'].map((item) => (
+              <li key={item} className="flex items-center gap-3 text-gray-700 text-lg">
+                <Check className="w-5 h-5 flex-shrink-0" style={{ color: '#0d9488' }} />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       {/* CTA final */}
       <section className="py-24 sm:py-32" style={{ background: 'linear-gradient(135deg, #1e40af 0%, #0d9488 100%)' }}>
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white">
-            Listo para tomar el control?
+            Empieza a saber con cuánto cuentas realmente.
           </h2>
-          <p className="mt-4 text-lg text-blue-100">Empieza gratis. Sin tarjeta de crédito.</p>
+          <p className="mt-4 text-lg text-blue-100">Crea tu primer espacio hoy. Es más sencillo de lo que crees.</p>
           <Link
             href="/login"
             className="mt-10 inline-flex items-center justify-center gap-2 px-10 py-4 text-lg font-semibold bg-white hover:bg-gray-50 rounded-xl shadow-xl transition-all"
             style={{ color: '#0d9488' }}
-            aria-label="Empezar ahora — Ir a registro o login"
+            aria-label="Empezar gratis — Ir a registro o login"
           >
-            Empezar ahora <ArrowRight className="w-5 h-5" aria-hidden />
+            Empezar gratis <ArrowRight className="w-5 h-5" aria-hidden />
           </Link>
+          <p className="mt-4 text-sm text-blue-100/90">Sin tarjeta de crédito.</p>
         </div>
       </section>
 

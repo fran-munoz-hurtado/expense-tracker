@@ -2,8 +2,19 @@ import type { Metadata } from 'next'
 import { texts } from '@/lib/translations'
 
 export const metadata: Metadata = {
+  title: 'Controla | Organiza pagos y sabe cuánto puedes gastar',
+  description: 'Organiza ingresos y pagos mensuales en un solo lugar. Sabe cuánto puedes gastar sin afectar tus obligaciones. Ideal para finanzas personales y familiares.',
   alternates: {
     canonical: '/',
+  },
+  openGraph: {
+    title: 'Controla | Organiza pagos y sabe cuánto puedes gastar',
+    description: 'Organiza ingresos y pagos mensuales en un solo lugar. Sabe cuánto puedes gastar sin afectar tus obligaciones. Ideal para finanzas personales y familiares.',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Controla | Organiza pagos y sabe cuánto puedes gastar',
+    description: 'Organiza ingresos y pagos mensuales en un solo lugar. Sabe cuánto puedes gastar sin afectar tus obligaciones. Ideal para finanzas personales y familiares.',
   },
 }
 

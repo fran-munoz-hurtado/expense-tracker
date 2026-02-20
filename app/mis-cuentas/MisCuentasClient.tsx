@@ -237,8 +237,8 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
                 <X className="h-5 w-5" />
               </button>
               <div className="text-center mb-3">
-                <h2 className="text-lg text-gray-dark font-semibold mb-2">Añadir Movimiento</h2>
-                <p className="text-sm text-green-dark">Selecciona el tipo de movimiento que deseas crear</p>
+                <h2 className="text-lg text-gray-dark font-semibold mb-2">Agregar ingreso u obligación</h2>
+                <p className="text-sm text-green-dark">Selecciona qué deseas registrar en este espacio</p>
               </div>
               <div className="mt-4">
                 <p className="text-xs uppercase text-green-dark mb-1 mt-4">Ingresos</p>
@@ -258,7 +258,7 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
                     </div>
                   </div>
                 </div>
-                <p className="text-xs uppercase text-green-dark mb-1 mt-4">Gastos</p>
+                <p className="text-xs uppercase text-green-dark mb-1 mt-4">OBLIGACIONES Y GASTOS</p>
                 <div className="flex flex-col gap-1">
                   <div onClick={() => handleMovementTypeSelect('RECURRENT_EXPENSE')} className="flex items-center gap-3 px-4 py-2 hover:bg-[#f5f6f4] hover:shadow-soft transition-all duration-150 rounded-md cursor-pointer">
                     {getMovementTypeContainer('RECURRENT_EXPENSE')}
