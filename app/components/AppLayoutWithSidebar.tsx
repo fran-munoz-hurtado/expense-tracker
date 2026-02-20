@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, Wallet, LayoutGrid } from 'lucide-react'
+import { Menu, X, Wallet, LayoutGrid, LogOut } from 'lucide-react'
 import Navbar from './Navbar'
+import { texts } from '@/lib/translations'
 import PendingInvitationsBanner from './PendingInvitationsBanner'
 import { type User } from '@/lib/supabase'
 
@@ -58,7 +59,8 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
       <aside
         className={`hidden lg:flex lg:flex-col lg:w-52 lg:shrink-0 ${SIDEBAR_BG} border-r border-sky-200`}
       >
-        <nav className="p-4 space-y-1">
+        <nav className="p-4 flex-1 flex flex-col">
+          <div className="space-y-1">
           {menuItems.map((item) => {
             const Icon = item.Icon
             const baseClasses = 'flex items-center gap-3 px-3 py-2 rounded-lg text-gray-800 font-medium text-sm font-sans hover:bg-sky-200/60 transition-colors'
@@ -81,6 +83,18 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
               </div>
             )
           })}
+          </div>
+          <div className="mt-auto pt-2 border-t border-sky-200/50">
+            <div className="rounded-lg bg-red-100/90 border border-red-300 px-1.5 py-0.5">
+              <button
+                onClick={onLogout}
+                className="w-full flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-red-600 font-medium text-xs font-sans hover:bg-red-200/80 transition-colors"
+              >
+                <LogOut className="h-3 w-3 shrink-0" strokeWidth={1.5} />
+                {texts.logout}
+              </button>
+            </div>
+          </div>
         </nav>
       </aside>
 
@@ -99,7 +113,7 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
           />
           {/* Panel: se desliza desde la izquierda */}
           <aside
-            className={`absolute left-0 top-0 bottom-0 w-64 ${SIDEBAR_BG} shadow-xl border-r border-sky-200 transform transition-transform duration-200 ease-out ${
+            className={`absolute left-0 top-0 bottom-0 w-64 flex flex-col ${SIDEBAR_BG} shadow-xl border-r border-sky-200 transform transition-transform duration-200 ease-out ${
               panelReady ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
@@ -113,7 +127,8 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
                 <X className="h-5 w-5 text-gray-600" />
               </button>
             </div>
-            <nav className="p-4 space-y-1">
+            <nav className="p-4 flex-1 flex flex-col">
+              <div className="space-y-1">
               {menuItems.map((item) => {
                 const Icon = item.Icon
                 const baseClasses = 'flex items-center gap-3 px-3 py-2 rounded-lg text-gray-800 font-medium text-sm font-sans hover:bg-sky-200/60 transition-colors'
@@ -137,6 +152,18 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
                   </div>
                 )
               })}
+              </div>
+              <div className="mt-auto pt-2 border-t border-sky-200/50">
+                <div className="rounded-lg bg-red-100/90 border border-red-300 px-1.5 py-0.5">
+                  <button
+                    onClick={() => { onLogout(); setMenuOpen(false) }}
+                    className="w-full flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-red-600 font-medium text-xs font-sans hover:bg-red-200/80 transition-colors"
+                  >
+                    <LogOut className="h-3 w-3 shrink-0" strokeWidth={1.5} />
+                    {texts.logout}
+                  </button>
+                </div>
+              </div>
             </nav>
           </aside>
         </div>
@@ -147,15 +174,14 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
         <PendingInvitationsBanner user={user} />
         <Navbar
           user={user}
-          onLogout={onLogout}
           leftSlot={
             <button
               onClick={() => setMenuOpen(true)}
-              className="lg:hidden p-2 -ml-1 mr-1 text-white hover:bg-white/15 rounded-lg transition-colors shrink-0"
+              className="lg:hidden p-2 -ml-1 mr-1 text-white hover:bg-white/15 rounded-lg transition-colors shrink-0 flex items-center justify-center"
               aria-label="Abrir menú"
               aria-expanded={menuOpen}
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5 shrink-0" />
             </button>
           }
         />

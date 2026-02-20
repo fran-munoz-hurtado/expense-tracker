@@ -203,11 +203,11 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
   // Get status color for transactions
   const getStatusColor = (transaction: Transaction): string => {
     if (transaction.status === 'paid') {
-      return 'bg-green-light text-green-primary'
+      return 'bg-green-light text-green-800'
     } else if (transaction.deadline && isDateOverdue(transaction.deadline)) {
-      return 'bg-error-bg text-error-red'
+      return 'bg-error-bg text-red-800'
     } else {
-      return 'bg-warning-bg text-warning-yellow'
+      return 'bg-warning-bg text-amber-800'
     }
   }
 
@@ -656,7 +656,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                   {/* Right section: Status + Amount */}
                                   <div className="flex items-center space-x-3 flex-shrink-0">
                                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${
-                                      objective.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'
+                                      objective.overdue > 0 ? 'bg-error-bg text-red-800' : 'bg-green-light text-green-800'
                                     }`}>
                                       {objective.overdue > 0 ? 'Vencido' : 'Al día'}
                                     </span>
@@ -682,7 +682,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                     <div className="text-sm font-medium text-gray-900 truncate font-sans flex-1">{objective.label}</div>
                                   </div>
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${
-                                    objective.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'
+                                    objective.overdue > 0 ? 'bg-error-bg text-red-800' : 'bg-green-light text-green-800'
                                   }`}>
                                     {objective.overdue > 0 ? 'Vencido' : 'Al día'}
                                   </span>
@@ -752,7 +752,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                   
                                   {/* Right section: Status + Amount */}
                                   <div className="flex items-center space-x-3 flex-shrink-0">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-green-light text-green-primary">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-green-light text-green-800">
                                       Completado
                                     </span>
                                     <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(objective.totalValue)}</div>
@@ -776,7 +776,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                     </div>
                                     <div className="text-sm font-medium text-gray-900 truncate font-sans flex-1">{objective.label}</div>
                                   </div>
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-green-light text-green-primary">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-green-light text-green-800">
                                     Completado
                                   </span>
                                 </div>
@@ -845,7 +845,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                   
                                   {/* Right section: Status + Amount */}
                                   <div className="flex items-center space-x-3 flex-shrink-0">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-error-bg text-error-red">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-error-bg text-red-800">
                                       Vencido
                                     </span>
                                     <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(objective.totalValue)}</div>
@@ -869,7 +869,7 @@ export default function MisMetasView({ user, navigationParams }: MisMetasViewPro
                                     </div>
                                     <div className="text-sm font-medium text-gray-900 truncate font-sans flex-1">{objective.label}</div>
                                   </div>
-                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-error-bg text-error-red">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans bg-error-bg text-red-800">
                                     Vencido
                                   </span>
                                 </div>

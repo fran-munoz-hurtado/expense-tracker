@@ -331,7 +331,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
   }
 
   const getStatusColor = (transaction: Transaction) => {
-    if (transaction.status === 'paid') return 'bg-green-light text-green-primary'
+    if (transaction.status === 'paid') return 'bg-green-light text-green-800'
     if (transaction.deadline) {
       // Parse the date string to avoid timezone issues and compare only dates
       const [year, month, day] = transaction.deadline.split('-').map(Number);
@@ -342,10 +342,10 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
       const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       
       if (deadlineDate < todayDate) {
-        return 'bg-error-bg text-error-red'
+        return 'bg-error-bg text-red-800'
       }
     }
-    return 'bg-warning-bg text-warning-yellow'
+    return 'bg-warning-bg text-amber-800'
   }
 
   // Fetch transactions data using pure Zustand pattern
@@ -1092,8 +1092,8 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                               </p>
                               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                                 getCategoryStatus(group.categoryName) === 'overdue' 
-                                  ? 'bg-error-bg text-error-red' 
-                                  : 'bg-green-light text-green-primary'
+                                  ? 'bg-error-bg text-red-800' 
+                                  : 'bg-green-light text-green-800'
                               }`}>
                                 {getCategoryStatus(group.categoryName) === 'overdue' ? 'Vencido' : 'Al día'}
                               </span>
@@ -1262,7 +1262,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                             
                                             {/* Right section: Status + Amount + (no attachment for recurrent groups) */}
                                             <div className="flex items-center space-x-3 flex-shrink-0">
-                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${recurrentGroup.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'}`}>
+                                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${recurrentGroup.overdue > 0 ? 'bg-error-bg text-red-800' : 'bg-green-light text-green-800'}`}>
                                                 {recurrentGroup.overdue > 0 ? 'Vencido' : 'Al día'}
                                               </span>
                                               <div className="text-sm font-medium text-gray-900 font-sans">{formatCurrency(recurrentGroup.total)}</div>
@@ -1300,7 +1300,7 @@ export default function CategoriesView({ navigationParams, user }: CategoriesVie
                                               </div>
                                               <div className="text-sm font-medium text-gray-900 truncate font-sans flex-1">{recurrentGroup.description}</div>
                                             </div>
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${recurrentGroup.overdue > 0 ? 'bg-error-bg text-error-red' : 'bg-green-light text-green-primary'}`}>
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-sans ${recurrentGroup.overdue > 0 ? 'bg-error-bg text-red-800' : 'bg-green-light text-green-800'}`}>
                                               {recurrentGroup.overdue > 0 ? 'Vencido' : 'Al día'}
                                             </span>
                                           </div>

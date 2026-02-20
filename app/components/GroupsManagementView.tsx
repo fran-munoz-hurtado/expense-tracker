@@ -37,7 +37,7 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
       </div>
 
       {/* Main Content - desktop: tabla a ancho completo; mobile: layout existente */}
-      <div className="flex-1 px-4 lg:px-8 pb-6 lg:pb-8 overflow-auto">
+      <div className="flex-1 px-4 lg:px-0 pb-6 lg:pb-8 overflow-auto">
         <div className="max-w-4xl lg:max-w-none mx-auto lg:mx-0 space-y-4">
           <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
             <div className="mb-4">
@@ -65,33 +65,25 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
               </div>
             ) : (
               <>
-                {/* Desktop Table - incluye Miembros y Rol */}
+                {/* Desktop Table - 3 columnas: Nombre | Miembros | Creado + Ver (inline) */}
                 <div className="hidden lg:block">
                   <div className="overflow-x-auto">
-                    <table className="min-w-full table-fixed">
+                    <table className="min-w-full table-fixed text-sm font-sans">
                       <colgroup>
-                        <col className="w-[35%]" />
-                        <col className="w-[80px]" />
-                        <col className="w-[80px]" />
-                        <col className="w-[90px]" />
-                        <col className="w-[59px]" />
+                        <col className="w-[45%]" />
+                        <col className="w-[15%]" />
+                        <col className="w-[40%]" />
                       </colgroup>
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
                           <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50">
                             Nombre
                           </th>
-                          <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans w-[80px] border-r border-dashed border-gray-300">
+                          <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">
                             Miembros
                           </th>
-                          <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans w-[80px] border-r border-dashed border-gray-300">
-                            Rol
-                          </th>
-                          <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans w-[90px] border-r border-dashed border-gray-300">
+                          <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">
                             Creado
-                          </th>
-                          <th className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider font-sans w-[59px]">
-                            Ver
                           </th>
                         </tr>
                       </thead>
@@ -111,7 +103,7 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
                                   {g.name}
                                 </span>
                                 {g.id === currentGroupId && (
-                                  <span className="text-xs font-medium text-green-primary bg-green-light px-2 py-0.5 rounded-full flex-shrink-0">
+                                  <span className="text-xs font-medium text-green-800 bg-green-light px-2 py-0.5 rounded-full flex-shrink-0">
                                     Activo
                                   </span>
                                 )}
@@ -120,20 +112,13 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
                             <td className="px-2 py-2 text-center text-sm text-gray-600 font-sans border-r border-dashed border-gray-300">
                               {g.member_count != null ? g.member_count : '—'}
                             </td>
-                            <td className="px-2 py-2 text-center text-sm font-sans border-r border-dashed border-gray-300">
-                              {g.my_role === 'admin' ? (
-                                <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-xs font-medium">Administrador</span>
-                              ) : g.my_role === 'member' ? (
-                                <span className="text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-xs font-medium">Miembro</span>
-                              ) : (
-                                '—'
-                              )}
-                            </td>
-                            <td className="px-2 py-2 text-center text-sm text-gray-600 font-sans border-r border-dashed border-gray-300">
-                              {formatDate(g.created_at)}
-                            </td>
-                            <td className="px-2 py-2 text-center">
-                              <ChevronRight className="h-4 w-4 text-gray-400 mx-auto group-hover/row:text-green-primary transition-colors" />
+                            <td className="px-2 py-2 border-r border-dashed border-gray-300">
+                              <div className="flex items-center gap-2 min-w-0 min-h-[52px]">
+                                <span className="text-sm text-gray-600 font-sans shrink-0">
+                                  {formatDate(g.created_at)}
+                                </span>
+                                <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0 group-hover/row:text-green-primary transition-colors" />
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -142,24 +127,20 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
                   </div>
                 </div>
 
-                {/* Mobile Table - misma estructura que transacciones */}
+                {/* Mobile Table - 2 columnas: Nombre | Creado + Ver (inline) */}
                 <div className="lg:hidden overflow-x-auto">
-                  <table className="min-w-0 w-full max-w-full text-xs table-fixed">
+                  <table className="min-w-0 w-full max-w-full table-fixed text-sm font-sans">
                     <colgroup>
-                      <col className="w-[128px]" />
-                      <col className="w-[126px]" />
-                      <col className="w-[70px]" />
+                      <col className="w-[55%]" />
+                      <col className="w-[45%]" />
                     </colgroup>
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
-                        <th className="pl-1.5 pr-1.5 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50 w-[128px]">
+                        <th className="pl-1.5 pr-1.5 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50">
                           Nombre
                         </th>
-                        <th className="pl-1 pr-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans w-[126px] border-r border-dashed border-gray-300">
+                        <th className="pl-1.5 pr-1.5 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">
                           Creado
-                        </th>
-                        <th className="px-0.5 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans">
-                          Ver
                         </th>
                       </tr>
                     </thead>
@@ -170,21 +151,23 @@ export default function GroupsManagementView({ user }: GroupsManagementViewProps
                           onClick={() => handleGroupClick(g)}
                           className="border-b border-gray-100 cursor-pointer active:bg-gray-100"
                         >
-                          <td className="px-1.5 py-1.5 w-[128px] border-r border-dashed border-gray-300">
-                            <div className="flex items-center gap-1 min-w-0 min-h-[44px]">
+                          <td className="px-1.5 py-2 border-r border-dashed border-gray-300">
+                            <div className="flex items-center gap-1.5 min-w-0 min-h-[44px]">
                               <div className="flex-shrink-0 w-6 h-6 rounded bg-green-light flex items-center justify-center">
                                 <Users className="h-3 w-3 text-green-primary" />
                               </div>
-                              <span className="text-xs font-medium text-gray-900 font-sans truncate block">
+                              <span className="text-sm font-medium text-gray-900 font-sans truncate block">
                                 {g.name}
                               </span>
                             </div>
                           </td>
-                          <td className="py-1.5 text-center text-[10px] text-gray-600 font-sans border-r border-dashed border-gray-300">
-                            {formatDate(g.created_at)}
-                          </td>
-                          <td className="px-0.5 py-1.5 text-center">
-                            <ChevronRight className="h-3 w-3 text-gray-400 mx-auto" />
+                          <td className="px-1.5 py-2 border-r border-dashed border-gray-300">
+                            <div className="flex items-center gap-1.5 min-w-0 min-h-[44px]">
+                              <span className="text-sm text-gray-600 font-sans shrink-0">
+                                {formatDate(g.created_at)}
+                              </span>
+                              <ChevronRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                            </div>
                           </td>
                         </tr>
                       ))}

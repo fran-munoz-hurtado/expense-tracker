@@ -148,9 +148,9 @@ export default function MisAhorrosView({ user, navigationParams }: MisAhorrosVie
   }
 
   const getStatusColor = (transaction: Transaction): string => {
-    if (transaction.status === 'paid') return 'bg-green-light text-green-primary'
-    if (transaction.deadline && isDateOverdue(transaction.deadline)) return 'bg-error-bg text-error-red'
-    return 'bg-warning-bg text-warning-yellow'
+    if (transaction.status === 'paid') return 'bg-green-light text-green-800'
+    if (transaction.deadline && isDateOverdue(transaction.deadline)) return 'bg-error-bg text-red-800'
+    return 'bg-warning-bg text-amber-800'
   }
 
   // TablaAhorros component

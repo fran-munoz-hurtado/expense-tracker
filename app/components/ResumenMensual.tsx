@@ -245,7 +245,7 @@ export default function ResumenMensual({ user }: ResumenMensualProps) {
             {cuantoQueda >= 0 && (
               <>
                 <CheckCircle className="w-3 h-3 text-green-primary" />
-                <span className="text-green-primary bg-green-light px-2 py-1 rounded-md text-xs font-sans">
+                <span className="text-green-800 bg-green-light px-2 py-1 rounded-md text-xs font-sans">
                   Te quedan {formatCurrency(cuantoQueda)}
                 </span>
               </>

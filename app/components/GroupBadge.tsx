@@ -110,7 +110,7 @@ export default function GroupBadge({ user, variant = 'light' }: GroupBadgeProps)
         >
           <Users className={isLight ? 'h-3.5 w-3.5 text-green-primary flex-shrink-0' : 'h-3.5 w-3.5 text-white flex-shrink-0'} />
           <span className={cn(
-            'text-xs sm:text-sm font-medium truncate max-w-[100px] sm:max-w-[140px]',
+            'text-sm font-medium font-sans truncate max-w-[100px] sm:max-w-[140px]',
             isLight ? 'text-gray-800' : 'text-white'
           )} title={currentGroup?.name || 'Seleccionar grupo'}>
             {currentGroup ? currentGroup.name : 'Sin grupo'}

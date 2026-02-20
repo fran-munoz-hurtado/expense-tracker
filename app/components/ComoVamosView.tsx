@@ -142,17 +142,17 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
     if (diffDays > 0) {
       return {
         text: `Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`,
-        className: 'text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full'
+        className: 'text-xs font-medium text-amber-800 bg-warning-bg px-2 py-1 rounded-full'
       };
     } else if (diffDays === 0) {
       return {
         text: 'Vence hoy',
-        className: 'text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full'
+        className: 'text-xs font-medium text-amber-800 bg-warning-bg px-2 py-1 rounded-full'
       };
     } else {
       return {
         text: `Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`,
-        className: 'text-xs font-medium text-error-red bg-error-bg px-2 py-1 rounded-full'
+        className: 'text-xs font-medium text-red-800 bg-error-bg px-2 py-1 rounded-full'
       };
     }
   }
@@ -282,8 +282,8 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
                   <Target className="w-4 h-4 text-green-primary" />
                   <span className={`px-2 py-1 rounded-md text-xs font-medium font-sans ${
                     goalsStatus === 'overdue' 
-                      ? 'bg-warning-bg text-warning-yellow' 
-                      : 'bg-green-light text-green-primary'
+                      ? 'bg-warning-bg text-amber-800' 
+                      : 'bg-green-light text-green-800'
                   }`}>
                     {goalsStatus === 'overdue' ? 'Pendiente' : 'Al día'}
                   </span>
@@ -322,8 +322,8 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
                       <span className="text-xs text-gray-dark font-sans">{category.name}</span>
                       <span className={`px-2 py-1 rounded-md text-xs font-medium font-sans ${
                         category.status === 'overdue' 
-                          ? 'bg-error-bg text-error-red' 
-                          : 'bg-green-light text-green-primary'
+                          ? 'bg-error-bg text-red-800' 
+                          : 'bg-green-light text-green-800'
                       }`}>
                         {category.status === 'overdue' ? 'Vencido' : 'Al día'}
                       </span>
@@ -467,8 +467,8 @@ export default function ComoVamosView({ user, navigationParams }: ComoVamosViewP
         <div className="flex items-center space-x-2 mb-2">
           <span className={`px-2 py-1 rounded-md text-xs font-medium font-sans ${
             hasOverdueSavings 
-              ? 'bg-error-bg text-error-red' 
-              : 'bg-green-light text-green-primary'
+              ? 'bg-error-bg text-red-800' 
+              : 'bg-green-light text-green-800'
           }`}>
             {hasOverdueSavings ? 'Vencido' : 'Al día'}
           </span>

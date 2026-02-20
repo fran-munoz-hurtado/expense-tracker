@@ -1755,17 +1755,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     if (diffDays > 0) {
       return {
         text: `Vence en ${diffDays === 1 ? '1 día' : diffDays + ' días'}`,
-        className: 'text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full'
+        className: 'text-xs font-medium text-amber-800 bg-warning-bg px-2 py-1 rounded-full'
       };
     } else if (diffDays === 0) {
       return {
         text: 'Vence hoy',
-        className: 'text-xs font-medium text-warning-yellow bg-warning-bg px-2 py-1 rounded-full'
+        className: 'text-xs font-medium text-amber-800 bg-warning-bg px-2 py-1 rounded-full'
       };
     } else {
       return {
         text: `Venció hace ${Math.abs(diffDays) === 1 ? '1 día' : Math.abs(diffDays) + ' días'}`,
-        className: 'text-xs font-medium text-error-red bg-error-bg px-2 py-1 rounded-full'
+        className: 'text-xs font-medium text-red-800 bg-error-bg px-2 py-1 rounded-full'
       };
     }
   }
@@ -1781,17 +1781,17 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
   // Solo colores; el tamaño y padding se aplican siempre igual en el span para consistencia
   const getStatusColor = (transaction: Transaction) => {
-    if (transaction.status === 'paid') return 'bg-green-light text-green-primary'
+    if (transaction.status === 'paid') return 'bg-green-light text-green-800'
     if (transaction.deadline) {
       const [year, month, day] = transaction.deadline.split('-').map(Number)
       const today = new Date()
       const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
       const deadlineDate = new Date(year, month - 1, day)
       const diffDays = Math.ceil((deadlineDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24))
-      if (diffDays < 0) return 'text-error-red bg-error-bg'
-      return 'text-warning-yellow bg-warning-bg'
+      if (diffDays < 0) return 'text-red-800 bg-error-bg'
+      return 'text-amber-800 bg-warning-bg'
     }
-    return 'bg-warning-bg text-warning-yellow'
+    return 'bg-warning-bg text-amber-800'
   }
 
   // Mobile only: status as colored circles (green/yellow/red) with optional day number
@@ -1983,22 +1983,19 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
   return (
     <div className="flex-1 flex flex-col h-screen bg-transparent">
-      {/* Barra superior compacta - Desktop y Mobile (consistente) */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between px-4 lg:px-8 py-3 bg-white border-b border-gray-200 gap-3">
-        {/* Fila 1: Título + filtros + agregar */}
-        <div className="flex flex-col lg:flex-row lg:flex-wrap lg:items-center gap-3 lg:gap-4 min-w-0">
-          <div className="flex items-center justify-between w-full lg:w-auto lg:justify-start gap-2 shrink-0 min-w-0">
-            <h2 className="text-base lg:text-lg font-semibold text-gray-dark font-sans shrink-0">Mis cuentas</h2>
-            <div className="lg:hidden w-full flex justify-end min-w-0">
-              <GroupBadge user={user} variant="light" />
-            </div>
+      {/* Barra superior */}
+      <div className="px-4 lg:px-8 py-3 bg-white border-b border-gray-200 space-y-3">
+        {/* MOBILE: Mis cuentas + GroupBadge | grid Año/Mes/Mes Actual | Añadir movimiento | totales */}
+        <div className="lg:hidden flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-gray-dark font-sans">Mis cuentas</h2>
+            <GroupBadge user={user} variant="light" />
           </div>
-          {/* Filtros: en mobile grid full-width; en desktop inline seguidos (Año, Mes, Mes Actual) */}
-          <div className="w-full lg:w-auto grid grid-cols-3 gap-2 lg:flex lg:flex-nowrap lg:items-center lg:gap-2 lg:flex-none min-w-0">
+          <div className="grid grid-cols-3 gap-2">
             <select
               value={selectedYear}
               onChange={(e) => handleMonthYearChange(Number(e.target.value), selectedMonth)}
-              className="w-full min-w-0 px-2 py-2.5 lg:py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-dark font-sans focus:ring-2 focus:ring-green-primary focus:border-green-primary lg:min-w-[72px]"
+              className="w-full min-w-0 px-2 py-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-dark font-sans focus:ring-2 focus:ring-green-primary focus:border-green-primary"
             >
               {availableYears.map(year => (
                 <option key={year} value={year}>{year}</option>
@@ -2007,7 +2004,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             <select
               value={selectedMonth}
               onChange={(e) => handleMonthYearChange(selectedYear, Number(e.target.value))}
-              className="w-full min-w-0 px-2 py-2.5 lg:py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-dark font-sans focus:ring-2 focus:ring-green-primary focus:border-green-primary lg:min-w-[100px]"
+              className="w-full min-w-0 px-2 py-2.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-dark font-sans focus:ring-2 focus:ring-green-primary focus:border-green-primary"
             >
               {months.map((m, i) => (
                 <option key={i} value={i + 1}>{m}</option>
@@ -2015,7 +2012,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             </select>
             <button
               onClick={() => handleMonthYearChange(new Date().getFullYear(), new Date().getMonth() + 1)}
-              className="w-full min-w-0 px-2 py-2.5 lg:py-1.5 lg:px-4 lg:min-w-[100px] text-sm font-medium text-green-primary bg-green-light border border-green-primary/40 hover:bg-green-primary hover:text-white rounded-md transition-colors font-sans whitespace-nowrap"
+              className="w-full min-w-0 px-2 py-2.5 text-sm font-medium text-green-primary bg-green-light border border-green-primary/40 hover:bg-green-primary hover:text-white rounded-md transition-colors font-sans whitespace-nowrap"
             >
               Mes Actual
             </button>
@@ -2023,7 +2020,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
           {onAddExpense && (
             <button
               onClick={onAddExpense}
-              className="lg:hidden flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gradient-to-b from-green-primary to-green-dark text-white rounded-md text-sm font-medium border border-green-dark/40 shadow-[0_2px_6px_rgba(93,119,96,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_4px_12px_rgba(93,119,96,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] active:scale-[0.98] transition-all duration-200 font-sans shrink-0 min-h-[44px] w-full"
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gradient-to-b from-sky-600 to-sky-700 text-white rounded-lg text-sm font-medium border border-sky-700/50 shadow-[0_4px_14px_rgba(2,132,199,0.35),0_2px_6px_rgba(0,0,0,0.08)] hover:from-sky-700 hover:to-sky-800 hover:shadow-[0_6px_20px_rgba(2,132,199,0.4),0_3px_8px_rgba(0,0,0,0.12)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] active:scale-[0.99] transition-all duration-200 font-sans min-h-[44px]"
               aria-label={texts.addTransaction}
             >
               <Plus className="h-4 w-4" />
@@ -2031,64 +2028,116 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
             </button>
           )}
         </div>
-        {/* Fila 2: Totales - en mobile: fila1 Ingresos+Gastos, fila2 Estado+resto; en desktop inline */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-sans lg:shrink-0 lg:bg-transparent bg-gray-50 rounded-lg px-3 py-2.5 lg:p-0 lg:rounded-none border border-gray-200 lg:border-0 shadow-[0_4px_14px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)] lg:shadow-none">
-          <span className="text-gray-500">Ingresos:</span>
-          <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.income)}</span>
-          <span className="text-gray-300 hidden sm:inline">|</span>
-          <span className="text-gray-500">Gastos:</span>
-          <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.expense)}</span>
-          <span className="flex-none w-full lg:hidden" aria-hidden="true" />
-          <span className="text-gray-300 hidden sm:inline">|</span>
-          <span className="text-gray-500">Estado:</span>
-          {faltaPagar > 0 ? (
-            <span className="bg-warning-bg text-warning-yellow px-2 py-0.5 rounded text-xs font-medium">
-              Falta pagar {displayValue(faltaPagar)}
-            </span>
-          ) : (
-            <span className="bg-green-light text-green-primary px-2 py-0.5 rounded text-xs font-medium">
-              Pagado {displayValue(summaryTotals.paid)}
-            </span>
-          )}
-          {cuantoQueda >= 0 && (
-            <>
-              <span className="text-gray-300 hidden sm:inline">|</span>
-              <span className="text-green-primary bg-green-light px-2 py-0.5 rounded text-xs font-medium">
-                Te quedan {displayValue(cuantoQueda)}
-              </span>
-            </>
-          )}
-          {tieneVencimientos && (
-            <span className="text-error-red text-xs font-medium">
-              Mora {displayValue(summaryTotals.overdue)}
-            </span>
-          )}
-        </div>
-      </div>
 
-      {/* Error Display */}
-      {error && (
-        <div className="mx-4 lg:mx-8 mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-400" />
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800 mb-1">{texts.errorOccurred}</h3>
-              <div className="text-sm text-red-700">{error}</div>
+        {/* DESKTOP: 2xl+ título+filtros izq, totales der | lg-2xl título+filtros arriba, totales debajo */}
+        <div className="hidden lg:flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-3">
+          <div className="flex flex-nowrap items-center gap-2 lg:gap-4 min-w-0 overflow-x-auto">
+            <h2 className="text-lg font-semibold text-gray-dark font-sans shrink-0">Mis cuentas</h2>
+            <GroupBadge user={user} variant="light" />
+            <div className="flex flex-nowrap items-center gap-2 shrink-0">
+              <select
+                value={selectedYear}
+                onChange={(e) => handleMonthYearChange(Number(e.target.value), selectedMonth)}
+                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-dark font-sans focus:ring-2 focus:ring-green-primary focus:border-green-primary min-w-[72px] shrink-0"
+              >
+                {availableYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+              <select
+                value={selectedMonth}
+                onChange={(e) => handleMonthYearChange(selectedYear, Number(e.target.value))}
+                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-dark font-sans focus:ring-2 focus:ring-green-primary focus:border-green-primary min-w-[100px] shrink-0"
+              >
+                {months.map((m, i) => (
+                  <option key={i} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <button
+                onClick={() => handleMonthYearChange(new Date().getFullYear(), new Date().getMonth() + 1)}
+                className="px-2 py-1.5 lg:px-4 text-sm font-medium text-green-primary bg-green-light border border-green-primary/40 hover:bg-green-primary hover:text-white rounded-md transition-colors font-sans whitespace-nowrap shrink-0"
+              >
+                Mes Actual
+              </button>
             </div>
           </div>
         </div>
-      )}
+      </div>
 
-      {/* Main Content - desktop: tabla a ancho completo; mobile: layout existente */}
-      <div className="flex-1 px-4 lg:px-8 pb-6 lg:pb-8 overflow-auto">
+      {/* Main Content - totales + tabla (scroll para más campo de visión; solo barra hasta Añadir queda fija) */}
+      <div className="flex-1 px-4 lg:px-0 pb-6 lg:pb-8 overflow-auto">
         <div className="max-w-4xl lg:max-w-none mx-auto lg:mx-0 space-y-4">
+          {/* Error Display - scrolla con el contenido */}
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+              <div className="flex">
+                <AlertCircle className="h-5 w-5 text-red-400 shrink-0" />
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800 mb-1">{texts.errorOccurred}</h3>
+                  <div className="text-sm text-red-700">{error}</div>
+                </div>
+              </div>
+            </div>
+          )}
+          {/* Totales - scrollan con el contenido */}
+          <div className="lg:hidden">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full text-sm font-sans bg-gray-50 rounded-lg p-2 border border-gray-200 shadow-[0_4px_14px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)]">
+              <div className="flex flex-col p-2.5 rounded-md border border-dashed border-gray-300/80 bg-white/60">
+                <span className="text-gray-500">Ingresos:</span>
+                <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.income)}</span>
+              </div>
+              <div className="flex flex-col p-2.5 rounded-md border border-dashed border-gray-300/80 bg-white/60">
+                <span className="text-gray-500">Gastos:</span>
+                <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.expense)}</span>
+              </div>
+              {faltaPagar > 0 ? (
+                <div className="flex flex-col p-2.5 rounded-md border border-dashed border-gray-300/80 bg-white/60">
+                  <span className="text-gray-500">Falta pagar:</span>
+                  <span className="font-medium text-gray-800 tabular-nums">{displayValue(faltaPagar)}</span>
+                </div>
+              ) : (
+                <div className="flex flex-col p-2.5 rounded-md border border-dashed border-gray-300/80 bg-white/60">
+                  <span className="text-gray-500">Pagado:</span>
+                  <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.paid)}</span>
+                </div>
+              )}
+              {cuantoQueda >= 0 && (
+                <div className="flex flex-col p-2.5 rounded-md border border-dashed border-gray-300/80 bg-white/60">
+                  <span className="text-gray-500">Queda:</span>
+                  <span className="font-medium text-gray-800 tabular-nums">{displayValue(cuantoQueda)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className="hidden lg:flex flex-wrap items-center justify-evenly 2xl:justify-start gap-x-4 gap-y-1 w-full text-sm font-sans bg-gray-50 rounded-lg px-4 py-2.5 border border-gray-200 shadow-[0_4px_14px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)]">
+            <span className="text-gray-500">Ingresos: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.income)}</span></span>
+            <span className="text-gray-500">Gastos: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.expense)}</span></span>
+            {faltaPagar > 0 ? (
+              <span className="text-gray-500">Falta pagar: <span className="font-medium text-gray-800 tabular-nums">{displayValue(faltaPagar)}</span></span>
+            ) : (
+              <span className="text-gray-500">Pagado: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.paid)}</span></span>
+            )}
+            {cuantoQueda >= 0 && (
+              <span className="text-gray-500">Queda: <span className="font-medium text-gray-800 tabular-nums">{displayValue(cuantoQueda)}</span></span>
+            )}
+            {tieneVencimientos && (
+              <span className="text-gray-500">Mora: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.overdue)}</span></span>
+            )}
+          </div>
           {/* Transacciones del mes - full width en desktop (sidebar a derecha); full viewport en mobile */}
           <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
             <div className="mb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
               <div>
-                <h3 className="text-sm font-medium text-gray-dark font-sans mb-1">
-                  Transacciones del mes
-                </h3>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <h3 className="text-sm font-medium text-gray-dark font-sans">
+                    Transacciones del mes
+                  </h3>
+                  {tieneVencimientos && (
+                    <span className="lg:hidden inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-red-600 text-white shadow-sm">
+                      Mora: {displayValue(summaryTotals.overdue)}
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-500 font-sans">
                   Control detallado de tus movimientos financieros
                 </p>
@@ -2099,7 +2148,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                 {onAddExpense && (
                   <button
                     onClick={onAddExpense}
-                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-b from-green-primary to-green-dark text-white rounded-md text-sm font-medium border border-green-dark/40 shadow-[0_2px_6px_rgba(93,119,96,0.3),inset_0_1px_0_rgba(255,255,255,0.2)] hover:shadow-[0_4px_12px_rgba(93,119,96,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] active:scale-[0.98] transition-all duration-200 font-sans"
+                    className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-b from-sky-600 to-sky-700 text-white rounded-lg text-sm font-medium border border-sky-700/50 shadow-[0_4px_14px_rgba(2,132,199,0.35),0_2px_6px_rgba(0,0,0,0.08)] hover:from-sky-700 hover:to-sky-800 hover:shadow-[0_6px_20px_rgba(2,132,199,0.4),0_3px_8px_rgba(0,0,0,0.12)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] active:scale-[0.99] transition-all duration-200 font-sans"
                     aria-label={texts.addTransaction}
                   >
                     <Plus className="h-4 w-4" />
