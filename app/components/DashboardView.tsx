@@ -15,11 +15,13 @@ import FileUploadModal from './FileUploadModal'
 import TransactionAttachments from './TransactionAttachments'
 import TransactionIcon from './TransactionIcon'
 import GroupBadge from './GroupBadge'
+import MemberAvatar from './MemberAvatar'
 import CreateSpaceButton from './CreateSpaceButton'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { getUserActiveCategories, addUserCategory } from '@/lib/services/categoryService'
 import { fetchAbonosByTransactionIds, createAbono, updateAbono, deleteAbono } from '@/lib/services/abonoService'
+import { fetchGroupMembers, type GroupMemberInfo } from '@/lib/services/groupService'
 import { buildMisCuentasUrl, type FilterType } from '@/lib/routes'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
@@ -40,7 +42,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const router = useRouter()
   const { refreshData, dataVersion } = useDataSync()
   const { currentGroupId, groups, isLoading: isGroupsLoading } = useGroupStore()
-  const { transactions, isLoading, fetchTransactions, setTransactions, markTransactionStatus, updateTransaction } = useTransactionStore()
+  const { transactions, isLoading, fetchTransactions, setTransactions, markTransactionStatus, updateTransaction, updateTransactionAssignedTo } = useTransactionStore()
   
   // State management - synced from URL/parent when syncToUrl
   const currentDate = new Date()
@@ -68,6 +70,11 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [hoveredNotesId, setHoveredNotesId] = useState<number | null>(null)
   const [notesTooltipAnchor, setNotesTooltipAnchor] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
   const notesTooltipCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [groupMembers, setGroupMembers] = useState<GroupMemberInfo[]>([])
+  const [openAssignDropdownId, setOpenAssignDropdownId] = useState<number | null>(null)
+  const mobileTableScrollRef = useRef<HTMLDivElement>(null)
+  const [showScrollHint, setShowScrollHint] = useState(true)
+  const [showScrollHintLeft, setShowScrollHintLeft] = useState(false)
 
   // Obtener el trigger VISIBLE (en mobile la tabla desktop está hidden y querySelector devuelve la primera)
   const getVisibleInfoTooltipTrigger = (txId: number) => {
@@ -297,10 +304,12 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [addingCategory, setAddingCategory] = useState(false)
   const [addCategoryError, setAddCategoryError] = useState<string | null>(null)
   
-  // Mobile options menu state
+  // Mobile options menu state (3 dots - same actions as desktop)
   const [openOptionsMenu, setOpenOptionsMenu] = useState<number | null>(null)
+  const [optionsMenuAnchor, setOptionsMenuAnchor] = useState<{ top?: number; bottom?: number; right: number; placement: 'below' | 'above' } | null>(null)
   const [openActionsDropdown, setOpenActionsDropdown] = useState<number | null>(null)
-  const [actionsDropdownAnchor, setActionsDropdownAnchor] = useState<{ top: number; right: number } | null>(null)
+  const [actionsDropdownAnchor, setActionsDropdownAnchor] = useState<{ top?: number; bottom?: number; right: number; placement: 'below' | 'above' } | null>(null)
+  const [assignDropdownAnchor, setAssignDropdownAnchor] = useState<{ top?: number; bottom?: number; left: number; centerX: boolean; placement: 'below' | 'above' } | null>(null)
 
   // Notes modal state (quick edit from dropdown)
   const [showNotesModal, setShowNotesModal] = useState(false)
@@ -311,15 +320,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   useEffect(() => {
     const handleClickOutside = () => {
       setOpenOptionsMenu(null)
+      setOptionsMenuAnchor(null)
       setOpenActionsDropdown(null)
       setActionsDropdownAnchor(null)
+      setOpenAssignDropdownId(null)
+      setAssignDropdownAnchor(null)
     }
     
-    if (openOptionsMenu !== null || openActionsDropdown !== null) {
+    if (openOptionsMenu !== null || openActionsDropdown !== null || openAssignDropdownId !== null) {
       document.addEventListener('click', handleClickOutside)
       return () => document.removeEventListener('click', handleClickOutside)
     }
-  }, [openOptionsMenu, openActionsDropdown])
+  }, [openOptionsMenu, openActionsDropdown, openAssignDropdownId])
 
   // Sync state from navigationParams (from URL path when on /mis-cuentas)
   useEffect(() => {
@@ -499,6 +511,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     }
   }, [user, currentGroupId, selectedMonth, selectedYear, fetchTransactions])
 
+  // Fetch group members for assignment column
+  useEffect(() => {
+    if (!currentGroupId) {
+      setGroupMembers([])
+      return
+    }
+    fetchGroupMembers(currentGroupId).then(setGroupMembers)
+  }, [currentGroupId])
+
   // Initial data fetch
   useEffect(() => {
     fetchData(false)
@@ -563,6 +584,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       return sortDirection === 'asc' ? comparison : -comparison
     })
   }, [sortedTransactions, sortField, sortDirection])
+
+  // Scroll hint en tabla mobile: fijos a los bordes, desaparecen al llegar al inicio/final del scroll
+  const checkScrollHint = useCallback(() => {
+    const el = mobileTableScrollRef.current
+    if (!el) return
+    const { scrollLeft, scrollWidth, clientWidth } = el
+    const atStart = scrollWidth <= clientWidth || scrollLeft <= 2
+    const atEnd = scrollWidth <= clientWidth || scrollLeft >= scrollWidth - clientWidth - 2
+    setShowScrollHintLeft(!atStart)
+    setShowScrollHint(!atEnd)
+  }, [])
+  useEffect(() => {
+    const el = mobileTableScrollRef.current
+    if (!el) return
+    checkScrollHint()
+    const ro = new ResizeObserver(checkScrollHint)
+    ro.observe(el)
+    window.addEventListener('resize', checkScrollHint)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', checkScrollHint)
+    }
+  }, [checkScrollHint, finalSortedTransactions])
 
   // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
@@ -678,6 +722,19 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       return 1
     }
     return 0
+  }
+
+  const getMemberDisplayName = (userId: string) => {
+    const m = groupMembers.find(m => m.user_id === userId)
+    if (!m) return '—'
+    const name = [m.first_name, m.last_name].filter(Boolean).join(' ')
+    return name || m.email || userId.slice(0, 8)
+  }
+
+  const handleAssignChange = async (transactionId: number, assignedTo: string | null) => {
+    if (!user) return
+    setOpenAssignDropdownId(null)
+    await updateTransactionAssignedTo({ transactionId, userId: user.id, assignedTo })
   }
 
   const handleCheckboxChange = async (transactionId: number, isChecked: boolean) => {
@@ -2124,9 +2181,10 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
               <span className="text-gray-500">Mora: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.overdue)}</span></span>
             )}
           </div>
-          {/* Transacciones del mes - full width en desktop (sidebar a derecha); full viewport en mobile */}
-          <div className="bg-white rounded-xl shadow-sm p-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0">
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+          {/* Transacciones del mes - full width en desktop (sidebar a derecha); full viewport en mobile.
+              px-0 en mobile: tabla + sombras llegan a ambos extremos sin espacio blanco. */}
+          <div className="bg-white rounded-xl p-4 px-0 lg:px-4 w-screen relative left-1/2 -ml-[50vw] lg:w-full lg:left-0 lg:ml-0 lg:shadow-sm">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 px-4 lg:px-0">
               <div>
                 <div className="flex items-center gap-2 flex-wrap mb-1">
                   <h3 className="text-sm font-medium text-gray-dark font-sans">
@@ -2158,7 +2216,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
               </div>
             </div>
             {isLoading ? (
-              <div className="text-center py-8 text-green-dark font-sans">{texts.loading}</div>
+              <div className="text-center px-4 py-8 text-green-dark font-sans">{texts.loading}</div>
             ) : finalSortedTransactions.length === 0 ? (
               <div className="text-center px-4 py-8">
                 <div className="w-16 h-16 bg-green-light rounded-full flex items-center justify-center mx-auto mb-6">
@@ -2178,7 +2236,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                 <div className="overflow-x-auto">
                   <table className="min-w-full table-fixed">
                     <colgroup>
-                      <col className="w-[47%]" />
+                      <col className="w-[40%]" />
+                      <col className="w-[120px]" />
                       <col className="w-[90px]" />
                       <col className="w-[59px]" />
                     </colgroup>
@@ -2196,6 +2255,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                 <ChevronDown className="h-4 w-4" />
                             )}
                           </div>
+                        </th>
+                        <th className="px-2 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider font-sans w-[120px] border-r border-dashed border-gray-300 bg-gray-50">
+                          {texts.assignedTo}
                         </th>
                         <th 
                           className="px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-border-light select-none font-sans w-[90px] border-r border-dashed border-gray-300"
@@ -2299,6 +2361,39 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                 )}
                               </div>
                             </td>
+                            <td className="px-2 py-2 w-[120px] border-r border-dashed border-gray-300 align-top" onClick={(e) => e.stopPropagation()}>
+                              <div className="relative min-h-[52px] flex items-center">
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                                    if (openAssignDropdownId === transaction.id) {
+                                      setOpenAssignDropdownId(null)
+                                      setAssignDropdownAnchor(null)
+                                    } else {
+                                      const spaceBelow = window.innerHeight - rect.bottom - 8
+                                      const spaceAbove = rect.top - 8
+                                      const flipToAbove = spaceBelow < 260 && spaceAbove > spaceBelow
+                                      setOpenAssignDropdownId(transaction.id)
+                                      setAssignDropdownAnchor(flipToAbove
+                                        ? { bottom: window.innerHeight - rect.top + 8, left: rect.left, centerX: false, placement: 'above' }
+                                        : { top: rect.bottom + 4, left: rect.left, centerX: false, placement: 'below' }
+                                      )
+                                    }
+                                  }}
+                                  className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 rounded px-1.5 py-1 -mx-1 font-sans truncate max-w-full"
+                                >
+                                  {transaction.assigned_to ? (
+                                    <MemberAvatar userId={transaction.assigned_to} members={groupMembers} size="md" />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-400 text-xs flex-shrink-0">—</div>
+                                  )}
+                                  <span className="truncate min-w-0">{transaction.assigned_to ? getMemberDisplayName(transaction.assigned_to) : '—'}</span>
+                                  <ChevronDown className="h-3.5 w-3.5 flex-shrink-0 text-gray-400" />
+                                </button>
+                              </div>
+                            </td>
                             <td className="px-1.5 py-2 whitespace-nowrap text-right w-[90px] border-r border-dashed border-gray-300">
                               <div className="flex items-center justify-end gap-x-1">
                                 <div className="text-sm font-medium text-gray-900 font-sans text-right tabular-nums">
@@ -2368,8 +2463,14 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                                         setOpenActionsDropdown(null)
                                         setActionsDropdownAnchor(null)
                                       } else {
+                                        const spaceBelow = window.innerHeight - rect.bottom - 8
+                                        const spaceAbove = rect.top - 8
+                                        const flipToAbove = spaceBelow < 260 && spaceAbove > spaceBelow
                                         setOpenActionsDropdown(transaction.id)
-                                        setActionsDropdownAnchor({ top: rect.bottom + 4, right: window.innerWidth - rect.right })
+                                        setActionsDropdownAnchor(flipToAbove
+                                          ? { bottom: window.innerHeight - rect.top + 8, right: window.innerWidth - rect.right, placement: 'above' }
+                                          : { top: rect.bottom + 4, right: window.innerWidth - rect.right, placement: 'below' }
+                                        )
                                       }
                                     }}
                                     className="p-1 rounded-md text-green-dark hover:bg-gray-100 hover:opacity-80 transition-all"
@@ -2405,10 +2506,18 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                    setOpenActionsDropdown(null)
                    setActionsDropdownAnchor(null)
                  }
+                 const actionsStyle: React.CSSProperties = {
+                   right: actionsDropdownAnchor.right
+                 }
+                 if (actionsDropdownAnchor.placement === 'above' && actionsDropdownAnchor.bottom != null) {
+                   actionsStyle.bottom = actionsDropdownAnchor.bottom
+                 } else if (actionsDropdownAnchor.top != null) {
+                   actionsStyle.top = actionsDropdownAnchor.top
+                 }
                  return createPortal(
                    <div
-                     className="fixed py-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[140px] z-[9999]"
-                     style={{ top: actionsDropdownAnchor.top, right: actionsDropdownAnchor.right }}
+                     className="fixed py-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[140px] max-h-[min(320px,70vh)] overflow-y-auto z-[9999]"
+                     style={actionsStyle}
                      onClick={(e) => e.stopPropagation()}
                    >
                      <button
@@ -2478,20 +2587,129 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                  )
                })()}
 
-              {/* Mobile Table View - 3 columnas: descripción | valor+3puntos | estado (sin scroll, estado con wrap) */}
-              <div className="lg:hidden overflow-x-auto" onMouseLeave={() => setOpenOptionsMenu(null)}>
-                <table className="min-w-0 w-full max-w-full text-xs table-fixed">
+              {/* Mobile options menu (3 dots) via portal - overlays table, flip when near bottom */}
+              {typeof document !== 'undefined' &&
+               openOptionsMenu !== null &&
+               optionsMenuAnchor &&
+               (() => {
+                 const transaction = finalSortedTransactions.find((t) => t.id === openOptionsMenu)
+                 if (!transaction) return null
+                 const closeDropdown = () => {
+                   setOpenOptionsMenu(null)
+                   setOptionsMenuAnchor(null)
+                 }
+                 const optsStyle: React.CSSProperties = { right: optionsMenuAnchor.right }
+                 if (optionsMenuAnchor.placement === 'above' && optionsMenuAnchor.bottom != null) {
+                   optsStyle.bottom = optionsMenuAnchor.bottom
+                 } else if (optionsMenuAnchor.top != null) {
+                   optsStyle.top = optionsMenuAnchor.top
+                 }
+                 return createPortal(
+                   <div
+                     className="fixed py-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[140px] max-h-[min(320px,70vh)] overflow-y-auto z-[9999]"
+                     style={optsStyle}
+                     onClick={(e) => e.stopPropagation()}
+                   >
+                     {transaction.type === 'expense' && !(transaction.category === 'Ahorro' && (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
+                       <button onClick={() => { handleCategoryClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                         <Tag className="w-3 h-3 flex-shrink-0" />
+                         <span>Categoría: {transaction.category && transaction.category !== 'sin categoría' ? transaction.category : 'sin categoría'}</span>
+                       </button>
+                     )}
+                     <button onClick={() => { handleAttachmentList(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                       <Paperclip className="w-3 h-3 flex-shrink-0" /><span>{texts.attachments}</span>
+                       {attachmentCounts[transaction.id] > 0 && <span className="ml-auto bg-warning-bg text-gray-700 text-[10px] rounded-full px-1.5 py-0.5">{attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}</span>}
+                     </button>
+                     <button onClick={() => { handleNotesClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                       <StickyNote className={cn('w-3 h-3 flex-shrink-0', transaction.notes?.trim() && 'text-amber-500')} />
+                       <span className="flex items-center gap-1.5">
+                         {texts.notes}
+                         {transaction.notes?.trim() && <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />}
+                       </span>
+                     </button>
+                     {transaction.type === 'expense' && transaction.status !== 'paid' && (
+                       <button onClick={() => { handleAbonarClick(transaction); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                         <Wallet className="w-3 h-3 flex-shrink-0" /><span>{texts.abonar}</span>
+                       </button>
+                     )}
+                     <button onClick={() => { handleModifyTransaction(transaction.id); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
+                       <Edit className="w-3 h-3 flex-shrink-0" /><span>Editar</span>
+                     </button>
+                     <button onClick={() => { handleDeleteTransaction(transaction.id); closeDropdown() }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 font-sans">
+                       <Trash2 className="w-3 h-3 flex-shrink-0" /><span>{texts.delete}</span>
+                     </button>
+                   </div>,
+                   document.body
+                 )
+               })()}
+
+              {/* Assign dropdown via portal - overlays table so it's always visible (mobile + desktop) */}
+              {typeof document !== 'undefined' &&
+               openAssignDropdownId !== null &&
+               assignDropdownAnchor &&
+               (() => {
+                 const transaction = finalSortedTransactions.find((t) => t.id === openAssignDropdownId)
+                 if (!transaction) return null
+                 const closeDropdown = () => {
+                   setOpenAssignDropdownId(null)
+                   setAssignDropdownAnchor(null)
+                 }
+                 const style: React.CSSProperties = {
+                   left: assignDropdownAnchor.left,
+                   transform: assignDropdownAnchor.centerX ? 'translateX(-50%)' : undefined
+                 }
+                 if (assignDropdownAnchor.placement === 'above' && assignDropdownAnchor.bottom != null) {
+                   style.bottom = assignDropdownAnchor.bottom
+                 } else if (assignDropdownAnchor.top != null) {
+                   style.top = assignDropdownAnchor.top
+                 }
+                 return createPortal(
+                   <div
+                     className="fixed py-1 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[140px] max-w-[min(280px,90vw)] max-h-[min(280px,70vh)] overflow-y-auto z-[9999]"
+                     style={style}
+                     onClick={(e) => e.stopPropagation()}
+                   >
+                     <div className="px-2 py-1 text-[10px] font-medium text-gray-500 uppercase border-b border-gray-100 font-sans sticky top-0 bg-white">{texts.assignedTo}</div>
+                     <button onClick={() => { handleAssignChange(transaction.id, null); closeDropdown() }} className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:py-2 text-left text-xs lg:text-sm font-sans', !transaction.assigned_to ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}>
+                       <div className={cn('w-6 h-6 lg:w-7 lg:h-7 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-[10px] flex-shrink-0')}>—</div>
+                       —
+                     </button>
+                     {groupMembers.filter(m => m.status === 'active').map((m) => (
+                       <button
+                         key={m.user_id}
+                         onClick={() => { handleAssignChange(transaction.id, m.user_id); closeDropdown() }}
+                         className={cn('w-full flex items-center gap-2 px-2 py-1.5 lg:px-2 lg:py-2 text-left text-xs lg:text-sm font-sans', transaction.assigned_to === m.user_id ? 'bg-green-50 text-green-800' : 'text-gray-700 hover:bg-gray-50')}
+                       >
+                         <MemberAvatar userId={m.user_id} members={groupMembers} size="sm" />
+                         {getMemberDisplayName(m.user_id)}
+                       </button>
+                     ))}
+                   </div>,
+                   document.body
+                 )
+               })()}
+
+              {/* Mobile Table View - descripción | asignado | valor+3puntos | estado (scroll horizontal)
+                  IMPORTANTE: scroll-hint-wrapper va en el padre (no en el scroll). Gradientes fijos a pantalla,
+                  desaparecen al llegar al inicio/final del scroll. */}
+              <div className={cn('lg:hidden relative scroll-hint-wrapper', !showScrollHint && 'scroll-at-end', !showScrollHintLeft && 'scroll-at-start')}>
+                <div ref={mobileTableScrollRef} className="overflow-x-auto scrollbar-hide-mobile" onScroll={checkScrollHint} onMouseLeave={() => setOpenOptionsMenu(null)}>
+                <table className="text-xs table-auto min-w-[450px]">
                   <colgroup>
-                    <col className="w-[128px]" />
-                    <col className="w-[126px]" />
-                    <col className="w-[70px]" />
+                    <col className="min-w-[110px]" />
+                    <col className="min-w-[44px]" />
+                    <col className="min-w-[130px]" />
+                    <col className="min-w-[70px]" />
                   </colgroup>
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="pl-1.5 pr-1.5 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50 w-[128px]">
+                      <th className="pl-1.5 pr-1.5 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300 bg-gray-50">
                         {texts.description}
                       </th>
-                      <th className="pl-1 pr-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans w-[126px] border-r border-dashed border-gray-300">{texts.amount}</th>
+                      <th className="pl-1 pr-1 py-1.5 text-left text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">
+                        {texts.assignedTo}
+                      </th>
+                      <th className="pl-1 pr-1 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans border-r border-dashed border-gray-300">{texts.amount}</th>
                       <th className="px-0.5 py-1.5 text-center text-[10px] font-medium text-gray-500 uppercase tracking-wider font-sans">{texts.status}</th>
                     </tr>
                   </thead>
@@ -2531,8 +2749,40 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               )}
                             </div>
                           </td>
-                          <td className="py-1.5 align-middle border-r border-dashed border-gray-300" style={{ width: 126, paddingLeft: 0, paddingRight: 0 }}>
-                            <div className="w-full flex justify-end">
+                          <td className="px-1.5 py-1.5 border-r border-dashed border-gray-300 align-middle" onClick={(e) => e.stopPropagation()}>
+                            <div className="relative flex justify-center">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                                  if (openAssignDropdownId === transaction.id) {
+                                    setOpenAssignDropdownId(null)
+                                    setAssignDropdownAnchor(null)
+                                  } else {
+                                    const spaceBelow = window.innerHeight - rect.bottom - 8
+                                    const spaceAbove = rect.top - 8
+                                    const flipToAbove = spaceBelow < 260 && spaceAbove > spaceBelow
+                                    setOpenAssignDropdownId(transaction.id)
+                                    setAssignDropdownAnchor(flipToAbove
+                                      ? { bottom: window.innerHeight - rect.top + 8, left: rect.left + rect.width / 2, centerX: true, placement: 'above' }
+                                      : { top: rect.bottom + 4, left: rect.left + rect.width / 2, centerX: true, placement: 'below' }
+                                    )
+                                  }
+                                }}
+                                className="flex items-center justify-center rounded-full hover:ring-2 hover:ring-green-primary/30 transition-shadow"
+                                aria-label={transaction.assigned_to ? getMemberDisplayName(transaction.assigned_to) : texts.assignedTo}
+                              >
+                                {transaction.assigned_to ? (
+                                  <MemberAvatar userId={transaction.assigned_to} members={groupMembers} size="sm" />
+                                ) : (
+                                  <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 text-[10px] flex-shrink-0">—</div>
+                                )}
+                              </button>
+                            </div>
+                          </td>
+                          <td className="py-1.5 align-middle border-r border-dashed border-gray-300" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                            <div className="w-full flex justify-end min-w-[130px]">
                               <div className="inline-flex items-center gap-x-1 flex-shrink-0">
                               <div className="leading-tight text-right shrink-0 tabular-nums">
                                 <span className="text-xs font-medium text-gray-900 font-sans">{formatCurrency(transaction.value)}</span>
@@ -2563,47 +2813,29 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                               <div className="relative flex justify-end shrink-0" onClick={(e) => e.stopPropagation()}>
                                 <button
                                   type="button"
-                                  onClick={() => { setOpenInfoTooltipId(null); setOpenOptionsMenu(isMenuOpen ? null : transaction.id) }}
+                                  onClick={(e) => {
+                                    setOpenInfoTooltipId(null)
+                                    if (isMenuOpen) {
+                                      setOpenOptionsMenu(null)
+                                      setOptionsMenuAnchor(null)
+                                    } else {
+                                      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+                                      const spaceBelow = window.innerHeight - rect.bottom - 8
+                                      const spaceAbove = rect.top - 8
+                                      const flipToAbove = spaceBelow < 260 && spaceAbove > spaceBelow
+                                      setOpenOptionsMenu(transaction.id)
+                                      setOptionsMenuAnchor(flipToAbove
+                                        ? { bottom: window.innerHeight - rect.top + 8, right: window.innerWidth - rect.right, placement: 'above' }
+                                        : { top: rect.bottom + 4, right: window.innerWidth - rect.right, placement: 'below' }
+                                      )
+                                    }
+                                  }}
                                   className="p-1 rounded text-gray-500 hover:bg-gray-100 flex justify-center items-center shrink-0"
                                   aria-label="Más opciones"
                                   style={{ width: 28, minWidth: 28 }}
                                 >
                                   <MoreVertical className="w-3.5 h-3.5 flex-shrink-0" />
                                 </button>
-                                {isMenuOpen && (
-                                  <div className="absolute right-0 top-full mt-0.5 py-1 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[140px] z-20">
-                                    {transaction.type === 'expense' && !(transaction.category === 'Ahorro' && (transaction.source_type === 'recurrent' ? !recurrentGoalMap[transaction.source_id] : true)) && !(transaction.source_type === 'recurrent' && recurrentGoalMap[transaction.source_id]) && (
-                                      <button onClick={() => { handleCategoryClick(transaction); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                                        <Tag className="w-3 h-3 flex-shrink-0" />
-                                        <span>Categoría: {transaction.category && transaction.category !== 'sin categoría' ? transaction.category : 'sin categoría'}</span>
-                                      </button>
-                                    )}
-                                    <button onClick={() => { handleAttachmentList(transaction); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                                      <Paperclip className="w-3 h-3 flex-shrink-0" /><span>{texts.attachments}</span>
-                                      {attachmentCounts[transaction.id] > 0 && <span className="ml-auto bg-warning-bg text-gray-700 text-[10px] rounded-full px-1.5 py-0.5">{attachmentCounts[transaction.id] > 9 ? '9+' : attachmentCounts[transaction.id]}</span>}
-                                    </button>
-                                    <button onClick={() => { handleNotesClick(transaction); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                                      <StickyNote className={cn("w-3 h-3 flex-shrink-0", transaction.notes?.trim() && "text-amber-500")} />
-                                      <span className="flex items-center gap-1.5">
-                                        {texts.notes}
-                                        {transaction.notes?.trim() && (
-                                          <span className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
-                                        )}
-                                      </span>
-                                    </button>
-                                    {transaction.type === 'expense' && transaction.status !== 'paid' && (
-                                      <button onClick={() => { handleAbonarClick(transaction); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                                        <Wallet className="w-3 h-3 flex-shrink-0" /><span>{texts.abonar}</span>
-                                      </button>
-                                    )}
-                                    <button onClick={() => { handleModifyTransaction(transaction.id); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 font-sans">
-                                      <Edit className="w-3 h-3 flex-shrink-0" /><span>Editar</span>
-                                    </button>
-                                    <button onClick={() => { handleDeleteTransaction(transaction.id); setOpenOptionsMenu(null) }} className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 font-sans">
-                                      <Trash2 className="w-3 h-3 flex-shrink-0" /><span>{texts.delete}</span>
-                                    </button>
-                                  </div>
-                                )}
                               </div>
                             </div>
                             </div>
@@ -2618,6 +2850,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             </>
             )}

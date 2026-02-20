@@ -185,7 +185,7 @@ export default function AppLayoutWithSidebar({ user, onLogout, children }: AppLa
             </button>
           }
         />
-        <main className="flex-1 overflow-auto">{children}</main>
+        <main className="layout-main-scroll flex-1 overflow-auto">{children}</main>
       </div>
     </div>
   )

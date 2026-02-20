@@ -9,6 +9,7 @@ export type GroupMemberInfo = {
   first_name?: string
   last_name?: string
   email?: string
+  profile_image_url?: string | null
 }
 
 export type GroupDetail = {
@@ -68,6 +69,7 @@ export async function fetchGroupMembers(groupId: string): Promise<GroupMemberInf
     first_name?: string
     last_name?: string
     email?: string
+    profile_image_url?: string | null
   }>
 
   return members.map((m) => ({
@@ -79,6 +81,7 @@ export async function fetchGroupMembers(groupId: string): Promise<GroupMemberInf
     first_name: m.first_name,
     last_name: m.last_name,
     email: m.email,
+    profile_image_url: m.profile_image_url ?? null,
   }))
 }
 

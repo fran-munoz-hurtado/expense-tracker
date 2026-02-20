@@ -131,6 +131,7 @@ export type Transaction = {
   notes?: string | null
   type: 'expense' | 'income'
   category: string
+  assigned_to?: string | null
   created_at: string
   updated_at: string
 }
@@ -164,6 +165,7 @@ export type NonRecurrentExpense = {
   payment_deadline?: string
   type: 'expense' | 'income'
   category: string
+  assigned_to?: string | null // UUID - integrante asignado (solo en espacios)
   created_at: string
   updated_at: string
 }

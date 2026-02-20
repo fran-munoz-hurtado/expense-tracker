@@ -47,6 +47,7 @@ export const translations = {
   deleteTransaction: 'Eliminar Transacción',
   transactions: 'Transacciones',
   description: 'Descripción',
+  assignedTo: 'Asignado',
   amount: 'Monto',
   date: 'Fecha',
   status: 'Estado',

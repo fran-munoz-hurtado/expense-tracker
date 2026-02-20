@@ -51,6 +51,11 @@ interface TransactionStore {
     deadline?: string | null
     notes?: string | null
   }) => Promise<void>
+  updateTransactionAssignedTo: (params: {
+    transactionId: number
+    assignedTo: string | null
+    userId: string // UUID
+  }) => Promise<void>
   updateRecurrentTransactionSeries: (params: {
     userId: string // UUID
     recurrentId: number
@@ -287,6 +292,44 @@ export const useTransactionStore = create<TransactionStore>((set, get) => ({
       } catch (cacheError) {
         console.warn('[zustand] updateTransaction: error clearing cache', cacheError)
       }
+    }
+  },
+  updateTransactionAssignedTo: async ({ transactionId, userId, assignedTo }) => {
+    const { transactions } = get()
+
+    const original = transactions.find(t => t.id === transactionId)
+    if (!original) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[zustand] updateTransactionAssignedTo: transaction not found', transactionId)
+      }
+      return
+    }
+
+    set({
+      transactions: transactions.map(t =>
+        t.id === transactionId ? { ...t, assigned_to: assignedTo } : t
+      ),
+    })
+
+    let updateQuery = supabase.from('transactions').update({ assigned_to: assignedTo }).eq('id', transactionId)
+    if (original.group_id) {
+      updateQuery = updateQuery.eq('group_id', original.group_id)
+    } else {
+      updateQuery = updateQuery.eq('user_id', userId)
+    }
+    const { error } = await updateQuery
+
+    if (error) {
+      set({
+        transactions: transactions.map(t =>
+          t.id === transactionId ? original : t
+        ),
+      })
+      console.error('[zustand] updateTransactionAssignedTo: failed', error)
+    } else {
+      try {
+        clearUserCache(userId)
+      } catch (e) { /* ignore */ }
     }
   },
   updateRecurrentTransactionSeries: async ({

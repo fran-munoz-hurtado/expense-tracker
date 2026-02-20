@@ -705,10 +705,8 @@
 }
 
 @layer components {
-  /* Apply border styles to all elements */
-  * {
-    @apply border-border;
-  }
+  /* Default border color - aplicado solo donde hay border explícito (evita franja gris en mobile) */
+  /* * { @apply border-border; } - removido: causaba borde visible no deseado en contenedores */
 
   /* Mobile-specific improvements */
   @media (max-width: 1024px) {
@@ -747,6 +745,62 @@
   .mobile-scroll {
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+  }
+
+  /* Ocultar scrollbar horizontal en tabla mobile (mis cuentas) */
+  .scrollbar-hide-mobile::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide-mobile {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Indicadores visuales de más contenido a izq/der (tabla transacciones mobile).
+     Van en el wrapper (padre del scroll), no en el scroll: quedan fijos a la pantalla.
+     .scroll-at-start / .scroll-at-end los ocultan cuando se llegó al inicio/final del scroll. */
+  .scroll-hint-wrapper {
+    position: relative;
+  }
+  .scroll-hint-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 28px;
+    pointer-events: none;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.12), transparent);
+    transition: opacity 0.2s ease;
+  }
+  .scroll-hint-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 28px;
+    pointer-events: none;
+    background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.12));
+    transition: opacity 0.2s ease;
+  }
+  .scroll-hint-wrapper.scroll-at-start::before {
+    opacity: 0;
+  }
+  .scroll-hint-wrapper.scroll-at-end::after {
+    opacity: 0;
+  }
+
+  /* Ocultar scrollbar vertical del main en mobile - evita la franja gris fija a la derecha
+     (el track del scrollbar aparecía como línea desde navbar hasta tabla) */
+  @media (max-width: 1023px) {
+    main.layout-main-scroll::-webkit-scrollbar {
+      display: none;
+    }
+    main.layout-main-scroll {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
   }
   
   /* Better focus states for accessibility */
