@@ -321,7 +321,7 @@ export default function GeneralDashboardView({ onNavigateToMonth, user, navigati
                       Gastos Totales
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-green-dark uppercase tracking-wide bg-neutral-bg">
-                      Balance (CuantoQueda)
+                      Balance
                     </th>
                   </tr>
                 </thead>

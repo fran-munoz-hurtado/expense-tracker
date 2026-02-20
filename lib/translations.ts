@@ -39,7 +39,7 @@ export const translations = {
   // New financial overview totals
   monthlyIncomeTotal: 'Total Ingresos del mes',
   monthlyExpensesTotal: 'Total Gastos del mes',
-  cuantoQueda: 'CuantoQueda',
+  cuantoQueda: 'Disponible',
   
   // Transactions
   addTransaction: 'Añadir movimiento',
