@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { savePrivacyConsent, handleSupabaseLogout } from '@/lib/services/supabaseAuth'
+import AppLoadingView from '@/app/components/AppLoadingView'
 
 const PRIVACY_CONSENT_STORAGE_KEY = 'privacy_consent_signup'
 
@@ -167,14 +168,7 @@ function AuthCallbackContent() {
     )
   }
 
-  return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2563eb 0%, #0d9488 100%)' }}>
-      <div className="bg-white rounded-xl p-8 max-w-md text-center shadow-lg">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4" />
-        <p className="text-gray-600">Completando inicio de sesión...</p>
-      </div>
-    </div>
-  )
+  return <AppLoadingView message="Completando inicio de sesión..." />
 }
 
 /**
@@ -184,14 +178,7 @@ function AuthCallbackContent() {
  */
 export default function AuthCallbackPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #2563eb 0%, #0d9488 100%)' }}>
-        <div className="bg-white rounded-xl p-8 max-w-md text-center shadow-lg">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4" />
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<AppLoadingView />}>
       <AuthCallbackContent />
     </Suspense>
   )

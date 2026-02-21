@@ -17,6 +17,7 @@ import TransactionIcon from './TransactionIcon'
 import GroupBadge from './GroupBadge'
 import MemberAvatar from './MemberAvatar'
 import CreateSpaceButton from './CreateSpaceButton'
+import AppLoadingView from './AppLoadingView'
 import { APP_COLORS, getColor, getGradient, getNestedColor } from '@/lib/config/colors'
 import { CATEGORIES } from '@/lib/config/constants'
 import { getUserActiveCategories, addUserCategory } from '@/lib/services/categoryService'
@@ -71,6 +72,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const [notesTooltipAnchor, setNotesTooltipAnchor] = useState<{ left: number; top: number; width: number; height: number } | null>(null)
   const notesTooltipCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [groupMembers, setGroupMembers] = useState<GroupMemberInfo[]>([])
+  const [groupMembersReady, setGroupMembersReady] = useState(false)
   const [openAssignDropdownId, setOpenAssignDropdownId] = useState<number | null>(null)
   const mobileTableScrollRef = useRef<HTMLDivElement>(null)
   const [showScrollHint, setShowScrollHint] = useState(true)
@@ -524,9 +526,16 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   useEffect(() => {
     if (!currentGroupId) {
       setGroupMembers([])
+      setGroupMembersReady(true) // No group = nothing to wait for
       return
     }
-    fetchGroupMembers(currentGroupId).then(setGroupMembers)
+    setGroupMembersReady(false)
+    fetchGroupMembers(currentGroupId)
+      .then((members) => {
+        setGroupMembers(members)
+        setGroupMembersReady(true)
+      })
+      .catch(() => setGroupMembersReady(true)) // Don't block on error
   }, [currentGroupId])
 
   // Initial data fetch
@@ -616,6 +625,9 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
       window.removeEventListener('resize', checkScrollHint)
     }
   }, [checkScrollHint, finalSortedTransactions])
+
+  // Unified loading: don't reveal main content until transactions + members are ready
+  const isInitialLoadReady = !currentGroupId || (!isLoading && groupMembersReady)
 
   // Helper function to compare dates without time
   const isDateOverdue = (deadline: string): boolean => {
@@ -2079,6 +2091,15 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
     )
   }
 
+  // Branded loading: don't show main content until groups + transactions + members are ready
+  if (isGroupsLoading || (currentGroupId && !isInitialLoadReady)) {
+    return (
+      <div className="flex-1 flex min-h-0 min-w-0">
+        <AppLoadingView message={texts.loading} />
+      </div>
+    )
+  }
+
   const displayValue = (v: number) => isLoading ? '—' : formatCurrency(v)
   const faltaPagar = summaryTotals.pending
 
@@ -2086,7 +2107,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
   const cuantoQueda = summaryTotals.cuantoQueda
 
   return (
-    <div className="flex-1 flex flex-col h-screen bg-transparent">
+    <div className="flex-1 flex flex-col h-screen bg-transparent animate-dashboard-reveal">
       {/* Barra superior */}
       <div className="px-4 lg:px-8 py-3 bg-white border-b border-gray-200 space-y-3">
         {/* MOBILE: Mis cuentas + GroupBadge | grid Año/Mes/Mes Actual | Añadir movimiento | totales */}

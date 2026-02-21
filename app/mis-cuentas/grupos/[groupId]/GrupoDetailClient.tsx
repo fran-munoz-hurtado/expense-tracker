@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useGroupStore } from '@/lib/store/groupStore'
@@ -29,6 +29,7 @@ interface GrupoDetailClientProps {
 
 export default function GrupoDetailClient({ groupId }: GrupoDetailClientProps) {
   const router = useRouter()
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { user, isLoading, logout, initAuth } = useAuthStore()
   const { fetchGroups, reset: resetGroups } = useGroupStore()
 
@@ -50,17 +51,19 @@ export default function GrupoDetailClient({ groupId }: GrupoDetailClientProps) {
   }, [user?.id, fetchGroups])
 
   const handleLogout = async () => {
+    setIsLoggingOut(true)
     try {
       resetGroups()
       await logout()
       router.push('/')
     } catch (error) {
       console.error('[grupo-detail] Error durante logout:', error)
+      setIsLoggingOut(false)
       router.push('/')
     }
   }
 
-  if (isLoading) return <LoadingFallback />
+  if (isLoading || isLoggingOut) return <AppLoadingView message={isLoggingOut ? texts.loggingOut : texts.loading} />
   if (!user) return <LoginPage onLogin={() => {}} />
 
   return (

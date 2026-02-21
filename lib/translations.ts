@@ -9,6 +9,7 @@ export const translations = {
   // App general
   appTitle: 'Controla',
   loading: 'Cargando...',
+  loggingOut: 'Cerrando sesión...',
   saving: 'Guardando...',
   save: 'Guardar',
   cancel: 'Cancelar',

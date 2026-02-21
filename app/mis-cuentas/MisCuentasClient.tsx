@@ -9,6 +9,7 @@ import { useAuthStore } from '@/lib/store/authStore'
 import { useGroupStore } from '@/lib/store/groupStore'
 import DashboardView from '@/app/components/DashboardView'
 import AppLayoutWithSidebar from '@/app/components/AppLayoutWithSidebar'
+import AppLoadingView from '@/app/components/AppLoadingView'
 import LoginPage from '@/app/components/LoginPage'
 import BaseMovementForm from '@/app/components/forms/BaseMovementForm'
 import { texts } from '@/lib/translations'
@@ -19,17 +20,7 @@ import TransactionIcon from '@/app/components/TransactionIcon'
 import { FILTER_PARAMS_REVERSE, buildMisCuentasUrl, parseMisCuentasPath, type FilterType } from '@/lib/routes'
 
 function LoadingFallback() {
-  return (
-    <div
-      className="flex h-screen items-center justify-center"
-      style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #f0fdfa 25%, #eff6ff 50%, #f0fdf4 75%, #ecfdf5 100%)' }}
-    >
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">{texts.loading}</p>
-      </div>
-    </div>
-  )
+  return <AppLoadingView message={texts.loading} />
 }
 
 interface MisCuentasClientProps {
@@ -51,6 +42,7 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
   const [showForm, setShowForm] = useState(false)
   const [selectedMovementType, setSelectedMovementType] = useState<MovementType | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   const initialFilter: FilterType =
     (filterParam && FILTER_PARAMS_REVERSE[filterParam]) || 'all'
@@ -93,12 +85,14 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
   }, [urlGroupId, currentGroupId, pathname, searchParams, router])
 
   const handleLogout = async () => {
+    setIsLoggingOut(true)
     try {
       resetGroups()
       await logout()
       router.push('/')
     } catch (error) {
       console.error('[page] Error durante logout:', error)
+      setIsLoggingOut(false)
       router.push('/')
     }
   }
@@ -207,7 +201,7 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
     )
   }
 
-  if (isLoading) return <LoadingFallback />
+  if (isLoading || isLoggingOut) return <AppLoadingView message={isLoggingOut ? texts.loggingOut : texts.loading} />
   if (!user) return <LoginPage onLogin={() => {}} />
 
   const navigationParams = { month, year }
