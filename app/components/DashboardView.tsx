@@ -2213,7 +2213,14 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
               </div>
               <div className="flex flex-col p-2.5 rounded-md border border-dashed border-gray-300/80 bg-white/60">
                 <span className="text-gray-500">Total comprometido:</span>
-                <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.expense)}</span>
+                <span className="font-medium text-gray-800 tabular-nums">
+                  {displayValue(summaryTotals.expense)}
+                  {summaryTotals.income > 0 && (
+                    <span className="ml-1 text-xs text-gray-400 font-normal">
+                      ({Math.round((summaryTotals.expense / summaryTotals.income) * 100)}%)
+                    </span>
+                  )}
+                </span>
               </div>
               {faltaPagar > 0 ? (
                 <div className="flex flex-col p-2.5 rounded-md border border-dashed border-gray-300/80 bg-white/60">
@@ -2229,21 +2236,28 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
               {cuantoQueda >= 0 && (
                 <div className="flex flex-col p-2.5 rounded-md border border-dashed border-gray-300/80 bg-white/60">
                   <span className="text-gray-500">Disponible real:</span>
-                  <span className="font-medium text-gray-800 tabular-nums">{displayValue(cuantoQueda)}</span>
+                  <span className="font-medium text-gray-800 tabular-nums">
+                    {displayValue(cuantoQueda)}
+                    {summaryTotals.income > 0 && (
+                      <span className="ml-1 text-xs text-gray-400 font-normal">
+                        ({Math.round((cuantoQueda / summaryTotals.income) * 100)}%)
+                      </span>
+                    )}
+                  </span>
                 </div>
               )}
             </div>
           </div>
           <div className="hidden lg:flex flex-wrap items-center justify-evenly 2xl:justify-start gap-x-4 gap-y-1 w-full text-sm font-sans bg-gray-50 rounded-lg px-4 py-2.5 border border-gray-200 shadow-[0_4px_14px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.08)]">
             <span className="text-gray-500">Ingresos: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.income)}</span></span>
-            <span className="text-gray-500">Total comprometido: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.expense)}</span></span>
+            <span className="text-gray-500">Total comprometido: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.expense)}{summaryTotals.income > 0 && <span className="ml-1 text-xs text-gray-400 font-normal">({Math.round((summaryTotals.expense / summaryTotals.income) * 100)}%)</span>}</span></span>
             {faltaPagar > 0 ? (
               <span className="text-gray-500">Pendiente de pago: <span className="font-medium text-gray-800 tabular-nums">{displayValue(faltaPagar)}</span></span>
             ) : (
               <span className="text-gray-500">Pagado: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.paid)}</span></span>
             )}
             {cuantoQueda >= 0 && (
-              <span className="text-gray-500">Disponible real: <span className="font-medium text-gray-800 tabular-nums">{displayValue(cuantoQueda)}</span></span>
+              <span className="text-gray-500">Disponible real: <span className="font-medium text-gray-800 tabular-nums">{displayValue(cuantoQueda)}{summaryTotals.income > 0 && <span className="ml-1 text-xs text-gray-400 font-normal">({Math.round((cuantoQueda / summaryTotals.income) * 100)}%)</span>}</span></span>
             )}
             {tieneVencimientos && (
               <span className="text-gray-500">Mora: <span className="font-medium text-gray-800 tabular-nums">{displayValue(summaryTotals.overdue)}</span></span>

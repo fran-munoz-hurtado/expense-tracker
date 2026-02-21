@@ -31,6 +31,12 @@ const STATUS_LABELS: Record<string, string> = {
   deactivated: 'Desactivado'
 }
 
+function getMemberStatusClasses(status: string): string {
+  if (status === 'active') return 'bg-green-light text-green-800'
+  if (status === 'pending_invitation') return 'bg-warning-bg text-amber-800'
+  return 'bg-gray-100 text-gray-700'
+}
+
 const ROLE_LABELS: Record<string, string> = {
   admin: 'Administrador',
   member: 'Miembro'
@@ -320,7 +326,7 @@ export default function GroupDetailView({ groupId, user }: GroupDetailViewProps)
                 <button
                   type="button"
                   onClick={handleOpenInvite}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-sky-600 hover:bg-sky-50 rounded-md transition-colors w-fit"
+                  className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-b from-sky-600 to-sky-700 text-white rounded-lg text-sm font-medium border border-sky-700/50 shadow-[0_4px_14px_rgba(2,132,199,0.35),0_2px_6px_rgba(0,0,0,0.08)] hover:from-sky-700 hover:to-sky-800 hover:shadow-[0_6px_20px_rgba(2,132,199,0.4),0_3px_8px_rgba(0,0,0,0.12)] active:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] active:scale-[0.99] transition-all duration-200 font-sans w-fit"
                 >
                   <UserPlus className="h-4 w-4" />
                   Invitar miembros
@@ -370,7 +376,7 @@ export default function GroupDetailView({ groupId, user }: GroupDetailViewProps)
                           {ROLE_LABELS[m.role] || m.role}
                         </td>
                         <td className="px-2 py-2">
-                          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium font-sans ${getMemberStatusClasses(m.status)}`}>
                             {STATUS_LABELS[m.status] || m.status}
                           </span>
                         </td>

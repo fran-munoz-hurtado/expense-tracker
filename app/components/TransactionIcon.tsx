@@ -67,7 +67,7 @@ export default function TransactionIcon({
   
   if (showBackground) {
     return (
-      <div className={`${getContainerSize()} rounded-full flex items-center justify-center ${iconBackground} ${iconShadow}`}>
+      <div className={`${getContainerSize()} shrink-0 aspect-square rounded-full flex items-center justify-center ${iconBackground} ${iconShadow}`}>
         {iconElement()}
       </div>
     )
