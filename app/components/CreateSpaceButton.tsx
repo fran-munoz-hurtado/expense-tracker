@@ -42,7 +42,7 @@ export default function CreateSpaceButton({ user, onSuccess, className }: Create
     const result = await createGroup(user.id, newGroupName.trim())
     setIsCreating(false)
     if (result.success) {
-      analytics.createSpace()
+      analytics.createSpace(user.id)
       handleClose()
       onSuccess?.()
     } else {

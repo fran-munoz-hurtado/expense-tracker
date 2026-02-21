@@ -56,7 +56,7 @@ export default function LoginPage({ onLogin, showPasswordLogin = true, variant =
           throw new Error(result.error)
         }
 
-        analytics.login('email')
+        analytics.login('email', result.user!.id)
 
         // Get user data from our users table
         const { data: userData, error: userError } = await supabase
@@ -99,7 +99,7 @@ export default function LoginPage({ onLogin, showPasswordLogin = true, variant =
           throw new Error(result.error)
         }
 
-        analytics.signUp('email')
+        analytics.signUp('email', result.user!.id)
 
         if (result.needsConfirmation) {
           setSuccess('¡Registro exitoso! Por favor revisa tu correo electrónico para confirmar tu cuenta.')

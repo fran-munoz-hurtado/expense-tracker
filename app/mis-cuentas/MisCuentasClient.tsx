@@ -155,7 +155,7 @@ export default function MisCuentasClient({ year, month, filterParam, groupId: ur
           }, currentGroupId!)
         }
       }
-      if (selectedMovementType) analytics.addMovement(selectedMovementType)
+      if (selectedMovementType) analytics.addMovement(selectedMovementType, user!.id)
       await refreshData(user!.id, 'create_transaction')
       handleCloseForm()
     } catch (error) {

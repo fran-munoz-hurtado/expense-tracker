@@ -140,7 +140,7 @@ export default function GroupDetailView({ groupId, user }: GroupDetailViewProps)
     const result = await inviteMember(groupId, inviteEmail.trim())
     setIsInviting(false)
     if (result.success) {
-      analytics.inviteMember()
+      analytics.inviteMember(user!.id)
       setShowInviteModal(false)
       setInviteEmail('')
       const [groupData, membersData] = await Promise.all([

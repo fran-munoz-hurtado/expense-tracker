@@ -74,7 +74,7 @@ export default function GroupBadge({ user, variant = 'light' }: GroupBadgeProps)
     const result = await createGroup(user.id, newGroupName.trim())
     setIsCreating(false)
     if (result.success) {
-      analytics.createSpace()
+      analytics.createSpace(user.id)
       setShowCreateModal(false)
       const newGroupId = useGroupStore.getState().currentGroupId
       if (newGroupId && pathname.startsWith('/mis-cuentas')) {

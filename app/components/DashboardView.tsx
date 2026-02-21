@@ -24,6 +24,7 @@ import { getUserActiveCategories, addUserCategory } from '@/lib/services/categor
 import { fetchAbonosByTransactionIds, createAbono, updateAbono, deleteAbono } from '@/lib/services/abonoService'
 import { fetchGroupMembers, type GroupMemberInfo } from '@/lib/services/groupService'
 import { buildMisCuentasUrl, type FilterType } from '@/lib/routes'
+import { analytics } from '@/lib/analytics'
 
 type ExpenseType = 'recurrent' | 'non_recurrent' | null
 
@@ -886,6 +887,8 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         newStatus: newStatus,
         userId: user.id
       })
+
+      if (action === 'mark_paid') analytics.markAsPaid(user.id)
       
       console.log('✅ Status update completed via Zustand store')
       refreshData(user.id, 'update_status')
@@ -951,6 +954,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         if (error) throw error
       }
 
+      analytics.deleteMovement(user.id)
       console.log('🔄 Triggering global data refresh after deletion')
       refreshData(user.id, 'delete_transaction')
       
@@ -1056,6 +1060,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
         console.log('[DELETE_SERIES] recurrent_expenses borrado OK')
       }
 
+      analytics.deleteMovement(user.id)
       console.log('[DELETE_SERIES] Completado OK, refrescando...')
       refreshData(user.id, 'delete_transaction')
 
@@ -2016,6 +2021,7 @@ export default function DashboardView({ navigationParams, user, onDataChange, in
 
       if (error) throw error
 
+      analytics.deleteMovement(user.id)
       // Trigger global data refresh using the new system
       console.log('🔄 Triggering global data refresh after individual deletion')
       refreshData(user.id, 'delete_transaction')
